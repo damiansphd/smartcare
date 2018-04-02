@@ -6,6 +6,7 @@ patientidfile = 'patientid.xlsx';
 % patient id file + corrections
 tic
 fprintf('Loading Patient ID file: %s\n', patientidfile);
+fprintf('---------------------------------------\n');
 patientid = readtable(patientidfile);
 patientid.Properties.Description = 'Table containing mapping of UserID to SmartCareID';
 patientid.Properties.VariableNames{3} = 'SmartCareID';
@@ -19,22 +20,21 @@ fprintf('Updating incorrect Patient IDs - %d rows\n', size(idx,1));
 for i = 1:size(idx,1)
     patientid.Patient_ID{idx(i)} = badids.Correct_ID{i};
 end
-toc
-fprintf('\n');
-
 % hard code this one as it had a trailing ' at the end of the id causing
 % mismatches
+fprintf('Updating incorrect Patient ID: h503el8mUI5hP-fwcnonk6 \n');
 patientid.Patient_ID{23} = 'h503el8mUI5hP-fwcnonk6';
+toc
+fprintf('\n');
 
 % SmartCare measurement data + corrections
 tic
 fprintf('Loading SmartCare data file: %s\n', scdatafile);
+fprintf('---------------------------------------\n');
 physdata = readtable(scdatafile);
 physdata.Properties.Description = 'Table containing SmartCare measurement data';
 physdata1_original = physdata;
 fprintf('SmartCare data has %d rows\n', size(physdata,1));
-toc
-fprintf('\n');
 
 % update incorrect StudyID FPH0011 to FPH011
 idx = find(ismember(physdata.UserName, 'FPH0011'));
@@ -52,7 +52,7 @@ toc
 fprintf('\n');
 
 tic
-%add column for SmartCareID
+%add column for SmartCareID and Date offset
 number = zeros(size(physdata,1),1);
 number = array2table(number);
 number.Properties.VariableNames{1} = 'SmartCareID';
@@ -61,10 +61,16 @@ day = array2table(day);
 day.Properties.VariableNames{1} = 'DateNum'; 
 physdata = [number day physdata];
 
-%sort both files by the ID
-patientid = sortrows(patientid,'SmartCareID','ascend');
-%physdata = sortrows(physdata,'UserID','ascend');
+% day offset
+offset  = datenum(datetime(2015,8,5,0,0,0)); 
+physdata.DateNum = ceil(datenum(datetime(physdata.Date_TimeRecorded))-offset);
+physdata1 = physdata;
 
+%sort patientid file by the ID
+patientid = sortrows(patientid,'SmartCareID','ascend');
+
+fprintf('Adding SmartCare ID to the data table\n');
+fprintf('-------------------------------------\n');
 totupdates = 0;
 for i = 1:size(patientid,1)
     id = patientid.Patient_ID{i};
@@ -91,13 +97,19 @@ toc
 fprintf('\n');
 
 tic
-% time offset
-offset  = datenum(datetime(2015,8,5,0,0,0)); 
-physdata.DateNum = ceil(datenum(datetime(physdata.Date_TimeRecorded))-offset);
-physdata1 = physdata;
+% remove unused information, take a copy first
+physdata2 = physdata;
+fprintf('Trim data table of unneeded data\n');
+fprintf('--------------------------------\n');
+fprintf('Removing unused columns - UserID, FEV10, Calories, Activity_Points\n');
+physdata(:,{'UserID','FEV10','Calories','Activity_Points'}) = [];
+toc
+fprintf('\n');
 
+tic
 % correct for blank entries
 fprintf('Correcting blank entries\n');
+fprintf('------------------------\n');
 
 % Activity_Steps - update blanks to zeros
 idx1 = find(ismember(physdata.RecordingType, 'ActivityRecording'));
@@ -126,11 +138,13 @@ idx2 = find(isnan(physdata.Temp_degC_));
 idx = intersect(idx1,idx2);
 fprintf('Removing %4d blank temperature measurements\n', size(idx,1));
 physdata(idx,:) = [];
-
+toc
 fprintf('\n');
 
+tic
 % handle anomalies in the data
 fprintf('Correcting anomalies in the data\n');
+fprintf('--------------------------------\n');
 
 % Activity Reading - > 30,000 steps
 idx1 = find(ismember(physdata.RecordingType, 'ActivityRecording'));
@@ -210,22 +224,13 @@ idx = intersect(idx1,idx2);
 fprintf('Removing %4d weight measurements < 35kg or > 125kg\n', size(idx,1));
 physdata(idx,:) = [];
 
-toc
-fprintf('\n');
-
 fprintf('SmartCare data now has %d rows\n', size(physdata,1));
-fprintf('\n');
-
-tic
-% remove unused information, take a copy first
-physdata2 = physdata;
-fprintf('Removing unused columns - UserID, FEV10, Calories, Activity_Points\n');
-physdata(:,{'UserID','FEV10','Calories','Activity_Points'}) = [];
 toc
 fprintf('\n');
 
 tic
-%measures = unique(physdata(:,'RecordingType'));
+fprintf('Calculate basic data demographics\n');
+fprintf('---------------------------------\n');
 measures = unique(physdata.RecordingType);
 for i = 1:size(measures,1)
     mmean = 0;mstd = 0;mmin = 0;mmax = 0;mtrue = 0;mfalse = 0;
@@ -285,6 +290,8 @@ for i = 1:size(measures,1)
 end
 toc
 fprintf('\n');
+
+physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
 
 tic
 outputfilename = 'smartcaredata.mat';
