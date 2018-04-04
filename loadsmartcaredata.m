@@ -22,6 +22,10 @@ tic
 patientid = sortrows(patientid,'SmartCareID','ascend');
 physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
 
+% plot histograms of numher of measures recorded by hour for each
+% measurement
+plotMeasuresByHour(physdata, 0, 'measuresbyhourhistograms.pdf');
+
 % update date offset to prior day for actiity measures uploaded between
 % 00:00 and 05:59
 fprintf('Updating Date offset for Activity measures overnight\n');

@@ -1,4 +1,5 @@
 function [physdata, physdata1_original] = loadAndCorrectSmartCareData(scdatafile,patientid)
+
 % loadAndCorrectSmartCareData - performs the following
 %       1) loads smartcare data file
 %       2) removes dummy entries
