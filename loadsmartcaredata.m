@@ -30,17 +30,13 @@ plotMeasuresByHour(physdata, 0, 'measuresbyhourhistograms.pdf');
 % 00:00 and 05:59
 fprintf('Updating Date offset for Activity measures overnight\n');
 fprintf('----------------------------------------------------\n');
-idx1 = find(ismember(physdata.RecordingType, 'ActivityRecording'));
-figure;
-fprintf('Histogram - activity measures by hour\n');
-histogram(hour(datetime(physdata.Date_TimeRecorded(idx1))));
-legend('Count of Activity Measures by Hour of Day', 'location', 'north');
-idx2 = find(hour(datetime(physdata.Date_TimeRecorded))<6);
-idx = intersect(idx1,idx2);
-fprintf('Updating %4d date offsets to prior day for activity measures between 00:00 and 05:59\n', size(idx,1));
-physdata.DateNum(idx) = physdata.DateNum(idx) - 1;
-toc
-fprintf('\n'); 
+%idx1 = find(ismember(physdata.RecordingType, 'ActivityRecording'));
+%idx2 = find(hour(datetime(physdata.Date_TimeRecorded))<6);
+%idx = intersect(idx1,idx2);
+%fprintf('Updating %4d date offsets to prior day for activity measures between 00:00 and 05:59\n', size(idx,1));
+%physdata.DateNum(idx) = physdata.DateNum(idx) - 1;
+%toc
+%fprintf('\n'); 
 
 tic
 % handle duplicates - first analyse how many by recording type
@@ -61,7 +57,8 @@ tunique = [tunique number];
 
 physdupes = physdata;
 physdupes(:,:) = [];
-for i = 1:size(tunique,1)
+%for i = 1:size(tunique,1)
+for i = 1:100
     idx = find(tJ==i);
     tunique.Count(i) = size(idx,1);
     if size(idx,1) > 1
