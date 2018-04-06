@@ -33,6 +33,9 @@ fprintf('End of Study data has %d rows\n',size(cdEndStudy,1));
 toc
 fprintf('\n');
 
+% correct Patient data anomalies
+cdPatient = fixCDPatientData(cdPatient);
+
 % no issues with microbiology data 
 
 % no issues with clinic visits data
@@ -43,8 +46,11 @@ cdPFT = fixCDPFTData(cdPFT);
 % correct Antibiotics data anomalies
 cdAntibiotics = fixCDAntibioticsData(cdAntibiotics);
 
-% add column to hold numeric equivalent of CRP level column
-cdCRP = fixCDCRPData(cdCRP;
+% correct Admissions data anomalies
+cdAdmissions = fixCDAdmissionsData(cdAdmissions);
+
+% correct CRP data anomalies
+cdCRP = fixCDCRPData(cdCRP);
 
 % no issues with end of study data
 

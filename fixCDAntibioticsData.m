@@ -100,15 +100,14 @@ fprintf('Fixed %2d illogical Start and Stop Dates\n', updates);
 
 % check for any remaining date anomalies (expect to see only those for
 % extended treatments
-
-
 idx = find((datenum(cdAntibiotics.StopDate) - datenum(cdAntibiotics.StartDate) < 1) | (datenum(cdAntibiotics.StopDate) - datenum(cdAntibiotics.StartDate) > 30));
 fprintf('There are %d remaining legitimate long term (> 30 days) Antibiotic treatments\n', size(idx,1));
 %cdAntibiotics(idx,:)
-fprintf('\n');
 
 cdAntibioticsOut = cdAntibiotics;
+
 toc
+fprintf('\n');
 
 end
 

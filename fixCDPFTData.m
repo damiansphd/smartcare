@@ -1,4 +1,5 @@
 function [cdPFTOut] = fixCDPFTData(cdPFT)
+
 % fixCDPFTData - fix anomalies in PFT data
 
 tic
@@ -12,9 +13,13 @@ idx = intersect(idx1,idx2);
 updates = size(idx,1);
 cdPFT.FVC1(idx) = 2.8;
 fprintf('Fixed %2d illogical values\n', updates);
-fprintf('\n');
 
 cdPFTOut = cdPFT;
+
+toc
+fprintf('\n');
+
+
 
 end
 
