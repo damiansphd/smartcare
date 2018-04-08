@@ -7,12 +7,7 @@ fprintf('Loading SmartCare measurement data\n');
 load('smartcaredata.mat');
 toc
 
-% uncomment one or other pair here depending on whether you want actual or
-% notional end date for measurement period
-%createnotionalmeasurementend = false;
-%outputfilename = 'TreatmentsOutsideMeasurementPeriod.xlsx';
-createnotionalmeasurementend = true;
-outputfilename = 'TreatmentsOutsideMeasurementPeriodNotionalEnd.xlsx';
+outputfilename = 'TreatmentsOutsideStudyPeriodNotionalEnd.xlsx';
 
 tic
 % remove Oral treatments & sort by SmartCareID and StopDate
@@ -26,8 +21,8 @@ physdata = sortrows(physdata, {'SmartCareID', 'DateNum', 'RecordingType'}, 'asce
 minDatesByPatient = varfun(@min, physdata(:,{'SmartCareID', 'Date_TimeRecorded'}), 'GroupingVariables', 'SmartCareID');
 maxDatesByPatient = varfun(@max, physdata(:,{'SmartCareID', 'Date_TimeRecorded'}), 'GroupingVariables', 'SmartCareID');
 
-outputtable = table('Size',[1 9], 'VariableTypes', {'string(12)','int32','int32','datetime','datetime','int32', 'string(14)','datetime','datetime'}, ...
-    'VariableNames', {'RowType','SmartCareID','StudyPeriod','FirstMeasurement','LastMeasurement','AntibioticID','AntibioticName','AntibioticStart','AntibioticEnd'});
+outputtable = table('Size',[1 11], 'VariableTypes', {'string(12)','int32','int32','datetime','datetime','int32', 'string(14)','datetime','datetime','datetime','datetime'}, ...
+    'VariableNames', {'RowType','SmartCareID','StudyPeriod','StudyStartDate','StudyEndDate','AntibioticID','AntibioticName','AntibioticStart','AntibioticEnd','FirstMeasurement','LastMeasurement'});
 rowtoadd = outputtable;
 outputtable(1,:) = [];
 
@@ -40,38 +35,43 @@ for i = 1:size(cdAntibiotics,1)
     treatmentend = cdAntibiotics.StopDate(i);
     dntreatmentend = datenum(cdAntibiotics.StopDate(i));
     
+    idx = find(cdPatient.ID == scid);
+    studystart = cdPatient.StudyDate(idx);
+    dnstudystart = ceil(datenum(studystart));
+    studyend = dateshift(studystart,'start','day',183);
+    dnstudyend = ceil(datenum(studyend));
+    
     idx = find(minDatesByPatient.SmartCareID == scid);
     firstmeasurement = minDatesByPatient.min_Date_TimeRecorded(idx);
     dnfirstm = ceil(datenum(minDatesByPatient.min_Date_TimeRecorded(idx)));
     lastmeasurement = maxDatesByPatient.max_Date_TimeRecorded(idx);
     dnlastm = ceil(datenum(maxDatesByPatient.max_Date_TimeRecorded(idx)));
-    if (((dnlastm - dnfirstm) < 183) & createnotionalmeasurementend)
-        lastmeasurement = dateshift(firstmeasurement,'start','day',183);
-        dnlastm = dnfirstm + 183;
-    end
-    if (dntreatmentend < dnfirstm-1) | (dntreatmentstart > dnlastm)
+    
+    if (dntreatmentend < dnstudystart-1) | (dntreatmentstart > dnstudyend)
         if oldid ~= scid
            fprintf('\n');
            oldid = scid;
         end
         
         rowtoadd.SmartCareID = scid;
-        rowtoadd.StudyPeriod = dnlastm - dnfirstm;
-        rowtoadd.FirstMeasurement = firstmeasurement;
-        rowtoadd.LastMeasurement = lastmeasurement;
+        rowtoadd.StudyPeriod = dnstudyend - dnstudystart;
+        rowtoadd.StudyStartDate = studystart;
+        rowtoadd.StudyEndDate = studyend;
         rowtoadd.AntibioticID = cdAntibiotics.AntibioticID(i);
         rowtoadd.AntibioticName = cdAntibiotics.AntibioticName{i};
         rowtoadd.AntibioticStart = treatmentstart;
         rowtoadd.AntibioticEnd = treatmentend;
+        rowtoadd.FirstMeasurement = firstmeasurement;
+        rowtoadd.LastMeasurement = lastmeasurement;
         
-        if (dntreatmentend < dnfirstm-1)
-            fprintf('Treatment before study  :  Patient ID %3d Study Period %3d days First Measurement %11s  :  Antibiotic ID %3d %14s End   %11s\n', scid, dnlastm - dnfirstm, datestr(firstmeasurement,1), ...
-                cdAntibiotics.AntibioticID(i), cdAntibiotics.AntibioticName{i}, datestr(treatmentend,1)); 
+        if (dntreatmentend < dnstudystart-1)
+            fprintf('Treatment before study  :  Patient ID %3d Study Period %3d days Study Start Date %11s  :  Antibiotic ID %3d %14s End   %11s  :  First Measurement %11s\n', ... 
+                scid, dnstudyend - dnstudystart, datestr(studystart,1), cdAntibiotics.AntibioticID(i), cdAntibiotics.AntibioticName{i}, datestr(treatmentend,1), datestr(firstmeasurement,1)); 
             rowtoadd.RowType = 'Treatment before study';
         end
-        if (dntreatmentstart > dnlastm) 
-            fprintf('Treatment after  study  :  Patient ID %3d Study Period %3d days  Last Measurement %11s  :  Antibiotic ID %3d %14s Start %11s\n', scid, dnlastm - dnfirstm, datestr(lastmeasurement,1), ...
-                cdAntibiotics.AntibioticID(i), cdAntibiotics.AntibioticName{i}, datestr(treatmentstart,1)); 
+        if (dntreatmentstart > dnstudyend) 
+            fprintf('Treatment after  study  :  Patient ID %3d Study Period %3d days   Study End Date %11s  :  Antibiotic ID %3d %14s Start %11s  :   Last Measurement %11s\n', ...
+                scid, dnstudyend - dnstudystart, datestr(studyend,1), cdAntibiotics.AntibioticID(i), cdAntibiotics.AntibioticName{i}, datestr(treatmentstart,1), datestr(lastmeasurement,1)); 
             rowtoadd.RowType = 'Treatment after study';
         end
         outputtable = [outputtable;rowtoadd];        

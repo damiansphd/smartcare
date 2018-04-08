@@ -1,4 +1,4 @@
-function [earlybirds, nightowls] = analyseOvernightMeasures(physdata, smartcareID)
+function [proposedupdate, earlybirds, nightowls] = analyseOvernightMeasures(physdata, smartcareID)
 
 % analyseOvernightMeasures - analyses measures recorded between 00:00 and
 % 03:59 to ascertain whether to adjust measurement day to prior day
@@ -125,15 +125,35 @@ fprintf('%d measures taken between 00:00-00:59am\n', size(idx,1));
 nrowstoshow = 1000;
 printSmartCareData(sortrows(physdata(idx,:),{'SmartCareID', 'Date_TimeRecorded'}, 'ascend'), nrowstoshow);
 
-postmidnightmeasures = unique(physdata(idx,{'SmartCareID','DateNum'}));
+%midnightto1ammeasures = unique(physdata(idx,{'SmartCareID','DateNum', 'RecordingType'}));
+midnightto1ammeasures = unique(physdata(idx,{'SmartCareID','DateNum'}));
 
 nrowstoshow = 50;
 daterange = 1;
 includeactivity = false;
-for i = 1:size(postmidnightmeasures,1)
-    scid = postmidnightmeasures.SmartCareID(i);
-    datenum = postmidnightmeasures.DateNum(i);
-    printSmartCareData(sortrows(getMeasuresForPatientAndDateRange(physdata, scid, datenum, daterange, includeactivity), {'SmartCareID','Date_TimeRecorded','RecordingType'}, 'ascend'), nrowstoshow);
+proposedupdate = zeros(size(midnightto1ammeasures,1),1);
+fprintf('           :        :   Prior Day   :   Prior Day   :  Current Day  :  Current Day  :  Proposed\n');
+fprintf('  Patient  :  Date  :  02:00-22:59  :  23:00-23:59  :  00:00-00:59  :  02:00-23:59  :   Update \n');
+fprintf('  _______  :  ____  :  ___________  :  ___________  :  ___________  :  ___________  :  ________\n');
+for i = 1:size(midnightto1ammeasures,1)
+    scid = midnightto1ammeasures.SmartCareID(i);
+    datenum = midnightto1ammeasures.DateNum(i);
+    idx1 = find(physdata.SmartCareID == scid);
+    cidx2 = find(physdata.DateNum == datenum & hour(datetime(physdata.Date_TimeRecorded)) == 0);
+    cidx = intersect(idx1,cidx2);
+    sidx2 = find(physdata.DateNum == datenum & hour(datetime(physdata.Date_TimeRecorded)) >= 2);
+    sidx = intersect(idx1,sidx2);
+    p1idx2 = find(physdata.DateNum == (datenum-1) & hour(datetime(physdata.Date_TimeRecorded)) >=2 & hour(datetime(physdata.Date_TimeRecorded)) < 23);
+    p1idx = intersect(idx1,p1idx2);
+    p2idx2 = find(physdata.DateNum == (datenum-1) & hour(datetime(physdata.Date_TimeRecorded)) == 23);
+    p2idx = intersect(idx1,p2idx2);
+    
+    if (size(p1idx,1) >=1 | size(sidx,1) >=1)
+        proposedupdate(i) = 1;
+    end
+   
+    fprintf('    %3d        %3d         %3d             %3d             %3d             %3d             %1d\n', scid, datenum, size(p1idx,1), size(p2idx,1), size(cidx,1), size(sidx,1), proposedupdate(i));
+    
 end
 
 % ====> for each, then get +/-1 day of readings (ex-Activity) and ascertain
@@ -147,7 +167,7 @@ laterows =  [ 45,173 ; 127,171 ; 128,228 ];
 twoamrows = [ 56,182 ; 139,55  ; 127,206 ; 47,123  ; 59,191  ; 121,467 ];
 relrows = [];
 
-fprintf('Further analysis of 00:00-00:59 measures for non-nightowls\n\n');
+%fprintf('Further analysis of 00:00-00:59 measures for non-nightowls\n\n');
 
 %for a = 1:size(earlyrows,1)
 %    relrows = getMeasuresForPatientAndDateRange(physdata, earlyrows(a,1), earlyrows(a,2), daterange);
