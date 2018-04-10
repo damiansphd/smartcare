@@ -82,7 +82,7 @@ tic
 fprintf('Trim data table of unneeded data\n');
 fprintf('--------------------------------\n');
 fprintf('Removing unused columns - UserID, FEV10, Calories, Activity_Points\n');
-physdata(:,{'UserID','FEV10','Calories','Activity_Points'}) = [];
+physdata(:,{'UserID','FEV10','Calories','SputumSampleTaken_','Activity_Points'}) = [];
 toc
 fprintf('\n');
 
@@ -107,9 +107,9 @@ physdata(idx,:) = [];
 
 % Sputum Sample Recording - remove blanks
 idx1 = find(ismember(physdata.RecordingType, 'SputumSampleRecording'));
-idx2 = find(~ismember(physdata.SputumSampleTaken_,'true'));
-idx = intersect(idx1,idx2);
-fprintf('Removing %4d blank sputum sample measurements\n', size(idx,1));
+%idx2 = find(~ismember(physdata.SputumSampleTaken_,'true'));
+idx = intersect(idx1,idx1);
+fprintf('Removing %4d sputum sample measurements\n', size(idx,1));
 physdata(idx,:) = [];
 
 % Temperature Recording - remove blanks

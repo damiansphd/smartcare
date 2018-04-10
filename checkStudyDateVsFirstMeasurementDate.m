@@ -8,6 +8,7 @@ load('smartcaredata.mat');
 toc
 
 outputfilename = 'StudyStartvsFirstMeasurement.xlsx';
+offset  = datenum(datetime(2015,8,5,0,0,0)); 
 
 tic
 cdPatient = sortrows(cdPatient, {'ID'}, 'ascend');
@@ -17,10 +18,13 @@ physdata = sortrows(physdata, {'SmartCareID', 'DateNum', 'RecordingType'}, 'asce
 minDatesByPatient = varfun(@min, physdata(:,{'SmartCareID', 'Date_TimeRecorded'}), 'GroupingVariables', 'SmartCareID');
 maxDatesByPatient = varfun(@max, physdata(:,{'SmartCareID', 'Date_TimeRecorded'}), 'GroupingVariables', 'SmartCareID');
 
-outputtable = table('Size',[1 4], 'VariableTypes', {'string(39)','int32','datetime','datetime'}, ...
-    'VariableNames', {'RowType','SmartCareID','StudyStartDate','FirstMeasurement'});
+outputtable = table('Size',[1 6], 'VariableTypes', {'string(39)','int32','datetime','datetime', 'int32', 'int32'}, ...
+    'VariableNames', {'RowType','SmartCareID','StudyStartDate','FirstMeasurement', 'DaysFMBeforeSS', 'NumberOfMeasuresBeforeSS'});
 rowtoadd = outputtable;
 outputtable(1,:) = [];
+
+measurestable = physdata(1:10,:);
+measurestable = [];
 
 
 oldid = cdPatient.ID(1);
@@ -33,7 +37,7 @@ for i = 1:size(cdPatient,1)
     firstmeasurement = minDatesByPatient.min_Date_TimeRecorded(idx);
     dnfirstm = ceil(datenum(minDatesByPatient.min_Date_TimeRecorded(idx)));
     
-    if (dnfirstm < dnstudystart-1) | ((dnfirstm - dnstudystart) > 14)
+    if (dnfirstm < dnstudystart) | ((dnfirstm - dnstudystart) > 14)
         if oldid ~= scid
            fprintf('\n');
            oldid = scid;
@@ -42,8 +46,19 @@ for i = 1:size(cdPatient,1)
         rowtoadd.SmartCareID = scid;
         rowtoadd.StudyStartDate = studystart;
         rowtoadd.FirstMeasurement = firstmeasurement;
+        rowtoadd.DaysFMBeforeSS = dnfirstm - dnstudystart;
         
-        if (dnfirstm < dnstudystart-1)
+        nmeasurements = 0;
+        range = dnstudystart - dnfirstm;
+        if range > 0
+            fprintf('SCID %3d   FMDate %11s   FMDateNum %6d   DateRange %3d\n', scid, datestr(firstmeasurement,1), dnfirstm, range);
+            measurements = getMeasuresForPatientAndDateRange(physdata, scid, dnfirstm - offset, range, true);
+            measurestable = [measurestable;measurements];
+            nmeasurements = size(measurements,1);
+        end
+        rowtoadd.NumberOfMeasuresBeforeSS = nmeasurements;
+        
+        if (dnfirstm < dnstudystart)
             fprintf('First measurement before study start       :  Patient ID %3d Study Start Date %11s  :  First Measurement %11s\n', ... 
                 scid, datestr(studystart,1), datestr(firstmeasurement,1)); 
             rowtoadd.RowType = 'First measurement before study start';
@@ -57,7 +72,11 @@ for i = 1:size(cdPatient,1)
     end
 end
 
-writetable(outputtable, outputfilename);
+measurestable.DateNum = [];
+measurestable = sortrows(measurestable, {'SmartCareID', 'Date_TimeRecorded', 'RecordingType'}, 'ascend');
+
+writetable(outputtable, outputfilename, 'Sheet', 'MeasurementsBeforeStudyStart');
+writetable(measurestable, outputfilename, 'Sheet', 'MeasurementDetails');
 
 toc
 

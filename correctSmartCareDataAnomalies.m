@@ -13,7 +13,7 @@ fprintf('--------------------------------\n');
 idx1 = find(ismember(physdata.RecordingType, 'ActivityRecording'));
 idx2 = find(physdata.Activity_Steps > 30000);
 idx = intersect(idx1,idx2);
-fprintf('Found    %4d activity measurements > 30,000 - leave for now\n', size(idx,1));
+fprintf('Found    %4d Activity measurements > 30,000 - leave for now\n', size(idx,1));
 %temp = sortrows(physdata(idx,:), {'SmartCareID', 'DateNum'}, 'ascend');
 %temp(:, {'SmartCareID','UserName','RecordingType','Date_TimeRecorded','Activity_Steps'})
 
@@ -23,7 +23,7 @@ idx2 = find(physdata.FEV1_ < 10 | physdata.FEV1_ > 130);
 idx3 = intersect(idx1,idx2);
 idx4 = find(physdata.SmartCareID ~= 227);
 idx = intersect(idx3,idx4);
-fprintf('Removing %4d lung function measurements < 10%% or > 130%% (except patient 227)\n', size(idx,1));
+fprintf('Removing %4d Lung Function measurements < 10%% or > 130%% (except patient 227)\n', size(idx,1));
 %temp = sortrows(physdata(idx,:), {'SmartCareID', 'DateNum'}, 'ascend');
 %temp(:, {'SmartCareID','UserName','RecordingType','Date_TimeRecorded','FEV1_'})
 physdata(idx,:) = [];
@@ -37,20 +37,20 @@ physdata(idx,:) = [];
 idx1 = find(ismember(physdata.RecordingType, 'O2SaturationRecording'));
 idx2 = find(physdata.O2Saturation < 80 | physdata.O2Saturation > 100);
 idx = intersect(idx1,idx2);
-fprintf('Found    %4d O2 saturation measurements > 100%% or < 80%%\n', size(idx,1));
+fprintf('Found    %4d O2 Saturation measurements > 100%% or < 80%%\n', size(idx,1));
 %temp = sortrows(physdata(idx,:), {'SmartCareID', 'DateNum'}, 'ascend');
 %temp(:, {'SmartCareID','UserName','RecordingType','Date_TimeRecorded','O2Saturation'})
 
 % O2 Saturation - update measures for patient 82 at 103% and 104% to be 100% (max allowable)
 idx2 = find(physdata.O2Saturation == 103 | physdata.O2Saturation ==104);
 idx = intersect(idx1,idx2);
-fprintf('Updating %4d O2 saturation measurements = 103%% and 104%% to be 100%%\n', size(idx,1));
+fprintf('Updating %4d O2 Saturation measurements = 103%% and 104%% to be 100%%\n', size(idx,1));
 physdata.O2Saturation(idx) = 100;
 
 % O2 saturation - remove incorrect entries (=127% and < 80%)
 idx2 = find(physdata.O2Saturation == 127 | physdata.O2Saturation < 80);
 idx = intersect(idx1,idx2);
-fprintf('Removing %4d O2 saturation measurements = 127%% or < 80%%\n', size(idx,1));
+fprintf('Removing %4d O2 Saturation measurements = 127%% or < 80%%\n', size(idx,1));
 physdata(idx,:) = [];
 
 % Pulse Rate (BPM) < 50 or > 150
@@ -71,14 +71,14 @@ physdata(idx,:) = [];
 idx1 = find(ismember(physdata.RecordingType, 'TemperatureRecording'));
 idx2 = find(physdata.Temp_degC_ > 96 & physdata.Temp_degC_ < 99);
 idx = intersect(idx1,idx2);
-fprintf('Converting %2d temperature measurements in degF to degC\n', size(idx,1));
+fprintf('Converting %2d Temperature measurements in degF to degC\n', size(idx,1));
 physdata.Temp_degC_(idx) = (physdata.Temp_degC_(idx) - 32) / 1.8;
 
 % Temperature Recording - remove illogical values (< 30 degC or > 50 degC)
 idx1 = find(ismember(physdata.RecordingType, 'TemperatureRecording'));
 idx2 = find(physdata.Temp_degC_ < 30 | physdata.Temp_degC_ > 50);
 idx = intersect(idx1,idx2);
-fprintf('Removing %4d illogical temperature measurements (>50degC or <30degC)\n', size(idx,1));
+fprintf('Removing %4d Illogical Temperature measurements (>50degC or <30degC)\n', size(idx,1));
 %temp = sortrows(physdata(idx,:), {'SmartCareID', 'DateNum'}, 'ascend');
 %temp(:, {'SmartCareID','UserName','RecordingType','Date_TimeRecorded','Temp_degC_'})
 physdata(idx,:) = [];
@@ -87,7 +87,7 @@ physdata(idx,:) = [];
 idx1 = find(ismember(physdata.RecordingType, 'WeightRecording'));
 idx2 = find(physdata.WeightInKg < 35 | physdata.WeightInKg > 125);
 idx = intersect(idx1,idx2);
-fprintf('Removing %4d weight measurements < 35kg or > 125kg\n', size(idx,1));
+fprintf('Removing %4d Weight measurements < 35kg or > 125kg\n', size(idx,1));
 %temp = sortrows(physdata(idx,:), {'SmartCareID', 'DateNum'}, 'ascend');
 %temp(:, {'SmartCareID','UserName','RecordingType','Date_TimeRecorded','WeightInKg'})
 physdata(idx,:) = [];
