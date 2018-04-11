@@ -24,14 +24,14 @@ physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorde
 
 % plot histograms of numher of measures recorded by hour for each
 % measurement
-plotMeasuresByHour(physdata, 0, 'measuresbyhourhistograms.pdf');
+plotMeasuresByHour(physdata, 0, 'measuresbyhourhistograms');
 
 % analyse overnight measures (activity and non-activity)
 % update DateNum to prior day for logic contained within the function
 % (following analysis performed)
 physdata = analyseOvernightMeasures(physdata,0, true);
  
-%physdata = handleDuplicateMeasures(physdata,0,false);
+physdata = handleDuplicateMeasures(physdata,0,true);
 
 
 

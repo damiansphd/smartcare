@@ -27,7 +27,6 @@ p.FontSize = 20;
 p.FontWeight = 'bold'; 
         
 measures = unique(physdata.RecordingType);
-%spid = zeros(size(measures,1),1);
 for i = 1:size(measures,1)
     m = measures{i};
     idxm = find(ismember(physdata.RecordingType, m));

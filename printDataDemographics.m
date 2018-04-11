@@ -48,8 +48,8 @@ for i = 1:size(measures,1)
             mmin = min(physdata.Pulse_BPM_(idx,:));
             mmax = max(physdata.Pulse_BPM_(idx,:));
         case 'SputumSampleRecording'
-            mtrue = size(find(ismember(physdata.SputumSampleTaken_(idx,:),'true')),1);
-            mfalse = size(find(~ismember(physdata.SputumSampleTaken_(idx,:),'true')),1);
+        %    mtrue = size(find(ismember(physdata.SputumSampleTaken_(idx,:),'true')),1);
+        %    mfalse = size(find(~ismember(physdata.SputumSampleTaken_(idx,:),'true')),1);
         case 'TemperatureRecording'
             mmean = mean(physdata.Temp_degC_(idx,:));
             mstd = std(physdata.Temp_degC_(idx,:));

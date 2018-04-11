@@ -16,6 +16,10 @@ physdata.Properties.Description = 'Table containing SmartCare measurement data';
 physdata1_original = physdata;
 fprintf('SmartCare data has %d rows\n', size(physdata,1));
 
+% save memory by defining these columns as categorical
+%physdata.UserName = categorical(physdata.UserName);
+%physdata.RecordingType = categorical(physdata.RecordingType);
+
 % update incorrect StudyID FPH0011 to FPH011
 idx = find(ismember(physdata.UserName, 'FPH0011'));
 fprintf('Updating incorrect StudyID FPH0011 to FPH011 - %d rows\n', size(idx,1));
@@ -81,7 +85,7 @@ tic
 % physdata2 = physdata;
 fprintf('Trim data table of unneeded data\n');
 fprintf('--------------------------------\n');
-fprintf('Removing unused columns - UserID, FEV10, Calories, Activity_Points\n');
+fprintf('Removing unused columns - UserID, FEV10, Calories, SputumSampleTaken,Activity_Points\n');
 physdata(:,{'UserID','FEV10','Calories','SputumSampleTaken_','Activity_Points'}) = [];
 toc
 fprintf('\n');
