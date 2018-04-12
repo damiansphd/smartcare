@@ -2,6 +2,8 @@ clear; clc; close all;
 
 scdatafile = 'mydata.csv';
 patientidfile = 'patientid.xlsx';
+detaillog = false;
+doupdates = true;
 
 % load patient id file + corrections
 patientid = loadAndCorrectPatientIDData(patientidfile);
@@ -14,7 +16,7 @@ printDataDemographics(physdata,0);
 
 physdata = correctSmartCareDataAnomalies(physdata);
 
-% calc and print overall data demographics before data anomaly fixes
+% calc and print overall data demographics after data anomaly fixes
 printDataDemographics(physdata,0);
 
 tic
@@ -29,11 +31,12 @@ plotMeasuresByHour(physdata, 0, 'measuresbyhourhistograms');
 % analyse overnight measures (activity and non-activity)
 % update DateNum to prior day for logic contained within the function
 % (following analysis performed)
-physdata = analyseOvernightMeasures(physdata,0, true);
+physdata = analyseOvernightMeasures(physdata,0, doupdates, detaillog);
  
-physdata = handleDuplicateMeasures(physdata,0,true);
+physdata = handleDuplicateMeasures(physdata,0,doupdates, detaillog);
 
-
+% calc and print overall data demographics after data anomaly fixes
+printDataDemographics(physdata,0);
 
 tic
 outputfilename = 'smartcaredata.mat';

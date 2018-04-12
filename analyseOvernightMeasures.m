@@ -1,4 +1,4 @@
-function [physdataout] = analyseOvernightMeasures(physdata, smartcareID, doupdates)
+function [physdataout] = analyseOvernightMeasures(physdata, smartcareID, doupdates, detaillog)
 
 % analyseOvernightMeasures - analyses measures recorded between 00:00 and
 % 03:59 to ascertain whether to adjust measurement day to prior day
@@ -128,19 +128,24 @@ idxe2 = find(hour(datetime(physdata.Date_TimeRecorded))== 0);
 idx = intersect(idxs,idxe2);
 idx = intersect(idxm, idx);
 fprintf('%d non-activity measures taken between 00:00-00:59am\n', size(idx,1));
-nrowstoshow = 500;
-printSmartCareData(sortrows(physdata(idx,:),{'SmartCareID', 'Date_TimeRecorded'}, 'ascend'), nrowstoshow);
+if detaillog
+    nrowstoshow = 500;
+    printSmartCareData(sortrows(physdata(idx,:),{'SmartCareID', 'Date_TimeRecorded'}, 'ascend'), nrowstoshow);
+end
 
 tic
-fprintf('Further analyse measures taken between 00:00-00:59\n');
-fprintf('\n');
+if detaillog
+    fprintf('Further analyse measures taken between 00:00-00:59\n');
+    fprintf('\n');
+end
 midnightto1ammeasures = unique(physdata(idx,{'SmartCareID','DateNum'}));
 proposedupdate = zeros(size(midnightto1ammeasures,1),1);
 nupdates = 0;
-
-fprintf('           :        :   Prior Day   :   Prior Day   :  Current Day  :  Current Day  :  Proposed\n');
-fprintf('  Patient  :  Date  :  02:00-22:59  :  23:00-23:59  :  00:00-00:59  :  02:00-23:59  :   Update \n');
-fprintf('  _______  :  ____  :  ___________  :  ___________  :  ___________  :  ___________  :  ________\n');
+if detaillog
+    fprintf('           :        :   Prior Day   :   Prior Day   :  Current Day  :  Current Day  :  Proposed\n');
+    fprintf('  Patient  :  Date  :  02:00-22:59  :  23:00-23:59  :  00:00-00:59  :  02:00-23:59  :   Update \n');
+    fprintf('  _______  :  ____  :  ___________  :  ___________  :  ___________  :  ___________  :  ________\n');
+end
 
 for i = 1:size(midnightto1ammeasures,1)
     scid = midnightto1ammeasures.SmartCareID(i);
@@ -169,13 +174,15 @@ for i = 1:size(midnightto1ammeasures,1)
             nupdates = nupdates + size(cidx,1);
         end
     end
-   
-    fprintf('    %3d        %3d         %3d             %3d             %3d             %3d             %1d\n', scid, datenum, size(p1idx,1), size(p2idx,1), size(cidx,1), size(sidx,1), proposedupdate(i));
-    
+    if detaillog   
+        fprintf('    %3d        %3d         %3d             %3d             %3d             %3d             %1d\n', scid, datenum, size(p1idx,1), size(p2idx,1), size(cidx,1), size(sidx,1), proposedupdate(i));
+    end
 end
-fprintf('\n');
-fprintf('Updated a total of %3d overnight non-activity measures to the prior day\n', nupdates);
-fprintf('\n');
+if doupdates
+    fprintf('\n');
+    fprintf('Updated a total of %3d overnight non-activity measures to the prior day\n', nupdates);
+    fprintf('\n');
+end
 toc
 fprintf('\n');
 
@@ -191,19 +198,25 @@ idx = intersect(idxa, idxa2);
 idx = intersect(idxs,idx);
 
 fprintf('%d activity measures taken between 03:00-05:59am\n', size(idx,1));
-nrowstoshow = 200;
-printSmartCareData(sortrows(physdata(idx,:),{'SmartCareID', 'Date_TimeRecorded'}, 'ascend'), nrowstoshow);
+if detaillog
+    nrowstoshow = 200;
+    printSmartCareData(sortrows(physdata(idx,:),{'SmartCareID', 'Date_TimeRecorded'}, 'ascend'), nrowstoshow);
+end
 
 tic
-fprintf('Further analyse measures taken between 00:00-05:59\n');
-fprintf('\n');
+if detaillog
+    fprintf('Further analyse measures taken between 00:00-05:59\n');
+    fprintf('\n');
+end
 overnightactivitymeasures = unique(physdata(idx,{'SmartCareID','DateNum'}));
 proposedupdateact = zeros(size(overnightactivitymeasures,1),1);
 
-fprintf('           :        :   Activity    :   Activity    :   Activity    :   Activity    :  NonActivity\n');
-fprintf('           :        :   Prior Day   :  Prior Curr   :  Current Day  :  Current Day  :  Prior Curr \n');
-fprintf('  Patient  :  Date  :  02:00-22:59  :  23:00-02:59  :  03:00-05:59  :  06:00-23:59  :  23:00-05:59\n');
-fprintf('  _______  :  ____  :  ___________  :  ___________  :  ___________  :  ___________  :  ___________\n');
+if detaillog
+    fprintf('           :        :   Activity    :   Activity    :   Activity    :   Activity    :  NonActivity\n');
+    fprintf('           :        :   Prior Day   :  Prior Curr   :  Current Day  :  Current Day  :  Prior Curr \n');
+    fprintf('  Patient  :  Date  :  02:00-22:59  :  23:00-02:59  :  03:00-05:59  :  06:00-23:59  :  23:00-05:59\n');
+    fprintf('  _______  :  ____  :  ___________  :  ___________  :  ___________  :  ___________  :  ___________\n');
+end
 
 for i = 1:size(overnightactivitymeasures,1)
     scid = overnightactivitymeasures.SmartCareID(i);
@@ -225,15 +238,12 @@ for i = 1:size(overnightactivitymeasures,1)
     nidx = intersect(idx1,nidx2);
     nidx = intersect(nidx,idxm);
     
-    %if (size(p1idx,1)==0 & (size(p2idx,1) >=1 | size(sidx,1) >=1))
-    %    proposedupdateact(i) = 1;
-    %end
-   
-    %fprintf('    %3d        %3d         %3d             %3d             %3d             %3d             %3d            %1d\n', ...
-    %    scid, datenum, size(p1idx,1), size(p2idx,1), size(cidx,1), size(sidx,1), size(nidx,1), proposedupdateact(i));
-    fprintf('    %3d        %3d         %3d             %3d             %3d             %3d             %3d\n', ...
-        scid, datenum, size(p1idx,1), size(p2idx,1), size(cidx,1), size(sidx,1), size(nidx,1));
-    
+    if detaillog
+        %fprintf('    %3d        %3d         %3d             %3d             %3d             %3d             %3d            %1d\n', ...
+        %    scid, datenum, size(p1idx,1), size(p2idx,1), size(cidx,1), size(sidx,1), size(nidx,1), proposedupdateact(i));
+        fprintf('    %3d        %3d         %3d             %3d             %3d             %3d             %3d\n', ...
+            scid, datenum, size(p1idx,1), size(p2idx,1), size(cidx,1), size(sidx,1), size(nidx,1));
+    end
 end
 toc
 fprintf('\n');

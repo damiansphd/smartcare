@@ -1,4 +1,4 @@
-function [physdataout, physdupes, tunique] = handleDuplicateMeasures(physdata, smartcareID, doupdates)
+function [physdataout, physdupes, tunique] = handleDuplicateMeasures(physdata, smartcareID, doupdates, detaillog)
 
 % handleDuplicateMeasures -  Analyse and correct for duplicate measures
 % Duplicates are of three types - for a given patient ID and recordingtype :-
@@ -6,14 +6,18 @@ function [physdataout, physdupes, tunique] = handleDuplicateMeasures(physdata, s
 %           2) multiple rows within a few minutes
 %           3) multiple rows for the same day
 
+
 fprintf('Handling Duplicates\n');
 fprintf('-------------------\n');
+tic
+fprintf('Loading demographic data by patient\n');
+load('datademographicsbypatient.mat');
+toc
+fprintf('\n');
 
 tic
-
-
 % first deal with duplicates with exactly the same date/time
-fprintf('1) Exact date/time duplicates\n');
+fprintf('1a) Exact date/time duplicates - Non-Activity\n');
 % first ensure physdata is sorted correctly
 physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
 
@@ -24,18 +28,21 @@ diffDTR = diff(physdata.Date_TimeRecorded);
 exactidx = find(diffDTR == 0);
 exactpairidx = unique([ exactidx ; exactidx+1 ]); % need to add next row for each diff of zero
 
-% 1) fix non-activity dupes - all exact dupes have same values. 
+% 1a) fix non-activity dupes - all exact dupes have same values. 
 % temp = varfun(@std, physdata(intersect(exactpairidx,idxna),:), 'GroupingVariables', {'SmartCareID','DateNum','UserName','RecordingType','Date_TimeRecorded'})
 % Collapse by removing just first row of dupe pair (exactidx)
 % for now just build idx of rows to delete
 delexactnaidx = intersect(exactidx, idxna);
+
 % remove rows where exact date/time dupes are for different measures
 temp = string([physdata.RecordingType(delexactnaidx) physdata.RecordingType(delexactnaidx+1)]);
 delexactnaidx(find(temp(:,1) ~= temp(:,2))) = [];
 fprintf('Found %d pairs of non-activity exact matches - delete one row of each pair\n', size(delexactnaidx,1)); 
 
 
-% next deal with activity dupes
+% 1b) next deal with activity dupes
+fprintf('\n');
+fprintf('1b) Exact date/time duplicates - Activity\n');
 % create index of rows to delete
 delexactpairaidx = intersect(exactpairidx,idxa);
 fprintf('Found %d exact duplicate rows of activity measures - to be deleted\n', size(delexactpairaidx,1)); 
@@ -53,15 +60,19 @@ addexactrows = [];
 
 for i = 1:size(goodrows,1)
     tempidx = find(physdata.SmartCareID == goodrows.SmartCareID(i) & physdata.Date_TimeRecorded == goodrows.Date_TimeRecorded(i));
-    temp = varfun(@mode, physdata(tempidx,:), 'GroupingVariables', {'SmartCareID','DateNum','UserName','RecordingType','Date_TimeRecorded'}, 'InputVariables', {'Activity_Steps'});
+    %temp = varfun(@mode, physdata(tempidx,:), 'GroupingVariables', {'SmartCareID','DateNum','UserName','RecordingType','Date_TimeRecorded'}, 'InputVariables', {'Activity_Steps'});
+    setmode = mode(physdata.Activity_Steps(tempidx));
     rowtoadd = physdata(tempidx(1),:);
-    rowtoadd.Activity_Steps = temp.mode_Activity_Steps;
+    %rowtoadd.Activity_Steps = temp.mode_Activity_Steps;
+    rowtoadd.Activity_Steps = setmode;
     addexactrows = [addexactrows ; rowtoadd];
 end
 
 if doupdates
+    fprintf('\n');
+    fprintf('1c) Making updates to data table\n');
     delrowsidx = [delexactnaidx ; delexactpairaidx];
-    fprintf('Deleting %d exact dupe rows\n', size(delrowsidx,1)); 
+    fprintf('Deleting %d + %d = %d exact dupe rows\n', size(delexactnaidx,1), size(delexactpairaidx,1), size(delrowsidx,1)); 
     physdata(delrowsidx,:) = [];
     fprintf('Adding back %d replacements\n', size(addexactrows,1)); 
     physdata = [physdata ; addexactrows];
@@ -70,14 +81,153 @@ end
 toc
 fprintf('\n');
 
-% 2) fix duplicates within 15 minute window
-fprintf('2) Duplicate measures within 15mins\n');
-idxna = find(~ismember(physdata.RecordingType,'ActivityRecording'));
+
+% 2a) fix duplicates within 5 minute window 0 Activity
+tic
+fprintf('2a) Duplicate measures within 15mins - Activity\n');
+idxa = find(ismember(physdata.RecordingType,'ActivityRecording'));
+timewindow = '00:05:00';
+diffDTR = diff(physdata.Date_TimeRecorded);
+similaridx = find(diffDTR > '00:00:00' & diffDTR < timewindow);
+similarpairidx = unique([ similaridx ; similaridx+1 ]); % need to add next row for each diff of < 5min
+
+% delete those with < 100 steps
+delzeroaidx = intersect(similarpairidx, idxa);
+tempidx = find(physdata.Activity_Steps < 100);
+delzeroaidx = intersect(delzeroaidx,tempidx);
+
+if doupdates
+    fprintf('Deleting %3d rows with < 100 Activity Steps in the similar dupe sets\n', size(delzeroaidx,1));
+    physdata(delzeroaidx,:) = [];
+end
+
+% recreate indexes after deletions
 idxa = find(ismember(physdata.RecordingType,'ActivityRecording'));
 
+timewindow = '00:05:00';
 diffDTR = diff(physdata.Date_TimeRecorded);
-exactidx = find(diffDTR < '00:15:00' & diffDTR > '00:00:00');
-exactpairidx = unique([ exactidx ; exactidx+1 ]); % need to add next row for each diff of zero
+similaridx = find(diffDTR > '00:00:00' & diffDTR < timewindow);
+similarpairidx = unique([ similaridx ; similaridx+1 ]); % need to add next row for each diff of < 5min
+
+asimidx = intersect(similaridx, idxa);
+asimpairidx = intersect(similarpairidx, idxa);
+fprintf('There are %d remaining Activity similar dupes\n', size(asimpairidx,1)); 
+
+addsimrows = physdata(1:1,:);
+addsimrows = [];
+priorscid = 0;
+priorrectype = ' ';
+priorenddtr = '';
+for i = 1:size(asimidx,1)
+    pidx = asimidx(i);
+    scid = physdata.SmartCareID(pidx);
+    dtnum = physdata.DateNum(pidx);
+    rectype = physdata.RecordingType(pidx);
+    startdtr = physdata.Date_TimeRecorded(pidx);
+    enddtr = startdtr + timewindow;
+    patientddidx = find(demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType,rectype));
+    patientmean = demographicstable(patientddidx,:).Fun_Activity_Steps(1);
+    patientstd = demographicstable(patientddidx,:).Fun_Activity_Steps(2);
+    
+    if detaillog
+        fprintf('Dupe %3d, scid = %3d, rectype = %22s, startdtr = %20s, enddtr = %20s\n', i, scid, string(rectype), startdtr, enddtr);
+    end
+    if (scid ~= priorscid | ~ismember(rectype, priorrectype) | startdtr > priorenddtr)
+        ntidx = find(physdata.SmartCareID == scid & ismember(physdata.RecordingType,rectype) & physdata.Date_TimeRecorded >= startdtr & physdata.Date_TimeRecorded < enddtr);
+        setmax = max(physdata.Activity_Steps(ntidx));
+        if detaillog    
+            if ((setmax < patientmean-2*patientstd) | (setmax > patientmean+2*patientstd))
+                fprintf('Max of similar dupe set is %3d, patient: -2SD = %3d, mean = %3d, +2SD = %3d\n',setmax, patientmean - 2*patientstd, patientmean, patientmean + 2*patientstd);
+                physdata(ntidx,:)
+            end
+        end
+        rowtoadd = physdata(ntidx(1),:);
+        rowtoadd.Activity_Steps = setmax;
+        addsimrows = [addsimrows ; rowtoadd];
+    end
+    priorscid = scid;
+    priorrectype = rectype;
+    priorenddtr = enddtr;
+end
+
+if doupdates
+    fprintf('Deleting %d Activity similar dupe rows\n', size(asimpairidx,1)); 
+    physdata(asimpairidx,:) = [];
+    fprintf('Adding back %d replacements\n', size(addsimrows,1)); 
+    physdata = [physdata ; addsimrows];
+    physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
+end
+
+
+toc
+fprintf('\n');
+
+tic
+fprintf('2b) Duplicate measures within 15mins - Non-Activity\n');
+
+% recreate indexes after deletions
+idxna = find(~ismember(physdata.RecordingType,'ActivityRecording'));
+timewindow = '00:05:00';
+diffDTR = diff(physdata.Date_TimeRecorded);
+similaridx = find(diffDTR > '00:00:00' & diffDTR < timewindow);
+similarpairidx = unique([ similaridx ; similaridx+1 ]); % need to add next row for each diff of < 5min
+nasimidx = intersect(similaridx, idxna);
+nasimpairidx = intersect(similarpairidx, idxna);
+
+fprintf('There are %d Non-Activity similar dupes\n', size(nasimpairidx,1));
+
+addsimrows = physdata(1:1,:);
+addsimrows = [];
+priorscid = 0;
+priorrectype = ' ';
+priorenddtr = '';
+for i = 1:size(nasimidx,1)
+%for i = 1:10
+    pidx = nasimidx(i);
+    scid = physdata.SmartCareID(pidx);
+    dtnum = physdata.DateNum(pidx);
+    rectype = physdata.RecordingType(pidx);
+    startdtr = physdata.Date_TimeRecorded(pidx);
+    enddtr = startdtr + timewindow;
+    if detaillog
+        fprintf('Dupe %3d, scid = %3d, rectype = %22s, startdtr = %20s, enddtr = %20s\n', i, scid, string(rectype), startdtr, enddtr);
+    end
+    if (scid ~= priorscid | ~ismember(rectype, priorrectype) | startdtr > priorenddtr)
+        ntidx = find(physdata.SmartCareID == scid & ismember(physdata.RecordingType,rectype) & physdata.Date_TimeRecorded >= startdtr & physdata.Date_TimeRecorded < enddtr);
+        rowtoadd = physdata(ntidx(size(ntidx,1)),:);
+        if detaillog    
+            physdata(ntidx,:)
+            rowtoadd
+        end
+        addsimrows = [addsimrows ; rowtoadd];
+    end
+    priorscid = scid;
+    priorrectype = rectype;
+    priorenddtr = enddtr;
+end
+
+if doupdates
+    fprintf('Deleting %d Activity similar dupe rows\n', size(nasimpairidx,1)); 
+    physdata(nasimpairidx,:) = [];
+    fprintf('Adding back %d replacements\n', size(addsimrows,1)); 
+    physdata = [physdata ; addsimrows];
+    physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
+end
+
+toc
+fprintf('\n');
+
+tic
+fprintf('3) Duplicate measures on same day - Activity\n');
+
+% recreate indexes after deletions
+idxa = find(ismember(physdata.RecordingType,'ActivityRecording'));
+idxna = find(~ismember(physdata.RecordingType,'ActivityRecording'));
+samedayidx = find(
+
+
+fprintf('SmartCare data now has %d rows\n', size(physdata,1));
+fprintf('\n');
 
 % handle duplicates - first analyse how many by recording type
 %fprintf('Handling duplicates - first look at demographics of duplicates\n');
