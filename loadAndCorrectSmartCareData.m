@@ -1,4 +1,4 @@
-function [physdata, physdata1_original] = loadAndCorrectSmartCareData(scdatafile,patientid)
+function [physdata, physdata1_original] = loadAndCorrectSmartCareData(scdatafile,patientid, detaillog)
 
 % loadAndCorrectSmartCareData - performs the following
 %       1) loads smartcare data file
@@ -47,8 +47,7 @@ physdata = [number day physdata];
 
 % day offset
 offset  = datenum(datetime(2015,8,5,0,0,0)); 
-physdata.DateNum = ceil(datenum(datetime(physdata.Date_TimeRecorded))-offset);
-physdata1 = physdata;
+physdata.DateNum = ceil(datenum(datetime(physdata.Date_TimeRecorded)+seconds(1))-offset);
 
 %sort patientid file by the ID
 patientid = sortrows(patientid,'SmartCareID','ascend');
@@ -60,7 +59,9 @@ for i = 1:size(patientid,1)
     id = patientid.Patient_ID{i};
     scid = patientid.SmartCareID(i);
     idx = find(ismember(physdata.UserID, id));
-    fprintf('Updating SmartCareID %3d for UserID %22s - %4d rows updated\n', scid, id, size(idx,1));
+    if detaillog
+        fprintf('Updating SmartCareID %3d for UserID %22s - %4d rows updated\n', scid, id, size(idx,1));
+    end
     physdata.SmartCareID(idx) = scid;
     totupdates = totupdates + size(idx,1);
 end

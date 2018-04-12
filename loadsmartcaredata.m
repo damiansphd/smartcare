@@ -9,7 +9,7 @@ doupdates = true;
 patientid = loadAndCorrectPatientIDData(patientidfile);
 
 % load SmartCare measurement data + corrections
-[physdata, physdata1_original] = loadAndCorrectSmartCareData(scdatafile, patientid);
+[physdata, physdata1_original] = loadAndCorrectSmartCareData(scdatafile, patientid, detaillog);
 
 % calc and print overall data demographics before data anomaly fixes
 printDataDemographics(physdata,0);
