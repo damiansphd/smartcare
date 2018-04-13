@@ -123,6 +123,8 @@ idx2 = find(isnan(physdata.Temp_degC_));
 idx = intersect(idx1,idx2);
 fprintf('Removing %4d blank temperature measurements\n', size(idx,1));
 physdata(idx,:) = [];
+
+fprintf('SmartCare data now has %d rows\n', size(physdata,1));
 toc
 fprintf('\n');
 

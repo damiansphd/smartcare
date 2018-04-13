@@ -1,4 +1,4 @@
-function [physdataout, physdupes, tunique] = handleDuplicateMeasures(physdata, smartcareID, doupdates, detaillog)
+function [physdataout] = handleDuplicateMeasures(physdata, doupdates, detaillog)
 
 % handleDuplicateMeasures -  Analyse and correct for duplicate measures
 % Duplicates are of three types - for a given patient ID and recordingtype :-
@@ -98,7 +98,6 @@ if doupdates
     physdata = [physdata ; addexactrows];
     physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
     fprintf('SmartCare data now has %d rows\n', size(physdata,1));
-    fprintf('\n');
 end
 toc
 fprintf('\n');
@@ -124,7 +123,7 @@ invalididx = find(physdata.SmartCareID(asimilaridx) ~= physdata.SmartCareID(asim
     string([physdata.RecordingType(asimilaridx)]) ~= string([physdata.RecordingType(asimilaridx+1)]));
 asimilaridx(invalididx) = [];
 
-% create table of activity rows to add back - single row for each exact dupe set
+% create table of activity rows to add back - single row for each dupe set
 % with the max of the activity steps for each.
 % with detaillogging on, compare toe mean and std of activity for patient
 % to ensure max is reasonable
@@ -175,7 +174,6 @@ if doupdates
     physdata = [physdata ; addsimrows];
     physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
     fprintf('SmartCare data now has %d rows\n', size(physdata,1));
-    fprintf('\n');
 end
 toc
 fprintf('\n');
@@ -221,12 +219,13 @@ for i = 1:size(nasimidx,1)
         ntidx = find(physdata.SmartCareID == scid & ismember(physdata.RecordingType,rectype) & physdata.Date_TimeRecorded >= startdtr & physdata.Date_TimeRecorded < enddtr);
         % keep the chronologically last row
         rowtoadd = physdata(ntidx(size(ntidx,1)),:);
+        addsimrows = [addsimrows ; rowtoadd];
         nasimpairidx = [nasimpairidx; ntidx];
         if detaillog    
             physdata(ntidx,:)
             rowtoadd
         end
-        addsimrows = [addsimrows ; rowtoadd];
+        
     end
     priorscid = scid;
     priorrectype = rectype;
@@ -242,7 +241,6 @@ if doupdates
     physdata = [physdata ; addsimrows];
     physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
     fprintf('SmartCare data now has %d rows\n', size(physdata,1));
-    fprintf('\n');
 end
 
 toc
@@ -255,17 +253,26 @@ physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'DateNum'}, 'asce
 % recreate indexes after deletions
 idxa = find(ismember(physdata.RecordingType,'ActivityRecording'));
 samedayidx = find(diff(physdata.DateNum)==0);
-samedaypairidx = unique([ samedayidx ; samedayidx+1 ]); % need to add next row for each same day dupe
+
+% build idx of activity rows with date/time diff < 12mins
 asamedayidx = intersect(samedayidx, idxa);
-asamedaypairidx = intersect(samedaypairidx, idxa);
 
-fprintf('There are %d Activity same day dupes\n', size(asamedaypairidx,1));
+% need to eliminate those rows where the Smart Care ID or RecordingType
+% isn't the same between rows - ie they aren't real dupes
+invalididx = find(physdata.SmartCareID(asamedayidx) ~= physdata.SmartCareID(asamedayidx+1) | ...
+    string([physdata.RecordingType(asamedayidx)]) ~= string([physdata.RecordingType(asamedayidx+1)]));
+asamedayidx(invalididx) = [];
 
+% create table of activity rows to add back - single row for each dupe set
+% with the sum of the activity steps for each.
+% with detaillogging on, compare toe mean and std of activity for patient
+% to ensure max is reasonable
 addsamerows = physdata(1:1,:);
 addsamerows = [];
 priorscid = 0;
 priordtnum = 0;
 priorrectype = ' ';
+asamedaypairidx = [];
 for i = 1:size(asamedayidx,1)
     pidx = asamedayidx(i);
     scid = physdata.SmartCareID(pidx);
@@ -290,11 +297,14 @@ for i = 1:size(asamedayidx,1)
         rowtoadd = physdata(ntidx(1),:);
         rowtoadd.Activity_Steps = setsum;
         addsamerows = [addsamerows ; rowtoadd];
+        asamedaypairidx = [asamedaypairidx; ntidx];
     end
     priorscid = scid;
     priordtnum = dtnum;
     priorrectype = rectype;
 end
+
+fprintf('There are %d sets of Activity same day dupes (< 30mins)\n', size(addsamerows,1));
 
 if doupdates
     fprintf('Deleting %d Activity similar dupe rows\n', size(asamedaypairidx,1)); 
@@ -303,7 +313,6 @@ if doupdates
     physdata = [physdata ; addsamerows];
     physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
     fprintf('SmartCare data now has %d rows\n', size(physdata,1));
-    fprintf('\n');
 end
 toc
 fprintf('\n');
@@ -311,10 +320,12 @@ fprintf('\n');
 tic
 fprintf('3b) Duplicate measures on same day - Non-Activity\n');
 physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'DateNum'}, 'ascend');
-% recreate indexes after deletions
 
+% recreate indexes after deletions
 idxna = find(~ismember(physdata.RecordingType,'ActivityRecording'));
 samedayidx = find(diff(physdata.DateNum)==0);
+
+% build idx of activity rows with date/time diff < 12mins
 nasamedayidx = intersect(samedayidx, idxna);
 
 % need to eliminate those rows where the diff is in the window, but the
@@ -339,105 +350,43 @@ for i = 1:size(nasamedayidx,1)
     end
     if (scid ~= priorscid | dtnum ~= priordtnum | ~ismember(rectype, priorrectype))
         ntidx = find(physdata.SmartCareID == scid & physdata.DateNum == dtnum & ismember(physdata.RecordingType,rectype));
-        meantable = varfun(@mean, physdata(ntidx,:), 'GroupingVariables', {'SmartCareID','DateNum','UserName','RecordingType','Date_TimeRecorded'});
+        meantable = varfun(@mean, physdata(ntidx,:), 'GroupingVariables', {'SmartCareID','DateNum','UserName','RecordingType'});
+        if (size(meantable,1) >1)
+            fprintf('Multiple rows returned from mean calc !! dupe %3d, scid %3d, dtnum %3d dupe set size = %d\n', i, scid, dtnum, size(ntidx,1));
+        end
+        rowtoadd = physdata(ntidx(1),:);
+        rowtoadd.FEV1 = meantable.mean_FEV1;
+        rowtoadd.PredictedFEV = meantable.mean_PredictedFEV;
+        rowtoadd.FEV1_ = meantable.mean_FEV1_;
+        rowtoadd.WeightInKg = meantable.mean_WeightInKg;
+        rowtoadd.O2Saturation = meantable.mean_O2Saturation;
+        rowtoadd.Pulse_BPM_ = meantable.mean_Pulse_BPM_;
+        rowtoadd.Rating = meantable.mean_Rating;
+        rowtoadd.Temp_degC_ = meantable.mean_Temp_degC_;
+        addsamerows = [addsamerows ; rowtoadd];
+        nasamedaypairidx = [nasamedaypairidx; ntidx];
         if detaillog
-            %fprintf('Sum of same day dupe set (size %3d) is %3d\n',setsum, size(ntidx,1));
-            %physdata(ntidx,:)
             sortrows(getMeasuresForPatientAndDateRange(physdata(idxa,:),scid,dtnum, 1, true),{'SmartCareID', 'RecordingType','Date_TimeRecorded'}, 'ascend')
         end
-
-%        addsamerows = [addsamerows ; rowtoadd];
     end
     priorscid = scid;
     priordtnum = dtnum;
     priorrectype = rectype;
 end
 
+fprintf('There are %d sets of Non-Activity same day dupes (< 30mins)\n', size(addsamerows,1));
 
-fprintf('SmartCare data now has %d rows\n', size(physdata,1));
-fprintf('\n');
-
-% handle duplicates - first analyse how many by recording type
-%fprintf('Handling duplicates - first look at demographics of duplicates\n');
-%physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'DateNum'}, 'ascend');
-t = physdata(:,:);
-%[tunique, tI, tJ] = unique(t(:,{'SmartCareID', 'RecordingType', 'DateNum', 'Date_TimeRecorded'}));
-[tunique, tI, tJ] = unique(t(:,{'SmartCareID', 'RecordingType', 'DateNum'}));
-
-number = zeros(size(tunique,1),5);
-number = array2table(number);
-number.Properties.VariableNames{1} = 'Count';
-number.Properties.VariableNames{2} = 'Mean';
-number.Properties.VariableNames{3} = 'Std';
-number.Properties.VariableNames{4} = 'Min';
-number.Properties.VariableNames{5} = 'Max';
-tunique = [tunique number];
-
-physdupes = physdata;
-physdupes(:,:) = [];
-%for i = 1:size(tunique,1)
-for i = 1:1
-    idx = find(tJ==i);
-    tunique.Count(i) = size(idx,1);
-    if size(idx,1) > 1
-        switch tunique.RecordingType{i}
-            case 'ActivityRecording'
-                tunique.Mean(i) = mean(t.Activity_Steps(idx));
-                tunique.Std(i) = std(t.Activity_Steps(idx));
-                tunique.Min(i) = min(t.Activity_Steps(idx));
-                tunique.Max(i) = max(t.Activity_Steps(idx));
-            case {'CoughRecording','SleepActivityRecording','WellnessRecording'}
-                tunique.Mean(i) = mean(t.Rating(idx));
-                tunique.Std(i) = std(t.Rating(idx));
-                tunique.Min(i) = min(t.Rating(idx));
-                tunique.Max(i) = max(t.Rating(idx));
-            case 'LungFunctionRecording'
-                tunique.Mean(i) = mean(t.FEV1_(idx));
-                tunique.Std(i) = std(t.FEV1_(idx));
-                tunique.Min(i) = min(t.FEV1_(idx));
-                tunique.Max(i) = max(t.FEV1_(idx));
-            case 'O2SaturationRecording'
-                tunique.Mean(i) = mean(t.O2Saturation(idx));
-                tunique.Std(i) = std(t.O2Saturation(idx));
-                tunique.Min(i) = min(t.O2Saturation(idx));
-                tunique.Max(i) = max(t.O2Saturation(idx));
-            case 'PulseRateRecording'
-                tunique.Mean(i) = mean(t.Pulse_BPM_(idx));
-                tunique.Std(i) = std(t.Pulse_BPM_(idx));
-                tunique.Min(i) = min(t.Pulse_BPM_(idx));
-                tunique.Max(i) = max(t.Pulse_BPM_(idx));
-            case 'SputumSampleRecording'
-                tunique.Mean(i) = 0;
-                tunique.Std(i) = 0;
-                tunique.Min(i) = 0;
-                tunique.Max(i) = 0;
-            case 'TemperatureRecording'
-                tunique.Mean(i) = mean(t.Temp_degC_(idx));
-                tunique.Std(i) = std(t.Temp_degC_(idx));
-                tunique.Min(i) = min(t.Temp_degC_(idx));
-                tunique.Max(i) = max(t.Temp_degC_(idx));
-            case 'WeightRecording'
-                tunique.Mean(i) = mean(t.WeightInKg(idx));
-                tunique.Std(i) = std(t.WeightInKg(idx));
-                tunique.Min(i) = min(t.WeightInKg(idx));
-                tunique.Max(i) = max(t.WeightInKg(idx));
-            otherwise
-                mmean = -1;
-                mstd = -1;
-                mmin = -1;
-                mmax = -1; 
-        end
-        physdupes = [physdupes;t(idx,:)];
-    end
-    if (round(i/1000) == i/1000)
-            fprintf('Processed %5d rows\n', i);
-    end 
+if doupdates
+    fprintf('Deleting %d Activity similar dupe rows\n', size(nasamedaypairidx,1)); 
+    physdata(nasamedaypairidx,:) = [];
+    fprintf('Adding back %d replacements\n', size(addsamerows,1)); 
+    physdata = [physdata ; addsamerows];
+    physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
+    fprintf('SmartCare data now has %d rows\n', size(physdata,1));
+    
 end
 toc
-fprintf('\n'); 
-
-
-
+fprintf('\n');
 
 physdataout = physdata;
 end

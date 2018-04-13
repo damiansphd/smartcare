@@ -26,14 +26,17 @@ physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorde
 
 % plot histograms of numher of measures recorded by hour for each
 % measurement
-plotMeasuresByHour(physdata, 0, 'measuresbyhourhistograms');
+%plotMeasuresByHour(physdata, 0, 'measuresbyhourhistograms');
 
 % analyse overnight measures (activity and non-activity)
 % update DateNum to prior day for logic contained within the function
 % (following analysis performed)
 physdata = analyseOvernightMeasures(physdata,0, doupdates, detaillog);
- 
-physdata = handleDuplicateMeasures(physdata,0,doupdates, detaillog);
+
+physdata_predupehandling = physdata;
+
+% handle duplicates
+physdata = handleDuplicateMeasures(physdata, doupdates, detaillog);
 
 % calc and print overall data demographics after data anomaly fixes
 printDataDemographics(physdata,0);
@@ -41,22 +44,5 @@ printDataDemographics(physdata,0);
 tic
 outputfilename = 'smartcaredata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
-save(outputfilename, 'physdata', 'physdata1_original', 'patientid');
+save(outputfilename, 'physdata', 'physdata1_original', 'physdata_predupehandling', 'patientid');
 toc
-
-%tunique = unique(t(:,{'DateNum','RecordingType','SmartCareID'}));
-%number = zeros(size(tunique,1),2);
-%number = array2table(number);
-%number.Properties.VariableNames{1} = 'Total';
-%number.Properties.VariableNames{2} = 'Count';
-%tunique = [tunique number];
-
-
-
-%patientlist = unique(patientid.SmartCareID(:));
-%for i = 1:size(patientlist,1)
-%    scid = patientlist(i);
-%   
-%end
-
-
