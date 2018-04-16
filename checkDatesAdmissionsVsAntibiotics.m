@@ -20,12 +20,6 @@ tic
 cdAntibiotics = sortrows(cdAntibiotics, {'ID','StartDate'},'ascend');
 cdAdmissions = sortrows(cdAdmissions, {'ID','Admitted'}, 'ascend');
 
-%physdata = sortrows(physdata, {'SmartCareID', 'DateNum', 'RecordingType'}, 'ascend');
-
-% get min and max measurement dates for each SmartCare ID
-%minDatesByPatient = varfun(@min, physdata(:,{'SmartCareID', 'Date_TimeRecorded'}), 'GroupingVariables', 'SmartCareID');
-%maxDatesByPatient = varfun(@max, physdata(:,{'SmartCareID', 'Date_TimeRecorded'}), 'GroupingVariables', 'SmartCareID');
-
 matchtable = table('Size',[1 12], 'VariableTypes', {'string(35)', 'string(8)', 'int32', 'int32', 'datetime', 'datetime','int32', 'string(15)', 'string(5)', ...
     'string(10)', 'datetime','datetime'}, 'VariableNames', {'RowType', 'Hospital', 'SmartCareID', 'AdmissionID', 'Admitted', 'Discharge', ...
     'AntibioticID', 'AntibioticName','Route', 'HomeIV','Start','Stop'});
@@ -56,7 +50,7 @@ for i = 1:size(cdAdmissions,1)
         rowtoadd.RowType = '*** Admission with no treatment ***';
         fprintf('%35s  :  Hospital %8s  Patient ID %3d  Admitted  %11s  Discharge  %11s\n', ... 
             rowtoadd.RowType, string(rowtoadd.Hospital), scid, datestr(admitted,1), datestr(discharge,1)); 
-        exceptiontable = [exceptiontable;rowtoadd(1,{'RowType','SmartCareID','Hospital','AdmissionID','Admitted','Discharge'})];  
+        exceptiontable = [exceptiontable;rowtoadd(1,{'RowType','Hospital', 'SmartCareID', 'AdmissionID', 'Admitted', 'Discharge'})];  
     else
         for t = 1:size(idx,1)
             rowtoadd.RowType = 'OK - Treatment during admission';
