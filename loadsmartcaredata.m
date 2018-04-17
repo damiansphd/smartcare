@@ -26,7 +26,7 @@ physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorde
 
 % plot histograms of numher of measures recorded by hour for each
 % measurement
-%plotMeasuresByHour(physdata, 0, 'measuresbyhourhistograms');
+plotMeasuresByHour(physdata, 0, 'measuresbyhourhistograms');
 
 % analyse overnight measures (activity and non-activity)
 % update DateNum to prior day for logic contained within the function
@@ -37,9 +37,12 @@ physdata_predupehandling = physdata;
 
 % handle duplicates
 physdata = handleDuplicateMeasures(physdata, doupdates, detaillog);
+%physdata = handleDuplicateMeasures(physdata, false, detaillog);
 
 % calc and print overall data demographics after data anomaly fixes
 printDataDemographics(physdata,0);
+
+physdata = scaleDaysByPatient(physdata, doupdates);
 
 tic
 outputfilename = 'smartcaredata.mat';

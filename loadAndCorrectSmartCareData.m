@@ -36,16 +36,18 @@ toc
 fprintf('\n');
 
 tic
-%add column for SmartCareID and Date offset
+%add column for SmartCareID and Date offsets
 number = zeros(size(physdata,1),1);
 number = array2table(number);
 number.Properties.VariableNames{1} = 'SmartCareID';
-day = zeros(size(physdata,1),1);
+day = zeros(size(physdata,1),2);
 day = array2table(day);
-day.Properties.VariableNames{1} = 'DateNum'; 
+day.Properties.VariableNames{1} = 'ScaledDateNum';
+day.Properties.VariableNames{2} = 'DateNum';
 physdata = [number day physdata];
 
-% day offset
+% day offset - add 1sec to correctly handle measurements taken at exactly
+% midnight
 offset  = datenum(datetime(2015,8,5,0,0,0)); 
 physdata.DateNum = ceil(datenum(datetime(physdata.Date_TimeRecorded)+seconds(1))-offset);
 
