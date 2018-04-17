@@ -19,7 +19,7 @@ fprintf('---------------------------------------------------------\n');
 
 f = figure('Name','MeasuresByHour');
 %set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.2, 0.2, 0.8, 0.8], 'MenuBar', 'none', 'ToolBar', 'none');
-set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8, 0.8], 'PaperOrientation', 'landscape', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
+set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8, 0.8], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, .75], 'PaperType', 'a4');
 p = uipanel('Parent',f,'BorderType','none'); 
 p.Title = 'Histograms of Measures by Hour'; 
 p.TitlePosition = 'centertop';
@@ -31,7 +31,7 @@ for i = 1:size(measures,1)
     m = measures{i};
     idxm = find(ismember(physdata.RecordingType, m));
     idx = intersect(idxs,idxm);
-    subplot(2,5,i,'Parent',p)
+    subplot(3,3,i,'Parent',p)
     histogram(hour(datetime(physdata.Date_TimeRecorded(idx))));
     t = title(sprintf('%s by Hour of Day',m), 'FontSize', 6);
 end
