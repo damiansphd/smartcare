@@ -37,7 +37,6 @@ physdata_predupehandling = physdata;
 
 % handle duplicates
 physdata = handleDuplicateMeasures(physdata, doupdates, detaillog);
-%physdata = handleDuplicateMeasures(physdata, false, detaillog);
 
 % calc and print overall data demographics after data anomaly fixes
 printDataDemographics(physdata,0);
@@ -46,8 +45,12 @@ printDataDemographics(physdata,0);
 physdata = scaleDaysByPatient(physdata, doupdates);
 
 physdata_predateoutlierhandling = physdata;
+
 % analyse measurement date outliers and handle as appropriate
 physdata = analyseAndHandleDateOutliers(physdata, doupdates);
+
+% calc and print overall data demographics after data anomaly fixes
+printDataDemographics(physdata,0);
 
 tic
 outputfilename = 'smartcaredata.mat';
