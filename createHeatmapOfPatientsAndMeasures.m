@@ -22,7 +22,8 @@ patientmeasures = [patientmeasures;dummymeasures];
 
 % create and format heatmap
 f = figure('Name',title);
-set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8*xratio, 0.8*yratio], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1*xratio, 1*yratio], 'PaperType', papersize);
+set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8*xratio, 0.8*yratio], 'PaperOrientation', 'portrait', ...
+    'PaperUnits', 'normalized','PaperPosition',[0, 0, 1*xratio, 1*yratio], 'PaperType', papersize);
 p = uipanel('Parent',f,'BorderType','none'); 
 p.Title = title; 
 p.TitlePosition = 'centertop';

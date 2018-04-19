@@ -1,4 +1,4 @@
-function [physdata, physdata1_original] = loadAndCorrectSmartCareData(scdatafile,patientid, detaillog)
+function [physdata, physdata_original, offset] = loadAndCorrectSmartCareData(scdatafile,patientid, detaillog)
 
 % loadAndCorrectSmartCareData - performs the following
 %       1) loads smartcare data file
@@ -13,7 +13,7 @@ fprintf('Loading SmartCare data file: %s\n', scdatafile);
 fprintf('---------------------------------------\n');
 physdata = readtable(scdatafile);
 physdata.Properties.Description = 'Table containing SmartCare measurement data';
-physdata1_original = physdata;
+physdata_original = physdata;
 fprintf('SmartCare data has %d rows\n', size(physdata,1));
 
 % save memory by defining these columns as categorical
@@ -40,15 +40,16 @@ tic
 number = zeros(size(physdata,1),1);
 number = array2table(number);
 number.Properties.VariableNames{1} = 'SmartCareID';
-day = zeros(size(physdata,1),2);
-day = array2table(day);
-day.Properties.VariableNames{1} = 'ScaledDateNum';
-day.Properties.VariableNames{2} = 'DateNum';
-physdata = [number day physdata];
+days = zeros(size(physdata,1),2);
+days = array2table(days);
+days.Properties.VariableNames{1} = 'ScaledDateNum';
+days.Properties.VariableNames{2} = 'DateNum';
+physdata = [number days physdata];
 
 % day offset - add 1sec to correctly handle measurements taken at exactly
 % midnight
-offset  = datenum(datetime(2015,8,5,0,0,0)); 
+minmdate = min(physdata.Date_TimeRecorded);
+offset = datenum(datetime(year(minmdate), month(minmdate), day(minmdate)));
 physdata.DateNum = ceil(datenum(datetime(physdata.Date_TimeRecorded)+seconds(1))-offset);
 
 %sort patientid file by the ID

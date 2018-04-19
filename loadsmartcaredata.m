@@ -8,8 +8,9 @@ doupdates = true;
 % load patient id file + corrections
 patientid = loadAndCorrectPatientIDData(patientidfile);
 
+
 % load SmartCare measurement data + corrections
-[physdata, physdata1_original] = loadAndCorrectSmartCareData(scdatafile, patientid, detaillog);
+[physdata, physdata_original, offset] = loadAndCorrectSmartCareData(scdatafile, patientid, detaillog);
 
 % calc and print overall data demographics before data anomaly fixes
 printDataDemographics(physdata,0);
@@ -55,5 +56,5 @@ printDataDemographics(physdata,0);
 tic
 outputfilename = 'smartcaredata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
-save(outputfilename, 'patientid', 'physdata', 'physdata1_original', 'physdata_predupehandling', 'physdata_predateoutlierhandling');
+save(outputfilename, 'patientid', 'physdata', 'offset','physdata_original', 'physdata_predupehandling', 'physdata_predateoutlierhandling');
 toc

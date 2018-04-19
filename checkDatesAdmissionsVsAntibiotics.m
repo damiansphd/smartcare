@@ -1,4 +1,4 @@
-clc; clear; close;
+clc; clear; close all;
 
 tic
 fprintf('Loading Clinical data\n');
