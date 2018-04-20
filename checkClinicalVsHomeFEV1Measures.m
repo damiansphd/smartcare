@@ -7,27 +7,28 @@ fprintf('Loading SmartCare measurement data\n');
 load('smartcaredata.mat');
 toc
 
-filenameprefix = 'ClinicalVsHomeWeight';
+filenameprefix = 'ClinicalVsHomeFEV1';
 
 % get the date scaling offset for each patient
 patientoffsets = getPatientOffsets(physdata);
 
 % extract study date and join with offsets to keep only those patients who
 % have enough data (ie the patients left after outlier date handling
-pstudydateweight = sortrows(cdPatient(:,{'ID', 'StudyDate', 'Weight'}), 'ID', 'ascend');
-pstudydateweight.Properties.VariableNames{'ID'} = 'SmartCareID';
-pstudydateweight = innerjoin(patientoffsets, pstudydateweight);
+pclinicalfev = sortrows(cdPFT(:,{'ID', 'LungFunctionDate', 'FEV1_'}), {'ID', 'LungFunctionDate'}, 'ascend');
+pclinicalfev.Properties.VariableNames{'ID'} = 'SmartCareID';
+pclinicalfev = innerjoin(pclinicalfev, patientoffsets);
 
 % create a scaleddatenum to translate the study date to the same normalised
 % scale as measurement data scaled date num
-pstudydateweight.ScaledDateNum = datenum(pstudydateweight.StudyDate) - offset - pstudydateweight.PatientOffset;
+pclinicalfev.ScaledDateNum = datenum(pclinicalfev.LungFunctionDate) - offset - pclinicalfev.PatientOffset;
+
 
 % extract just the weight measures from smartcare data
-pmeasuresweight = physdata(ismember(physdata.RecordingType,'WeightRecording'),{'SmartCareID', 'ScaledDateNum', 'WeightInKg'});
+pmeasuresfev = physdata(ismember(physdata.RecordingType,'LungFunctionRecording'),{'SmartCareID', 'ScaledDateNum', 'FEV1_'});
 
 % store min and max to scale x-axis of plot display
-mindays = min(pmeasuresweight.ScaledDateNum);
-maxdays = max(pmeasuresweight.ScaledDateNum);
+mindays = min(pmeasuresfev.ScaledDateNum);
+maxdays = max(pmeasuresfev.ScaledDateNum);
 
 % loop over all patients, create a plot for each of home weight measurements
 % with the clinical weight overlaid as a horizontal line
@@ -38,22 +39,34 @@ plotsacross = 2;
 plotsdown = 4;
 plotsperpage = plotsacross * plotsdown;
 
-% uncomment to creat plots just for anomalous clinical weight measures identified
-%pstudydateweight = pstudydateweight(ismember(pstudydateweight.SmartCareID, [61,178,193,195,196,197,198,199,201]),:);
-%filenameprefix = 'ClinicalVsHomeWeight - Clinical Anomalies';
+patientlist = unique(pmeasuresfev.SmartCareID);
 
 % uncomment to create plots just for anomalous clinical weight measures identified
-%pstudydateweight = pstudydateweight(ismember(pstudydateweight.SmartCareID, [30, 35, 100, 102, 134, 216, 241]),:);
-%filenameprefix = 'ClinicalVsHomeWeight - Outlier Values';
+%patientlist = patientlist(ismember(patientlist, [54, 82, 94, 141, 153, 175, 196, 197, 201, 207, 212, 213, 214, 215, 216, 223, 227, 229]));
+%filenameprefix = 'ClinicalVsHomeFEV1 - Different Values';
 
-for i = 1:size(pstudydateweight,1)
-    scid = pstudydateweight.SmartCareID(i);
-    pweight = pstudydateweight.Weight(i);
-    % get weight measures just for current patient
-    pmeasures = pmeasuresweight(pmeasuresweight.SmartCareID == scid,:);
-    % store min and max for patient
-    minpmweight = min(pmeasures.WeightInKg);
-    maxpmweight = max(pmeasures.WeightInKg);
+% uncomment to create plots just for anomalous clinical weight measures identified
+%patientlist = patientlist(ismember(patientlist, [130]));
+%filenameprefix = 'ClinicalVsHomeFEV1 - Outlier Clinical Values';
+
+for i = 1:size(patientlist,1)
+%for i = 1:13
+    scid = patientlist(i);
+    % get home weight measures just for current patient
+    pmeasures = pmeasuresfev(pmeasuresfev.SmartCareID == scid,:);
+    % get clinical weight measures just for current patient
+    pclinical = pclinicalfev(pclinicalfev.SmartCareID == scid,:);
+    % store min and max for patient (and handle case where there are no
+    % clinical measures
+    minpmfev = min(pmeasures.FEV1_);
+    maxpmfev = max(pmeasures.FEV1_);
+    if size(pclinical,1) > 0
+        minpcfev = min(pclinical.FEV1_);
+        maxpcfev = max(pclinical.FEV1_);
+    else
+        minpcfev = minpmfev;
+        minpcfev = minpmfev;
+    end
     
     % create a new page as necessary
     if round((i-1)/plotsperpage) == (i-1)/plotsperpage
@@ -71,20 +84,25 @@ for i = 1:size(pstudydateweight,1)
     
     % plot weight measures
     subplot(plotsdown,plotsacross,i-(page-1)*plotsperpage,'Parent',p);
-    plot(pmeasures.ScaledDateNum,pmeasures.WeightInKg,'y-o',...
+    hold on;
+    plot(pmeasures.ScaledDateNum,pmeasures.FEV1_,'y-o',...
         'LineWidth',1,...
         'MarkerSize',3,...
         'MarkerEdgeColor','b',...
         'MarkerFaceColor','g');
+    plot(pclinical.ScaledDateNum,pclinical.FEV1_,'c-o',...
+        'LineWidth',1,...
+        'MarkerSize',3,...
+        'MarkerEdgeColor','m',...
+        'MarkerFaceColor','w');
     xl = [mindays maxdays];
     xlim(xl);
-    yl = [min(pweight, minpmweight)*.9 max(pweight, maxpmweight)*1.1];
+    yl = [min(minpcfev, minpmfev)*.9 max(maxpcfev, maxpmfev)*1.1];
     ylim(yl);
     title(sprintf('Patient %3d',scid));
-    % add clinical weight as a horizontal line
-    line( xl,[pweight pweight],'Color','red','LineStyle','--','LineWidth',1);
-    fprintf('Row %3d, Patient %3d: Clinical Weight = %2.2d Min Home Weight = %2.2d Max Home Weight = %2.2d\n', ...
-        i, scid, pweight, minpmweight, maxpmweight);   
+    hold off
+    fprintf('Row %3d, Patient %3d\n', ...
+        i, scid);   
 end
 
 for i = 1:size(figurearray,2)
