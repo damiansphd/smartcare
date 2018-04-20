@@ -36,12 +36,13 @@ patientstudydate.ScaledDateNum = datenum(patientstudydate.StudyDate) - offset - 
 
 % add rows to the count table to mark the study start and end dates (use a count
 % of 10 to allow it to be highlighted in a different colour on the heatmap
+studyduration = 183
 fixedcount = ones(size(patientstudydate,1),1)*10;
 fixedcount = array2table(fixedcount);
 fixedcount.Properties.VariableNames{'fixedcount'} = 'GroupCount';
 rowstoadd = [patientstudydate(:,{'SmartCareID', 'ScaledDateNum'}) fixedcount];   
 pdcountmtable = [pdcountmtable ; rowstoadd];
-rowstoadd.ScaledDateNum = rowstoadd.ScaledDateNum + 183;
+rowstoadd.ScaledDateNum = rowstoadd.ScaledDateNum + studyduration;
 pdcountmtable = [pdcountmtable ; rowstoadd];
 
 % create the min and max smartcareid to allow me to hide the dummy row
