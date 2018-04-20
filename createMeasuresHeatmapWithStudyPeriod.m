@@ -42,6 +42,20 @@ pdcountmtable = [pdcountmtable ; rowstoadd];
 rowstoadd.ScaledDateNum = rowstoadd.ScaledDateNum + 183;
 pdcountmtable = [pdcountmtable ; rowstoadd];
 
+dispmin = min(pdcountmtable.SmartCareID);
+dispmax = max(pdcountmtable.SmartCareID);
+
+dummymin = min(pdcountmtable.ScaledDateNum);
+dummymax = max(pdcountmtable.ScaledDateNum);
+%dummymeasures = table('Size',[dummymax-dummymin+1 3], 'VariableTypes', {'int32', 'int32', 'int32'}, 'VariableNames', {'SmartCareID', 'ScaledDateNum', 'GroupCount'});
+dummymeasures = pdcountmtable(1:dummymax-dummymin+1,:);
+dummymeasures.SmartCareID(:) = 0;
+dummymeasures.GroupCount(:) = 1;
+for i = 1:dummymax-dummymin+1
+    dummymeasures.ScaledDateNum(i) = i+dummymin-1;
+end
+pdcountmtable = [pdcountmtable ; dummymeasures];
+
 title = 'Heatmap of Measures with Study Period';
 f = figure('Name', title);
 p = uipanel('Parent',f,'BorderType','none'); 
@@ -56,9 +70,11 @@ h = heatmap(p, pdcountmtable, 'ScaledDateNum', 'SmartCareID', 'Colormap', colors
 h.Title = ' ';
 h.XLabel = 'Days';
 h.YLabel = 'Patients';
+h.YLimits = {dispmin,dispmax};
 h.CellLabelColor = 'none';
 h.GridVisible = 'off';
 
+%[C,x] = sortx(h);
 
 filename = 'HeatmapAllPatientsWithStudyPeriod.png';
 saveas(f,filename);
