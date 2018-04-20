@@ -50,6 +50,13 @@ physdata_predateoutlierhandling = physdata;
 % analyse measurement date outliers and handle as appropriate
 physdata = analyseAndHandleDateOutliers(physdata, doupdates);
 
+tic
+fprintf('Loading Clinical data\n');
+load('clinicaldata.mat');
+toc
+
+createMeasuresHeatmapWithStudyPeriod(physdata, offset, cdPatient);
+
 % calc and print overall data demographics after data anomaly fixes
 printDataDemographics(physdata,0);
 

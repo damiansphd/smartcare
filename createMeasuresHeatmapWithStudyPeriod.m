@@ -1,11 +1,7 @@
-clc; clear; close all;
+function createMeasuresHeatmapWithStudyPeriod(physdata, offset, cdPatient)
 
-tic
-fprintf('Loading Clinical data\n');
-load('clinicaldata.mat');
-fprintf('Loading SmartCare measurement data\n');
-load('smartcaredata.mat');
-toc
+% createMeasuresHeatmapWithStudyPeriod - creates the Patient/Measures
+% heatmap, and overlays study period start and end
 
 temp = hsv;
 brightness = .75;
@@ -90,3 +86,5 @@ h.GridVisible = 'off';
 % save results
 filename = 'HeatmapAllPatientsWithStudyPeriod.png';
 saveas(f,filename);
+
+end
