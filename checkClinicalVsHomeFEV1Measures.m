@@ -12,7 +12,7 @@ filenameprefix = 'ClinicalVsHomeFEV1';
 % get the date scaling offset for each patient
 patientoffsets = getPatientOffsets(physdata);
 
-% extract study date and join with offsets to keep only those patients who
+% extract clinical FEV1 measures and join with offsets to keep only those patients who
 % have enough data (ie the patients left after outlier date handling
 pclinicalfev = sortrows(cdPFT(:,{'ID', 'LungFunctionDate', 'FEV1_'}), {'ID', 'LungFunctionDate'}, 'ascend');
 pclinicalfev.Properties.VariableNames{'ID'} = 'SmartCareID';
@@ -22,13 +22,28 @@ pclinicalfev = innerjoin(pclinicalfev, patientoffsets);
 % scale as measurement data scaled date num
 pclinicalfev.ScaledDateNum = datenum(pclinicalfev.LungFunctionDate) - offset - pclinicalfev.PatientOffset;
 
+% extract study date and join with offsets to keep only those patients who
+% have enough data (ie the patients left after outlier date handling
+pstudydate = sortrows(cdPatient(:,{'ID', 'StudyDate'}), 'ID', 'ascend');
+pstudydate.Properties.VariableNames{'ID'} = 'SmartCareID';
+pstudydate = innerjoin(patientoffsets, pstudydate);
+
+% create a scaleddatenum to translate the study date to the same normalised
+% scale as measurement data scaled date num
+pstudydate.ScaledDateNum = datenum(pstudydate.StudyDate) - offset - pstudydate.PatientOffset;
+
 
 % extract just the weight measures from smartcare data
 pmeasuresfev = physdata(ismember(physdata.RecordingType,'LungFunctionRecording'),{'SmartCareID', 'ScaledDateNum', 'FEV1_'});
 
-% store min and max to scale x-axis of plot display
-mindays = min(pmeasuresfev.ScaledDateNum);
-maxdays = max(pmeasuresfev.ScaledDateNum);
+% store min and max to scale x-axis of plot display. Set min to -5 if less
+% than, to avoid wasting plot space for the one patient with a larger delay
+% between study date and active measurement period
+mindays = min([pmeasuresfev.ScaledDateNum ; pstudydate.ScaledDateNum]);
+if mindays < -5
+    mindays = -5
+end
+maxdays = max([pmeasuresfev.ScaledDateNum ; pstudydate.ScaledDateNum + 183]);
 
 % loop over all patients, create a plot for each of home weight measurements
 % with the clinical weight overlaid as a horizontal line
@@ -46,8 +61,8 @@ patientlist = unique(pmeasuresfev.SmartCareID);
 %filenameprefix = 'ClinicalVsHomeFEV1 - Different Values';
 
 % uncomment to create plots just for anomalous clinical weight measures identified
-%patientlist = patientlist(ismember(patientlist, [130]));
-%filenameprefix = 'ClinicalVsHomeFEV1 - Outlier Clinical Values';
+patientlist = patientlist(ismember(patientlist, [130]));
+filenameprefix = 'ClinicalVsHomeFEV1 - Outlier Clinical Values';
 
 for i = 1:size(patientlist,1)
 %for i = 1:13
@@ -56,6 +71,11 @@ for i = 1:size(patientlist,1)
     pmeasures = pmeasuresfev(pmeasuresfev.SmartCareID == scid,:);
     % get clinical weight measures just for current patient
     pclinical = pclinicalfev(pclinicalfev.SmartCareID == scid,:);
+    
+    % get study start and end dates just for current patient
+    studystart = pstudydate.ScaledDateNum(i);
+    studyend = studystart + 183;
+    
     % store min and max for patient (and handle case where there are no
     % clinical measures
     minpmfev = min(pmeasures.FEV1_);
@@ -100,6 +120,9 @@ for i = 1:size(patientlist,1)
     yl = [min(minpcfev, minpmfev)*.9 max(maxpcfev, maxpmfev)*1.1];
     ylim(yl);
     title(sprintf('Patient %3d',scid));
+    % add study start and end as vertical lines
+    line( [studystart studystart], yl, 'Color', 'g', 'LineStyle', '-', 'LineWidth', 1);
+    line( [studyend studyend],     yl, 'Color', 'g', 'LineStyle', '-', 'LineWidth', 1);
     hold off
     fprintf('Row %3d, Patient %3d\n', ...
         i, scid);   

@@ -26,8 +26,11 @@ pstudydateweight.ScaledDateNum = datenum(pstudydateweight.StudyDate) - offset - 
 pmeasuresweight = physdata(ismember(physdata.RecordingType,'WeightRecording'),{'SmartCareID', 'ScaledDateNum', 'WeightInKg'});
 
 % store min and max to scale x-axis of plot display
-mindays = min(pmeasuresweight.ScaledDateNum);
-maxdays = max(pmeasuresweight.ScaledDateNum);
+mindays = min([pmeasuresweight.ScaledDateNum ; pstudydateweight.ScaledDateNum]);
+if mindays < -5
+    mindays = -5
+end
+maxdays = max([pmeasuresweight.ScaledDateNum ; pstudydateweight.ScaledDateNum + 183]);
 
 % loop over all patients, create a plot for each of home weight measurements
 % with the clinical weight overlaid as a horizontal line
@@ -43,8 +46,8 @@ plotsperpage = plotsacross * plotsdown;
 %filenameprefix = 'ClinicalVsHomeWeight - Clinical Anomalies';
 
 % uncomment to create plots just for anomalous clinical weight measures identified
-%pstudydateweight = pstudydateweight(ismember(pstudydateweight.SmartCareID, [30, 35, 100, 102, 134, 216, 241]),:);
-%filenameprefix = 'ClinicalVsHomeWeight - Outlier Values';
+pstudydateweight = pstudydateweight(ismember(pstudydateweight.SmartCareID, [30, 35, 100, 102, 134, 216, 241]),:);
+filenameprefix = 'ClinicalVsHomeWeight - Outlier Values';
 
 for i = 1:size(pstudydateweight,1)
     scid = pstudydateweight.SmartCareID(i);
@@ -54,6 +57,9 @@ for i = 1:size(pstudydateweight,1)
     % store min and max for patient
     minpmweight = min(pmeasures.WeightInKg);
     maxpmweight = max(pmeasures.WeightInKg);
+    
+    studystart = pstudydateweight.ScaledDateNum(i);
+    studyend = studystart + 183;
     
     % create a new page as necessary
     if round((i-1)/plotsperpage) == (i-1)/plotsperpage
@@ -81,8 +87,14 @@ for i = 1:size(pstudydateweight,1)
     yl = [min(pweight, minpmweight)*.9 max(pweight, maxpmweight)*1.1];
     ylim(yl);
     title(sprintf('Patient %3d',scid));
+    
     % add clinical weight as a horizontal line
-    line( xl,[pweight pweight],'Color','red','LineStyle','--','LineWidth',1);
+    line( xl, [pweight pweight], 'Color', 'r', 'LineStyle','--', 'LineWidth',1);
+    
+    % add study start and end as vertical lines
+    line( [studystart studystart], yl, 'Color', 'g', 'LineStyle', '-', 'LineWidth', 1);
+    line( [studyend studyend],     yl, 'Color', 'g', 'LineStyle', '-', 'LineWidth', 1);
+    
     fprintf('Row %3d, Patient %3d: Clinical Weight = %2.2d Min Home Weight = %2.2d Max Home Weight = %2.2d\n', ...
         i, scid, pweight, minpmweight, maxpmweight);   
 end
