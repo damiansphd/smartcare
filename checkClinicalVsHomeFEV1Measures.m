@@ -41,7 +41,7 @@ pmeasuresfev = physdata(ismember(physdata.RecordingType,'LungFunctionRecording')
 % between study date and active measurement period
 mindays = min([pmeasuresfev.ScaledDateNum ; pstudydate.ScaledDateNum]);
 if mindays < -5
-    mindays = -5
+    mindays = -5;
 end
 maxdays = max([pmeasuresfev.ScaledDateNum ; pstudydate.ScaledDateNum + 183]);
 
