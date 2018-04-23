@@ -1,12 +1,19 @@
 clc; clear; close all;
 
 tic
+basedir = './';
+subfolder = 'MatlabSavedVariables';
+clinicalmatfile = 'clinicaldata.mat';
+scmatfile = 'smartcaredata.mat';
+
 fprintf('Loading Clinical data\n');
-load('clinicaldata.mat');
+load(fullfile(basedir, subfolder, clinicalmatfile));
 fprintf('Loading SmartCare measurement data\n');
-load('smartcaredata.mat');
+load(fullfile(basedir, subfolder, scmatfile));
 toc
 
+basedir = './';
+subfolder = 'ExcelFiles';
 outputfilename = 'StudyStartvsFirstMeasurement.xlsx';
 offset  = datenum(datetime(2015,8,5,0,0,0)); 
 
@@ -52,7 +59,7 @@ for i = 1:size(cdPatient,1)
         range = dnstudystart - dnfirstm;
         if range > 0
             fprintf('SCID %3d   FMDate %11s   FMDateNum %6d   DateRange %3d\n', scid, datestr(firstmeasurement,1), dnfirstm, range);
-            measurements = getMeasuresForPatientAndDateRange(physdata, scid, dnfirstm - offset, range, true);
+            measurements = getMeasuresForPatientAndDateRange(physdata, scid, dnfirstm - offset, range, 'All',true);
             measurestable = [measurestable;measurements];
             nmeasurements = size(measurements,1);
         end
@@ -75,8 +82,8 @@ end
 measurestable.DateNum = [];
 measurestable = sortrows(measurestable, {'SmartCareID', 'Date_TimeRecorded', 'RecordingType'}, 'ascend');
 
-writetable(outputtable, outputfilename, 'Sheet', 'MeasurementsBeforeStudyStart');
-writetable(measurestable, outputfilename, 'Sheet', 'MeasurementDetails');
+writetable(outputtable, fullfile(basedir, subfolder,outputfilename), 'Sheet', 'MeasurementsBeforeStudyStart');
+writetable(measurestable, fullfile(basedir, subfolder,outputfilename), 'Sheet', 'MeasurementDetails');
 
 toc
 

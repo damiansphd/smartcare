@@ -32,14 +32,18 @@ outputfilename = sprintf('datademographicsbypatient-%s.mat',datestr(clock(),30))
 
 tic
 timenow = datestr(clock(),30);
-%outputfilename = 'datademographicsbypatient.mat';
+
+basedir = './';
+subfolder = 'MatlabSavedVariables';
 outputfilename = sprintf('datademographicsbypatient-%s.mat',timenow);
 fprintf('Saving output variables to matlab file %s\n', outputfilename);
-save(outputfilename, 'measurecounttable', 'demographicstable');
 
-%outputfilename = 'DataDemographicsByPatient.xlsx';
+save(fullfile(basedir, subfolder, outputfilename), 'measurecounttable', 'demographicstable');
+
+basedir = './';
+subfolder = 'ExcelFiles';
 outputfilename = sprintf('DataDemographicsByPatient-%s.xlsx',timenow);
 fprintf('Saving results to excel file %s\n', outputfilename);
-writetable(measurecounttable, outputfilename, 'Sheet', 'MeasureCountByPatient');
-writetable(demographicstable, outputfilename, 'Sheet', 'DataDemographicsByPatient');
+writetable(measurecounttable, fullfile(basedir, subfolder, outputfilename), 'Sheet', 'MeasureCountByPatient');
+writetable(demographicstable, fullfile(basedir, subfolder, outputfilename), 'Sheet', 'DataDemographicsByPatient');
 toc

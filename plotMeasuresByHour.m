@@ -35,8 +35,11 @@ for i = 1:size(measures,1)
     t = title(sprintf('%s by Hour of Day',m), 'FontSize', 6);
 end
 
-saveas(f,strcat(imagefilename, '.png'));
-saveas(f,strcat(imagefilename, '.pdf'));
+basedir = './';
+subfolder = 'Plots';
+
+saveas(f,strcat(fullfile(basedir, subfolder, imagefilename), '.png'));
+saveas(f,strcat(fullfile(basedir, subfolder, imagefilename), '.pdf'));
 
 toc
 fprintf('\n'); 

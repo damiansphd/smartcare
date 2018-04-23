@@ -1,6 +1,7 @@
+clear; clc; close all;
 
-clear; clc; close;
-
+basedir = './';
+subfolder = 'DataFiles';
 clinicaldatafile = 'clinicaldata.xlsx';
 cdpatientsheet = 'Patients';
 cdmicrosheet = 'Microbiolgy';
@@ -14,21 +15,21 @@ endofstudyfile = 'EOS Data_ALL.xlsx';
 tic
 % load relevant clinical data
 fprintf('Loading relevant clinical data\n');
-cdPatient = readtable(clinicaldatafile, 'Sheet', cdpatientsheet);
+cdPatient = readtable(fullfile(basedir, subfolder, clinicaldatafile), 'Sheet', cdpatientsheet);
 fprintf('Patient data has %d rows\n',size(cdPatient,1));
-cdMicrobiology = readtable(clinicaldatafile, 'Sheet', cdmicrosheet);
+cdMicrobiology = readtable(fullfile(basedir, subfolder, clinicaldatafile), 'Sheet', cdmicrosheet);
 fprintf('Microbiology data has %d rows\n',size(cdMicrobiology,1));
-cdClinicVisits = readtable(clinicaldatafile, 'Sheet', cdcvsheet);
+cdClinicVisits = readtable(fullfile(basedir, subfolder, clinicaldatafile), 'Sheet', cdcvsheet);
 fprintf('Clinic Visits data has %d rows\n',size(cdClinicVisits,1));
-cdPFT = readtable(clinicaldatafile, 'Sheet', cdpftsheet);
+cdPFT = readtable(fullfile(basedir, subfolder, clinicaldatafile), 'Sheet', cdpftsheet);
 fprintf('PFT data has %d rows\n',size(cdPFT,1));
-cdAdmissions = readtable(clinicaldatafile, 'Sheet', cdadmisssheet);
+cdAdmissions = readtable(fullfile(basedir, subfolder, clinicaldatafile), 'Sheet', cdadmisssheet);
 fprintf('Admissions data has %d rows\n',size(cdAdmissions,1));
-cdAntibiotics = readtable(clinicaldatafile, 'Sheet', cdantibsheet);
+cdAntibiotics = readtable(fullfile(basedir, subfolder, clinicaldatafile), 'Sheet', cdantibsheet);
 fprintf('Antibiotics data has %d rows\n',size(cdAntibiotics,1));
-cdCRP = readtable(clinicaldatafile, 'Sheet', cdcrpsheet);
+cdCRP = readtable(fullfile(basedir, subfolder, clinicaldatafile), 'Sheet', cdcrpsheet);
 fprintf('CRP data has %d rows\n',size(cdCRP,1));
-cdEndStudy = readtable(endofstudyfile);
+cdEndStudy = readtable(fullfile(basedir, subfolder, endofstudyfile));
 fprintf('End of Study data has %d rows\n',size(cdEndStudy,1));
 toc
 fprintf('\n');
@@ -56,7 +57,10 @@ cdCRP = fixCDCRPData(cdCRP);
 
 tic
 fprintf('\n');
+
+basedir = './';
+subfolder = 'MatlabSavedVariables';
 outputfilename = 'clinicaldata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
-save(outputfilename, 'cdPatient', 'cdMicrobiology', 'cdClinicVisits', 'cdPFT', 'cdAdmissions', 'cdAntibiotics', 'cdCRP', 'cdEndStudy');
+save(fullfile(basedir, subfolder,outputfilename), 'cdPatient', 'cdMicrobiology', 'cdClinicVisits', 'cdPFT', 'cdAdmissions', 'cdAntibiotics', 'cdCRP', 'cdEndStudy');
 toc

@@ -1,12 +1,19 @@
 clc; clear; close all;
 
 tic
+basedir = './';
+subfolder = 'MatlabSavedVariables';
+clinicalmatfile = 'clinicaldata.mat';
+scmatfile = 'smartcaredata.mat';
+
 fprintf('Loading Clinical data\n');
-load('clinicaldata.mat');
+load(fullfile(basedir, subfolder, clinicalmatfile));
 fprintf('Loading SmartCare measurement data\n');
-load('smartcaredata.mat');
+load(fullfile(basedir, subfolder, scmatfile));
 toc
 
+basedir = './';
+subfolder = 'Plots';
 filenameprefix = 'ClinicalVsHomeFEV1';
 
 % get the date scaling offset for each patient
@@ -130,5 +137,5 @@ end
 
 for i = 1:size(figurearray,2)
     imagefilename = sprintf('%s - page %2d.png', filenameprefix, i);
-    saveas(figurearray(i),imagefilename);
+    saveas(figurearray(i),fullfile(basedir, subfolder, imagefilename));
 end

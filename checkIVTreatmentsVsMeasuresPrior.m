@@ -1,15 +1,17 @@
 clc; clear; close all;
 
 tic
-fprintf('Loading Clinical data\n');
-load('clinicaldata.mat');
-fprintf('Loading SmartCare measurement data\n');
-load('smartcaredata.mat');
-toc
 
-outputfilename = 'MeasuresPriorToIVTreatments.xlsx';
-summarysheet = 'SummaryByIVTreatment';
-detailsheet = 'MeasuresDetail';
+basedir = './';
+subfolder = 'MatlabSavedVariables';
+clinicalmatfile = 'clinicaldata.mat';
+scmatfile = 'smartcaredata.mat';
+
+fprintf('Loading Clinical data\n');
+load(fullfile(basedir, subfolder, clinicalmatfile));
+fprintf('Loading SmartCare measurement data\n');
+load(fullfile(basedir, subfolder, scmatfile));
+toc
 
 tic
 % remove Oral treatments & sort by SmartCareID and StopDate
@@ -83,8 +85,15 @@ measuresdetailtable.DateNum = [];
 
 tic
 fprintf('Saving results\n');
-%writetable(summarytable,        outputfilename, 'Sheet', summarysheet);
-%writetable(measuresdetailtable, outputfilename, 'Sheet', detailsheet);
+
+basedir = './';
+subfolder = 'ExcelFiles';
+outputfilename = 'MeasuresPriorToIVTreatments.xlsx';
+summarysheet = 'SummaryByIVTreatment';
+detailsheet = 'MeasuresDetail';
+
+writetable(summarytable,        fullfile(basedir, subfolder, outputfilename), 'Sheet', summarysheet);
+writetable(measuresdetailtable, fullfile(basedir, subfolder, outputfilename), 'Sheet', detailsheet);
 
 toc
 fprintf('\n');

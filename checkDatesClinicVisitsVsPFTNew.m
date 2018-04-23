@@ -1,14 +1,21 @@
 clc; clear; close all;
 
 tic
+basedir = './';
+subfolder = 'MatlabSavedVariables';
+clinicalmatfile = 'clinicaldata.mat';
+scmatfile = 'smartcaredata.mat';
+
 fprintf('Loading Clinical data\n');
-load('clinicaldata.mat');
+load(fullfile(basedir, subfolder, clinicalmatfile));
 fprintf('Loading SmartCare measurement data\n');
-load('smartcaredata.mat');
+load(fullfile(basedir, subfolder, scmatfile));
 toc
 
 fprintf('\n');
 
+basedir = './';
+subfolder = 'ExcelFiles';
 outputfilename = 'ClinicVisitsVsPFT.xlsx';
 residualsheet = 'PFTWithNoClinicAdmissionAB';
 
@@ -67,6 +74,6 @@ fprintf('\n');
 tic
 fprintf('Saving results\n');
 
-writetable(residualtable,  outputfilename, 'Sheet', residualsheet);
+writetable(residualtable,  fullfile(basedir, subfolder,outputfilename), 'Sheet', residualsheet);
 toc
 fprintf('\n');

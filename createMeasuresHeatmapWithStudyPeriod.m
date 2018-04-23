@@ -3,6 +3,9 @@ function createMeasuresHeatmapWithStudyPeriod(physdata, offset, cdPatient)
 % createMeasuresHeatmapWithStudyPeriod - creates the Patient/Measures
 % heatmap, and overlays study period start and end
 
+basedir = './';
+subfolder = 'Plots';
+
 temp = hsv;
 brightness = .75;
 %colors(1,:)  = [0 0 0];     % black for no measures
@@ -36,7 +39,7 @@ patientstudydate.ScaledDateNum = datenum(patientstudydate.StudyDate) - offset - 
 
 % add rows to the count table to mark the study start and end dates (use a count
 % of 10 to allow it to be highlighted in a different colour on the heatmap
-studyduration = 183
+studyduration = 183;
 fixedcount = ones(size(patientstudydate,1),1)*10;
 fixedcount = array2table(fixedcount);
 fixedcount.Properties.VariableNames{'fixedcount'} = 'GroupCount';
@@ -86,6 +89,6 @@ h.GridVisible = 'off';
 
 % save results
 filename = 'HeatmapAllPatientsWithStudyPeriod.png';
-saveas(f,filename);
+saveas(f, fullfile(basedir, subfolder, filename));
 
 end

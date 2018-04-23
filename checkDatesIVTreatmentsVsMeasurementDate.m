@@ -1,12 +1,19 @@
 clc; clear; close all;
 
 tic
+basedir = './';
+subfolder = 'MatlabSavedVariables';
+clinicalmatfile = 'clinicaldata.mat';
+scmatfile = 'smartcaredata.mat';
+
 fprintf('Loading Clinical data\n');
-load('clinicaldata.mat');
+load(fullfile(basedir, subfolder, clinicalmatfile));
 fprintf('Loading SmartCare measurement data\n');
-load('smartcaredata.mat');
+load(fullfile(basedir, subfolder, scmatfile));
 toc
 
+basedir = './';
+subfolder = 'ExcelFiles';
 outputfilename = 'TreatmentsOutsideStudyPeriodNotionalEnd.xlsx';
 
 tic
@@ -42,10 +49,15 @@ for i = 1:size(cdAntibiotics,1)
     dnstudyend = ceil(datenum(studyend));
     
     idx = find(minDatesByPatient.SmartCareID == scid);
-    firstmeasurement = minDatesByPatient.min_Date_TimeRecorded(idx);
-    dnfirstm = ceil(datenum(minDatesByPatient.min_Date_TimeRecorded(idx)));
-    lastmeasurement = maxDatesByPatient.max_Date_TimeRecorded(idx);
-    dnlastm = ceil(datenum(maxDatesByPatient.max_Date_TimeRecorded(idx)));
+    if size(idx,1)>0
+        firstmeasurement = minDatesByPatient.min_Date_TimeRecorded(idx);
+        dnfirstm = ceil(datenum(minDatesByPatient.min_Date_TimeRecorded(idx)));
+        lastmeasurement = maxDatesByPatient.max_Date_TimeRecorded(idx);
+        dnlastm = ceil(datenum(maxDatesByPatient.max_Date_TimeRecorded(idx)));
+    else
+        firstmeasurement = datetime(0,0,0);
+        lastmeasurement = datetime(0,0,0);
+    end
     
     if (dntreatmentend < dnstudystart-1) | (dntreatmentstart > dnstudyend)
         if oldid ~= scid
@@ -78,7 +90,7 @@ for i = 1:size(cdAntibiotics,1)
     end
 end
 
-writetable(outputtable, outputfilename);
+writetable(outputtable, fullfile(basedir, subfolder,outputfilename));
 
 toc
 

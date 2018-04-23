@@ -1,12 +1,19 @@
 clc; clear; close all;
 
 tic
+basedir = './';
+subfolder = 'MatlabSavedVariables';
+clinicalmatfile = 'clinicaldata.mat';
+scmatfile = 'smartcaredata.mat';
+
 fprintf('Loading Clinical data\n');
-load('clinicaldata.mat');
+load(fullfile(basedir, subfolder, clinicalmatfile));
 fprintf('Loading SmartCare measurement data\n');
-load('smartcaredata.mat');
+load(fullfile(basedir, subfolder, scmatfile));
 toc
 
+basedir = './';
+subfolder = 'Plots';
 filenameprefix = 'ClinicalVsHomeWeight';
 
 % get the date scaling offset for each patient
@@ -45,7 +52,7 @@ plotsperpage = plotsacross * plotsdown;
 %pstudydateweight = pstudydateweight(ismember(pstudydateweight.SmartCareID, [61,178,193,195,196,197,198,199,201]),:);
 %filenameprefix = 'ClinicalVsHomeWeight - Clinical Anomalies';
 
-% uncomment to create plots just for anomalous clinical weight measures identified
+% uncomment to create plots just for anomalous home weight measures identified
 pstudydateweight = pstudydateweight(ismember(pstudydateweight.SmartCareID, [30, 35, 100, 102, 134, 216, 241]),:);
 filenameprefix = 'ClinicalVsHomeWeight - Outlier Values';
 
@@ -101,5 +108,5 @@ end
 
 for i = 1:size(figurearray,2)
     imagefilename = sprintf('%s - page %2d.png', filenameprefix, i);
-    saveas(figurearray(i),imagefilename);
+    saveas(figurearray(i),fullfile(basedir, subfolder, imagefilename));
 end

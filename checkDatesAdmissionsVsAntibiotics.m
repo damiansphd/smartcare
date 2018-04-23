@@ -1,14 +1,21 @@
 clc; clear; close all;
 
 tic
+basedir = './';
+subfolder = 'MatlabSavedVariables';
+clinicalmatfile = 'clinicaldata.mat';
+scmatfile = 'smartcaredata.mat';
+
 fprintf('Loading Clinical data\n');
-load('clinicaldata.mat');
+load(fullfile(basedir, subfolder, clinicalmatfile));
 fprintf('Loading SmartCare measurement data\n');
-load('smartcaredata.mat');
+load(fullfile(basedir, subfolder, scmatfile));
 toc
 
 fprintf('\n');
 
+basedir = './';
+subfolder = 'ExcelFiles';
 outputfilename = 'AdmissionsVsAntibiotics.xlsx';
 exceptionsheet = '1)AdmissionWithNoTreatment';
 matchsheet = '3)AdmissionsWithTreatments';
@@ -134,10 +141,10 @@ exceptiontable = sortrows(exceptiontable, {'Hospital','SmartCareID','Admitted'},
 residualtable = sortrows(residualtable, {'Hospital','SmartCareID','Start'}, 'ascend');
 iptable = sortrows(iptable, {'Hospital','SmartCareID','Start'}, 'ascend');
 
-writetable(exceptiontable, outputfilename, 'Sheet', exceptionsheet);
-writetable(iptable,        outputfilename, 'Sheet', ipsheet);
-writetable(matchtable,     outputfilename, 'Sheet', matchsheet);
-writetable(residualtable,  outputfilename, 'Sheet', residualsheet);
+writetable(exceptiontable, fullfile(basedir, subfolder,outputfilename), 'Sheet', exceptionsheet);
+writetable(iptable,        fullfile(basedir, subfolder,outputfilename), 'Sheet', ipsheet);
+writetable(matchtable,     fullfile(basedir, subfolder,outputfilename), 'Sheet', matchsheet);
+writetable(residualtable,  fullfile(basedir, subfolder,outputfilename), 'Sheet', residualsheet);
 
 
 toc

@@ -1,16 +1,17 @@
 clear; clc; close all;
 
+basedir = './';
+subfolder = 'DataFiles';
 scdatafile = 'mydata.csv';
 patientidfile = 'patientid.xlsx';
 detaillog = false;
 doupdates = true;
 
 % load patient id file + corrections
-patientid = loadAndCorrectPatientIDData(patientidfile);
-
+patientid = loadAndCorrectPatientIDData(fullfile(basedir, subfolder, patientidfile));
 
 % load SmartCare measurement data + corrections
-[physdata, physdata_original, offset] = loadAndCorrectSmartCareData(scdatafile, patientid, detaillog);
+[physdata, physdata_original, offset] = loadAndCorrectSmartCareData(fullfile(basedir, subfolder, scdatafile), patientid, detaillog);
 
 % calc and print overall data demographics before data anomaly fixes
 printDataDemographics(physdata,0);
@@ -61,7 +62,9 @@ createMeasuresHeatmapWithStudyPeriod(physdata, offset, cdPatient);
 printDataDemographics(physdata,0);
 
 tic
+basedir = './';
+subfolder = 'MatlabSavedVariables';
 outputfilename = 'smartcaredata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
-save(outputfilename, 'patientid', 'physdata', 'offset','physdata_original', 'physdata_predupehandling', 'physdata_predateoutlierhandling');
+save(fullfile(basedir, subfolder, outputfilename), 'patientid', 'physdata', 'offset','physdata_original', 'physdata_predupehandling', 'physdata_predateoutlierhandling');
 toc
