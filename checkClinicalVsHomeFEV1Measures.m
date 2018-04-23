@@ -72,7 +72,6 @@ patientlist = patientlist(ismember(patientlist, [130]));
 filenameprefix = 'ClinicalVsHomeFEV1 - Outlier Clinical Values';
 
 for i = 1:size(patientlist,1)
-%for i = 1:13
     scid = patientlist(i);
     % get home weight measures just for current patient
     pmeasures = pmeasuresfev(pmeasuresfev.SmartCareID == scid,:);
