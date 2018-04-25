@@ -61,8 +61,23 @@ for a = 1:size(hospitals,1)
     hpatients = patientstudydate.SmartCareID(ismember(patientstudydate.Hospital, hospital));
     hpdcountmtable = pdcountmtable(ismember(pdcountmtable.SmartCareID, hpatients),:);
     
-    % create the min and max smartcareid to allow me to hide the dummy row
-    % below
+    % create different flavors of sort order
+    % 1) total number of measures
+    hpcountmtable = varfun(@sum, hpdcountmtable(:,{'SmartCareID', 'GroupCount'}), 'GroupingVariables', {'SmartCareID'});
+    hpcountmtable = sortrows(hpcountmtable, 'sum_GroupCount', 'descend');
+    ysortmostmeasures = hpcountmtable.SmartCareID;
+    
+    % 2) days with measurements
+    hpcountmtable = varfun(@sum, hpdcountmtable(:,{'SmartCareID'}), 'GroupingVariables', {'SmartCareID'});
+    hpcountmtable = sortrows(hpcountmtable, 'GroupCount', 'descend');
+    ysortmostdays = hpcountmtable.SmartCareID;
+    
+    % 3) days with 4 or more measures
+    hpcountmtable = varfun(@sum, hpdcountmtable(hpdcountmtable.GroupCount >=4,{'SmartCareID'}), 'GroupingVariables', {'SmartCareID'});
+    hpcountmtable = sortrows(hpcountmtable, 'GroupCount', 'descend');
+    ysort4mdays = hpcountmtable.SmartCareID;
+    
+    % create the min and max smartcareid to allow me to hide the dummy row below
     dispmin = min(hpdcountmtable.SmartCareID);
     dispmax = max(hpdcountmtable.SmartCareID);
 
@@ -94,7 +109,8 @@ for a = 1:size(hospitals,1)
     h.Title = ' ';
     h.XLabel = 'Days';
     h.YLabel = 'Patients';
-    h.YLimits = {dispmin,dispmax};
+    h.YDisplayData = ysort4mdays;
+    %h.YLimits = {dispmin,dispmax};
     h.CellLabelColor = 'none';
     h.GridVisible = 'off';
 

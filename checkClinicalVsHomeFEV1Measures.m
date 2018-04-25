@@ -64,12 +64,12 @@ plotsperpage = plotsacross * plotsdown;
 patientlist = unique(pmeasuresfev.SmartCareID);
 
 % uncomment to create plots just for anomalous clinical weight measures identified
-%patientlist = patientlist(ismember(patientlist, [54, 82, 94, 141, 153, 175, 196, 197, 201, 207, 212, 213, 214, 215, 216, 223, 227, 229]));
-%filenameprefix = 'ClinicalVsHomeFEV1 - Different Values';
+patientlist = patientlist(ismember(patientlist, [54, 82, 94, 141, 153, 175, 196, 197, 201, 207, 212, 213, 214, 215, 216, 223, 227, 229]));
+filenameprefix = 'ClinicalVsHomeFEV1 - Different Values';
 
 % uncomment to create plots just for anomalous clinical weight measures identified
-patientlist = patientlist(ismember(patientlist, [130]));
-filenameprefix = 'ClinicalVsHomeFEV1 - Outlier Clinical Values';
+%patientlist = patientlist(ismember(patientlist, [130]));
+%filenameprefix = 'ClinicalVsHomeFEV1 - Outlier Clinical Values';
 
 for i = 1:size(patientlist,1)
     scid = patientlist(i);
