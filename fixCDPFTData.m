@@ -1,4 +1,4 @@
-function [cdPFTOut] = fixCDPFTData(cdPFT)
+function [cdPFTOut] = fixCDPFTData(cdPFT, cdPatient)
 
 % fixCDPFTData - fix anomalies in PFT data
 
@@ -13,6 +13,12 @@ idx = intersect(idx1,idx2);
 updates = size(idx,1);
 cdPFT.FVC1(idx) = 2.8;
 fprintf('Fixed %2d illogical values\n', updates);
+
+% add column for calculated FEV1% (based on calculated predicted FEV1 from
+% ECSC formula from sex/age/height
+fprintf('Adding column for calculated FEV1%%\n');
+cdPFT = innerjoin(cdPFT, cdPatient(:,{'ID', 'CalcFEV1SetAs'}));
+cdPFT.CalcFEV1_ = round((cdPFT.FEV1 ./ cdPFT.CalcFEV1SetAs) * 100);
 
 cdPFTOut = cdPFT;
 

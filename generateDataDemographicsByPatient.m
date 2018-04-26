@@ -1,16 +1,21 @@
 clc; clear; close;
 
 tic
+basedir = './';
+subfolder = 'MatlabSavedVariables';
+clinicalmatfile = 'clinicaldata.mat';
+scmatfile = 'smartcaredata.mat';
+
 fprintf('Loading Clinical data\n');
-load('clinicaldata.mat');
+load(fullfile(basedir, subfolder, clinicalmatfile));
 fprintf('Loading SmartCare measurement data\n');
-load('smartcaredata.mat');
+load(fullfile(basedir, subfolder, scmatfile));
 toc
 fprintf('\n');
 
 tic
 cdPatient = sortrows(cdPatient, {'ID'}, 'ascend');
-physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'DateNum'}, 'ascend');
+physdata = sortrows(physdata_predupehandling, {'SmartCareID', 'RecordingType', 'DateNum'}, 'ascend');
 
 fprintf('Calculating data demographics by patient\n');
 tempdata = physdata;

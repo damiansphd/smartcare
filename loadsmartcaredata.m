@@ -1,5 +1,18 @@
 clear; clc; close all;
 
+
+tic
+fprintf('Loading Clinical Data\n');
+fprintf('---------------------\n');
+basedir = './';
+subfolder = 'MatlabSavedVariables';
+clinicalmatfile = 'clinicaldata.mat';
+fprintf('Loading Clinical data\n');
+load(fullfile(basedir, subfolder, clinicalmatfile));
+fprintf('Done\n');
+toc
+fprintf('\n');
+
 basedir = './';
 subfolder = 'DataFiles';
 scdatafile = 'mydata.csv';
@@ -17,6 +30,8 @@ patientid = loadAndCorrectPatientIDData(fullfile(basedir, subfolder, patientidfi
 printDataDemographics(physdata,0);
 
 physdata = correctSmartCareDataAnomalies(physdata);
+
+physdata = addCalculatedFEV1percentage(physdata, cdPatient);
 
 % calc and print overall data demographics after data anomaly fixes
 printDataDemographics(physdata,0);
@@ -50,11 +65,6 @@ physdata_predateoutlierhandling = physdata;
 
 % analyse measurement date outliers and handle as appropriate
 physdata = analyseAndHandleDateOutliers(physdata, doupdates);
-
-tic
-fprintf('Loading Clinical data\n');
-load('clinicaldata.mat');
-toc
 
 createMeasuresHeatmapWithStudyPeriod(physdata, offset, cdPatient);
 

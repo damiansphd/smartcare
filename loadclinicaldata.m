@@ -42,7 +42,7 @@ cdPatient = fixCDPatientData(cdPatient);
 % no issues with clinic visits data
 
 % correct PFT data anomalies
-cdPFT = fixCDPFTData(cdPFT);
+cdPFT = fixCDPFTData(cdPFT, cdPatient);
 
 % correct Antibiotics data anomalies
 cdAntibiotics = fixCDAntibioticsData(cdAntibiotics);
