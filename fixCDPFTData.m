@@ -12,7 +12,13 @@ idx2 = find(cdPFT.FVC1 == 28);
 idx = intersect(idx1,idx2);
 updates = size(idx,1);
 cdPFT.FVC1(idx) = 2.8;
-fprintf('Fixed %2d illogical values\n', updates);
+fprintf('Fixed %2d illogical FVC1 values\n', updates);
+
+idx = find(cdPFT.ID == 130 & cdPFT.FEV1_ == 9);
+updates = size(idx,1);
+cdPFT.FEV1(idx) = cdPFT.FEV1(idx) * 10;
+cdPFT.FEV1_(idx) = cdPFT.FEV1_(idx) * 10;
+fprintf('Fixed %2d illogical FVC1 values\n', updates);
 
 % add column for calculated FEV1% (based on calculated predicted FEV1 from
 % ECSC formula from sex/age/height

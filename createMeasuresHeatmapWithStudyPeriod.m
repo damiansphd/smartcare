@@ -3,6 +3,10 @@ function createMeasuresHeatmapWithStudyPeriod(physdata, offset, cdPatient)
 % createMeasuresHeatmapWithStudyPeriod - creates the Patient/Measures
 % heatmap, and overlays study period start and end
 
+fprintf('Creating Heatmap of Measures with Study Period\n');
+fprintf('----------------------------------------------\n');
+tic
+
 basedir = './';
 subfolder = 'Plots';
 
@@ -90,5 +94,8 @@ h.GridVisible = 'off';
 % save results
 filename = 'HeatmapAllPatientsWithStudyPeriod.png';
 saveas(f, fullfile(basedir, subfolder, filename));
+
+toc
+fprintf('\n');
 
 end

@@ -12,10 +12,6 @@ fprintf('Loading SmartCare measurement data\n');
 load(fullfile(basedir, subfolder, scmatfile));
 toc
 
-basedir = './';
-subfolder = 'Plots';
-filenameprefix = 'ClinicalVsHomeFEV1';
-
 % get the date scaling offset for each patient
 patientoffsets = getPatientOffsets(physdata);
 
@@ -55,86 +51,100 @@ maxdays = max([pmeasuresfev.ScaledDateNum ; pstudydate.ScaledDateNum + 183]);
 % loop over all patients, create a plot for each of home weight measurements
 % with the clinical weight overlaid as a horizontal line
 % six plots per page
-figurearray = [];
-page = 0;
 plotsacross = 2;
 plotsdown = 4;
 plotsperpage = plotsacross * plotsdown;
+basedir = './';
+subfolder = 'Plots';
 
-patientlist = unique(pmeasuresfev.SmartCareID);
-
-% uncomment to create plots just for anomalous clinical weight measures identified
-patientlist = patientlist(ismember(patientlist, [54, 82, 94, 141, 153, 175, 196, 197, 201, 207, 212, 213, 214, 215, 216, 223, 227, 229]));
+% create plots for patients with differences home vs clinical
+fprintf('FEV Plots for diff values home vs clinical\n');
+patientlist = [54 ; 82 ; 141 ; 153 ; 175 ; 196 ; 197 ; 201 ; 212 ; 213 ; 214 ; 215 ; 216 ; 223 ; 227 ; 229];
 filenameprefix = 'ClinicalVsHomeFEV1 - Different Values';
+figurearray = createAndSaveFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pstudydate, ...
+    mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
+close all;
 
-% uncomment to create plots just for anomalous clinical weight measures identified
-%patientlist = patientlist(ismember(patientlist, [130]));
-%filenameprefix = 'ClinicalVsHomeFEV1 - Outlier Clinical Values';
+% create plots for potential anomalous clinical FEV1 measures identified
+fprintf('FEV Plots for potential anomalous clinical measures\n');
+patientlist = [130];
+filenameprefix = 'ClinicalVsHomeFEV1 - Outlier Clinical Values';
+figurearray = createAndSaveFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pstudydate, ...
+    mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
+close all;
 
-for i = 1:size(patientlist,1)
-    scid = patientlist(i);
+fprintf('FEV Plots for all patients\n');
+patientlist = unique(pmeasuresfev.SmartCareID);
+filenameprefix = 'ClinicalVsHomeFEV1';
+figurearray = createAndSaveFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pstudydate, ...
+    mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
+close all;
+
+
+%for i = 1:size(patientlist,1)
+%    scid = patientlist(i);
     % get home weight measures just for current patient
-    pmeasures = pmeasuresfev(pmeasuresfev.SmartCareID == scid,:);
+%    pmeasures = pmeasuresfev(pmeasuresfev.SmartCareID == scid,:);
     % get clinical weight measures just for current patient
-    pclinical = pclinicalfev(pclinicalfev.SmartCareID == scid,:);
+%    pclinical = pclinicalfev(pclinicalfev.SmartCareID == scid,:);
     
     % get study start and end dates just for current patient
-    studystart = pstudydate.ScaledDateNum(i);
-    studyend = studystart + 183;
+%    studystart = pstudydate.ScaledDateNum(i);
+%    studyend = studystart + 183;
     
     % store min and max for patient (and handle case where there are no
     % clinical measures
-    minpmfev = min(pmeasures.FEV1_);
-    maxpmfev = max(pmeasures.FEV1_);
-    if size(pclinical,1) > 0
-        minpcfev = min(pclinical.FEV1_);
-        maxpcfev = max(pclinical.FEV1_);
-    else
-        minpcfev = minpmfev;
-        minpcfev = minpmfev;
-    end
+%    minpmfev = min(pmeasures.FEV1_);
+%    maxpmfev = max(pmeasures.FEV1_);
+%    if size(pclinical,1) > 0
+%        minpcfev = min(pclinical.FEV1_);
+%        maxpcfev = max(pclinical.FEV1_);
+%    else
+%        minpcfev = minpmfev;
+%        minpcfev = minpmfev;
+%    end
     
     % create a new page as necessary
-    if round((i-1)/plotsperpage) == (i-1)/plotsperpage
-        page = page + 1;
-        fprintf('Next Page\n');
-        figurearray(page) = figure('Name',sprintf('%s - page %2d', filenameprefix, page));
-        set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8, 0.8], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, .75], 'PaperType', 'a4');
-        p = uipanel('Parent',figurearray(page),'BorderType','none'); 
-        p.Title = sprintf('%s - page %2d', filenameprefix, page); 
-        p.TitlePosition = 'centertop';
-        p.FontSize = 20;
-        p.FontWeight = 'bold';
+%    if round((i-1)/plotsperpage) == (i-1)/plotsperpage
+%        page = page + 1;
+%        fprintf('Next Page\n');
+%        figurearray(page) = figure('Name',sprintf('%s - page %2d', filenameprefix, page));
+%        set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8, 0.8], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, .75], 'PaperType', 'a4');
+%        p = uipanel('Parent',figurearray(page),'BorderType','none'); 
+%        p.Title = sprintf('%s - page %2d', filenameprefix, page); 
+%        p.TitlePosition = 'centertop';
+%        p.FontSize = 20;
+%        p.FontWeight = 'bold';
         
-    end
+%    end
     
     % plot weight measures
-    subplot(plotsdown,plotsacross,i-(page-1)*plotsperpage,'Parent',p);
-    hold on;
-    plot(pmeasures.ScaledDateNum,pmeasures.FEV1_,'y-o',...
-        'LineWidth',1,...
-        'MarkerSize',3,...
-        'MarkerEdgeColor','b',...
-        'MarkerFaceColor','g');
-    plot(pclinical.ScaledDateNum,pclinical.FEV1_,'c-o',...
-        'LineWidth',1,...
-        'MarkerSize',3,...
-        'MarkerEdgeColor','m',...
-        'MarkerFaceColor','w');
-    xl = [mindays maxdays];
-    xlim(xl);
-    yl = [min(minpcfev, minpmfev)*.9 max(maxpcfev, maxpmfev)*1.1];
-    ylim(yl);
-    title(sprintf('Patient %3d',scid));
+%    subplot(plotsdown,plotsacross,i-(page-1)*plotsperpage,'Parent',p);
+%    hold on;
+%    plot(pmeasures.ScaledDateNum,pmeasures.FEV1_,'y-o',...
+%        'LineWidth',1,...
+%        'MarkerSize',3,...
+%        'MarkerEdgeColor','b',...
+%        'MarkerFaceColor','g');
+%    plot(pclinical.ScaledDateNum,pclinical.FEV1_,'c-o',...
+%        'LineWidth',1,...
+%        'MarkerSize',3,...
+%        'MarkerEdgeColor','m',...
+%        'MarkerFaceColor','w');
+%    xl = [mindays maxdays];
+%    xlim(xl);
+%    yl = [min(minpcfev, minpmfev)*.9 max(maxpcfev, maxpmfev)*1.1];
+%    ylim(yl);
+%    title(sprintf('Patient %3d',scid));
     % add study start and end as vertical lines
-    line( [studystart studystart], yl, 'Color', 'g', 'LineStyle', '-', 'LineWidth', 1);
-    line( [studyend studyend],     yl, 'Color', 'g', 'LineStyle', '-', 'LineWidth', 1);
-    hold off
-    fprintf('Row %3d, Patient %3d\n', ...
-        i, scid);   
-end
+%    line( [studystart studystart], yl, 'Color', 'g', 'LineStyle', '-', 'LineWidth', 1);
+%    line( [studyend studyend],     yl, 'Color', 'g', 'LineStyle', '-', 'LineWidth', 1);
+%    hold off
+%    fprintf('Row %3d, Patient %3d\n', ...
+%        i, scid);   
+%end
 
-for i = 1:size(figurearray,2)
-    imagefilename = sprintf('%s - page %2d.png', filenameprefix, i);
-    saveas(figurearray(i),fullfile(basedir, subfolder, imagefilename));
-end
+%for i = 1:size(figurearray,2)
+%    imagefilename = sprintf('%s - page %2d.png', filenameprefix, i);
+%    saveas(figurearray(i),fullfile(basedir, subfolder, imagefilename));
+%end

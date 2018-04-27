@@ -35,17 +35,26 @@ fprintf('Fixing %2d Heights in m - converted to cm\n', updates);
 % 3) Patient 42, weight = 117kg. Awaiting confirmation this is correct
 % 4) Patient 201, weight = 34.3kg. Awaiting confirmation this is correct
 
+% add column for calculated age - as the Age column has some mistakes
+fprintf('Adding column for calculated Age\n');
+cdPatient.CalcAge = floor(years(cdPatient.StudyDate - cdPatient.DOB));
+cdPatient.CalcAgeExact = years(cdPatient.StudyDate - cdPatient.DOB);
+
 % add columns for calculated PredictedFEV1 and FEV1SetAs based on
 % sex/age/height using ECSC formulae
 fprintf('Adding columns for calculated PredictedFEV1 and FEV1SetAs\n');
 cdMalePatient = cdPatient(ismember(cdPatient.Sex,'Male'),:);
 cdFemalePatient = cdPatient(~ismember(cdPatient.Sex,'Male'),:);
 
-cdMalePatient.CalcPredictedFEV1 = (cdMalePatient.Height * 0.01 * 4.3) - (cdMalePatient.Age * 0.029) - 2.49;
-cdFemalePatient.CalcPredictedFEV1 = (cdFemalePatient.Height * 0.01 * 3.95) - (cdFemalePatient.Age * 0.025) - 2.6;
+cdMalePatient.CalcPredictedFEV1 = (cdMalePatient.Height * 0.01 * 4.3) - (cdMalePatient.CalcAge * 0.029) - 2.49;
+cdMalePatient.CalcPredictedFEV1OrigAge = (cdMalePatient.Height * 0.01 * 4.3) - (cdMalePatient.Age * 0.029) - 2.49;
+cdFemalePatient.CalcPredictedFEV1 = (cdFemalePatient.Height * 0.01 * 3.95) - (cdFemalePatient.CalcAge * 0.025) - 2.6;
+cdFemalePatient.CalcPredictedFEV1OrigAge = (cdFemalePatient.Height * 0.01 * 3.95) - (cdFemalePatient.Age * 0.025) - 2.6;
 
 cdMalePatient.CalcFEV1SetAs = round(cdMalePatient.CalcPredictedFEV1,1);
+cdMalePatient.CalcFEV1SetAsOrigAge = round(cdMalePatient.CalcPredictedFEV1OrigAge,1);
 cdFemalePatient.CalcFEV1SetAs = round(cdFemalePatient.CalcPredictedFEV1,1);
+cdFemalePatient.CalcFEV1SetAsOrigAge = round(cdFemalePatient.CalcPredictedFEV1OrigAge,1);
 
 cdPatient = sortrows([cdMalePatient ; cdFemalePatient], {'ID'}, 'ascend');
 

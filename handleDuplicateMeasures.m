@@ -201,7 +201,7 @@ invalididx = find(physdata.SmartCareID(nasimidx) ~= physdata.SmartCareID(nasimid
 nasimidx(invalididx) = [];
 
 % create table of non-activity rows to add back - single row for dupe set
-% with the chronologically last row for each.
+% for lung function, with the max, for others with the chronologically last
 addsimrows = physdata(1:1,:);
 addsimrows = [];
 priorscid = 0;
@@ -220,15 +220,29 @@ for i = 1:size(nasimidx,1)
     end
     if (scid ~= priorscid | ~ismember(rectype, priorrectype) | startdtr > priorenddtr)
         ntidx = find(physdata.SmartCareID == scid & ismember(physdata.RecordingType,rectype) & physdata.Date_TimeRecorded >= startdtr & physdata.Date_TimeRecorded < enddtr);
-        % keep the chronologically last row
-        rowtoadd = physdata(ntidx(size(ntidx,1)),:);
-        addsimrows = [addsimrows ; rowtoadd];
-        nasimpairidx = [nasimpairidx; ntidx];
-        if detaillog    
-            physdata(ntidx,:)
-            rowtoadd
+        if ismember(rectype, 'LungFunctionRecording')
+            % for Lung Function, some patients mirror clinical procedure
+            % so take the best of 3 measures for this
+            [fevmax fevmaxidx] = max(physdata.FEV1_(ntidx));
+            rowtoadd = physdata(ntidx(fevmaxidx),:);
+            addsimrows = [addsimrows ; rowtoadd];
+            nasimpairidx = [nasimpairidx; ntidx];
+            if detaillog    
+               physdata(ntidx,:)
+              rowtoadd
+            end
+        else
+            % for other measures, multiple entries in a short space of time 
+            % indicates a mistake that has been corrected so for these, keep 
+            % the chronologically last row of the set
+            rowtoadd = physdata(ntidx(size(ntidx,1)),:);
+            addsimrows = [addsimrows ; rowtoadd];
+            nasimpairidx = [nasimpairidx; ntidx];
+            if detaillog    
+               physdata(ntidx,:)
+              rowtoadd
+            end
         end
-        
     end
     priorscid = scid;
     priorrectype = rectype;
