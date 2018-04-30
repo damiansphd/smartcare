@@ -17,7 +17,7 @@ tic
 % remove Oral treatments & sort by SmartCareID and StopDate
 idx = find(ismember(cdAntibiotics.Route, {'Oral'}));
 cdAntibiotics(idx,:) = [];
-ivTreatments = unique(cdAntibiotics(:,{'ID','StartDate'}));
+ivTreatments = unique(cdAntibiotics(:,{'ID', 'Hospital', 'StartDate'}));
 ivTreatments.IVDateNum = datenum(ivTreatments.StartDate) - offset + 1;
 
 % use the version of physdata before handling dateoutliers
@@ -27,15 +27,15 @@ physdata = sortrows(physdata, {'SmartCareID', 'DateNum', 'RecordingType'}, 'asce
 numdays = 40;
 Day = zeros(1,numdays);
 Day = array2table(Day);
-summarytable = table('Size',[1 6], ...
-    'VariableTypes', {'int32',       'datetime',    'int32',     'int32',            'int32',         'double'}, ...
-    'VariableNames', {'SmartCareID', 'IVStartDate', 'IVDateNum', 'DaysWithMeasures', 'TotalMeasures', 'AvgMeasuresPerDay'});
-summarytable = [summarytable Day];
+ivandmeasurestable = table('Size',[1 7], ...
+    'VariableTypes', {'int32',       'cell',     'datetime',    'int8',     'int32',            'int32',         'double'}, ...
+    'VariableNames', {'SmartCareID', 'Hospital', 'IVStartDate', 'IVDateNum', 'DaysWithMeasures', 'TotalMeasures', 'AvgMeasuresPerDay'});
+ivandmeasurestable = [ivandmeasurestable Day];
 for i = 1:40
-    summarytable.Properties.VariableNames{i+6} = sprintf('IVminus%d',abs(i-41));
+    ivandmeasurestable.Properties.VariableNames{i+7} = sprintf('IVminus%d',abs(i-41));
 end
-rowtoadd = summarytable;
-summarytable(1,:) = [];
+rowtoadd = ivandmeasurestable;
+ivandmeasurestable(1,:) = [];
 
 measuresdetailtable = physdata(1:1,:);
 measuresdetailtable = [];
@@ -44,6 +44,7 @@ oldid = 0;
 oldstartdn = 0;
 for i = 1:size(ivTreatments,1)
     scid = ivTreatments.ID(i);
+    hospital = ivTreatments.Hospital(i);
     startdate = ivTreatments.StartDate(i);
     startdn = ivTreatments.IVDateNum(i);
     
@@ -52,6 +53,7 @@ for i = 1:size(ivTreatments,1)
         pdcountmtable = varfun(@max, physdata(idx, {'SmartCareID','DateNum'}), 'GroupingVariables', {'SmartCareID', 'DateNum'});
     
         rowtoadd.SmartCareID = scid;
+        rowtoadd.Hospital = hospital;
         rowtoadd.IVStartDate = startdate;
         rowtoadd.IVDateNum = startdn;
         rowtoadd.DaysWithMeasures = size(find(pdcountmtable.GroupCount>0),1);
@@ -69,7 +71,7 @@ for i = 1:size(ivTreatments,1)
             end
         end
     
-        summarytable = [summarytable ; rowtoadd];
+        ivandmeasurestable = [ivandmeasurestable ; rowtoadd];
         measuresdetailtable = [measuresdetailtable ; physdata(idx,:)];
     end
     
@@ -79,12 +81,19 @@ end
 toc
 fprintf('\n');
 
-summarytable.IVDateNum = [];
+tic
+basedir = './';
+subfolder = 'MatlabSavedVariables';
+outputfilename = 'ivandmeasures.mat';
+
+fprintf('Saving output variables to file %s\n', outputfilename);
+save(fullfile(basedir, subfolder, outputfilename), 'ivandmeasurestable');
+
+ivandmeasurestable.IVDateNum = [];
 measuresdetailtable.ScaledDateNum = [];
 measuresdetailtable.DateNum = [];
 
-tic
-fprintf('Saving results\n');
+fprintf('Saving results to excel\n');
 
 basedir = './';
 subfolder = 'ExcelFiles';
@@ -92,7 +101,7 @@ outputfilename = 'MeasuresPriorToIVTreatments.xlsx';
 summarysheet = 'SummaryByIVTreatment';
 detailsheet = 'MeasuresDetail';
 
-writetable(summarytable,        fullfile(basedir, subfolder, outputfilename), 'Sheet', summarysheet);
+writetable(ivandmeasurestable,        fullfile(basedir, subfolder, outputfilename), 'Sheet', summarysheet);
 writetable(measuresdetailtable, fullfile(basedir, subfolder, outputfilename), 'Sheet', detailsheet);
 
 toc
