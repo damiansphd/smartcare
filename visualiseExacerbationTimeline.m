@@ -7,6 +7,7 @@ subfolder = 'MatlabSavedVariables';
 clinicalmatfile = 'clinicaldata.mat';
 scmatfile = 'smartcaredata.mat';
 ivandmeasuresfile = 'ivandmeasures.mat';
+datademographicsfile = 'datademographicsbypatient.mat';
 
 
 fprintf('Loading Clinical data\n');
@@ -15,6 +16,8 @@ fprintf('Loading SmartCare measurement data\n');
 load(fullfile(basedir, subfolder, scmatfile));
 fprintf('Loading iv treatment and measures prior data\n');
 load(fullfile(basedir, subfolder, ivandmeasuresfile));
+fprintf('Loading datademographics by patient\n');
+load(fullfile(basedir, subfolder, datademographicsfile));
 toc
 
 tic
@@ -50,8 +53,8 @@ subfolder = 'Plots';
 abpriorwindow = days(-7);
 abpostwindow = days(25);
 measuresstartdn = -40;
-%for i = 1:size(abTreatments,1)
-for i = 1:4       
+for i = 1:size(abTreatments,1)
+%for i = 1:4       
     scid = abTreatments.SmartCareID(i);
     hospital = abTreatments.Hospital{i};
     eventstartdate = abTreatments.IVStartDate(i);
@@ -184,7 +187,17 @@ for i = 1:4
             end
             for c = 1:size(ivdates,1)
                 line( [ivdates(c) ivdates(c)], yl, 'Color', 'm', 'LineStyle', '--', 'LineWidth', 1)
-            end 
+            end
+            % add horizontal lines for mid50mean and mid50 min/max
+            ddcolumn = sprintf('Fun_%s',column);
+            mid50mean = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(5);
+            mid50std = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(6);
+            %mid50min = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(7);
+            %mid50max = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(8);
+            line( xl, [mid50mean mid50mean] , 'Color', 'bl', 'LineStyle', '--', 'LineWidth', 1)
+            line( xl, [mid50mean-mid50std mid50mean-mid50std] , 'Color', 'bl', 'LineStyle', ':', 'LineWidth', 1)
+            line( xl, [mid50mean+mid50std mid50mean+mid50std] , 'Color', 'bl', 'LineStyle', ':', 'LineWidth', 1)
+            
             hold off;
         end
     end

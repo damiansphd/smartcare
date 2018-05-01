@@ -15,13 +15,13 @@ fprintf('\n');
 
 tic
 cdPatient = sortrows(cdPatient, {'ID'}, 'ascend');
-physdata = sortrows(physdata_predupehandling, {'SmartCareID', 'RecordingType', 'DateNum'}, 'ascend');
+%physdata = sortrows(physdata_predupehandling, {'SmartCareID', 'RecordingType', 'DateNum'}, 'ascend');
 
 fprintf('Calculating data demographics by patient\n');
 tempdata = physdata;
-tempdata(:,{'UserName', 'Date_TimeRecorded', 'FEV1', 'PredictedFEV'}) = [];
+tempdata(:,{'UserName', 'ScaledDateNum', 'DateNum', 'Date_TimeRecorded', 'FEV1', 'PredictedFEV', 'ScalingRatio', 'CalcFEV1SetAs'}) = [];
 
-demofunc = @(x)[mean(x) std(x) min(x) max(x)];
+demofunc = @(x)[mean(x)  std(x)  min(x)  max(x) mid50mean(x) mid50std(x) mid50min(x) mid50max(x)];
 demographicstable = varfun(demofunc, tempdata, 'GroupingVariables', {'SmartCareID', 'RecordingType'});
 
 % example of how to access max FEV1_ for a given row
