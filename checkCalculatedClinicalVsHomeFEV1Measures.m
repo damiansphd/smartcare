@@ -34,7 +34,7 @@ pstudydate = innerjoin(patientoffsets, pstudydate);
 
 % create a scaleddatenum to translate the study date to the same normalised
 % scale as measurement data scaled date num
-pstudydate.ScaledDateNum = datenum(pstudydate.StudyDate) - offset - pstudydate.PatientOffset;
+pstudydate.ScaledDateNum = datenum(pstudydate.StudyDate) - offset - pstudydate.PatientOffset + 1;
 
 
 % extract just the weight measures from smartcare data

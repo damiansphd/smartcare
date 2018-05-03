@@ -84,7 +84,7 @@ for i = 1:size(abTreatments,1)
         
     eventtable = sortrows(eventtable, {'SmartCareID','StartDate','EventType'}, 'ascend');
         
-    % set the x range for the plots (always start at -20, and finish at
+    % set the x range for the plots (always start at -40, and finish at
     % max stop date of all rows for this event (with a minimum of 20)
     xplotstartdn = measuresstartdn;
     xplotstopdn = max(eventtable.StopDateNum);
@@ -107,7 +107,7 @@ for i = 1:size(abTreatments,1)
     ylim(yl);
     title('Admissions and Treatments');
     xlabel('Days');
-    % plot a horizontal row for each row in the event table, coloured
+    % plot a horizontal bar for each row in the event table, coloured
     % according to the type of event.
     for a = 1:size(eventtable,1)
         yval = size(eventtable,1) - a + 1;
@@ -134,24 +134,7 @@ for i = 1:size(abTreatments,1)
     measures = unique(physdata.RecordingType);
     for b = 1:size(measures,1)
         measure = measures{b};
-        switch measure
-            case 'ActivityRecording'
-                column = 'Activity_Steps';
-            case {'CoughRecording','SleepActivityRecording','WellnessRecording'}
-                column = 'Rating';
-            case 'LungFunctionRecording'
-                column = 'CalcFEV1_';
-            case 'O2SaturationRecording'
-                column = 'O2Saturation';
-            case 'PulseRateRecording'
-                column = 'Pulse_BPM_';
-            case 'TemperatureRecording'
-                column = 'Temp_degC_';
-            case 'WeightRecording'
-                column = 'WeightInKg';
-            otherwise
-                column = '';
-        end
+        column = getColumnForMeasure(measure);
         scdata = physdata(physdata.SmartCareID == scid & ismember(physdata.RecordingType, measure) & ...
             physdata.DateNum >= eventstartdn + xplotstartdn & physdata.DateNum <= eventstartdn + xplotstopdn, :);
         scdata = scdata(:, {'SmartCareID','DateNum' 'Date_TimeRecorded', column});
@@ -192,8 +175,6 @@ for i = 1:size(abTreatments,1)
             ddcolumn = sprintf('Fun_%s',column);
             mid50mean = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(5);
             mid50std = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(6);
-            %mid50min = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(7);
-            %mid50max = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(8);
             line( xl, [mid50mean mid50mean] , 'Color', 'bl', 'LineStyle', '--', 'LineWidth', 1)
             line( xl, [mid50mean-mid50std mid50mean-mid50std] , 'Color', 'bl', 'LineStyle', ':', 'LineWidth', 1)
             line( xl, [mid50mean+mid50std mid50mean+mid50std] , 'Color', 'bl', 'LineStyle', ':', 'LineWidth', 1)

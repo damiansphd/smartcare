@@ -30,20 +30,6 @@ for i = 1:size(patientlist,1)
         maxpcfev = maxpmfev;
     end
     
-    % set y display limits - with a low threshold of 50 for patients with
-    % very narrow ranges of fev values.
-    ydisplaymin = min(minpcfev, minpmfev)*.9;
-    ydisplaymax = max(maxpcfev, maxpmfev)*1.1;
-    lowlimit = 50;
-    if ydisplaymax-ydisplaymin < lowlimit
-        ydisplaymin = 0.5 * (ydisplaymax+ydisplaymin) - 0.5 * lowlimit;
-        ydisplaymax = 0.5 * (ydisplaymax+ydisplaymin) + 0.5 * lowlimit;
-        if ydisplaymin < 0
-            ydisplaymax = ydisplaymax - ydisplaymin;
-            ydisplaymin = 0;
-        end
-    end
-    
     % create a new page as necessary
     if round((i-1)/plotsperpage) == (i-1)/plotsperpage
         page = page + 1;
@@ -73,8 +59,7 @@ for i = 1:size(patientlist,1)
         'MarkerFaceColor','w');
     xl = [mindays maxdays];
     xlim(xl);
-    %yl = [min(minpcfev, minpmfev)*.9 max(maxpcfev, maxpmfev)*1.1];
-    yl = [ydisplaymin ydisplaymax];
+    yl = setYDisplayRange(min(minpcfev, minpmfev), max(maxpcfev, maxpmfev), 50);
     ylim(yl);
     title(sprintf('Patient %3d',scid));
     % add study start and end as vertical lines

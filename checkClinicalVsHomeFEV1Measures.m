@@ -23,7 +23,7 @@ pclinicalfev = innerjoin(pclinicalfev, patientoffsets);
 
 % create a scaleddatenum to translate the study date to the same normalised
 % scale as measurement data scaled date num
-pclinicalfev.ScaledDateNum = datenum(pclinicalfev.LungFunctionDate) - offset - pclinicalfev.PatientOffset;
+pclinicalfev.ScaledDateNum = datenum(pclinicalfev.LungFunctionDate) - offset - pclinicalfev.PatientOffset + 1;
 
 % extract study date and join with offsets to keep only those patients who
 % have enough data (ie the patients left after outlier date handling
