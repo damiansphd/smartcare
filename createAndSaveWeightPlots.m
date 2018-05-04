@@ -1,35 +1,24 @@
-function [figurearray] = createAndSaveFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pstudydate, ...
+function [figurearray] = createAndSaveWeightPlots(pmeasuresweight, pstudydateweight, ...
     mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix)
 
-% createAndSaveFEVPlots - function to create plots of FEV home vs clinical 
+% createAndSaveWeightPlots - function to create plots of Weight home vs clinical 
 % measures and save results to file
 
 figurearray = [];
 page = 0;
 
-for i = 1:size(patientlist,1)
-    scid = patientlist(i);
-    hospital = pstudydate.Hospital{pstudydate.SmartCareID == scid};
-    % get home weight measures just for current patient
-    pmeasures = pmeasuresfev(pmeasuresfev.SmartCareID == scid,:);
-    % get clinical weight measures just for current patient
-    pclinical = pclinicalfev(pclinicalfev.SmartCareID == scid,:);
+for i = 1:size(pstudydateweight,1)
+    scid = pstudydateweight.SmartCareID(i);
+    hospital = pstudydateweight.Hospital{i};
+    pweight = pstudydateweight.Weight(i);
+    % get weight measures just for current patient
+    pmeasures = pmeasuresweight(pmeasuresweight.SmartCareID == scid,:);
+    % store min and max for patient
+    minpmweight = min(pmeasures.WeightInKg);
+    maxpmweight = max(pmeasures.WeightInKg);
     
-    % get study start and end dates just for current patient
-    studystart = pstudydate.ScaledDateNum(i);
+    studystart = pstudydateweight.ScaledDateNum(i);
     studyend = studystart + 183;
-    
-    % store min and max for patient (and handle case where there are no
-    % clinical measures
-    minpmfev = min(pmeasures.FEV1_);
-    maxpmfev = max(pmeasures.FEV1_);
-    if size(pclinical,1) > 0
-        minpcfev = min(pclinical.FEV1_);
-        maxpcfev = max(pclinical.FEV1_);
-    else
-        minpcfev = minpmfev;
-        maxpcfev = maxpmfev;
-    end
     
     % create a new page as necessary
     if round((i-1)/plotsperpage) == (i-1)/plotsperpage
@@ -45,31 +34,30 @@ for i = 1:size(patientlist,1)
         
     end
     
-    % plot FEV1 measures
+    % plot weight measures
     subplot(plotsdown,plotsacross,i-(page-1)*plotsperpage,'Parent',p);
-    hold on;
-    plot(pmeasures.ScaledDateNum,pmeasures.FEV1_,'y-o',...
+    plot(pmeasures.ScaledDateNum,pmeasures.WeightInKg,'y-o',...
         'LineWidth',1,...
         'MarkerSize',3,...
         'MarkerEdgeColor','b',...
         'MarkerFaceColor','g');
-    plot(pclinical.ScaledDateNum,pclinical.FEV1_,'c-o',...
-        'LineWidth',1,...
-        'MarkerSize',3,...
-        'MarkerEdgeColor','m',...
-        'MarkerFaceColor','w');
     xl = [mindays maxdays];
     xlim(xl);
-    rangelimit = setMinYDisplayRangeForMeasure('LungFunctionRecording');
-    yl = setYDisplayRange(min(minpcfev, minpmfev), max(maxpcfev, maxpmfev), rangelimit);
+    rangelimit = setMinYDisplayRangeForMeasure('WeightRecording');
+    yl = setYDisplayRange(min(pweight, minpmweight), max(pweight, maxpmweight), rangelimit);
+    %yl = [min(pweight, minpmweight)*.9 max(pweight, maxpmweight)*1.1];
     ylim(yl);
     title(sprintf('Patient %3d (%s)',scid, hospital));
+    
+    % add clinical weight as a horizontal line
+    line( xl, [pweight pweight], 'Color', 'r', 'LineStyle','--', 'LineWidth',1);
+    
     % add study start and end as vertical lines
     line( [studystart studystart], yl, 'Color', 'g', 'LineStyle', '-', 'LineWidth', 1);
     line( [studyend studyend],     yl, 'Color', 'g', 'LineStyle', '-', 'LineWidth', 1);
-    hold off
-    fprintf('Row %3d, Patient %3d\n', ...
-        i, scid);   
+    
+    fprintf('Row %3d, Patient %3d: Clinical Weight = %2.2d Min Home Weight = %2.2d Max Home Weight = %2.2d\n', ...
+        i, scid, pweight, minpmweight, maxpmweight);   
 end
 
 for i = 1:size(figurearray,2)

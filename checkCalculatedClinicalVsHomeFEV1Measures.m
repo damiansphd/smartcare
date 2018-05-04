@@ -12,6 +12,7 @@ fprintf('Loading SmartCare measurement data\n');
 load(fullfile(basedir, subfolder, scmatfile));
 toc
 
+tic
 % get the date scaling offset for each patient
 patientoffsets = getPatientOffsets(physdata);
 
@@ -28,7 +29,7 @@ pclinicalfev.ScaledDateNum = datenum(pclinicalfev.LungFunctionDate) - offset - p
 
 % extract study date and join with offsets to keep only those patients who
 % have enough data (ie the patients left after outlier date handling
-pstudydate = sortrows(cdPatient(:,{'ID', 'StudyDate'}), 'ID', 'ascend');
+pstudydate = sortrows(cdPatient(:,{'ID', 'Hospital', 'StudyDate'}), 'ID', 'ascend');
 pstudydate.Properties.VariableNames{'ID'} = 'SmartCareID';
 pstudydate = innerjoin(patientoffsets, pstudydate);
 
@@ -50,15 +51,14 @@ if mindays < -5
 end
 maxdays = max([pmeasuresfev.ScaledDateNum ; pstudydate.ScaledDateNum + 183]);
 
-% loop over all patients, create a plot for each of home weight measurements
-% with the clinical weight overlaid as a horizontal line
-% six plots per page
 plotsacross = 2;
 plotsdown = 4;
 plotsperpage = plotsacross * plotsdown;
 basedir = './';
 subfolder = 'Plots';
+toc
 
+tic
 % create plots for patients with differences home vs clinical
 fprintf('FEV Plots for diff values home vs clinical\n');
 patientlist = [82 ; 99 ; 175 ; 196 ; 201];
@@ -66,7 +66,8 @@ filenameprefix = 'CalcClinicalVsHomeFEV1 - Different Values';
 figurearray = createAndSaveFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pstudydate, ...
     mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
 close all;
-
+toc
+tic
 % create plots for patients with step function change in home measures
 fprintf('FEV Plots for step function change in home measuresl\n');
 patientlist = [54 ; 81 ; 138];
@@ -74,7 +75,8 @@ filenameprefix = 'CalcClinicalVsHomeFEV1 - Step Function Change';
 figurearray = createAndSaveFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pstudydate, ...
     mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
 close all;
-
+toc
+tic
 % create plots for patients with incorrect height
 fprintf('FEV Plots for incorrect height\n');
 patientlist = [179];
@@ -82,23 +84,26 @@ filenameprefix = 'CalcClinicalVsHomeFEV1 - Incorrect Height';
 figurearray = createAndSaveFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pstudydate, ...
     mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
 close all;
-
+toc
+tic
 % create plots for potential anomalous clinical FEV1 measures identified
 fprintf('FEV Plots for potential anomalous clinical measures\n');
-patientlist = [24 ; 66 ; 130];
+patientlist = [24 ; 66];
 filenameprefix = 'CalcClinicalVsHomeFEV1 - Outlier Clinical Values';
 figurearray = createAndSaveFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pstudydate, ...
     mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
 close all;
-
+toc
+tic
 % create plots for potential anomalous Home FEV1 measures identified
 fprintf('FEV Plots for potential anomalous Home measures\n');
-patientlist = [46 ; 53 ; 78 ; 171 ; 172];
+patientlist = [46 ; 53 ; 78 ; 171];
 filenameprefix = 'CalcClinicalVsHomeFEV1 - Outlier Home Values';
 figurearray = createAndSaveFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pstudydate, ...
     mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
 close all;
-
+toc
+tic
 % create plots for all patients
 fprintf('FEV Plots for all patients\n');
 patientlist = unique(pmeasuresfev.SmartCareID);
@@ -107,4 +112,4 @@ figurearray = createAndSaveFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pst
     mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
 close all;
 
-
+toc

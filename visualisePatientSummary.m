@@ -20,10 +20,9 @@ fprintf('Loading datademographics by patient\n');
 load(fullfile(basedir, subfolder, datademographicsfile));
 toc
 
-tic
-
 basedir = './';
 subfolder = 'Plots';
+figurearray = [];
 
 patientoffsets = getPatientOffsets(physdata);
 
@@ -31,8 +30,9 @@ patientlist = unique(physdata.SmartCareID);
 for i = 1:size(patientlist,1)
 %for i = 103:104
 %for i = 1:4
-    
+    tic
     scid       = patientlist(i);
+    fprintf('Creating patient summary for patient %d\n', scid);
     poffset    = patientoffsets.PatientOffset(patientoffsets.SmartCareID == scid);
     hospital   = cdPatient.Hospital{cdPatient.ID == scid};
     sex        = cdPatient.Sex{cdPatient.ID == scid};
@@ -182,9 +182,9 @@ for i = 1:size(patientlist,1)
     
     page = 1;
     
-    f = figure('Name',sprintf('Patient Summary - ID %d Hosp %s - Page %d', scid, hospital, page));
+    figurearray(page) = figure('Name',sprintf('Patient Summary - ID %d Hosp %s - Page %d', scid, hospital, page));
     set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
-    p = uipanel('Parent', f, 'BorderType', 'none'); 
+    p = uipanel('Parent', figurearray(page), 'BorderType', 'none'); 
     p.Title = sprintf('Patient Summary - ID %d (%s) - Page %d', scid, hospital, page); 
     p.TitlePosition = 'centertop';
     p.FontSize = 20;
@@ -262,7 +262,6 @@ for i = 1:size(patientlist,1)
     subplot(plotsdown, plotsacross, 2,'Parent',sp3);
     pcrp = cdCRP(cdCRP.ID == scid,:);
     pcrp.ScaledDateNum = datenum(pcrp.CRPDate) - offset - poffset + 1;
-    
     if size(pcrp,1) > 0
         hold on;
         plot(pcrp.ScaledDateNum,pcrp.NumericLevel,'c-o',...
@@ -278,16 +277,14 @@ for i = 1:size(patientlist,1)
         yl = setYDisplayRange(min(pcrp.NumericLevel), max(pcrp.NumericLevel), rangelimit);
         ylim(yl);
         for a = 1:size(ivabdates,1)
-            line( [ivabdates(a) ivabdates(a)], yl, 'Color', 'm', 'LineStyle', '--', 'LineWidth', 1)
+            line( [ivabdates(a) ivabdates(a)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
         end
         for c = 1:size(admdates,1)
-            line( [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', '--', 'LineWidth', 1)
+            line( [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
         end
         hold off;
     end
     
-    
-
     subplot(plotsdown, plotsacross, 3,'Parent',sp3);
     ppft = cdPFT(cdPFT.ID == scid,:);
     ppft.ScaledDateNum = datenum(ppft.LungFunctionDate) - offset - poffset + 1;
@@ -306,31 +303,17 @@ for i = 1:size(patientlist,1)
         yl = setYDisplayRange(min(ppft.CalcFEV1_), max(ppft.CalcFEV1_), rangelimit);
         ylim(yl);
         for a = 1:size(ivabdates,1)
-            line( [ivabdates(a) ivabdates(a)], yl, 'Color', 'm', 'LineStyle', '--', 'LineWidth', 1)
+            line( [ivabdates(a) ivabdates(a)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
         end
         for c = 1:size(admdates,1)
-            line( [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', '--', 'LineWidth', 1)
+            line( [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
         end
         hold off;
     end
-    
-    imagefilename = sprintf('PatientSummary_ID%d_%s_page%d.png', scid, hospital, page);
-    saveas(f,fullfile(basedir, subfolder, imagefilename));
-    close(f);
-    
-    % add page with home measures here
-    plotsacross = 2;
+    % plots for home measures on pages 2 & 3
+    plotsacross = 1;
     plotsdown = 5;
     plotsperpage = plotsacross * plotsdown;
-    page = 2;
-    
-    f = figure('Name',sprintf('Patient Summary - ID %d Hosp %s - Page %d', scid, hospital, page));
-    set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
-    p = uipanel('Parent', f, 'BorderType', 'none'); 
-    p.Title = sprintf('Patient Summary - ID %d (%s) - Page %d', scid, hospital, page); 
-    p.TitlePosition = 'centertop';
-    p.FontSize = 20;
-    p.FontWeight = 'bold';
     
     % get all measures so the plots for each appear in a consistent place
     % across all patients
@@ -341,8 +324,21 @@ for i = 1:size(patientlist,1)
         scdata = physdata(physdata.SmartCareID == scid & ismember(physdata.RecordingType, measure), :);
         scdata = scdata(:, {'SmartCareID','ScaledDateNum' 'Date_TimeRecorded', column});
         scdata.Properties.VariableNames{column} = 'Measurement';
+        
+        if round((a-1)/plotsperpage) == (a-1)/plotsperpage
+            page = page + 1;
+            fprintf('Next Page\n');
+            figurearray(page) = figure('Name',sprintf('Patient Summary - ID %d Hosp %s - Page %d', scid, hospital, page));
+            set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
+            p = uipanel('Parent', figurearray(page), 'BorderType', 'none'); 
+            p.Title = sprintf('Patient Summary - ID %d (%s) - Page %d', scid, hospital, page); 
+            p.TitlePosition = 'centertop';
+            p.FontSize = 20;
+            p.FontWeight = 'bold';
+        end
+        
         if size(scdata,1) > 0
-            subplot(plotsdown,plotsacross,a,'Parent',p);
+            subplot(plotsdown,plotsacross,a - (page-2)*plotsperpage,'Parent',p);
             hold on;
             xlim(xl);
             rangelimit = setMinYDisplayRangeForMeasure(measure);
@@ -363,20 +359,24 @@ for i = 1:size(patientlist,1)
             line( xl, [mid50mean-mid50std mid50mean-mid50std] , 'Color', 'black', 'LineStyle', ':', 'LineWidth', 1)
             line( xl, [mid50mean+mid50std mid50mean+mid50std] , 'Color', 'black', 'LineStyle', ':', 'LineWidth', 1)
             for a = 1:size(ivabdates,1)
-                line( [ivabdates(a) ivabdates(a)], yl, 'Color', 'm', 'LineStyle', '--', 'LineWidth', 1)
+                line( [ivabdates(a) ivabdates(a)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
             end
             for c = 1:size(admdates,1)
-                line( [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', '--', 'LineWidth', 1)
+                line( [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
             end
             hold off;
         end
     end
-    imagefilename = sprintf('PatientSummary_ID%d_%s_page%d.png', scid, hospital, page);
-    saveas(f,fullfile(basedir, subfolder, imagefilename));
-    close(f);
+    toc
     
+    tic
+    for a = 1:size(figurearray,2)
+        imagefilename = sprintf('PatientSummary_ID%d_%s_page%d.png', scid, hospital, a);
+        saveas(figurearray(a),fullfile(basedir, subfolder, imagefilename));
+        close(figurearray(a));
+    end
+    toc
 end
-toc
 
     
     
