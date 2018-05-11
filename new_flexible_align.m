@@ -1,4 +1,4 @@
-function [final plp hstg qualete] = flexible_align(normcube, dubiousproblem, max_offset, align_wind, run_mode)
+function [final, plp, plp2, hstg, qualete] = new_flexible_align(normcube, dubiousproblem, max_offset, align_wind, run_mode)
 
 %run_mode = 'new';
 basedir = './';
@@ -99,40 +99,40 @@ p.TitlePosition = 'centertop';
 p.FontSize = 16;
 p.FontWeight = 'bold'; 
     subplot(3,2,1,'Parent',p)
-        plot(plp(1,:), 'color', 'blue')
-        xlim([0 50]);
+        plot([-1*(max_offset+align_wind):-1], plp(1,:), 'color', 'blue')
+        xlim([-50 0]);
         ylim([-2.5 0.5])
         hold on;
-        plot(plp2(1,:), 'color', 'red');
+        plot([-1*(max_offset+align_wind):-1], plp2(1,:), 'color', 'red');
         hold off;
         title('Activity normalised')
     subplot(3,2,2,'Parent',p)
-        plot(plp(2,:),'color', 'blue')
-        xlim([0 50]);
+        plot([-1*(max_offset+align_wind):-1], plp(2,:),'color', 'blue')
+        xlim([-50 0]);
         ylim([-2.5 0.5])
         hold on;
-        plot(plp2(2,:), 'color', 'red');
+        plot([-1*(max_offset+align_wind):-1], plp2(2,:), 'color', 'red');
         hold off;
         title('Cough normalised')
     subplot(3,2,3,'Parent',p)
-        plot(plp(3,:),'color', 'blue')
-        xlim([0 50]);
+        plot([-1*(max_offset+align_wind):-1], plp(3,:),'color', 'blue')
+        xlim([-50 0]);
         ylim([-2.5 0.5])
         hold on;
-        plot(plp2(3,:), 'color', 'red');
+        plot([-1*(max_offset+align_wind):-1], plp2(3,:), 'color', 'red');
         hold off;
         title('FEV1 normalised')
     subplot(3,2,4,'Parent',p)
-        plot(plp(4,:),'color', 'blue')
-        xlim([0 50]);
+        plot([-1*(max_offset+align_wind):-1], plp(4,:),'color', 'blue')
+        xlim([-50 0]);
         ylim([-2.5 0.5])
         hold on;
-        plot(plp2(4,:), 'color', 'red');
+        plot([-1*(max_offset+align_wind):-1], plp2(4,:), 'color', 'red');
         hold off;
         title('Wellness normalised')
     subplot(3,2,[5 6],'Parent',p)
         histogram(final)
-        xlim([0 25]);
+        xlim([-0.5 24.5]);
         ylim([0 50]);
         title('Histogram')
 
@@ -189,7 +189,7 @@ function [dist] = distance( x , off, updatehistogram)
                     hstg(q,x,off+1) = hstg(q,x,off+1)+( model22(1,(max_offset+align_wind+1)-p-off,q)/model22(2,(max_offset+align_wind+1)-p-off,q) - normcube(dubiousproblem.ID(x),dubiousproblem.Start(x)-p,q))^2;
                     % fprintf('hstg(%d,%d,%d) = %d \n',q,x,off+1,hstg(q,x,off+1));
                 else
-                   fprintf('calculating distance for %d, %d, %d but not updating hstg\n', x, p, q);
+                   %fprintf('calculating distance for %d, %d, %d but not updating hstg\n', x, p, q);
                 end
             end
         end
