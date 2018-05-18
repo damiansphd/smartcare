@@ -215,8 +215,8 @@ for i = 1:size(patientlist,1)
     plotsdown = 3;
     plotsperpage = plotsacross * plotsdown;
     
-    daysfrom = min(spstartdn, hmstartdn);
-    daysto   = max(spenddn, hmenddn);
+    daysfrom = min(spstartdn, hmstartdn) - 14;
+    daysto   = max(spenddn, hmenddn) + 14;
     xl = [daysfrom daysto];
     
     subplot(plotsdown, plotsacross, 1,'Parent',sp3);
@@ -347,7 +347,10 @@ for i = 1:size(patientlist,1)
             title(measure);
             xlabel('Days');
             ylabel('Measure');
-            plot(scdata.ScaledDateNum, scdata.Measurement, 'y-o',...
+            plot(scdata.ScaledDateNum, scdata.Measurement,...
+                'Color', [0, 0.65, 1], ...
+                'LineStyle', '-', ...
+                'Marker', 'o', ...
                 'LineWidth',1,...
                 'MarkerSize',3,...
                 'MarkerEdgeColor','b',...
@@ -373,6 +376,10 @@ for i = 1:size(patientlist,1)
     for a = 1:size(figurearray,2)
         imagefilename = sprintf('PatientSummary_ID%d_%s_page%d.png', scid, hospital, a);
         saveas(figurearray(a),fullfile(basedir, subfolder, imagefilename));
+        if scid==133
+            imagefilename = sprintf('PatientSummary_ID%d_%s_page%d.svg', scid, hospital, a);
+            saveas(figurearray(a),fullfile(basedir, subfolder, imagefilename));
+        end
         close(figurearray(a));
     end
     toc

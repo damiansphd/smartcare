@@ -17,10 +17,16 @@ subfolder = 'ExcelFiles';
 outputfilename = 'TreatmentsOutsideStudyPeriodNotionalEnd.xlsx';
 
 tic
+% get patients with enough data
+patientoffsets = getPatientOffsets(physdata);
+patientoffsets.Properties.VariableNames{'SmartCareID'} = 'ID';
+
 % remove Oral treatments & sort by SmartCareID and StopDate
-idx = find(ismember(cdAntibiotics.Route, {'Oral'}));
-cdAntibiotics(idx,:) = [];
-cdAntibiotics = sortrows(cdAntibiotics, {'ID','StopDate'},'ascend');
+ivantibiotics = cdAntibiotics;
+idx = find(ismember(ivantibiotics.Route, {'Oral'}));
+ivantibiotics(idx,:) = [];
+ivantibiotics = sortrows(ivantibiotics, {'ID','StopDate'},'ascend');
+ivantibiotics = innerjoin(ivantibiotics, patientoffsets);
 
 physdata = sortrows(physdata, {'SmartCareID', 'DateNum', 'RecordingType'}, 'ascend');
 
@@ -34,13 +40,13 @@ rowtoadd = outputtable;
 outputtable(1,:) = [];
 
 
-oldid = cdAntibiotics.ID(1);
-for i = 1:size(cdAntibiotics,1)
-    scid = cdAntibiotics.ID(i);
-    treatmentstart = cdAntibiotics.StartDate(i);
-    dntreatmentstart = datenum(cdAntibiotics.StartDate(i));
-    treatmentend = cdAntibiotics.StopDate(i);
-    dntreatmentend = datenum(cdAntibiotics.StopDate(i));
+oldid = ivantibiotics.ID(1);
+for i = 1:size(ivantibiotics,1)
+    scid = ivantibiotics.ID(i);
+    treatmentstart = ivantibiotics.StartDate(i);
+    dntreatmentstart = datenum(ivantibiotics.StartDate(i));
+    treatmentend = ivantibiotics.StopDate(i);
+    dntreatmentend = datenum(ivantibiotics.StopDate(i));
     
     idx = find(cdPatient.ID == scid);
     studystart = cdPatient.StudyDate(idx);
@@ -69,8 +75,8 @@ for i = 1:size(cdAntibiotics,1)
         rowtoadd.StudyPeriod = dnstudyend - dnstudystart;
         rowtoadd.StudyStartDate = studystart;
         rowtoadd.StudyEndDate = studyend;
-        rowtoadd.AntibioticID = cdAntibiotics.AntibioticID(i);
-        rowtoadd.AntibioticName = cdAntibiotics.AntibioticName{i};
+        rowtoadd.AntibioticID = ivantibiotics.AntibioticID(i);
+        rowtoadd.AntibioticName = ivantibiotics.AntibioticName{i};
         rowtoadd.AntibioticStart = treatmentstart;
         rowtoadd.AntibioticEnd = treatmentend;
         rowtoadd.FirstMeasurement = firstmeasurement;
@@ -78,12 +84,12 @@ for i = 1:size(cdAntibiotics,1)
         
         if (dntreatmentend < dnstudystart-1)
             fprintf('Treatment before study  :  Patient ID %3d Study Period %3d days Study Start Date %11s  :  Antibiotic ID %3d %14s End   %11s  :  First Measurement %11s\n', ... 
-                scid, dnstudyend - dnstudystart, datestr(studystart,1), cdAntibiotics.AntibioticID(i), cdAntibiotics.AntibioticName{i}, datestr(treatmentend,1), datestr(firstmeasurement,1)); 
+                scid, dnstudyend - dnstudystart, datestr(studystart,1), ivantibiotics.AntibioticID(i), ivantibiotics.AntibioticName{i}, datestr(treatmentend,1), datestr(firstmeasurement,1)); 
             rowtoadd.RowType = 'Treatment before study';
         end
         if (dntreatmentstart > dnstudyend) 
             fprintf('Treatment after  study  :  Patient ID %3d Study Period %3d days   Study End Date %11s  :  Antibiotic ID %3d %14s Start %11s  :   Last Measurement %11s\n', ...
-                scid, dnstudyend - dnstudystart, datestr(studyend,1), cdAntibiotics.AntibioticID(i), cdAntibiotics.AntibioticName{i}, datestr(treatmentstart,1), datestr(lastmeasurement,1)); 
+                scid, dnstudyend - dnstudystart, datestr(studyend,1), ivantibiotics.AntibioticID(i), ivantibiotics.AntibioticName{i}, datestr(treatmentstart,1), datestr(lastmeasurement,1)); 
             rowtoadd.RowType = 'Treatment after study';
         end
         outputtable = [outputtable;rowtoadd];        

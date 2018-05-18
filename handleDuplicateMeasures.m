@@ -144,8 +144,13 @@ for i = 1:size(asimilaridx,1)
     startdtr = physdata.Date_TimeRecorded(pidx);
     enddtr = startdtr + timewindow;
     patientddidx = find(demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType,rectype));
-    patientmean = demographicstable(patientddidx,:).Fun_Activity_Steps(1);
-    patientstd = demographicstable(patientddidx,:).Fun_Activity_Steps(2);
+    if (size(patientddidx,1) > 0)
+        patientmean = demographicstable(patientddidx,:).Fun_Activity_Steps(1);
+        patientstd = demographicstable(patientddidx,:).Fun_Activity_Steps(2);
+    else
+        patientmean = 0;
+        patientstd = 0;
+    end
     if detaillog
         %fprintf('Dupe %3d, scid = %3d, rectype = %22s, startdtr = %20s, enddtr = %20s\n', i, scid, string(rectype), startdtr, enddtr);
     end
@@ -296,8 +301,13 @@ for i = 1:size(asamedayidx,1)
     dtnum = physdata.DateNum(pidx);
     rectype = physdata.RecordingType(pidx);
     patientddidx = find(demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType,rectype));
-    patientmean = demographicstable(patientddidx,:).Fun_Activity_Steps(1);
-    patientstd = demographicstable(patientddidx,:).Fun_Activity_Steps(2);
+    if (size(patientddidx,1) > 0)
+        patientmean = demographicstable(patientddidx,:).Fun_Activity_Steps(1);
+        patientstd = demographicstable(patientddidx,:).Fun_Activity_Steps(2);
+    else
+        patientmean = 0;
+        patientstd = 0;
+    end
     if detaillog
         fprintf('Dupe %3d, scid = %3d, rectype = %22s, dtnum = %3d\n', i, scid, string(rectype), dtnum);
     end
@@ -321,7 +331,7 @@ for i = 1:size(asamedayidx,1)
     priorrectype = rectype;
 end
 
-fprintf('There are %d sets of Activity same day dupes (< 30mins)\n', size(addsamerows,1));
+fprintf('There are %d sets of Activity same day dupes\n', size(addsamerows,1));
 
 if doupdates
     fprintf('Deleting %d Activity similar dupe rows\n', size(asamedaypairidx,1)); 
@@ -391,7 +401,7 @@ for i = 1:size(nasamedayidx,1)
     priorrectype = rectype;
 end
 
-fprintf('There are %d sets of Non-Activity same day dupes (< 30mins)\n', size(addsamerows,1));
+fprintf('There are %d sets of Non-Activity same day dupes\n', size(addsamerows,1));
 
 if doupdates
     fprintf('Deleting %d Activity similar dupe rows\n', size(nasamedaypairidx,1)); 

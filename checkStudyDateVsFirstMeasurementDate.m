@@ -18,7 +18,13 @@ outputfilename = 'StudyStartvsFirstMeasurement.xlsx';
 offset  = datenum(datetime(2015,8,5,0,0,0)); 
 
 tic
+% get patients with enough data
+patientoffsets = getPatientOffsets(physdata);
+patientoffsets.Properties.VariableNames{'SmartCareID'} = 'ID';
+
 cdPatient = sortrows(cdPatient, {'ID'}, 'ascend');
+patients = innerjoin(cdPatient, patientoffsets);
+
 physdata = sortrows(physdata, {'SmartCareID', 'DateNum', 'RecordingType'}, 'ascend');
 
 % get min and max measurement dates for each SmartCare ID
@@ -34,10 +40,10 @@ measurestable = physdata(1:10,:);
 measurestable = [];
 
 
-oldid = cdPatient.ID(1);
-for i = 1:size(cdPatient,1)
-    scid = cdPatient.ID(i);
-    studystart = cdPatient.StudyDate(i);
+oldid = patients.ID(1);
+for i = 1:size(patients,1)
+    scid = patients.ID(i);
+    studystart = patients.StudyDate(i);
     dnstudystart = ceil(datenum(studystart));
     
     idx = find(minDatesByPatient.SmartCareID == scid);

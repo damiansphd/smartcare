@@ -2,10 +2,11 @@ clear; clc; close all;
 
 basedir = './';
 subfolder = 'DataFiles';
-clinicaldatafile = 'clinicaldata.xlsx';
+clinicaldatafile = 'clinicaldata_updated.xlsx';
 cdpatientsheet = 'Patients';
 cdmicrosheet = 'Microbiolgy';
 cdcvsheet = 'Clinic Visits';
+cdovsheet = 'Other Visits';
 cdpftsheet = "PFT's";
 cdadmisssheet = 'Admissions';
 cdantibsheet = 'Antibiotics';
@@ -24,6 +25,9 @@ fprintf('Microbiology data has %d rows\n',size(cdMicrobiology,1));
 cdClinicVisits = readtable(fullfile(basedir, subfolder, clinicaldatafile), 'Sheet', cdcvsheet);
 cdClinicVisits = sortrows(cdClinicVisits, {'ID', 'AttendanceDate'}, 'ascend');
 fprintf('Clinic Visits data has %d rows\n',size(cdClinicVisits,1));
+cdOtherVisits = readtable(fullfile(basedir, subfolder, clinicaldatafile), 'Sheet', cdovsheet);
+cdOtherVisits = sortrows(cdOtherVisits, {'ID', 'AttendanceDate'}, 'ascend');
+fprintf('Other Visits data has %d rows\n',size(cdOtherVisits,1));
 cdPFT = readtable(fullfile(basedir, subfolder, clinicaldatafile), 'Sheet', cdpftsheet);
 cdPFT = sortrows(cdPFT, {'ID', 'LungFunctionDate'}, 'ascend');
 fprintf('PFT data has %d rows\n',size(cdPFT,1));
@@ -68,7 +72,7 @@ fprintf('\n');
 
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-outputfilename = 'clinicaldata_old.mat';
+outputfilename = 'clinicaldata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
-save(fullfile(basedir, subfolder,outputfilename), 'cdPatient', 'cdMicrobiology', 'cdClinicVisits', 'cdPFT', 'cdAdmissions', 'cdAntibiotics', 'cdCRP', 'cdEndStudy');
+save(fullfile(basedir, subfolder,outputfilename), 'cdPatient', 'cdMicrobiology', 'cdClinicVisits', 'cdOtherVisits','cdPFT', 'cdAdmissions', 'cdAntibiotics', 'cdCRP', 'cdEndStudy');
 toc

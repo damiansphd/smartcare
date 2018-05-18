@@ -20,11 +20,18 @@ outputfilename = 'ClinicVisitsVsCRP.xlsx';
 residualsheet = 'CRPWithNoClinicAdmissionAB';
 
 tic
+% get patients with enough data
+patientoffsets = getPatientOffsets(physdata);
+patientoffsets.Properties.VariableNames{'SmartCareID'} = 'ID';
+
 % sort by SmartCareID and StartDate
-cdClinicVisits = sortrows(cdClinicVisits, {'Hospital','ID','AttendanceDate'},'ascend');
 cdCRP = sortrows(cdCRP, {'Hospital','ID','CRPDate'}, 'ascend');
 cdAdmissions = sortrows(cdAdmissions, {'Hospital','ID','Admitted'}, 'ascend');
 cdAntibiotics = sortrows(cdAntibiotics, {'Hospital','ID','StartDate'}, 'ascend');
+cdClinicVisits = sortrows(cdClinicVisits, {'Hospital','ID','AttendanceDate'},'ascend');
+cdOtherVisits = sortrows(cdOtherVisits, {'Hospital','ID','AttendanceDate'},'ascend');
+
+cdCRP = innerjoin(cdCRP, patientoffsets);
 
 residualtable = table('Size',[1 6], ...
     'VariableTypes', {'string(56)', 'string(8)', 'int32',       'int32', 'datetime', 'int32'}, ...
@@ -46,8 +53,9 @@ for i = 1:size(cdCRP,1)
     idx = find(cdAdmissions.ID == scid & (cdAdmissions.Admitted-days(7)) <= crpdate & cdAdmissions.Discharge >= crpdate);
     idx2 = find(cdAntibiotics.ID == scid & ismember(cdAntibiotics.Route, {'IV'}) & cdAntibiotics.StartDate <= crpdate & cdAntibiotics.StopDate >= crpdate);
     idx3 = find(cdClinicVisits.ID == scid & cdClinicVisits.AttendanceDate == crpdate);
+    idx4 = find(cdOtherVisits.ID == scid & cdOtherVisits.AttendanceDate == crpdate);
     
-    if (size(idx,1) ==0 & size(idx2,1)==0 & size(idx3,1)==0)
+    if (size(idx,1) ==0 & size(idx2,1)==0 & size(idx3,1)==0 & size(idx4,1)==0)
         rowtoadd.RowType = '*** CRP with no Clinic Visit/Admission/IV Antibiotic ***';
         fprintf('%56s  :  Hospital %8s  Patient ID %3d  :  CRP ID %3d  CRP Date  %11s  CRP Level  %3d\n', ... 
             rowtoadd.RowType, rowtoadd.Hospital, rowtoadd.SmartCareID, rowtoadd.CRPID, datestr(rowtoadd.CRPDate,1), rowtoadd.CRPLevel);

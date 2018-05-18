@@ -52,6 +52,9 @@ physdata = analyseOvernightMeasures(physdata,0, doupdates, detaillog);
 
 physdata_predupehandling = physdata;
 
+% generate data demographics by patient
+generateDataDemographicsByPatientFn(physdata, cdPatient);
+
 % handle duplicates
 physdata = handleDuplicateMeasures(physdata, doupdates, detaillog);
 

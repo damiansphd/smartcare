@@ -23,9 +23,16 @@ ipsheet = '2)HospitalIVWithNoAdmission';
 residualsheet = '4)HomeTreatments';
 
 tic
+% get patients with enough data
+patientoffsets = getPatientOffsets(physdata);
+patientoffsets.Properties.VariableNames{'SmartCareID'} = 'ID';
+
 % sort by SmartCareID and StartDate
 cdAntibiotics = sortrows(cdAntibiotics, {'ID','StartDate'},'ascend');
+cdAntibiotics = innerjoin(cdAntibiotics, patientoffsets);
+
 cdAdmissions = sortrows(cdAdmissions, {'ID','Admitted'}, 'ascend');
+cdAdmissions = innerjoin(cdAdmissions, patientoffsets);
 
 matchtable = table('Size',[1 12], 'VariableTypes', {'string(35)', 'string(8)', 'int32', 'int32', 'datetime', 'datetime','int32', 'string(15)', 'string(5)', ...
     'string(10)', 'datetime','datetime'}, 'VariableNames', {'RowType', 'Hospital', 'SmartCareID', 'AdmissionID', 'Admitted', 'Discharge', ...

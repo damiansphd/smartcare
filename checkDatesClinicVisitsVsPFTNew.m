@@ -20,11 +20,18 @@ outputfilename = 'ClinicVisitsVsPFT.xlsx';
 residualsheet = 'PFTWithNoClinicAdmissionAB';
 
 tic
+% get patients with enough data
+patientoffsets = getPatientOffsets(physdata);
+patientoffsets.Properties.VariableNames{'SmartCareID'} = 'ID';
+
 % sort by Hospital, SmartCareID and Date
 cdPFT = sortrows(cdPFT, {'Hospital','ID','LungFunctionDate'}, 'ascend');
 cdClinicVisits = sortrows(cdClinicVisits, {'Hospital','ID','AttendanceDate'},'ascend');
+cdOtherVisits = sortrows(cdOtherVisits, {'Hospital','ID','AttendanceDate'},'ascend');
 cdAdmissions = sortrows(cdAdmissions, {'Hospital','ID','Admitted'}, 'ascend');
 cdAntibiotics = sortrows(cdAntibiotics, {'Hospital','ID','StartDate'}, 'ascend');
+
+cdPFT = innerjoin(cdPFT, patientoffsets);
 
 residualtable = table('Size',[1 9], ...
     'VariableTypes', {'string(56)', 'string(8)', 'int32',       'int32',          'datetime',         'double', 'int32', 'double', 'int32'}, ...
@@ -46,11 +53,12 @@ for i = 1:size(cdPFT,1)
     rowtoadd.FVC1  = cdPFT.FVC1(i);
     rowtoadd.FVC1_ = cdPFT.FVC1_(i);
     
-    idx = find(cdAdmissions.ID == scid & (cdAdmissions.Admitted-days(7)) <= pftdate & cdAdmissions.Discharge >= pftdate);
+    idx =  find(cdAdmissions.ID == scid & (cdAdmissions.Admitted-days(7)) <= pftdate & cdAdmissions.Discharge >= pftdate);
     idx2 = find(cdAntibiotics.ID == scid & ismember(cdAntibiotics.Route, {'IV'}) & cdAntibiotics.StartDate <= pftdate & cdAntibiotics.StopDate >= pftdate);
     idx3 = find(cdClinicVisits.ID == scid & cdClinicVisits.AttendanceDate == pftdate);
+    idx4 = find(cdOtherVisits.ID == scid & cdOtherVisits.AttendanceDate == pftdate);
     
-    if (size(idx,1) ==0 & size(idx2,1)==0 & size(idx3,1)==0)
+    if (size(idx,1) ==0 & size(idx2,1)==0 & size(idx3,1)==0 & size(idx4,1)==0)
         rowtoadd.RowType = '*** PFT with no Clinic Visit/Admission/IV Antibiotic ***';
         fprintf('%56s  :  Hospital %8s  Patient ID %3d  :  LungFunction ID %3d  LungFunction Date  %11s  FEV1 %1.2f  FEV1_ %3.0f  FVC1 %1.2f  FVC1_ %3.0f\n', ... 
             rowtoadd.RowType, rowtoadd.Hospital, rowtoadd.SmartCareID, rowtoadd.LungFunctionID, datestr(rowtoadd.LungFunctionDate,1), rowtoadd.FEV1, ...
