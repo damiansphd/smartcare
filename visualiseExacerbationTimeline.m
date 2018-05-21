@@ -53,8 +53,8 @@ subfolder = 'Plots';
 abpriorwindow = days(-7);
 abpostwindow = days(25);
 measuresstartdn = -40;
-for i = 1:size(abTreatments,1)
-%for i = 1:4       
+%for i = 1:size(abTreatments,1)
+for i = 41:43       
     scid = abTreatments.SmartCareID(i);
     hospital = abTreatments.Hospital{i};
     eventstartdate = abTreatments.IVStartDate(i);
@@ -154,7 +154,10 @@ for i = 1:size(abTreatments,1)
             title(measure);
             xlabel('Days');
             ylabel('Measure');
-            plot(scdata.DateNum, scdata.Measurement, 'y-o',...
+            plot(scdata.DateNum, scdata.Measurement, ...
+                'Color', [0, 0.65, 1], ...
+                'LineStyle', '-', ...
+                'Marker', 'o', ...
                 'LineWidth',1,...
                 'MarkerSize',3,...
                 'MarkerEdgeColor','b',...
@@ -184,7 +187,11 @@ for i = 1:size(abTreatments,1)
     end
     % save plot
     imagefilename = sprintf('ExacerbationTimeline_ID%d_%s_%11s.png', scid, hospital, datestr(eventstartdate, 29));
-    saveas(f,fullfile(basedir, subfolder, imagefilename));
+    saveas(f, fullfile(basedir, subfolder, imagefilename));
+    if scid==133
+            imagefilename = sprintf('ExacerbationTimeline_ID%d_%s_%11s.svg', scid, hospital, datestr(eventstartdate, 29));
+            saveas(f, fullfile(basedir, subfolder, imagefilename));
+    end
     close(f);
 end
     
