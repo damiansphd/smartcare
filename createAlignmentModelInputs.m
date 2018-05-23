@@ -34,12 +34,13 @@ tic
 
 % create list of interventions with enough data to run model on
 fprintf('Creating list of interventions\n');
-abTreatments = createListOfInterventions(ivandmeasurestable, physdata, offset);
+amInterventions = createListOfInterventions(ivandmeasurestable, physdata, offset);
+ninterventions = size(amInterventions,1);
 toc
 tic
 % create datacube - 3D array of patients/days/measures for model
 fprintf('Creating 3D data array\n');
-[datacube, normcube] = createDataCube(physdata, measures, demographicstable, npatients, ndays, nmeasures);
+[amDatacube, amNormcube] = createDataCube(physdata, measures, demographicstable, overalltable, npatients, ndays, nmeasures);
 toc
 
 tic
@@ -47,7 +48,7 @@ basedir = './';
 subfolder = 'MatlabSavedVariables';
 outputfilename = 'alignmentmodelinputs.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
-save(fullfile(basedir, subfolder,outputfilename), 'abTreatments','datacube', 'normcube', 'measures', 'npatients','ndays', 'nmeasures');
+save(fullfile(basedir, subfolder,outputfilename), 'amInterventions','amDatacube', 'amNormcube', 'measures', 'npatients','ndays', 'nmeasures', 'ninterventions');
 toc
 
 

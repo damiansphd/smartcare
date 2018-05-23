@@ -33,7 +33,7 @@ cdAdmissions.EventType(:) = {'Admission'};
 %abTreatments = unique(cdAntibiotics(:,{'ID', 'Hospital', 'StartDate'}));
 %abTreatments.Properties.VariableNames{'ID'} = 'SmartCareID';
 %abTreatments.IVDateNum = datenum(abTreatments.StartDate) - offset + 1;
-abTreatments = ivandmeasurestable(ivandmeasurestable.DaysWithMeasures >= 20 & ivandmeasurestable.AvgMeasuresPerDay >= 3, {'SmartCareID', 'Hospital', 'IVStartDate', 'IVDateNum'});
+abTreatments = ivandmeasurestable(ivandmeasurestable.DaysWithMeasures >= 15 & ivandmeasurestable.AvgMeasuresPerDay >= 2, {'SmartCareID', 'Hospital', 'IVStartDate', 'IVDateNum'});
 
 % get the date scaling offset for each patient
 patientoffsets = getPatientOffsets(physdata);
@@ -53,8 +53,8 @@ subfolder = 'Plots';
 abpriorwindow = days(-7);
 abpostwindow = days(25);
 measuresstartdn = -40;
-%for i = 1:size(abTreatments,1)
-for i = 41:43       
+for i = 1:size(abTreatments,1)
+%for i = 41:43       
     scid = abTreatments.SmartCareID(i);
     hospital = abTreatments.Hospital{i};
     eventstartdate = abTreatments.IVStartDate(i);
@@ -91,7 +91,8 @@ for i = 41:43
     xplotstopdn = max(20, xplotstopdn);
         
     f = figure('Name',sprintf('Patient: %d  Hospital: %s  EventDate: %s', scid, hospital, datestr(eventstartdate, 29)));
-    set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8, 0.8], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
+    set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
+    %set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8, 0.8], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
     p = uipanel('Parent', f, 'BorderType', 'none'); 
     p.Title = sprintf('Patient: %d  Hospital: %s  EventDate: %s', scid, hospital, datestr(eventstartdate, 29)); 
     p.TitlePosition = 'centertop';
@@ -124,7 +125,7 @@ for i = 41:43
         l(a) = line( [eventtable.StartDateNum(a) eventtable.StopDateNum(a)], [yval, yval], 'Color', colour, 'LineStyle', '-', 'LineWidth', 6);
     end  
     % add vertical line to mark event date
-    line( [0 0], yl, 'Color', 'black', 'LineStyle', '--', 'LineWidth', 1)
+    line( [0 0], yl, 'Color', 'black', 'LineStyle', ':', 'LineWidth', 1)
     % add legend for plot with one of each type of event listed
     [dummy, legendidx] = unique(eventtable.EventType, 'stable');
     legend(l(legendidx), eventtable.EventType(legendidx), 'Location', 'west', 'FontSize', 8);
@@ -167,12 +168,12 @@ for i = 41:43
             admdates = unique([eventtable.StartDateNum(ismember(eventtable.EventType, 'Admission')) ; eventtable.StopDateNum(ismember(eventtable.EventType, 'Admission'))]);
             ivdates = unique([eventtable.StartDateNum(ismember(eventtable.EventType, 'IV')) ; eventtable.StopDateNum(ismember(eventtable.EventType, 'IV'))]);
             ivdates = setdiff(ivdates, admdates);
-            line( [0 0], yl, 'Color', 'black', 'LineStyle', '--', 'LineWidth', 1)
+            line( [0 0], yl, 'Color', 'black', 'LineStyle', ':', 'LineWidth', 1)
             for c = 1:size(admdates,1)
-                line( [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', '--', 'LineWidth', 1)
+                line( [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
             end
             for c = 1:size(ivdates,1)
-                line( [ivdates(c) ivdates(c)], yl, 'Color', 'm', 'LineStyle', '--', 'LineWidth', 1)
+                line( [ivdates(c) ivdates(c)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
             end
             % add horizontal lines for mid50mean and mid50 min/max
             ddcolumn = sprintf('Fun_%s',column);
