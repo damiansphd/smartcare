@@ -23,9 +23,11 @@ toc
 npatients = max(physdata.SmartCareID);
 ndays = max(physdata.ScaledDateNum);
 nmeasures = size(unique(physdata.RecordingType),1);
-measures = table('Size',[nmeasures 3], 'VariableTypes', {'int32', 'cell', 'cell'} ,'VariableNames', {'Index', 'Name', 'Column'});
+measures = table('Size',[nmeasures 4], 'VariableTypes', {'int32', 'cell', 'cell', 'cell'} ,'VariableNames', {'Index', 'Name', 'DisplayName', 'Column'});
 measures.Index = [1:9]';
 measures.Name = unique(physdata.RecordingType);
+measures.DisplayName = replace(measures.Name, 'Recording', '');
+
 for i = 1:size(measures,1)
      measures.Column(i) = cellstr(getColumnForMeasure(measures.Name{i}));
 end
