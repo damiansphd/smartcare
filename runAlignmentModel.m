@@ -11,7 +11,7 @@ fprintf('Loading datademographics by patient\n');
 load(fullfile(basedir, subfolder, datademographicsfile));
 toc
 
-detaillog = false;
+detaillog = true;
 max_offset = 25; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
 align_wind = 20;
 
@@ -23,6 +23,7 @@ amNormcube(:,:,measures.Index(idx)) = [];
 measures(idx,:) = [];
 nmeasures = size(measures,1);
 measures.Index = [1:nmeasures]';
+unaligned_profile = zeros(nmeasures, max_offset+align_wind);
 
 tic
 fprintf('Running alignment with zero offset start\n');
@@ -32,33 +33,53 @@ end
 run_type = 'Zero Offset Start';
 [best_offsets, best_profile_pre, best_profile_post, best_histogram, best_qual] = amAlignCurves(amNormcube, amInterventions, measures, max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, best_qual);
+% save the zero offset pre-profile to unaligned_profile so all plots show a
+% consistent unaligned curve as the pre-profile.
+unaligned_profile = best_profile_pre;
+% plot and save aligned curves (pre and post)
+amPlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_offsets, best_qual, measures, max_offset, align_wind, nmeasures, run_type)
 toc
 fprintf('\n');
 
+% save the zero offset pre-profile to unaligned_profile so all plots show a
+% consistent unaligned curve as the pre-profile.
+unaligned_profile = best_profile_pre;
+
 fprintf('Running alignment with random offset start\n');
-niterations = 20;
+niterations = 500;
 for j=1:niterations
     tic
     for i=1:ninterventions
         amInterventions.Offset(i) = floor(rand * max_offset);
     end
+    initial_offsets = amInterventions.Offset;
     run_type = sprintf('Random Offset Start %d', j);
     [offsets, profile_pre, profile_post, histogram, qual] = amAlignCurves(amNormcube, amInterventions, measures, max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog);
+    fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
     if qual < best_qual
+        % plot and save aligned curves (pre and post) if the result is best
+        % so far
+        amPlotAndSaveAlignedCurves(unaligned_profile, profile_post, offsets, qual, measures, max_offset, align_wind, nmeasures, run_type)
         fprintf('Best so far is random start %d\n', j);
         best_offsets = offsets;
+        best_initial_offsets = initial_offsets;
         best_profile_pre = profile_pre;
         best_profile_post = profile_post;
         best_histogram = histogram;
         best_qual = qual; 
     end
-    fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
     toc
 end
 fprintf('\n');
 
+basedir = './';
+subfolder = 'MatlabSavedVariables';
+outputfilename = sprintf('alignmentmodelresults-obj%d.mat', round(best_qual*10000));
+fprintf('Saving alignment model results to file %s\n', outputfilename);
+save(fullfile(basedir, subfolder, outputfilename), 'best_initial_offsets', 'best_offsets', 'best_profile_pre', 'best_profile_post', 'unaligned_profile', 'best_histogram', 'best_qual');
+
 tic
-fprintf('Plotting results\n');
+fprintf('Plotting prediction results\n');
 % choose where to label exacerbation start on the best_profile
 ex_start = -25;
 

@@ -2,13 +2,13 @@ function [offsets, profile_pre, profile_post, hstg, qual] = amAlignCurves(amNorm
 
 % alignCurves = function to align measurement curves prior to intervention
 
-meancurvesum   = zeros(max_offset + align_wind, nmeasures);
-meancurvecount = zeros(max_offset + align_wind, nmeasures);
-offsets        = zeros(1, ninterventions);
-profile_pre    = zeros(nmeasures, max_offset+align_wind);
-profile_post   = zeros(nmeasures, max_offset+align_wind);
-hstg           = zeros(nmeasures, ninterventions, max_offset);
-hstgc          = zeros(nmeasures, ninterventions, max_offset);
+meancurvesum      = zeros(max_offset + align_wind, nmeasures);
+meancurvecount    = zeros(max_offset + align_wind, nmeasures);
+offsets           = zeros(1, ninterventions);
+profile_pre       = zeros(nmeasures, max_offset+align_wind);
+profile_post      = zeros(nmeasures, max_offset+align_wind);
+hstg              = zeros(nmeasures, ninterventions, max_offset);
+hstgc             = zeros(nmeasures, ninterventions, max_offset);
 qual = 0;
 
 % calculate mean curve over all interventions
@@ -92,45 +92,6 @@ end
 % scale the objective function result by the count of data points (for each
 % measure, intervention, offset)
 hstg(:,:,:) = hstg(:,:,:) ./ hstgc(:,:,:);
-
-basedir = './';
-subfolder = 'Plots';
-plotsacross = 2;
-plotsdown = round((nmeasures + 1) / plotsacross);
-
-f = figure;
-set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
-p = uipanel('Parent',f,'BorderType','none'); 
-p.Title = sprintf('Alignment Model - %s - ErrFcn = %7.4f', run_type, qual);
-p.TitlePosition = 'centertop'; 
-p.FontSize = 16;
-p.FontWeight = 'bold';
-
-for m = 1:nmeasures
-    xl = [-1 * (max_offset + align_wind) 0];
-    yl = [min(min(profile_pre(m,:)), min(profile_post(m,:))) max(max(profile_pre(m,:)), max(profile_post(m,:)))];
-    subplot(plotsdown,plotsacross,m,'Parent',p)
-    plot([-1 * (max_offset + align_wind): -1], profile_pre(m,:), 'color', 'blue')
-    xlim(xl);
-    ylim(yl);
-    hold on;
-    plot([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'color', 'red');
-    hold off;
-    title(measures.DisplayName(m));
-end
-
-subplot(plotsdown, plotsacross, nmeasures + 1, 'Parent', p)
-histogram(amInterventions.Offset)
-xlim([-0.5 (max_offset - 0.5)]);
-ylim([0 50]);
-title('Histogram')
-
-filename = sprintf('Alignment Model - %s - Err Function.png', run_type);
-saveas(f,fullfile(basedir, subfolder, filename));
-filename = sprintf('Alignment Model - %s - Err Function.svg', run_type);
-saveas(f,fullfile(basedir, subfolder, filename));
-
-close(f);
 
 end
 
