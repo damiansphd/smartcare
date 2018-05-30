@@ -30,6 +30,8 @@ fprintf('Running alignment with zero offset start\n');
 for i=1:size(amInterventions,1)
         amInterventions.Offset(i) = 0;
 end
+best_initial_offsets = amInterventions.Offset;
+
 run_type = 'Zero Offset Start';
 [best_offsets, best_profile_pre, best_profile_post, best_histogram, best_qual] = amAlignCurves(amNormcube, amInterventions, measures, max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, best_qual);
@@ -41,12 +43,9 @@ amPlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_offsets, b
 toc
 fprintf('\n');
 
-% save the zero offset pre-profile to unaligned_profile so all plots show a
-% consistent unaligned curve as the pre-profile.
-unaligned_profile = best_profile_pre;
-
 fprintf('Running alignment with random offset start\n');
 niterations = 500;
+%niterations = 0;
 for j=1:niterations
     tic
     for i=1:ninterventions
@@ -83,11 +82,30 @@ fprintf('Plotting prediction results\n');
 % choose where to label exacerbation start on the best_profile
 ex_start = -25;
 
+hstgorig = best_histogram;
+hstgorig(isnan(hstgorig)) = 0;
+
+agghstg = zeros(ninterventions, max_offset);
+for j = 1:ninterventions
+        agghstg(j,:) = sum(hstgorig(:, j, :),1);
+        normconst = norm(reshape(agghstg(j, :),[1 max_offset]),inf);
+        if normconst == 0
+            normconst = 1;
+        end
+        %agghstg(j,:) = agghstg(j,:) / norm(reshape(agghstg(j, :),[1 max_offset]),inf);
+        agghstg(j,:) = agghstg(j,:) / normconst;
+end
+agghstg = 1 - agghstg;
+agghstg = agghstg ./ sum(agghstg,2);
+
+
+
+
 % do l_1 normalisation of the histogram to obtain posterior probabilities,
 % person x feature fixed
 for m=1:nmeasures
     for j=1:ninterventions
-        best_histogram(m, j, :) = best_histogram(m, j, :) / norm(reshape(best_histogram(m, j, :),[1 max_offset]),inf) ;
+        best_histogram(m, j, :) = best_histogram(m, j, :) / norm(reshape(best_histogram(m, j, :),[1 max_offset]),inf);
     end
 end
 
@@ -98,8 +116,8 @@ hpos = [ 5 ; 10 ; 15 ; 20 ; 25 ; 30 ; 35 ; 40];
 
 days = [-1 * (max_offset + align_wind): 0];
 
-for i=1:ninterventions
-%for i = 1:3
+%for i=1:ninterventions
+for i = 43:43
     scid = amInterventions.SmartCareID(i);
     start = amInterventions.IVScaledDateNum(i);
     name = sprintf('Alignment Model - Exacerbation %d - ID %d Date %s', i, scid, datestr(amInterventions.IVStartDate(i),29));

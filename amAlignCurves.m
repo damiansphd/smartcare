@@ -26,6 +26,8 @@ end
 % iterate to convergence
 pnt = 1;
 cnt = 0;
+prior_cnt = 0;
+repeat_cnt = 0;
 ok  = 0;
 while 1
     [meancurvesum, meancurvecount] = amRemoveFromMean(meancurvesum, meancurvecount, amNormcube, amInterventions, pnt, max_offset, align_wind, nmeasures);
@@ -35,7 +37,7 @@ while 1
         for m=1:nmeasures
             if meancurvecount(i,m) < 3
                 if detaillog
-                    fprintf('Intervention %d, Measure %s, dayprior %d <3 datapoints\n', pnt, measures.Name{m}, i);
+                    %fprintf('Intervention %d, Measure %s, dayprior %d <3 datapoints\n', pnt, measures.Name{m}, i);
                 end
                 ok = 0;
             end
@@ -50,6 +52,9 @@ while 1
     
     if better_offset ~= amInterventions.Offset(pnt)
         amInterventions.Offset(pnt) = better_offset;
+        %if detaillog
+        %    fprintf('amIntervention.Offset(%d) set to %d\n', pnt, better_offset);
+        %end
         cnt = cnt+1;
     end
     [meancurvesum, meancurvecount] = amAddToMean(meancurvesum, meancurvecount, amNormcube, amInterventions, pnt, max_offset, align_wind, nmeasures);
@@ -62,10 +67,23 @@ while 1
                 fprintf('Converged\n');
             end
             break;
-        else
+        else 
             if detaillog
                 fprintf('Changed %d offsets on this iteration\n', cnt);
             end
+            if prior_cnt == cnt
+                repeat_cnt = repeat_cnt + 1;
+                if detaillog
+                    fprintf('Repeat count is %d\n', repeat_cnt);
+                end
+                if repeat_cnt > 200
+                    if detaillog
+                        fprintf('Repeat count limit exceeded - breaking\n');
+                    end
+                    break;
+                end
+            end
+            prior_cnt = cnt;
             cnt = 0;
         end
     end
