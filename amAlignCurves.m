@@ -4,7 +4,8 @@ function [offsets, profile_pre, profile_post, hstg, qual] = amAlignCurves(amNorm
 
 meancurvesum      = zeros(max_offset + align_wind, nmeasures);
 meancurvecount    = zeros(max_offset + align_wind, nmeasures);
-offsets           = zeros(1, ninterventions);
+%offsets           = zeros(1, ninterventions);
+offsets           = zeros(ninterventions, 1);
 profile_pre       = zeros(nmeasures, max_offset+align_wind);
 profile_post      = zeros(nmeasures, max_offset+align_wind);
 hstg              = zeros(nmeasures, ninterventions, max_offset);
@@ -26,8 +27,9 @@ end
 % iterate to convergence
 pnt = 1;
 cnt = 0;
-prior_cnt = 0;
-repeat_cnt = 0;
+iter = 0;
+%prior_cnt = 0;
+%repeat_cnt = 0;
 ok  = 0;
 while 1
     [meancurvesum, meancurvecount] = amRemoveFromMean(meancurvesum, meancurvecount, amNormcube, amInterventions, pnt, max_offset, align_wind, nmeasures);
@@ -61,29 +63,36 @@ while 1
         
     pnt = pnt+1;
     if pnt > ninterventions
+        iter = iter + 1;
         pnt = pnt - ninterventions;
         if cnt == 0
             if detaillog
-                fprintf('Converged\n');
+                fprintf('Converged after %2d iterations\n', iter);
             end
             break;
         else 
             if detaillog
-                fprintf('Changed %d offsets on this iteration\n', cnt);
+                fprintf('Changed %2d offsets on iteration %2d\n', cnt, iter);
             end
-            if prior_cnt == cnt
-                repeat_cnt = repeat_cnt + 1;
+            %if prior_cnt == cnt
+            %   repeat_cnt = repeat_cnt + 1;
+            %    if detaillog
+            %        fprintf('Repeat count is %d\n', repeat_cnt);
+            %    end
+            %    if repeat_cnt > 100
+            %        if detaillog
+            %            fprintf('Repeat count limit exceeded - breaking\n');
+            %        end
+            %        break;
+            %    end
+            %end
+            if iter > 100
                 if detaillog
-                    fprintf('Repeat count is %d\n', repeat_cnt);
+                    fprintf('Iteration count limit exceeded - breaking\n');
                 end
-                if repeat_cnt > 200
-                    if detaillog
-                        fprintf('Repeat count limit exceeded - breaking\n');
-                    end
-                    break;
-                end
+                break;
             end
-            prior_cnt = cnt;
+            %prior_cnt = cnt;
             cnt = 0;
         end
     end
