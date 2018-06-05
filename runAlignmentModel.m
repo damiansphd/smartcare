@@ -12,13 +12,15 @@ load(fullfile(basedir, subfolder, datademographicsfile));
 toc
 
 detaillog = true;
-max_offset = 25; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
+max_offset = 30; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
 align_wind = 20;
 
 % remove temperature readings as insufficient datapoints for a number of
 % the interventions
 idx = ismember(measures.DisplayName, {'Temperature'});
 %idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'LungFunction', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
+%idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
+
 amDatacube(:,:,measures.Index(idx)) = [];
 amNormcube(:,:,measures.Index(idx)) = [];
 measures(idx,:) = [];
@@ -102,6 +104,7 @@ for j = 1:ninterventions
 end
 agghstg = 1 - agghstg;
 agghstg = agghstg ./ sum(agghstg,2);
+
 probthreshold = 0.75;
 cumprob = 0;
 for j = 1:ninterventions
@@ -126,6 +129,16 @@ for j = 1:ninterventions
     end
 end
 
+tic
+basedir = './';
+subfolder = 'MatlabSavedVariables';
+outputfilename = sprintf('alignmentmodelresults-obj%d.mat', round(best_qual*10000));
+fprintf('Saving alignment model results to file %s\n', outputfilename);
+fprintf('\n');
+save(fullfile(basedir, subfolder, outputfilename), 'best_initial_offsets', 'best_offsets', 'best_profile_pre', 'best_profile_post', ...
+    'unaligned_profile', 'best_histogram', 'best_qual', 'ex_start', 'agghstg', 'problower', 'probupper');
+
+
 % do l_1 normalisation of the histogram to obtain posterior probabilities,
 % person x feature fixed
 for m=1:nmeasures
@@ -141,7 +154,7 @@ fprintf('Plotting prediction results\n');
 for i=1:ninterventions
 %for i = 43:43
     amPlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, best_offsets, problower, probupper, ex_start, i, nmeasures, max_offset, align_wind);
-    amPlotsAndSaveMeasuresVsMeanCurve(amInterventions, amNormcube, measures, demographicstable, best_profile_post, best_offsets, problower, probupper, ex_start, i, nmeasures, max_offset, align_wind)
+    amPlotsAndSaveMeasuresVsMeanCurve(amInterventions, amNormcube, measures, demographicstable, best_profile_post, best_histogram, best_offsets, problower, probupper, ex_start, i, nmeasures, max_offset, align_wind)
 
 end
 toc

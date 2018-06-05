@@ -1,4 +1,4 @@
-function amPlotsAndSaveMeasuresVsMeanCurve(amInterventions, amNormcube, measures, demographicstable, best_profile_post, best_offsets, problower, probupper, ex_start, thisinter, nmeasures, max_offset, align_wind)
+function amPlotsAndSaveMeasuresVsMeanCurve(amInterventions, amNormcube, measures, demographicstable, best_profile_post, best_histogram, best_offsets, problower, probupper, ex_start, thisinter, nmeasures, max_offset, align_wind)
 
 % amPlotsAndSaveMeasuresvsMeanCurve - plots (normalised) measures prior to
 % treatment vs the aligned mean curve for each measure
@@ -72,6 +72,22 @@ for m = 1:nmeasures
     %line( xl,[pmmid50mean pmmid50mean], 'Color', 'blue', 'LineStyle', '--', 'LineWidth', 1);
     %line( xl, [pmmid50mean - pmmid50std pmmid50mean - pmmid50std] , 'Color', 'blue', 'LineStyle', ':', 'LineWidth', 1)
     %line( xl, [pmmid50mean + pmmid50std pmmid50mean + pmmid50std] , 'Color', 'blue', 'LineStyle', ':', 'LineWidth', 1)
+    hold off;
+end
+    
+%plot the histograms
+for m=1:nmeasures
+    subplot(plotsdown, plotsacross, hpos(m,:),'Parent',p)    
+    scatter([0:max_offset-1],best_histogram(m,thisinter,:),'o','MarkerFaceColor','g');    
+    set(gca,'fontsize',6);
+    hold on;
+    line( [best_offsets(thisinter) best_offsets(thisinter)] , [0 1],'Color','red', 'LineStyle',':','LineWidth',1);
+    fill([problower(thisinter) probupper(thisinter) probupper(thisinter) problower(thisinter)], ...
+            [0 0 1 1], ...
+            'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+    title(measures.DisplayName(m));
+    xlim([0 max_offset-1]);
+    ylim([0 1]);
     hold off;
 end
 
