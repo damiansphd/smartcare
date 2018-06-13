@@ -1,6 +1,6 @@
 function [meancurvesum,meancurvecount] = am2RemoveFromMean(meancurvesum, meancurvecount, amNormcube, amInterventions, currinter, max_offset, align_wind, nmeasures)
 
-% amRemoveFromMean - remove a curve from the mean curve (sum and count)
+% am2RemoveFromMean - remove a curve from the mean curve (sum and count)
 
 scid   = amInterventions.SmartCareID(currinter);
 start = amInterventions.IVScaledDateNum(currinter);

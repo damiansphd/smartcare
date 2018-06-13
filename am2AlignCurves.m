@@ -1,6 +1,6 @@
 function [offsets, profile_pre, profile_post, hstg, qual] = am2AlignCurves(amNormcube, amInterventions, measures, max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog)
 
-% alignCurves = function to align measurement curves prior to intervention
+% am2AlignCurves = function to align measurement curves prior to intervention
 
 meancurvesum      = zeros(max_offset + align_wind, nmeasures);
 meancurvecount    = zeros(max_offset + align_wind, nmeasures);

@@ -1,6 +1,6 @@
 function [dist, hstg] = am2CalcObjFcn(meancurvesum, meancurvecount, amNormcube, amInterventions, hstg, currinter, curroffset, max_offset, align_wind, nmeasures, updatehistogram)
 
-% amCalcObjFcn - calculates residual sum of squares distance for points in
+% am2CalcObjFcn - calculates residual sum of squares distance for points in
 % curve vs meancurve incorporating offset
 
 dist = 0;

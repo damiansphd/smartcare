@@ -1,6 +1,6 @@
 function am2PlotAndSaveAlignedCurves(profile_pre, profile_post, offsets, qual, measures, max_offset, align_wind, nmeasures, run_type)
 
-% amPlotAndSaveAlignedCurves - plots the curves pre and post alignment for
+% am2PlotAndSaveAlignedCurves - plots the curves pre and post alignment for
 % each measure, and the histogram of offsets
 
 basedir = './';
@@ -8,7 +8,7 @@ subfolder = 'Plots';
 
 plotsacross = 2;
 plotsdown = round((nmeasures + 1) / plotsacross);
-plottitle = sprintf('Alignment Model - %s - ErrFcn = %7.4f', run_type, qual);
+plottitle = sprintf('Alignment Model2 - %s - ErrFcn = %7.4f', run_type, qual);
 
 f = figure;
 set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');

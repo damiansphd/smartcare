@@ -1,6 +1,6 @@
 function [better_offset, hstg] = am2BestFit(meancurvesum, meancurvecount, amNormcube, amInterventions, hstg, currinter, max_offset, align_wind, nmeasures)
 
-% amBestFit - calculates the offset for an intervention by minimising the
+% am2BestFit - calculates the offset for an intervention by minimising the
 % objective function
 
 scid   = amInterventions.SmartCareID(currinter);

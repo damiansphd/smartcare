@@ -1,6 +1,6 @@
 function [meancurvesum,meancurvecount] = am2AddToMean(meancurvesum, meancurvecount, amNormcube, amInterventions, currinter, max_offset, align_wind, nmeasures)
 
-% amAddToMean - add a curve to the mean curve (sum and count)
+% am2AddToMean - add a curve to the mean curve (sum and count)
 
 scid   = amInterventions.SmartCareID(currinter);
 start = amInterventions.IVScaledDateNum(currinter);
