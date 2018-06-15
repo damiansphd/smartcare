@@ -17,20 +17,29 @@ align_wind = 20;
 
 % remove temperature readings as insufficient datapoints for a number of
 % the interventions
-%idx = ismember(measures.DisplayName, {'Temperature'});
-idx = ismember(measures.DisplayName, {'Temperature', 'Wellness', 'Activity', 'LungFunction', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
+idx = ismember(measures.DisplayName, {'Temperature'});
+%idx = ismember(measures.DisplayName, {'Temperature', 'Wellness', 'Activity', 'LungFunction', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
 %idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
 %idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'Cough', 'LungFunction', 'SleepActivity', 'Wellness'});
-
-
 amDatacube(:,:,measures.Index(idx)) = [];
 amNormcube(:,:,measures.Index(idx)) = [];
 measures(idx,:) = [];
 nmeasures = size(measures,1);
 measures.Index = [1:nmeasures]';
 unaligned_profile = zeros(nmeasures, max_offset+align_wind);
-%problower = zeros(ninterventions, 1);
-%probupper = zeros(ninterventions, 1);
+overall_hist = zeros(ninterventions, max_offset);
+
+% calculate the alignment window std for each measure and store in measures
+% table
+for m = 1:nmeasures
+    tempdata = zeros(ninterventions * align_wind, 1);
+    for i = 1:ninterventions
+        scid   = amInterventions.SmartCareID(i);
+        start = amInterventions.IVScaledDateNum(i);
+        tempdata( ((i-1) * align_wind) + 1 : (i * align_wind) ) = reshape(amDatacube(scid, (start - align_wind):(start - 1), m), align_wind, 1);
+    end
+    measures.AlignWindStd(m) = std(tempdata(~isnan(tempdata)));
+end
 
 tic
 fprintf('Running alignment with zero offset start\n');
@@ -52,7 +61,8 @@ fprintf('\n');
 
 fprintf('Running alignment with random offset start\n');
 %niterations = 500;
-niterations = 0;
+niterations = 200;
+%niterations = 0;
 for j=1:niterations
     tic
     for i=1:ninterventions
@@ -90,26 +100,33 @@ fprintf('\n');
 save(fullfile(basedir, subfolder, outputfilename), 'best_initial_offsets', 'best_offsets', 'best_profile_pre', 'best_profile_post', ...
     'unaligned_profile', 'best_histogram', 'best_qual', 'ex_start');
 
+% create overall histogram (summed over measures by intervention/offset)
+for j = 1:ninterventions
+    overall_hist(j, :) = reshape(sum(best_histogram(:,j,:),1), [1, max_offset]);
+end
+
+% save raw results from objfcn
 hstgorig = best_histogram;
+overall_hstorig = overall_hist;
 
-% do l_1 normalisation of the histogram to obtain posterior probabilities,
-% person x feature fixed
-%for m=1:nmeasures
-%    for j=1:ninterventions
-%        best_histogram(m, j, :) = best_histogram(m, j, :) / norm(reshape(best_histogram(m, j, :),[1 max_offset]),inf);
-%    end
-%end
-
-
+% convert back from log space
+for j=1:ninterventions
+    for m=1:nmeasures
+        best_histogram(m, j, :) = exp(-1 * best_histogram(m, j, :));
+        best_histogram(m, j, :) = best_histogram(m, j, :) / sum(best_histogram(m, j, :));
+    end
+    overall_hist(j,:) = exp(-1 * overall_hist(j,:));
+    overall_hist(j,:) = overall_hist(j,:) / sum(overall_hist(j,:));
+end
 
 toc
 fprintf('\n');
 
 tic
 fprintf('Plotting prediction results\n');
-%for i=1:ninterventions
-for i = 42:44
-    am2PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, ...
+for i=1:ninterventions
+%for i = 42:44
+    am2PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, ...
         best_offsets, best_profile_post, ex_start, i, nmeasures, max_offset, align_wind);
 end
 toc

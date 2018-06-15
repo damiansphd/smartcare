@@ -17,9 +17,12 @@ align_wind = 20;
 
 % remove temperature readings as insufficient datapoints for a number of
 % the interventions
-idx = ismember(measures.DisplayName, {'Temperature'});
+%idx = ismember(measures.DisplayName, {'Temperature'});
 %idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'LungFunction', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
+idx = ismember(measures.DisplayName, {'Temperature', 'Wellness', 'Activity', 'LungFunction', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
 %idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
+%idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'Cough', 'LungFunction', 'SleepActivity', 'Wellness'});
+
 
 amDatacube(:,:,measures.Index(idx)) = [];
 amNormcube(:,:,measures.Index(idx)) = [];
@@ -105,7 +108,9 @@ end
 agghstg = 1 - agghstg;
 agghstg = agghstg ./ sum(agghstg,2);
 
-probthreshold = 0.75;
+%probthreshold = 0.75;
+% changed to 1s.d on normal distribution
+probthreshold = 0.6827;
 cumprob = 0;
 for j = 1:ninterventions
     problower(j) = best_offsets(j);
@@ -151,8 +156,8 @@ fprintf('\n');
 
 tic
 fprintf('Plotting prediction results\n');
-for i=1:ninterventions
-%for i = 43:43
+%for i=1:ninterventions
+for i = 42:44
     amPlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, best_offsets, problower, probupper, ex_start, i, nmeasures, max_offset, align_wind);
     amPlotsAndSaveMeasuresVsMeanCurve(amInterventions, amNormcube, measures, demographicstable, best_profile_post, best_histogram, best_offsets, problower, probupper, ex_start, i, nmeasures, max_offset, align_wind)
 

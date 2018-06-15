@@ -100,9 +100,9 @@ end
 
 %computing the objective function result for converged offset array
 for i=1:ninterventions
-    amRemoveFromMean(meancurvesum, meancurvecount, amNormcube, amInterventions, i, max_offset, align_wind, nmeasures);
+    [meancurvesum, meancurvecount] = amRemoveFromMean(meancurvesum, meancurvecount, amNormcube, amInterventions, i, max_offset, align_wind, nmeasures);
     qual = qual + amCalcObjFcn(meancurvesum, meancurvecount, amNormcube, amInterventions, hstg, hstgc, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, 0);
-    amAddToMean(meancurvesum, meancurvecount, amNormcube, amInterventions, i, max_offset, align_wind, nmeasures);
+    [meancurvesum, meancurvecount] = amAddToMean(meancurvesum, meancurvecount, amNormcube, amInterventions, i, max_offset, align_wind, nmeasures);
 end
 
 for i=1:ninterventions 

@@ -1,4 +1,4 @@
-function [meancurvesum,meancurvecount] = am2AddToMean(meancurvesum, meancurvecount, amNormcube, amInterventions, currinter, max_offset, align_wind, nmeasures)
+function [meancurvesum,meancurvecount] = am2AddToMean(meancurvesum, meancurvecount, amDatacube, amInterventions, currinter, max_offset, align_wind, nmeasures)
 
 % am2AddToMean - add a curve to the mean curve (sum and count)
 
@@ -11,8 +11,8 @@ for m = 1:nmeasures
         if start - i <= 0
             continue;
         end
-        if ~isnan(amNormcube(scid, start - i, m))
-            meancurvesum((max_offset + align_wind + 1) - offset - i, m)   = meancurvesum((max_offset + align_wind + 1) - offset - i, m)   + amNormcube(scid, start - i, m);
+        if ~isnan(amDatacube(scid, start - i, m))
+            meancurvesum((max_offset + align_wind + 1) - offset - i, m)   = meancurvesum((max_offset + align_wind + 1) - offset - i, m)   + amDatacube(scid, start - i, m);
             meancurvecount((max_offset + align_wind + 1) - offset - i, m) = meancurvecount((max_offset + align_wind + 1) - offset - i, m) + 1;
         end
     end

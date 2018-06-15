@@ -8,12 +8,6 @@ start = amInterventions.IVScaledDateNum(currinter);
 
 better_offset = 0;
 mini = 1000000;
-%for m = 1:nmeasures
-%    for i = 1:max_offset
-%            hstg(m, currinter, i) = 0;
-%            hstgc(m, currinter, i) = 0;
-%    end
-%end
 
 for i = 0:max_offset - 1
     [currdist, hstg, hstgc] = amCalcObjFcn(meancurvesum, meancurvecount, amNormcube, amInterventions, hstg, hstgc, currinter, i, max_offset, align_wind, nmeasures, 1);

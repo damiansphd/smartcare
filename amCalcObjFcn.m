@@ -35,6 +35,7 @@ end
 
 if distcount > 0
     dist = dist/distcount;
+%    fprintf('%d intervention, distcount is %d\n', currinter, distcount);
 %    if (updatehistogram == 1)
 %        hstg(:, currinter, curroffset + 1) = hstg(:, currinter, curroffset + 1) ./ hstgc(:, currinter, curroffset + 1) + 1;
 %    end
