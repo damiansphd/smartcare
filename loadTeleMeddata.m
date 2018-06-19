@@ -6,27 +6,47 @@ fprintf('---------------------------------\n');
 basedir = './';
 subfolder = 'MatlabSavedVariables';
 clinicalmatfile = 'clinicaldata.mat';
+scmatfile = 'smartcaredata.mat';
 fprintf('Loading equivalent smartcare data structures as baseline\n');
 load(fullfile(basedir, subfolder, clinicalmatfile));
+load(fullfile(basedir, subfolder, scmatfile));
 fprintf('Done\n');
+
 tmAdmissions        = cdAdmissions;
 admrowtoadd         = tmAdmissions(1,:);
 tmAdmissions(:,:)   = [];
+
 tmAntibiotics       = cdAntibiotics;
 ivabrowtoadd        = tmAntibiotics(1,:);
 poabrowtoadd        = tmAntibiotics(1,:);
 tmAntibiotics(:,:)  = [];
+
 tmClinicVisits      = cdClinicVisits;
 cvrowtoadd         = tmClinicVisits(1,:); 
 tmClinicVisits(:,:) = [];
+
 tmCRP               = cdCRP;
 crprowtoadd         = tmCRP(1,:);
 tmCRP(:,:)          = [];
+
+tmMicrobiology      = cdMicrobiology;
+tmMicrobiology(:,:) = [];
+
+tmEndStudy          = cdEndStudy;
+tmEndStudy(:,:)     = [];
+
 tmPatient           = cdPatient;
 tmPatient(:,:)      = [];
+
 tmPFT               = cdPFT;
 pftrowtoadd         = tmPFT(1,:);
 tmPFT(:,:)          = [];
+
+tmphysdata          = physdata;
+phrowtoadd          = tmphysdata(1,:);
+tmphysdata(:,:)     = [];
+tmoffset            = datenum('2013/01/30');
+
 toc
 fprintf('\n');
 
@@ -47,7 +67,9 @@ ntmpatients = size(tmPatientInfo,1);
 tmPatient.ID(1:ntmpatients) = tmPatientInfo.ID;
 for i = 1:size(tmPatient,1)
     tmPatient.Hospital{i} = 'PAP';
+    %tmPatient.StudyNumber = cellstr(num2str(tmPatient.ID(i)));
 end
+tmPatient.StudyNumber = cellstr(num2str(tmPatient.ID));
 tmPatient.Age = tmPatientInfo.Age;
 tmPatient.Sex = tmPatientInfo.Gender;
 tmPatient.Height = tmPatientInfo.Height;
@@ -63,7 +85,9 @@ tmMalePatient.CalcFEV1SetAs = round(tmMalePatient.CalcPredictedFEV1,1);
 tmFemalePatient.CalcFEV1SetAs = round(tmFemalePatient.CalcPredictedFEV1,1);
 tmPatient = sortrows([tmMalePatient ; tmFemalePatient], {'ID'}, 'ascend');
 
+toc
 fprintf('\n');
+
 tic
 for i = 1:ntmpatients
     tmdatafile = sprintf('K%d.xlsx', i);
@@ -73,11 +97,51 @@ for i = 1:ntmpatients
     if i ~= 11 & i ~= 15
         tmData.Date = datetime(tmData.Date, 'InputFormat', 'dd.MM.yy');
     end
-    [tmClinicVisits, tmAdmissions, tmAntibiotics, tmCRP, tmPFT] = convertTeleMedData(tmData, tmPatient, tmClinicVisits, tmAdmissions, tmAntibiotics, tmCRP, tmPFT, ...
-            cvrowtoadd, admrowtoadd, poabrowtoadd, ivabrowtoadd, crprowtoadd, pftrowtoadd, i);
-    fprintf('\n');
-        
+    [tmPatient, tmClinicVisits, tmAdmissions, tmAntibiotics, tmCRP, tmPFT, tmphysdata] = ...,
+        convertTeleMedData(tmData, tmPatient, tmClinicVisits, tmAdmissions, tmAntibiotics, tmCRP, tmPFT, tmphysdata, ...
+        cvrowtoadd, admrowtoadd, poabrowtoadd, ivabrowtoadd, crprowtoadd, pftrowtoadd, phrowtoadd, i, tmoffset);
+    fprintf('\n');    
 end
+
+% populate id's in clinical tables
+fprintf('Populating ids in clinical tables\n');
+tmClinicVisits.ClinicID = [1:size(tmClinicVisits,1)]';
+tmAdmissions.HospitalAdmissionID = [1:size(tmAdmissions,1)]';
+tmAntibiotics.AntibioticID = [1:size(tmAntibiotics,1)]';
+tmCRP.CRPID = [1:size(tmCRP,1)]';
+tmPFT.LungFunctionID = [1:size(tmPFT,1)]';
+
+% populate Study Date in clinical patient table
+fprintf('Populating study date in clinical patient table\n');
+minDatesByPatient = varfun(@min, tmphysdata(:,{'SmartCareID', 'Date_TimeRecorded'}), 'GroupingVariables', 'SmartCareID');
+minDatesByPatient.GroupCount = [];
+minDatesByPatient.Properties.VariableNames({'SmartCareID'}) = {'ID'};
+minDatesByPatient.Properties.VariableNames({'min_Date_TimeRecorded'}) = {'MinPatientDate'};
+tmPatient = innerjoin(tmPatient, minDatesByPatient);
+tmPatient.StudyDate = tmPatient.MinPatientDate;
+tmPatient.MinPatientDate = [];
+
+% populate ScaledDateNum in measurement data table
+fprintf('Populating ScaledDateNum in measurement data\n');
+minDatesByPatient = varfun(@min, tmphysdata(:,{'SmartCareID', 'DateNum'}), 'GroupingVariables', 'SmartCareID');
+minDatesByPatient.GroupCount = [];
+minDatesByPatient.Properties.VariableNames({'min_DateNum'}) = {'MinPatientDateNum'};
+tmphysdata = innerjoin(tmphysdata,minDatesByPatient);
+tmphysdata.ScaledDateNum = tmphysdata.DateNum - tmphysdata.MinPatientDateNum + 1;
+tmphysdata.MinPatientDateNum = [];
+
+toc
+fprintf('\n');    
+
+tic
+basedir = './';
+subfolder = 'MatlabSavedVariables';
+tmclinicalmatfile = 'telemedclinicaldata.mat';
+tmmatfile = 'telemeddata.mat';
+fprintf('Saving telemed clinical data variables to file %s\n', tmclinicalmatfile);
+save(fullfile(basedir, subfolder,tmclinicalmatfile), 'tmPatient', 'tmClinicVisits', 'tmPFT', 'tmAdmissions', 'tmAntibiotics', 'tmCRP', 'tmMicrobiology', 'tmEndStudy');
+fprintf('Saving telemed measurement data variables to file %s\n', tmclinicalmatfile);
+save(fullfile(basedir, subfolder, tmmatfile), 'tmphysdata', 'tmoffset');
 
 toc
 

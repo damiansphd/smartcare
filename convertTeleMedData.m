@@ -1,5 +1,6 @@
-function [tmClinicVisits, tmAdmissions, tmAntibiotics, tmCRP, tmPFT] = convertTeleMedData(tmData, tmPatient, tmClinicVisits, tmAdmissions, tmAntibiotics, tmCRP, tmPFT, ...
-    cvrowtoadd, admrowtoadd, poabrowtoadd, ivabrowtoadd, crprowtoadd, pftrowtoadd, fileid)
+function [tmPatient, tmClinicVisits, tmAdmissions, tmAntibiotics, tmCRP, tmPFT, tmphysdata] = ...
+    convertTeleMedData(tmData, tmPatient, tmClinicVisits, tmAdmissions, tmAntibiotics, tmCRP, tmPFT, tmphysdata, ...
+    cvrowtoadd, admrowtoadd, poabrowtoadd, ivabrowtoadd, crprowtoadd, pftrowtoadd, phrowtoadd, fileid, offset)
 
 % convertTelemedData - converts from TelemedData format to SmartCare format
 
@@ -27,7 +28,7 @@ for i = 1:nmeasurements
         if (tmData.Clinic{i} == 'Y')
            cvrowtoadd.ID = id;
            cvrowtoadd.Hospital = 'PAP';
-           cvrowtoadd.StudyNumber = ' ';
+           cvrowtoadd.StudyNumber = num2str(id);
            cvrowtoadd.ClinicID = 0;
            cvrowtoadd.AttendanceDate = tmData.Date(i);
            tmClinicVisits = [tmClinicVisits; cvrowtoadd];   
@@ -39,7 +40,7 @@ for i = 1:nmeasurements
         if (ismember(tmData.Admission(i),{'Y'}) & ~ismember(tmData.Admission(i),prioradm))
             admrowtoadd.ID = id;
             admrowtoadd.Hospital = 'PAP';
-            admrowtoadd.StudyNumber = ' ';
+            admrowtoadd.StudyNumber = num2str(id);
             admrowtoadd.HospitalAdmissionID = 0;
             admrowtoadd.Admitted = tmData.Date(i);
             fprintf('Admission started on %s\n', datestr(tmData.Date(i),29));     
@@ -57,7 +58,7 @@ for i = 1:nmeasurements
         if (ismember(tmData.POAbx(i),{'Y'}) & ~ismember(tmData.POAbx(i),priorpoab))
             poabrowtoadd.ID = id;
             poabrowtoadd.Hospital = 'PAP';
-            poabrowtoadd.StudyNumber = ' ';
+            poabrowtoadd.StudyNumber = num2str(id);
             poabrowtoadd.AntibioticID = 0;
             poabrowtoadd.AntibioticName = 'Not Captured';
             poabrowtoadd.Route = 'Oral';
@@ -78,7 +79,7 @@ for i = 1:nmeasurements
         if (ismember(tmData.IVAbx(i),{'Y'}) & ~ismember(tmData.IVAbx(i),priorivab))
             ivabrowtoadd.ID = id;
             ivabrowtoadd.Hospital = 'PAP';
-            ivabrowtoadd.StudyNumber = ' ';
+            ivabrowtoadd.StudyNumber = num2str(id);
             ivabrowtoadd.AntibioticID = 0;
             ivabrowtoadd.AntibioticName = 'Not Captured';
             ivabrowtoadd.Route = 'IV';
@@ -108,7 +109,8 @@ for i = 1:nmeasurements
     if ~isnan(tmData.NumericLevel(i))
         crprowtoadd.ID = id;
         crprowtoadd.Hospital = 'PAP';
-        crprowtoadd.StudyNumber = ' ';
+        %crprowtoadd.StudyNumber = ' ';
+        crprowtoadd.StudyNumber = num2str(id);
         crprowtoadd.CRPID = 0;
         crprowtoadd.CRPDate = tmData.Date(i);
         if isequal(class(tmData.CRP), 'cell')
@@ -131,19 +133,90 @@ for i = 1:nmeasurements
     if ~isnan(tmData.FEVI_L_(i))
         pftrowtoadd.ID = id;
         pftrowtoadd.Hospital = 'PAP';
-        pftrowtoadd.StudyNumber = ' ';
+        pftrowtoadd.StudyNumber = num2str(id);
         pftrowtoadd.LungFunctionID = 0;
         pftrowtoadd.LungFunctionDate = tmData.Date(i);
         pftrowtoadd.FEV1 = tmData.FEVI_L_(i);
         pftrowtoadd.FEV1_ = tmData.FEV1___(i);
         pftrowtoadd.FVC1 = NaN;
-        pftrowtoadd.FVC1 = NaN;
+        pftrowtoadd.FVC1_ = NaN;
         pftrowtoadd.CalcFEV1SetAs = tmPatient.CalcFEV1SetAs(tmPatient.ID==id);
         pftrowtoadd.CalcFEV1_ = round((pftrowtoadd.FEV1 / pftrowtoadd.CalcFEV1SetAs) * 100);
         tmPFT = [tmPFT; pftrowtoadd];   
         fprintf('PFT taken on %s\n', datestr(tmData.Date(i),29));
     end
+    
+    % measurement data
+    
+    % weight
+    if ~isnan(tmData.weight(i))
+        phrowtoadd = initialiseMeasurementRow(phrowtoadd, id, tmData.Date(i), offset);
+        phrowtoadd.RecordingType = {'WeightRecording'};
+        phrowtoadd.Date_TimeRecorded = tmData.Date(i);
+        phrowtoadd.WeightInKg = tmData.weight(i);
+        tmphysdata = [tmphysdata; phrowtoadd];
+    end
+    
+    % FEV1
+    if ~isnan(tmData.FEV1_A_(i))
+        phrowtoadd = initialiseMeasurementRow(phrowtoadd, id, tmData.Date(i), offset);
+        phrowtoadd.RecordingType = {'LungFunctionRecording'};
+        %phrowtoadd.Date_TimeRecorded = tmData.Date(i);
+        phrowtoadd.FEV1 = tmData.FEV1_A_(i);
+        phrowtoadd.PredictedFEV = tmPatient.CalcPredictedFEV1(tmPatient.ID == id);
+        phrowtoadd.FEV1_ = round(100 * phrowtoadd.FEV1 / phrowtoadd.PredictedFEV);
+        phrowtoadd.CalcFEV1SetAs = tmPatient.CalcFEV1SetAs(tmPatient.ID == id);
+        phrowtoadd.CalcFEV1_ = round(100 * phrowtoadd.FEV1 / phrowtoadd.PredictedFEV);
+        tmphysdata = [tmphysdata; phrowtoadd];
+    end
+    
+    % Pulse Rate
+    if ~isnan(tmData.HR_mean_(i))
+        phrowtoadd = initialiseMeasurementRow(phrowtoadd, id, tmData.Date(i), offset);
+        phrowtoadd.RecordingType = {'PulseRateRecording'};
+        %phrowtoadd.Date_TimeRecorded = tmData.Date(i);
+        phrowtoadd.Pulse_BPM_ = tmData.HR_mean_(i);
+        tmphysdata = [tmphysdata; phrowtoadd];
+    end
+    
+    % O2 Saturation
+    if ~isnan(tmData.SpO2_mean_(i))
+        phrowtoadd = initialiseMeasurementRow(phrowtoadd, id, tmData.Date(i), offset);
+        phrowtoadd.RecordingType = {'O2SaturationRecording'};
+        %phrowtoadd.Date_TimeRecorded = tmData.Date(i);
+        phrowtoadd.O2Saturation = tmData.SpO2_mean_(i);
+        tmphysdata = [tmphysdata; phrowtoadd];
+    end
+    
+    % Activity
+    if ~isnan(tmData.Steps(i))
+        phrowtoadd = initialiseMeasurementRow(phrowtoadd, id, tmData.Date(i), offset);
+        phrowtoadd.RecordingType = {'ActivityRecording'};
+        %phrowtoadd.Date_TimeRecorded = tmData.Date(i);
+        phrowtoadd.Activity_Steps = tmData.Steps(i);
+        tmphysdata = [tmphysdata; phrowtoadd];
+    end
+    
+    % Cough
+    if ~isnan(tmData.CoughScore(i))
+        phrowtoadd = initialiseMeasurementRow(phrowtoadd, id, tmData.Date(i), offset);
+        phrowtoadd.RecordingType = {'CoughRecording'};
+        %phrowtoadd.Date_TimeRecorded = tmData.Date(i);
+        phrowtoadd.Rating = tmData.CoughScore(i) * 10;
+        tmphysdata = [tmphysdata; phrowtoadd];
+    end
+    
+    % Wellness
+    if ~isnan(tmData.WellnessScore(i))
+        phrowtoadd = initialiseMeasurementRow(phrowtoadd, id, tmData.Date(i), offset);
+        phrowtoadd.RecordingType = {'WellnessRecording'};
+        %phrowtoadd.Date_TimeRecorded = tmData.Date(i);
+        phrowtoadd.Rating = tmData.WellnessScore(i) * 10;
+        tmphysdata = [tmphysdata; phrowtoadd];
+    end
 end
 
+
 end
+
 
