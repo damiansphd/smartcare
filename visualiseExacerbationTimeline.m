@@ -1,24 +1,49 @@
 clc; clear; close all;
 
-tic
+studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
 
+if studynbr == 1
+    study = 'SC';
+    clinicalmatfile = 'clinicaldata.mat';
+    datamatfile = 'smartcaredata.mat';
+    ivandmeasuresfile = 'SCivandmeasures.mat';
+    datademographicsfile = 'SCdatademographicsbypatient.mat';
+elseif studynbr == 2
+    study = 'TM';
+    clinicalmatfile = 'telemedclinicaldata.mat';
+    datamatfile = 'telemeddata.mat';
+    ivandmeasuresfile = 'TMivandmeasures.mat';
+    datademographicsfile = 'TMdatademographicsbypatient.mat';
+else
+    fprintf('Invalid study\n');
+    return;
+end
+
+tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-clinicalmatfile = 'clinicaldata.mat';
-scmatfile = 'smartcaredata.mat';
-ivandmeasuresfile = 'ivandmeasures.mat';
-datademographicsfile = 'datademographicsbypatient.mat';
-
-
-fprintf('Loading Clinical data\n');
+fprintf('Loading clinical data\n');
 load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading SmartCare measurement data\n');
-load(fullfile(basedir, subfolder, scmatfile));
+fprintf('Loading measurement data\n');
+load(fullfile(basedir, subfolder, datamatfile));
 fprintf('Loading iv treatment and measures prior data\n');
 load(fullfile(basedir, subfolder, ivandmeasuresfile));
 fprintf('Loading datademographics by patient\n');
 load(fullfile(basedir, subfolder, datademographicsfile));
 toc
+
+if studynbr == 2
+    physdata = tmphysdata;
+    cdPatient = tmPatient;
+    cdMicrobiology = tmMicrobiology;
+    cdAntibiotics = tmAntibiotics;
+    cdAdmissions = tmAdmissions;
+    cdPFT = tmPFT;
+    cdCRP = tmCRP;
+    cdClinicVisits = tmClinicVisits;
+    cdEndStudy = tmEndStudy;
+    offset = tmoffset;
+end
 
 tic
 % sort antibiotic and admission clinical data consistently
@@ -90,11 +115,11 @@ for i = 1:size(abTreatments,1)
     xplotstopdn = max(eventtable.StopDateNum);
     xplotstopdn = max(20, xplotstopdn);
         
-    f = figure('Name',sprintf('Patient: %d  Hospital: %s  EventDate: %s', scid, hospital, datestr(eventstartdate, 29)));
+    f = figure('Name',sprintf('%s-Patient: %d  Hospital: %s  EventDate: %s', study, scid, hospital, datestr(eventstartdate, 29)));
     set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
     %set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8, 0.8], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
     p = uipanel('Parent', f, 'BorderType', 'none'); 
-    p.Title = sprintf('Patient: %d  Hospital: %s  EventDate: %s', scid, hospital, datestr(eventstartdate, 29)); 
+    p.Title = sprintf('%s-Patient: %d  Hospital: %s  EventDate: %s', study, scid, hospital, datestr(eventstartdate, 29)); 
     p.TitlePosition = 'centertop';
     p.FontSize = 20;
     p.FontWeight = 'bold';
@@ -187,10 +212,10 @@ for i = 1:size(abTreatments,1)
         end
     end
     % save plot
-    imagefilename = sprintf('ExacerbationTimeline_ID%d_%s_%11s.png', scid, hospital, datestr(eventstartdate, 29));
+    imagefilename = sprintf('%s-ExacerbationTimeline_ID%d_%s_%11s.png', study, scid, hospital, datestr(eventstartdate, 29));
     saveas(f, fullfile(basedir, subfolder, imagefilename));
     if scid==133
-            imagefilename = sprintf('ExacerbationTimeline_ID%d_%s_%11s.svg', scid, hospital, datestr(eventstartdate, 29));
+            imagefilename = sprintf('%s-ExacerbationTimeline_ID%d_%s_%11s.svg', study, scid, hospital, datestr(eventstartdate, 29));
             saveas(f, fullfile(basedir, subfolder, imagefilename));
     end
     close(f);

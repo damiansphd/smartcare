@@ -1,22 +1,47 @@
 clc; clear; close all;
 
+studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
+
+if studynbr == 1
+    study = 'SC';
+    clinicalmatfile = 'clinicaldata.mat';
+    datamatfile = 'smartcaredata.mat';
+    datademographicsfile = 'SCdatademographicsbypatient.mat';
+elseif studynbr == 2
+    study = 'TM';
+    clinicalmatfile = 'telemedclinicaldata.mat';
+    datamatfile = 'telemeddata.mat';
+    datademographicsfile = 'TMdatademographicsbypatient.mat';
+else
+    fprintf('Invalid study\n');
+    return;
+end
+
 tic
 
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-clinicalmatfile = 'clinicaldata.mat';
-scmatfile = 'smartcaredata.mat';
-datademographicsfile = 'datademographicsbypatient.mat';
-
-
-fprintf('Loading Clinical data\n');
+fprintf('Loading clinical data\n');
 load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading SmartCare measurement data\n');
-load(fullfile(basedir, subfolder, scmatfile));
+fprintf('Loading measurement data\n');
+load(fullfile(basedir, subfolder, datamatfile));
 fprintf('Loading datademographics by patient\n');
 load(fullfile(basedir, subfolder, datademographicsfile));
 toc
 
+if studynbr == 2
+    physdata = tmphysdata;
+    cdPatient = tmPatient;
+    cdMicrobiology = tmMicrobiology;
+    cdAntibiotics = tmAntibiotics;
+    cdAdmissions = tmAdmissions;
+    cdPFT = tmPFT;
+    cdCRP = tmCRP;
+    cdClinicVisits = tmClinicVisits;
+    cdEndStudy = tmEndStudy;
+    offset = tmoffset;
+end
+    
 basedir = './';
 subfolder = 'Plots';
 figurearray = [];
@@ -179,10 +204,10 @@ for i = 1:size(patientlist,1)
     
     page = 1;
     
-    figurearray(page) = figure('Name',sprintf('Patient Summary - ID %d Hosp %s - Page %d', scid, hospital, page));
+    figurearray(page) = figure('Name',sprintf('%s-Patient Summary - ID %d Hosp %s - Page %d', study, scid, hospital, page));
     set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
     p = uipanel('Parent', figurearray(page), 'BorderType', 'none'); 
-    p.Title = sprintf('Patient Summary - ID %d (%s) - Page %d', scid, hospital, page); 
+    p.Title = sprintf('%s-Patient Summary - ID %d (%s) - Page %d', study, scid, hospital, page); 
     p.TitlePosition = 'centertop';
     p.FontSize = 20;
     p.FontWeight = 'bold';
@@ -371,10 +396,10 @@ for i = 1:size(patientlist,1)
     
     tic
     for a = 1:size(figurearray,2)
-        imagefilename = sprintf('PatientSummary_ID%d_%s_page%d.png', scid, hospital, a);
+        imagefilename = sprintf('%sPatientSummary_ID%d_%s_page%d.png', study, scid, hospital, a);
         saveas(figurearray(a),fullfile(basedir, subfolder, imagefilename));
         if scid==133
-            imagefilename = sprintf('PatientSummary_ID%d_%s_page%d.svg', scid, hospital, a);
+            imagefilename = sprintf('%sPatientSummary_ID%d_%s_page%d.svg', study, scid, hospital, a);
             saveas(figurearray(a),fullfile(basedir, subfolder, imagefilename));
         end
         close(figurearray(a));

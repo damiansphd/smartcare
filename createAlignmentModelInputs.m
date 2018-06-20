@@ -1,30 +1,56 @@
 clear; close all; clc;
 
+studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
+
+if studynbr == 1
+    study = 'SC';
+    clinicalmatfile = 'clinicaldata.mat';
+    datamatfile = 'smartcaredata.mat';
+    ivandmeasuresfile = 'SCivandmeasures.mat';
+    datademographicsfile = 'SCdatademographicsbypatient.mat';
+elseif studynbr == 2
+    study = 'TM';
+    clinicalmatfile = 'telemedclinicaldata.mat';
+    datamatfile = 'telemeddata.mat';
+    ivandmeasuresfile = 'TMivandmeasures.mat';
+    datademographicsfile = 'TMdatademographicsbypatient.mat';
+else
+    fprintf('Invalid study\n');
+    return;
+end
+
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-clinicalmatfile = 'clinicaldata.mat';
-scmatfile = 'smartcaredata.mat';
-ivandmeasuresfile = 'ivandmeasures.mat';
-datademographicsfile = 'datademographicsbypatient.mat';
-
-
-fprintf('Loading Clinical data\n');
+fprintf('Loading clinical data\n');
 load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading SmartCare measurement data\n');
-load(fullfile(basedir, subfolder, scmatfile));
+fprintf('Loading measurement data\n');
+load(fullfile(basedir, subfolder, datamatfile));
 fprintf('Loading iv treatment and measures prior data\n');
 load(fullfile(basedir, subfolder, ivandmeasuresfile));
 fprintf('Loading datademographics by patient\n');
 load(fullfile(basedir, subfolder, datademographicsfile));
 toc
 
+if studynbr == 2
+    physdata = tmphysdata;
+    cdPatient = tmPatient;
+    cdMicrobiology = tmMicrobiology;
+    cdAntibiotics = tmAntibiotics;
+    cdAdmissions = tmAdmissions;
+    cdPFT = tmPFT;
+    cdCRP = tmCRP;
+    cdClinicVisits = tmClinicVisits;
+    cdEndStudy = tmEndStudy;
+    offset = tmoffset;
+end
+
 % useful variables
 npatients = max(physdata.SmartCareID);
 ndays = max(physdata.ScaledDateNum);
 nmeasures = size(unique(physdata.RecordingType),1);
 measures = table('Size',[nmeasures 4], 'VariableTypes', {'int32', 'cell', 'cell', 'cell'} ,'VariableNames', {'Index', 'Name', 'DisplayName', 'Column'});
-measures.Index = [1:9]';
+measures.Index = [1:nmeasures]';
 measures.Name = unique(physdata.RecordingType);
 measures.DisplayName = replace(measures.Name, 'Recording', '');
 measures.AlignWindStd = zeros(nmeasures,1); % populate during model execution
@@ -49,7 +75,7 @@ toc
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-outputfilename = 'alignmentmodelinputs.mat';
+outputfilename = sprintf('%salignmentmodelinputs.mat', study);
 fprintf('Saving output variables to file %s\n', outputfilename);
 save(fullfile(basedir, subfolder,outputfilename), 'amInterventions','amDatacube', 'amNormcube', 'measures', 'npatients','ndays', 'nmeasures', 'ninterventions');
 toc

@@ -1,11 +1,23 @@
 clear; close all; clc;
 
+studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
+
+if studynbr == 1
+    study = 'SC';
+    modelinputsmatfile = 'SCalignmentmodelinputs.mat';
+    datademographicsfile = 'SCdatademographicsbypatient.mat';
+elseif studynbr == 2
+    study = 'TM';
+    modelinputsmatfile = 'TMalignmentmodelinputs.mat';
+    datademographicsfile = 'TMdatademographicsbypatient.mat';
+else
+    fprintf('Invalid study\n');
+    return;
+end
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-modelinputsmatfile = 'alignmentmodelinputs.mat';
-datademographicsfile = 'datademographicsbypatient.mat';
-fprintf('Loading Alignment Model Inputs data\n');
+fprintf('Loading alignment model Inputs data\n');
 load(fullfile(basedir, subfolder, modelinputsmatfile));
 fprintf('Loading datademographics by patient\n');
 load(fullfile(basedir, subfolder, datademographicsfile));
@@ -17,9 +29,9 @@ align_wind = 20;
 
 % remove temperature readings as insufficient datapoints for a number of
 % the interventions
-idx = ismember(measures.DisplayName, {'Temperature'});
+%idx = ismember(measures.DisplayName, {'Temperature'});
 %idx = ismember(measures.DisplayName, {'Temperature', 'Wellness', 'Activity', 'LungFunction', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
-%idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
+idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
 %idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'Cough', 'LungFunction', 'SleepActivity', 'Wellness'});
 amDatacube(:,:,measures.Index(idx)) = [];
 amNormcube(:,:,measures.Index(idx)) = [];
@@ -55,7 +67,7 @@ fprintf('%s - ErrFcn = %7.4f\n', run_type, best_qual);
 % consistent unaligned curve as the pre-profile.
 unaligned_profile = best_profile_pre;
 % plot and save aligned curves (pre and post)
-am2PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_offsets, best_qual, measures, max_offset, align_wind, nmeasures, run_type)
+am2PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_offsets, best_qual, measures, max_offset, align_wind, nmeasures, run_type, study)
 toc
 fprintf('\n');
 
@@ -75,7 +87,7 @@ for j=1:niterations
     if qual < best_qual
         % plot and save aligned curves (pre and post) if the result is best
         % so far
-        am2PlotAndSaveAlignedCurves(unaligned_profile, profile_post, offsets, qual, measures, max_offset, align_wind, nmeasures, run_type)
+        am2PlotAndSaveAlignedCurves(unaligned_profile, profile_post, offsets, qual, measures, max_offset, align_wind, nmeasures, run_type, study)
         fprintf('Best so far is random start %d\n', j);
         best_offsets = offsets;
         best_initial_offsets = initial_offsets;
@@ -94,7 +106,7 @@ fprintf('\n');
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('alignmentmodel2results-obj%d.mat', round(best_qual*10000));
+outputfilename = sprintf('%salignmentmodel2results-obj%d.mat', study, round(best_qual*10000));
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');
 save(fullfile(basedir, subfolder, outputfilename), 'best_initial_offsets', 'best_offsets', 'best_profile_pre', 'best_profile_post', ...
@@ -127,7 +139,7 @@ fprintf('Plotting prediction results\n');
 for i=1:ninterventions
 %for i = 42:44
     am2PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, ...
-        best_offsets, best_profile_post, ex_start, i, nmeasures, max_offset, align_wind);
+        best_offsets, best_profile_post, ex_start, i, nmeasures, max_offset, align_wind, study);
 end
 toc
 fprintf('\n');

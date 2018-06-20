@@ -1,5 +1,5 @@
 
-function generateDataDemographicsByPatientFn(physdata, cdPatient)
+function generateDataDemographicsByPatientFn(physdata, cdPatient, study)
 
 % generateDataDemographicsByPatientFn - function that creates data
 % demographics by patient and stores matlab variables and creates an excel
@@ -37,16 +37,16 @@ timenow = datestr(clock(),30);
 
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('datademographicsbypatient-%s.mat',timenow);
+outputfilename = sprintf('%sdatademographicsbypatient-%s.mat', study, timenow);
 fprintf('Saving output variables to matlab file %s\n', outputfilename);
 save(fullfile(basedir, subfolder, outputfilename), 'measurecounttable', 'demographicstable', 'overalltable');
-outputfilename = sprintf('datademographicsbypatient.mat',timenow);
+outputfilename = sprintf('%sdatademographicsbypatient.mat', study);
 fprintf('Saving output variables to matlab file %s\n', outputfilename);
 save(fullfile(basedir, subfolder, outputfilename), 'measurecounttable', 'demographicstable', 'overalltable');
 
 basedir = './';
 subfolder = 'ExcelFiles';
-outputfilename = sprintf('DataDemographicsByPatient-%s.xlsx',timenow);
+outputfilename = sprintf('%sDataDemographicsByPatient-%s.xlsx',study, timenow);
 fprintf('Saving results to excel file %s\n', outputfilename);
 writetable(measurecounttable, fullfile(basedir, subfolder, outputfilename), 'Sheet', 'MeasureCountByPatient');
 writetable(demographicstable, fullfile(basedir, subfolder, outputfilename), 'Sheet', 'DataDemographicsByPatient');

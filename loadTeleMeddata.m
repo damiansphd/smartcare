@@ -45,7 +45,7 @@ tmPFT(:,:)          = [];
 tmphysdata          = physdata;
 phrowtoadd          = tmphysdata(1,:);
 tmphysdata(:,:)     = [];
-tmoffset            = datenum('2013/01/30');
+tmoffset            = datenum('2013/01/31');
 
 toc
 fprintf('\n');
@@ -65,12 +65,13 @@ tmPatientInfo.FEV1SetAs = round(tmPatientInfo.PredFEV1,1);
 
 ntmpatients = size(tmPatientInfo,1);
 tmPatient.ID(1:ntmpatients) = tmPatientInfo.ID;
-for i = 1:size(tmPatient,1)
-    tmPatient.Hospital{i} = 'PAP';
-    %tmPatient.StudyNumber = cellstr(num2str(tmPatient.ID(i)));
-end
+tmPatient.Hospital(1:ntmpatients) = {'PAP'}
+%for i = 1:size(tmPatient,1)
+%    tmPatient.Hospital{i} = 'PAP';
+%end
 tmPatient.StudyNumber = cellstr(num2str(tmPatient.ID));
 tmPatient.Age = tmPatientInfo.Age;
+tmPatient.DOB = datetime(2013-tmPatient.Age, 1, 1);
 tmPatient.Sex = tmPatientInfo.Gender;
 tmPatient.Height = tmPatientInfo.Height;
 tmPatient.PredictedFEV1 = tmPatientInfo.PredFEV1;
@@ -84,6 +85,13 @@ tmFemalePatient.CalcPredictedFEV1 = (tmFemalePatient.Height * 0.01 * 3.95) - (tm
 tmMalePatient.CalcFEV1SetAs = round(tmMalePatient.CalcPredictedFEV1,1);
 tmFemalePatient.CalcFEV1SetAs = round(tmFemalePatient.CalcPredictedFEV1,1);
 tmPatient = sortrows([tmMalePatient ; tmFemalePatient], {'ID'}, 'ascend');
+
+tmEndStudy.ID(1:ntmpatients) = tmPatient.ID;
+tmEndStudy.Hospital = tmPatient.Hospital;
+tm.StudyNumber = tmPatient.StudyNumber;
+for i = 1:size(tmEndStudy,1)
+    tmEndStudy.EndOfStudyReason{i} = 'Completed Study';
+end
 
 toc
 fprintf('\n');
@@ -110,6 +118,7 @@ tmAdmissions.HospitalAdmissionID = [1:size(tmAdmissions,1)]';
 tmAntibiotics.AntibioticID = [1:size(tmAntibiotics,1)]';
 tmCRP.CRPID = [1:size(tmCRP,1)]';
 tmPFT.LungFunctionID = [1:size(tmPFT,1)]';
+tmEndStudy.EndOfStudyID = [1:size(tmEndStudy,1)]';
 
 % populate Study Date in clinical patient table
 fprintf('Populating study date in clinical patient table\n');
@@ -129,6 +138,9 @@ minDatesByPatient.Properties.VariableNames({'min_DateNum'}) = {'MinPatientDateNu
 tmphysdata = innerjoin(tmphysdata,minDatesByPatient);
 tmphysdata.ScaledDateNum = tmphysdata.DateNum - tmphysdata.MinPatientDateNum + 1;
 tmphysdata.MinPatientDateNum = [];
+
+% remove invalid HR and O2 measures from patient K14
+tmphysdata(isnan(tmphysdata.DateNum),:) = [];
 
 toc
 fprintf('\n');    

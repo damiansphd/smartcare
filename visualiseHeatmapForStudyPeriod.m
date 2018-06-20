@@ -1,17 +1,42 @@
 clc; clear; close all;
 
+studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
+
+if studynbr == 1
+    study = 'SC';
+    clinicalmatfile = 'clinicaldata.mat';
+    datamatfile = 'smartcaredata.mat';
+elseif studynbr == 2
+    study = 'TM';
+    clinicalmatfile = 'telemedclinicaldata.mat';
+    datamatfile = 'telemeddata.mat';
+else
+    fprintf('Invalid study\n');
+    return;
+end
+
 tic
 
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-clinicalmatfile = 'clinicaldata.mat';
-scmatfile = 'smartcaredata.mat';
-
-fprintf('Loading Clinical data\n');
+fprintf('Loading clinical data\n');
 load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading SmartCare measurement data\n');
-load(fullfile(basedir, subfolder, scmatfile));
+fprintf('Loading measurement data\n');
+load(fullfile(basedir, subfolder, datamatfile));
 toc
+
+if studynbr == 2
+    physdata = tmphysdata;
+    cdPatient = tmPatient;
+    cdMicrobiology = tmMicrobiology;
+    cdAntibiotics = tmAntibiotics;
+    cdAdmissions = tmAdmissions;
+    cdPFT = tmPFT;
+    cdCRP = tmCRP;
+    cdClinicVisits = tmClinicVisits;
+    cdEndStudy = tmEndStudy;
+    offset = tmoffset;
+end
 
 tic
 temp = hsv;
@@ -26,14 +51,14 @@ colors(8,:)  = temp(16,:);
 colors(9,:)  = temp(18,:);
 
 %f1 = createMeasuresHeatmapWithStudyPeriod(physdata, offset, cdPatient);
-f2 = createHeatmapOfPatientsAndMeasures(physdata(physdata.ScaledDateNum<184,{'SmartCareID','ScaledDateNum'}), colors, 'Heatmap of Patient Measures during Study Period', 1, 1, 'a3');
+f2 = createHeatmapOfPatientsAndMeasures(physdata(physdata.ScaledDateNum<184,{'SmartCareID','ScaledDateNum'}), colors, strcat(study, '-Heatmap of Patient Measures during Study Period'), 1, 1, 'a3');
 
 basedir = './';
 subfolder = 'Plots';
 filenameappend = 'ForStudyPeriod';
-fullfilename = strcat('HeatmapAllPatients', filenameappend, '.png');
+fullfilename = strcat(study, '-HeatmapAllPatients', filenameappend, '.png');
 saveas(f2,fullfile(basedir, subfolder, fullfilename));
-fullfilename = strcat('HeatmapAllPatients', filenameappend, '.svg');
+fullfilename = strcat(study, '-HeatmapAllPatients', filenameappend, '.svg');
 saveas(f2,fullfile(basedir, subfolder, fullfilename));
 
 toc

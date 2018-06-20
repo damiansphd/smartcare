@@ -13,6 +13,8 @@ fprintf('Done\n');
 toc
 fprintf('\n');
 
+study = 'SC';
+
 basedir = './';
 subfolder = 'DataFiles';
 scdatafile = 'mydata.csv';
@@ -53,7 +55,7 @@ physdata = analyseOvernightMeasures(physdata,0, doupdates, detaillog);
 physdata_predupehandling = physdata;
 
 % generate data demographics by patient
-generateDataDemographicsByPatientFn(physdata, cdPatient);
+generateDataDemographicsByPatientFn(physdata, cdPatient, study);
 
 % handle duplicates
 physdata = handleDuplicateMeasures(physdata, doupdates, detaillog);

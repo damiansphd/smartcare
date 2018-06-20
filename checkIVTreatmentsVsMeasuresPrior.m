@@ -1,17 +1,42 @@
 clc; clear; close all;
 
+studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
+
+if studynbr == 1
+    study = 'SC';
+    clinicalmatfile = 'clinicaldata.mat';
+    datamatfile = 'smartcaredata.mat';
+elseif studynbr == 2
+    study = 'TM';
+    clinicalmatfile = 'telemedclinicaldata.mat';
+    datamatfile = 'telemeddata.mat';
+else
+    fprintf('Invalid study\n');
+    return;
+end
+
 tic
 
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-clinicalmatfile = 'clinicaldata.mat';
-scmatfile = 'smartcaredata.mat';
-
-fprintf('Loading Clinical data\n');
+fprintf('Loading clinical data\n');
 load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading SmartCare measurement data\n');
-load(fullfile(basedir, subfolder, scmatfile));
+fprintf('Loading measurement data\n');
+load(fullfile(basedir, subfolder, datamatfile));
 toc
+
+if studynbr == 2
+    physdata = tmphysdata;
+    cdPatient = tmPatient;
+    cdMicrobiology = tmMicrobiology;
+    cdAntibiotics = tmAntibiotics;
+    cdAdmissions = tmAdmissions;
+    cdPFT = tmPFT;
+    cdCRP = tmCRP;
+    cdClinicVisits = tmClinicVisits;
+    cdEndStudy = tmEndStudy;
+    offset = tmoffset;
+end
 
 tic
 % remove Oral treatments & sort by SmartCareID and StopDate
@@ -84,7 +109,7 @@ fprintf('\n');
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-outputfilename = 'ivandmeasures.mat';
+outputfilename = sprintf('%sivandmeasures.mat', study);
 
 fprintf('Saving output variables to file %s\n', outputfilename);
 save(fullfile(basedir, subfolder, outputfilename), 'ivandmeasurestable');
@@ -97,7 +122,7 @@ fprintf('Saving results to excel\n');
 
 basedir = './';
 subfolder = 'ExcelFiles';
-outputfilename = 'MeasuresPriorToIVTreatments.xlsx';
+outputfilename = sprintf('%sMeasuresPriorToIVTreatments.xlsx', study);
 summarysheet = 'SummaryByIVTreatment';
 detailsheet = 'MeasuresDetail';
 

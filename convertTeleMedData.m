@@ -152,7 +152,6 @@ for i = 1:nmeasurements
     if ~isnan(tmData.weight(i))
         phrowtoadd = initialiseMeasurementRow(phrowtoadd, id, tmData.Date(i), offset);
         phrowtoadd.RecordingType = {'WeightRecording'};
-        phrowtoadd.Date_TimeRecorded = tmData.Date(i);
         phrowtoadd.WeightInKg = tmData.weight(i);
         tmphysdata = [tmphysdata; phrowtoadd];
     end
@@ -161,7 +160,6 @@ for i = 1:nmeasurements
     if ~isnan(tmData.FEV1_A_(i))
         phrowtoadd = initialiseMeasurementRow(phrowtoadd, id, tmData.Date(i), offset);
         phrowtoadd.RecordingType = {'LungFunctionRecording'};
-        %phrowtoadd.Date_TimeRecorded = tmData.Date(i);
         phrowtoadd.FEV1 = tmData.FEV1_A_(i);
         phrowtoadd.PredictedFEV = tmPatient.CalcPredictedFEV1(tmPatient.ID == id);
         phrowtoadd.FEV1_ = round(100 * phrowtoadd.FEV1 / phrowtoadd.PredictedFEV);
@@ -174,7 +172,6 @@ for i = 1:nmeasurements
     if ~isnan(tmData.HR_mean_(i))
         phrowtoadd = initialiseMeasurementRow(phrowtoadd, id, tmData.Date(i), offset);
         phrowtoadd.RecordingType = {'PulseRateRecording'};
-        %phrowtoadd.Date_TimeRecorded = tmData.Date(i);
         phrowtoadd.Pulse_BPM_ = tmData.HR_mean_(i);
         tmphysdata = [tmphysdata; phrowtoadd];
     end
@@ -183,7 +180,6 @@ for i = 1:nmeasurements
     if ~isnan(tmData.SpO2_mean_(i))
         phrowtoadd = initialiseMeasurementRow(phrowtoadd, id, tmData.Date(i), offset);
         phrowtoadd.RecordingType = {'O2SaturationRecording'};
-        %phrowtoadd.Date_TimeRecorded = tmData.Date(i);
         phrowtoadd.O2Saturation = tmData.SpO2_mean_(i);
         tmphysdata = [tmphysdata; phrowtoadd];
     end
@@ -192,7 +188,6 @@ for i = 1:nmeasurements
     if ~isnan(tmData.Steps(i))
         phrowtoadd = initialiseMeasurementRow(phrowtoadd, id, tmData.Date(i), offset);
         phrowtoadd.RecordingType = {'ActivityRecording'};
-        %phrowtoadd.Date_TimeRecorded = tmData.Date(i);
         phrowtoadd.Activity_Steps = tmData.Steps(i);
         tmphysdata = [tmphysdata; phrowtoadd];
     end
@@ -201,7 +196,6 @@ for i = 1:nmeasurements
     if ~isnan(tmData.CoughScore(i))
         phrowtoadd = initialiseMeasurementRow(phrowtoadd, id, tmData.Date(i), offset);
         phrowtoadd.RecordingType = {'CoughRecording'};
-        %phrowtoadd.Date_TimeRecorded = tmData.Date(i);
         phrowtoadd.Rating = tmData.CoughScore(i) * 10;
         tmphysdata = [tmphysdata; phrowtoadd];
     end
@@ -210,7 +204,6 @@ for i = 1:nmeasurements
     if ~isnan(tmData.WellnessScore(i))
         phrowtoadd = initialiseMeasurementRow(phrowtoadd, id, tmData.Date(i), offset);
         phrowtoadd.RecordingType = {'WellnessRecording'};
-        %phrowtoadd.Date_TimeRecorded = tmData.Date(i);
         phrowtoadd.Rating = tmData.WellnessScore(i) * 10;
         tmphysdata = [tmphysdata; phrowtoadd];
     end

@@ -1,4 +1,4 @@
-function am2PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, best_offsets, best_profile_post, ex_start, thisinter, nmeasures, max_offset, align_wind)
+function am2PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, best_offsets, best_profile_post, ex_start, thisinter, nmeasures, max_offset, align_wind, study)
 
 % am2PlotsAndSavePredictions - plots measures prior to
 % treatment with alignment model predictions and overlaid with the mean
@@ -13,7 +13,7 @@ days = [-1 * (max_offset + align_wind): 0];
 
 scid = amInterventions.SmartCareID(thisinter);
 start = amInterventions.IVScaledDateNum(thisinter);
-name = sprintf('Alignment Model2 Prediction - Exacerbation %d - ID %d Date %s', thisinter, scid, datestr(amInterventions.IVStartDate(thisinter),29));
+name = sprintf('%sAlignment Model2 Prediction - Exacerbation %d - ID %d Date %s', study, thisinter, scid, datestr(amInterventions.IVStartDate(thisinter),29));
 f = figure('Name', name);
 set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
 p = uipanel('Parent',f,'BorderType','none');
