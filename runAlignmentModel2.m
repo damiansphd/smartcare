@@ -1,6 +1,7 @@
 clear; close all; clc;
 
 studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
+fprintf('\n');
 
 if studynbr == 1
     study = 'SC';
@@ -14,6 +15,18 @@ else
     fprintf('Invalid study\n');
     return;
 end
+
+fprintf('Methodology for multiplicative normalisation\n');
+fprintf('--------------------------------------------\n');
+fprintf('1: Std for Data Window across interventions by measure\n');
+fprintf('2: Std across all data by measure\n');
+fprintf('3: Std across all data by patient and measure\n');
+multiplicativenormmethod = input('Choose methodology (1-3) ');
+fprintf('\n');
+if multiplicativenormmethod > 3
+    fprintf('Invalid methodology\n');
+    return;
+end
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
@@ -24,8 +37,13 @@ load(fullfile(basedir, subfolder, datademographicsfile));
 toc
 
 detaillog = true;
-max_offset = 30; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
+max_offset = 25; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
 align_wind = 20;
+
+% remove any interventions where the start is less than the alignment
+% window
+amInterventions(amInterventions.IVScaledDateNum <= align_wind,:) = [];
+ninterventions = size(amInterventions,1);
 
 % remove temperature readings as insufficient datapoints for a number of
 % the interventions
@@ -34,14 +52,13 @@ align_wind = 20;
 idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
 %idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'Cough', 'LungFunction', 'SleepActivity', 'Wellness'});
 amDatacube(:,:,measures.Index(idx)) = [];
-amNormcube(:,:,measures.Index(idx)) = [];
 measures(idx,:) = [];
 nmeasures = size(measures,1);
 measures.Index = [1:nmeasures]';
 unaligned_profile = zeros(nmeasures, max_offset+align_wind);
 overall_hist = zeros(ninterventions, max_offset);
 
-% calculate the alignment window std for each measure and store in measures
+% calculate the overall & alignment window std for each measure and store in measures
 % table
 for m = 1:nmeasures
     tempdata = zeros(ninterventions * align_wind, 1);
@@ -51,7 +68,64 @@ for m = 1:nmeasures
         tempdata( ((i-1) * align_wind) + 1 : (i * align_wind) ) = reshape(amDatacube(scid, (start - align_wind):(start - 1), m), align_wind, 1);
     end
     measures.AlignWindStd(m) = std(tempdata(~isnan(tempdata)));
+    tempdata = reshape(amDatacube(:, :, m), npatients * ndays, 1);
+    measures.OverallStd(m) = std(tempdata(~isnan(tempdata)));
 end
+
+% populate multiplicative normalisation values based on methodology
+% selected
+validids = unique(demographicstable.SmartCareID);
+normstd = zeros(npatients, nmeasures);
+for i = 1:npatients
+    for m = 1:nmeasures
+        if multiplicativenormmethod == 1
+            normstd(i,m) = measures.AlignWindStd(m);
+        elseif multiplicativenormmethod == 2
+            normstd(i,m) = measures.OverallStd(m);
+        else
+            if ismember(i,validids)
+                scid = i;
+                column = getColumnForMeasure(measures.Name{m});
+                ddcolumn = sprintf('Fun_%s',column);
+                if size(find(demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m})),1) == 0
+                    normstd(i,m) = measures.OverallStd(m);
+                else
+                    normstd(i,m) = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}),{ddcolumn}}(2);
+                end
+            end
+        end
+    end
+end
+
+% adjust by additive normalisation
+
+normmean = zeros(ninterventions, nmeasures);
+amNormcube = amDatacube;
+for i = 1:ninterventions
+    meanwindow = 7;
+    scid   = amInterventions.SmartCareID(i);
+    start = amInterventions.IVScaledDateNum(i);
+    if (start - align_wind - meanwindow) < 0
+        meanwindow = start - align_wind - 1;
+    end
+    for m = 1:nmeasures
+        meanwindowdata = amDatacube(scid, start - align_wind - meanwindow: start - align_wind - 1, m);
+        if size(meanwindowdata(~isnan(meanwindowdata)),2) >= 3
+            normmean(i, m) = mean(meanwindowdata(~isnan(meanwindowdata)));
+        else
+            fprintf('Using inter-quartile mean for intervention %d, measure %d\n', i, m);
+            column = getColumnForMeasure(measures.Name{m});
+            ddcolumn = sprintf('Fun_%s',column);
+            normmean(i, m) = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}),{ddcolumn}}(5);
+        end
+        periodstart = start - align_wind - max_offset;
+        if periodstart <= 0
+            periodstart = 1;
+        end
+        amNormcube(scid, (periodstart):(start), m) = amDatacube(scid, (periodstart):(start), m) - normmean(i,m);
+    end
+end
+fprintf('\n');
 
 tic
 fprintf('Running alignment with zero offset start\n');
@@ -61,7 +135,7 @@ end
 best_initial_offsets = amInterventions.Offset;
 
 run_type = 'Zero Offset Start';
-[best_offsets, best_profile_pre, best_profile_post, best_histogram, best_qual] = am2AlignCurves(amDatacube, amInterventions, measures, max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog);
+[best_offsets, best_profile_pre, best_profile_post, best_histogram, best_qual] = am2AlignCurves(amNormcube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, best_qual);
 % save the zero offset pre-profile to unaligned_profile so all plots show a
 % consistent unaligned curve as the pre-profile.
@@ -82,7 +156,7 @@ for j=1:niterations
     end
     initial_offsets = amInterventions.Offset;
     run_type = sprintf('Random Offset Start %d', j);
-    [offsets, profile_pre, profile_post, histogram, qual] = am2AlignCurves(amDatacube, amInterventions, measures, max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog);
+    [offsets, profile_pre, profile_post, histogram, qual] = am2AlignCurves(amNormcube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog);
     fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
     if qual < best_qual
         % plot and save aligned curves (pre and post) if the result is best
@@ -139,7 +213,7 @@ fprintf('Plotting prediction results\n');
 for i=1:ninterventions
 %for i = 42:44
     am2PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, ...
-        best_offsets, best_profile_post, ex_start, i, nmeasures, max_offset, align_wind, study);
+        best_offsets, best_profile_post, normmean, ex_start, i, nmeasures, max_offset, align_wind, study);
 end
 toc
 fprintf('\n');

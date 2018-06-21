@@ -1,4 +1,4 @@
-function [offsets, profile_pre, profile_post, hstg, qual] = am2AlignCurves(amDatacube, amInterventions, measures, max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog)
+function [offsets, profile_pre, profile_post, hstg, qual] = am2AlignCurves(amDatacube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog)
 
 % am2AlignCurves = function to align measurement curves prior to intervention
 
@@ -44,7 +44,7 @@ while 1
     end
     
     if ok == 1
-        [better_offset, hstg] = am2BestFit(meancurvesum, meancurvecount, amDatacube, amInterventions, measures, hstg, pnt, max_offset, align_wind, nmeasures);
+        [better_offset, hstg] = am2BestFit(meancurvesum, meancurvecount, amDatacube, amInterventions, measures, normstd, hstg, pnt, max_offset, align_wind, nmeasures);
     else
         better_offset = amInterventions.Offset(pnt);
     end
@@ -85,7 +85,7 @@ end
 % computing the objective function result for converged offset array
 for i=1:ninterventions
     [meancurvesum, meancurvecount] = am2RemoveFromMean(meancurvesum, meancurvecount, amDatacube, amInterventions, i, max_offset, align_wind, nmeasures);
-    qual = qual + am2CalcObjFcn(meancurvesum, meancurvecount, amDatacube, amInterventions, measures, hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, 0);
+    qual = qual + am2CalcObjFcn(meancurvesum, meancurvecount, amDatacube, amInterventions, measures, normstd, hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, 0);
     [meancurvesum, meancurvecount] = am2AddToMean(meancurvesum, meancurvecount, amDatacube, amInterventions, i, max_offset, align_wind, nmeasures);
 end
 

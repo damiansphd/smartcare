@@ -54,6 +54,7 @@ measures.Index = [1:nmeasures]';
 measures.Name = unique(physdata.RecordingType);
 measures.DisplayName = replace(measures.Name, 'Recording', '');
 measures.AlignWindStd = zeros(nmeasures,1); % populate during model execution
+measures.OverallStd = zeros(nmeasures,1); % populate during model execution
 
 for i = 1:size(measures,1)
      measures.Column(i) = cellstr(getColumnForMeasure(measures.Name{i}));
@@ -69,7 +70,7 @@ toc
 tic
 % create datacube - 3D array of patients/days/measures for model
 fprintf('Creating 3D data array\n');
-[amDatacube, amNormcube] = createDataCube(physdata, measures, demographicstable, overalltable, npatients, ndays, nmeasures);
+[amDatacube] = createDataCube(physdata, measures, demographicstable, overalltable, npatients, ndays, nmeasures);
 toc
 
 tic
@@ -77,7 +78,7 @@ basedir = './';
 subfolder = 'MatlabSavedVariables';
 outputfilename = sprintf('%salignmentmodelinputs.mat', study);
 fprintf('Saving output variables to file %s\n', outputfilename);
-save(fullfile(basedir, subfolder,outputfilename), 'amInterventions','amDatacube', 'amNormcube', 'measures', 'npatients','ndays', 'nmeasures', 'ninterventions');
+save(fullfile(basedir, subfolder,outputfilename), 'amInterventions','amDatacube', 'measures', 'npatients','ndays', 'nmeasures', 'ninterventions');
 toc
 
 
