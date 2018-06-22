@@ -37,8 +37,8 @@ load(fullfile(basedir, subfolder, datademographicsfile));
 toc
 
 detaillog = true;
-max_offset = 25; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
-align_wind = 20;
+max_offset = 30; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
+align_wind = 25;
 
 % remove any interventions where the start is less than the alignment
 % window
@@ -113,10 +113,15 @@ for i = 1:ninterventions
         if size(meanwindowdata(~isnan(meanwindowdata)),2) >= 3
             normmean(i, m) = mean(meanwindowdata(~isnan(meanwindowdata)));
         else
-            fprintf('Using inter-quartile mean for intervention %d, measure %d\n', i, m);
-            column = getColumnForMeasure(measures.Name{m});
-            ddcolumn = sprintf('Fun_%s',column);
-            normmean(i, m) = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}),{ddcolumn}}(5);
+            if size(find(demographicstable.SmartCareID(demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}))),1) > 0
+                fprintf('Using inter-quartile mean for intervention %d, measure %d\n', i, m);
+                column = getColumnForMeasure(measures.Name{m});
+                ddcolumn = sprintf('Fun_%s',column);
+                normmean(i, m) = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}),{ddcolumn}}(5);
+            else
+                fprintf('No measures for intervention %d, measure %d\n', i, m);
+                normean(i,m) = 0;
+            end
         end
         periodstart = start - align_wind - max_offset;
         if periodstart <= 0
