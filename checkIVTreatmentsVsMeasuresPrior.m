@@ -40,8 +40,9 @@ end
 
 tic
 % remove Oral treatments & sort by SmartCareID and StopDate
-idx = find(ismember(cdAntibiotics.Route, {'Oral'}));
-cdAntibiotics(idx,:) = [];
+% after further analysis, changed to include oral ab's as well as iv ab's
+%idx = find(ismember(cdAntibiotics.Route, {'Oral'}));
+%cdAntibiotics(idx,:) = [];
 ivTreatments = unique(cdAntibiotics(:,{'ID', 'Hospital', 'StartDate'}));
 ivTreatments.IVDateNum = datenum(ivTreatments.StartDate) - offset + 1;
 

@@ -37,7 +37,7 @@ load(fullfile(basedir, subfolder, datademographicsfile));
 toc
 
 detaillog = true;
-max_offset = 30; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
+max_offset = 25; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
 align_wind = 25;
 
 % remove any interventions where the start is less than the alignment
@@ -105,7 +105,7 @@ for i = 1:ninterventions
     meanwindow = 7;
     scid   = amInterventions.SmartCareID(i);
     start = amInterventions.IVScaledDateNum(i);
-    if (start - align_wind - meanwindow) < 0
+    if (start - align_wind - meanwindow) <= 0
         meanwindow = start - align_wind - 1;
     end
     for m = 1:nmeasures
@@ -151,8 +151,8 @@ toc
 fprintf('\n');
 
 fprintf('Running alignment with random offset start\n');
-%niterations = 500;
-niterations = 200;
+niterations = 500;
+%niterations = 200;
 %niterations = 0;
 for j=1:niterations
     tic
