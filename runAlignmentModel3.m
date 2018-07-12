@@ -146,7 +146,7 @@ fprintf('%s - ErrFcn = %7.4f\n', run_type, best_qual);
 % consistent unaligned curve as the pre-profile.
 unaligned_profile = best_profile_pre;
 % plot and save aligned curves (pre and post)
-am3PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_offsets, best_qual, measures, max_offset, align_wind, nmeasures, run_type, study)
+am3PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_offsets, best_qual, measures, 0, max_offset, align_wind, nmeasures, run_type, study, 0)
 toc
 fprintf('\n');
 
@@ -166,7 +166,7 @@ for j=1:niterations
     if qual < best_qual
         % plot and save aligned curves (pre and post) if the result is best
         % so far
-        am3PlotAndSaveAlignedCurves(unaligned_profile, profile_post, count_post, offsets, qual, measures, max_offset, align_wind, nmeasures, run_type, study)
+        am3PlotAndSaveAlignedCurves(unaligned_profile, profile_post, count_post, offsets, qual, measures, 0, max_offset, align_wind, nmeasures, run_type, study, 0)
         fprintf('Best so far is random start %d\n', j);
         best_offsets = offsets;
         best_initial_offsets = initial_offsets;
@@ -183,14 +183,14 @@ fprintf('\n');
 ex_start = input('Look at best start and enter exacerbation start: ');
 fprintf('\n');
 
-tic
-basedir = './';
-subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('%salignmentmodel2results-obj%d.mat', study, round(best_qual*10000));
-fprintf('Saving alignment model results to file %s\n', outputfilename);
-fprintf('\n');
-save(fullfile(basedir, subfolder, outputfilename), 'best_initial_offsets', 'best_offsets', 'best_profile_pre', 'best_profile_post', ...
-    'unaligned_profile', 'best_histogram', 'best_qual', 'ex_start');
+run_type = 'Best Alignment';
+
+[sorted_interventions, max_points] = am3VisualiseAlignmentDetail(amDatacube, amInterventions, best_offsets, best_profile_pre, ...
+    best_profile_post, best_count_post, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start);
+
+am3PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_offsets, best_qual, measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start)
+
+return;
 
 % create overall histogram (summed over measures by intervention/offset)
 for j = 1:ninterventions
@@ -224,4 +224,15 @@ end
 toc
 fprintf('\n');
 
+tic
+basedir = './';
+subfolder = 'MatlabSavedVariables';
+outputfilename = sprintf('%salignmentmodel2results-obj%d.mat', study, round(best_qual*10000));
+fprintf('Saving alignment model results to file %s\n', outputfilename);
+fprintf('\n');
+save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amNormcube', 'amInterventions','best_initial_offsets', ...
+    'best_offsets', 'best_profile_pre', 'best_profile_post', 'unaligned_profile', 'best_histogram', 'best_qual', ...
+    'best_count_post', 'sorted_interventions', 'ex_start', 'normmean', 'normstd', 'study', 'multiplicativenormmethod', ...
+    'max_offset', 'align_wind', 'measures', 'nmeasures', 'ninterventions', 'overall_hist');
+toc
 

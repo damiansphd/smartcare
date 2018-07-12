@@ -1,4 +1,4 @@
-function am3PlotAndSaveAlignedCurves(profile_pre, profile_post, count_post, offsets, qual, measures, max_offset, align_wind, nmeasures, run_type, study)
+function am3PlotAndSaveAlignedCurves(profile_pre, profile_post, count_post, offsets, qual, measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start)
 
 % am3PlotAndSaveAlignedCurves - plots the curves pre and post alignment for
 % each measure, and the histogram of offsets
@@ -19,29 +19,37 @@ p.FontSize = 16;
 p.FontWeight = 'bold';
 
 for m = 1:nmeasures
-    xl = [-1 * (max_offset + align_wind) 0];
+    xl = [((-1 * (max_offset + align_wind)) - 0.5), -0.5];
     yl = [min(min(profile_pre(m,:)), min(profile_post(m,:))) max(max(profile_pre(m,:)), max(profile_post(m,:)))];
     ax = subplot(plotsdown,plotsacross,m,'Parent',p);
     
     yyaxis left;
-    plot([-1 * (max_offset + align_wind): -1], profile_pre(m,:), 'Color', 'blue','LineStyle', ':');
+    plot([-1 * (max_offset + align_wind): -1], profile_pre(m,:), 'Color', 'red','LineStyle', ':');
     ax.XAxis.FontSize = 8;
     xlabel('Days prior to Intervention');
-    ax.YAxis(1).Color = 'red';
+    ax.YAxis(1).Color = 'blue';
     ax.YAxis(1).FontSize = 8;
     ylabel('Normalised Measure', 'FontSize', 8);
     xlim(xl);
     ylim(yl);
     hold on;
-    plot([-1 * (max_offset + align_wind): -1], smooth(profile_pre(m,:), 5), 'Color', 'blue', 'LineStyle', '-');
-    plot([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'red', 'LineStyle', ':');
-    plot([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:), 5), 'Color', 'red', 'LineStyle', '-');
+    plot([-1 * (max_offset + align_wind): -1], smooth(profile_pre(m,:), 5), 'Color', 'red', 'LineStyle', '-');
+    plot([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue', 'LineStyle', ':');
+    plot([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:), 5), 'Color', 'blue', 'LineStyle', '-');
+    
+    if ex_start ~= 0
+        line([ex_start ex_start], yl, 'Color', 'blue', 'LineStyle', '--');
+    end
     
     yyaxis right
     ax.YAxis(2).Color = 'black';
     ax.YAxis(2).FontSize = 8;
     ylabel('Count of Data points');
-    plot([-1 * (max_offset + align_wind): -1], count_post(m, :), 'Color', 'black','LineStyle', ':');
+    if isequal(run_type,'Best Alignment')
+        bar([-1 * (max_offset + align_wind): -1], max_points, 0.5, 'FaceColor', 'white', 'FaceAlpha', 0.1);
+    end
+    bar([-1 * (max_offset + align_wind): -1], count_post(m, :), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.25, 'LineWidth', 0.2);
+    ylim([0 max(count_post(m, :)*1.5)]);
     
     title(measures.DisplayName(m));
     hold off;
@@ -49,15 +57,13 @@ for m = 1:nmeasures
 end
 
 subplot(plotsdown, plotsacross, nmeasures + 1, 'Parent', p)
-histogram(offsets)
-xlim([-0.5 (max_offset - 0.5)]);
+histogram(-1 * offsets)
+xlim([(-1 * max_offset) + 0.5, 0.5]);
 ylim([0 50]);
 title('Histogram of Alignment Offsets')
 
-%filename = sprintf('Alignment Model - %s - Err Function.png', run_type);
 filename = sprintf('%s.png', plottitle);
 saveas(f,fullfile(basedir, subfolder, filename));
-%filename = sprintf('Alignment Model - %s - Err Function.svg', run_type);
 filename = sprintf('%s.svg', plottitle);
 saveas(f,fullfile(basedir, subfolder, filename));
 
