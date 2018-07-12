@@ -16,8 +16,8 @@ else
     return;
 end
 
-fprintf('Methodology for multiplicative normalisation\n');
-fprintf('--------------------------------------------\n');
+fprintf('Methodology for multiplicative normalisation (sigma)\n');
+fprintf('----------------------------------------------------\n');
 fprintf('1: Std for Data Window across interventions by measure\n');
 fprintf('2: Std across all data by measure\n');
 fprintf('3: Std across all data by patient and measure\n');
@@ -27,6 +27,29 @@ if multiplicativenormmethod > 3
     fprintf('Invalid methodology\n');
     return;
 end
+
+fprintf('Methodology for additive normalisation (mu)\n');
+fprintf('-------------------------------------------\n');
+fprintf('1: Mean for 7 days prior to data window\n');
+fprintf('2: Upper Quartile Mean for 8 days prior to data window\n');
+additivenormmethod = input('Choose methodology (1-2) ');
+fprintf('\n');
+if additivenormmethod > 2
+    fprintf('Invalid methodology\n');
+    return;
+end
+
+fprintf('Methodology for curve averaging\n');
+fprintf('-------------------------------------------\n');
+fprintf('1: Just data window\n');
+fprintf('2: Data window + data to the left\n');
+curveaveragingmethod = input('Choose methodology (1-2) ');
+fprintf('\n');
+if curveaveragingmethod > 2
+    fprintf('Invalid methodology\n');
+    return;
+end
+
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
@@ -227,7 +250,7 @@ fprintf('\n');
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('%salignmentmodel2results-obj%d.mat', study, round(best_qual*10000));
+outputfilename = sprintf('%salignmentmodelv3results-obj%d.mat', study, round(best_qual*10000));
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');
 save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amNormcube', 'amInterventions','best_initial_offsets', ...

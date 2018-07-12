@@ -49,7 +49,7 @@ for m = 1:nmeasures
         bar([-1 * (max_offset + align_wind): -1], max_points, 0.5, 'FaceColor', 'white', 'FaceAlpha', 0.1);
     end
     bar([-1 * (max_offset + align_wind): -1], count_post(m, :), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.25, 'LineWidth', 0.2);
-    ylim([0 max(count_post(m, :)*1.5)]);
+    ylim([0 max(count_post(m, :) * 2)]);
     
     title(measures.DisplayName(m));
     hold off;

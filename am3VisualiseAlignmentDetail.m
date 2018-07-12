@@ -98,7 +98,7 @@ for m = 1:nmeasures
     ylabel('Count of Data points');
     bar([-1 * (max_offset + align_wind): -1], max_points, 0.5, 'FaceColor', 'white','FaceAlpha', 0.1);
     bar([-1 * (max_offset + align_wind): -1], count_post(m, :), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.15);
-    ylim([0 (max(max_points) * 1.5)]);
+    ylim([0 (max(max_points) * 2)]);
     
     subplot(plotsdown,plotsacross,[7:16],'Parent',p);
     h = heatmap(p, datatable, 'ScaledDateNum', 'Intervention', 'Colormap', colors, 'MissingDataColor', 'white', ...
