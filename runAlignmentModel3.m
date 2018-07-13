@@ -163,7 +163,9 @@ end
 best_initial_offsets = amInterventions.Offset;
 
 run_type = 'Zero Offset Start';
-[best_offsets, best_profile_pre, best_profile_post, best_count_post, best_histogram, best_qual] = am3AlignCurves(amNormcube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog);
+[best_offsets, best_profile_pre, best_profile_post, best_count_post, best_histogram, best_qual] = am3AlignCurves(amNormcube, ...
+    amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, ...
+    run_type, detaillog, curveaveragingmethod);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, best_qual);
 % save the zero offset pre-profile to unaligned_profile so all plots show a
 % consistent unaligned curve as the pre-profile.
@@ -174,7 +176,11 @@ toc
 fprintf('\n');
 
 fprintf('Running alignment with random offset start\n');
-niterations = 500;
+if curveaveragingmethod == 1
+    niterations = 500;
+else
+    niterations = 500;
+end
 %niterations = 200;
 %niterations = 0;
 for j=1:niterations
@@ -184,7 +190,9 @@ for j=1:niterations
     end
     initial_offsets = amInterventions.Offset;
     run_type = sprintf('Random Offset Start %d', j);
-    [offsets, profile_pre, profile_post, count_post, histogram, qual] = am3AlignCurves(amNormcube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog);
+    [offsets, profile_pre, profile_post, count_post, histogram, qual] = am3AlignCurves(amNormcube, ...
+        amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, ...
+        run_type, detaillog, curveaveragingmethod);
     fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
     if qual < best_qual
         % plot and save aligned curves (pre and post) if the result is best
@@ -209,11 +217,11 @@ fprintf('\n');
 run_type = 'Best Alignment';
 
 [sorted_interventions, max_points] = am3VisualiseAlignmentDetail(amDatacube, amInterventions, best_offsets, best_profile_pre, ...
-    best_profile_post, best_count_post, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start);
+    best_profile_post, best_count_post, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, curveaveragingmethod);
 
 am3PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_offsets, best_qual, measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start)
 
-return;
+%return;
 
 % create overall histogram (summed over measures by intervention/offset)
 for j = 1:ninterventions

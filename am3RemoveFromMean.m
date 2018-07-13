@@ -1,4 +1,4 @@
-function [meancurvesum,meancurvecount] = am3RemoveFromMean(meancurvesum, meancurvecount, amDatacube, amInterventions, currinter, max_offset, align_wind, nmeasures)
+function [meancurvesum,meancurvecount] = am3RemoveFromMean(meancurvesum, meancurvecount, amDatacube, amInterventions, currinter, max_offset, align_wind, nmeasures, curveaveragingmethod)
 
 % am3RemoveFromMean - remove a curve from the mean curve (sum and count)
 
@@ -6,8 +6,14 @@ scid   = amInterventions.SmartCareID(currinter);
 start = amInterventions.IVScaledDateNum(currinter);
 offset = amInterventions.Offset(currinter);
 
+if curveaveragingmethod == 1
+    averagewindow = align_wind;
+else
+    averagewindow = max_offset + align_wind - offset;
+end
+
 for m = 1:nmeasures
-    for i = 1:max_offset + align_wind - offset
+    for i = 1:averagewindow
         if start - i <= 0
             continue;
         end

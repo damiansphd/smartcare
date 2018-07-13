@@ -1,4 +1,4 @@
-function [sorted_interventions, max_points] = am3VisualiseAlignmentDetail(amDatacube, amInterventions, offsets, profile_pre, profile_post, count_post, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start)
+function [sorted_interventions, max_points] = am3VisualiseAlignmentDetail(amDatacube, amInterventions, offsets, profile_pre, profile_post, count_post, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, curveaveragingmethod)
 
 % am3VisualiseAlignmentDetail - creates a plot of horizontal bars showing 
 % the alignment of the data window (including the best_offset) for all 
@@ -15,10 +15,15 @@ sorted_interventions = array2table(offsets);
 sorted_interventions.Intervention = [1:nInterventions]';
 sorted_interventions = sortrows(sorted_interventions, {'offsets', 'Intervention'}, {'descend', 'ascend'});
 for i = 1:max_offset+align_wind
-    if (i - align_wind) <= 0
-        max_points(1, i) = nInterventions;
+    if curveaveragingmethod == 1
+        max_points(1, i) = size(sorted_interventions.offsets(sorted_interventions.offsets <= (max_offset + align_wind - i) ...
+            & sorted_interventions.offsets > (align_wind - i)),1);
     else
-        max_points(1,i) = size(sorted_interventions.offsets(sorted_interventions.offsets <= (max_offset + align_wind - i)),1);
+        if (i - align_wind) <= 0
+            max_points(1, i) = nInterventions;
+        else
+            max_points(1,i) = size(sorted_interventions.offsets(sorted_interventions.offsets <= (max_offset + align_wind - i)),1);
+        end
     end
 end
 
@@ -43,16 +48,17 @@ for m = 1:nmeasures
             end
         end
         rowtoadd.Count = 1;
-        for d = 1:max_offset
-            if start -align_wind - d <= 0
-                continue;
-            end
-            if ~isnan(amDatacube(scid, start -align_wind - d, m))
-                rowtoadd.ScaledDateNum = 0 - align_wind - d - offset;
-                datatable = [datatable ; rowtoadd];
+        if curveaveragingmethod == 2
+            for d = 1:max_offset
+                if start -align_wind - d <= 0
+                    continue;
+                end
+                if ~isnan(amDatacube(scid, start -align_wind - d, m))
+                    rowtoadd.ScaledDateNum = 0 - align_wind - d - offset;
+                    datatable = [datatable ; rowtoadd];
+                end
             end
         end
-   
     end
 
     temp = hsv;
