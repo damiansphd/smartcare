@@ -37,7 +37,7 @@ while 1
     ok = 1;
     for i=2:max_offset + align_wind
         for m=1:nmeasures
-            if meancurvecount(i,m) < 2
+            if meancurvecount(i,m) < 3
                 %if detaillog
                 %    fprintf('Intervention %d, Measure %s, dayprior %d <3 datapoints\n', pnt, measures.Name{m}, i);
                 %end

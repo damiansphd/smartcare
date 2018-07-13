@@ -30,7 +30,7 @@ end
 
 fprintf('Methodology for additive normalisation (mu)\n');
 fprintf('-------------------------------------------\n');
-fprintf('1: Mean for 7 days prior to data window\n');
+fprintf('1: Mean for 8 days prior to data window\n');
 fprintf('2: Upper Quartile Mean for 8 days prior to data window\n');
 additivenormmethod = input('Choose methodology (1-2) ');
 fprintf('\n');
@@ -125,7 +125,11 @@ end
 normmean = zeros(ninterventions, nmeasures);
 amNormcube = amDatacube;
 for i = 1:ninterventions
-    meanwindow = 7;
+    if additivenormmethod == 1
+        meanwindow = 8;
+    else
+        meanwindow = 20;
+    end
     scid   = amInterventions.SmartCareID(i);
     start = amInterventions.IVScaledDateNum(i);
     if (start - align_wind - meanwindow) <= 0
@@ -133,9 +137,20 @@ for i = 1:ninterventions
     end
     for m = 1:nmeasures
         meanwindowdata = amDatacube(scid, start - align_wind - meanwindow: start - align_wind - 1, m);
-        if size(meanwindowdata(~isnan(meanwindowdata)),2) >= 3
-            normmean(i, m) = mean(meanwindowdata(~isnan(meanwindowdata)));
+        meanwindowdata = sort(meanwindowdata(~isnan(meanwindowdata)), 'ascend');
+        if size(meanwindowdata,2) >= 3
+            if additivenormmethod == 1
+                % take mean of mean window (8 days prior to data window -
+                % as long as there are 3 or more data points in the window
+                normmean(i, m) = mean(meanwindowdata);
+            else
+                % upper quartile mean of mean window method
+                percentile75 = round(size(meanwindowdata,2) * .75) + 1;
+                normmean(i, m) = mean(meanwindowdata(percentile75:end));
+            end
         else
+            % if not enough data points in the mean window, use the
+            % patients inter-quartile mean
             if size(find(demographicstable.SmartCareID(demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}))),1) > 0
                 fprintf('Using inter-quartile mean for intervention %d, measure %d\n', i, m);
                 column = getColumnForMeasure(measures.Name{m});
