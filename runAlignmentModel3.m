@@ -21,9 +21,10 @@ fprintf('----------------------------------------------------\n');
 fprintf('1: Std for Data Window across interventions by measure\n');
 fprintf('2: Std across all data by measure\n');
 fprintf('3: Std across all data by patient and measure\n');
-multiplicativenormmethod = input('Choose methodology (1-3) ');
+fprintf('4: Std for each data point in the average curve\n');
+sigmamethod = input('Choose methodology (1-4) ');
 fprintf('\n');
-if multiplicativenormmethod > 3
+if sigmamethod > 4
     fprintf('Invalid methodology\n');
     return;
 end
@@ -31,10 +32,10 @@ end
 fprintf('Methodology for additive normalisation (mu)\n');
 fprintf('-------------------------------------------\n');
 fprintf('1: Mean for 8 days prior to data window\n');
-fprintf('2: Upper Quartile Mean for 8 days prior to data window\n');
-additivenormmethod = input('Choose methodology (1-2) ');
+fprintf('2: Upper Quartile Mean for 20 days prior to data window\n');
+mumethod = input('Choose methodology (1-2) ');
 fprintf('\n');
-if additivenormmethod > 2
+if mumethod > 2
     fprintf('Invalid methodology\n');
     return;
 end
@@ -95,17 +96,17 @@ for m = 1:nmeasures
     measures.OverallStd(m) = std(tempdata(~isnan(tempdata)));
 end
 
-% populate multiplicative normalisation values based on methodology
+% populate multiplicative normalisation (sigma) values based on methodology
 % selected
 validids = unique(demographicstable.SmartCareID);
 normstd = zeros(npatients, nmeasures);
 for i = 1:npatients
     for m = 1:nmeasures
-        if multiplicativenormmethod == 1
+        if sigmamethod == 1
             normstd(i,m) = measures.AlignWindStd(m);
-        elseif multiplicativenormmethod == 2
+        elseif sigmamethod == 2
             normstd(i,m) = measures.OverallStd(m);
-        else
+        elseif sigmamethod == 3
             if ismember(i,validids)
                 scid = i;
                 column = getColumnForMeasure(measures.Name{m});
@@ -116,16 +117,19 @@ for i = 1:npatients
                     normstd(i,m) = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}),{ddcolumn}}(2);
                 end
             end
+        else 
+            % for methodology 4, need to calculate dynamically during
+            % the alignment process 0 - so leave normstd as zeros for now
         end
     end
 end
 
-% adjust by additive normalisation
+% adjust by additive normalisation (mu) based on methodology
 
 normmean = zeros(ninterventions, nmeasures);
 amNormcube = amDatacube;
 for i = 1:ninterventions
-    if additivenormmethod == 1
+    if mumethod == 1
         meanwindow = 8;
     else
         meanwindow = 20;
@@ -139,7 +143,7 @@ for i = 1:ninterventions
         meanwindowdata = amDatacube(scid, start - align_wind - meanwindow: start - align_wind - 1, m);
         meanwindowdata = sort(meanwindowdata(~isnan(meanwindowdata)), 'ascend');
         if size(meanwindowdata,2) >= 3
-            if additivenormmethod == 1
+            if mumethod == 1
                 % take mean of mean window (8 days prior to data window -
                 % as long as there are 3 or more data points in the window
                 normmean(i, m) = mean(meanwindowdata);
@@ -178,15 +182,16 @@ end
 best_initial_offsets = amInterventions.Offset;
 
 run_type = 'Zero Offset Start';
-[best_offsets, best_profile_pre, best_profile_post, best_count_post, best_histogram, best_qual] = am3AlignCurves(amNormcube, ...
+[best_offsets, best_profile_pre, best_profile_post, best_count_post, best_std_post, best_histogram, best_qual] = am3AlignCurves(amNormcube, ...
     amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, ...
-    run_type, detaillog, curveaveragingmethod);
+    run_type, detaillog, curveaveragingmethod, sigmamethod);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, best_qual);
 % save the zero offset pre-profile to unaligned_profile so all plots show a
 % consistent unaligned curve as the pre-profile.
 unaligned_profile = best_profile_pre;
 % plot and save aligned curves (pre and post)
-am3PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_offsets, best_qual, measures, 0, max_offset, align_wind, nmeasures, run_type, study, 0)
+am3PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_std_post, best_offsets, best_qual, measures, 0, max_offset, align_wind, ...
+    nmeasures, run_type, study, 0)
 toc
 fprintf('\n');
 
@@ -196,8 +201,7 @@ if curveaveragingmethod == 1
 else
     niterations = 500;
 end
-%niterations = 200;
-%niterations = 0;
+
 for j=1:niterations
     tic
     for i=1:ninterventions
@@ -205,20 +209,22 @@ for j=1:niterations
     end
     initial_offsets = amInterventions.Offset;
     run_type = sprintf('Random Offset Start %d', j);
-    [offsets, profile_pre, profile_post, count_post, histogram, qual] = am3AlignCurves(amNormcube, ...
+    [offsets, profile_pre, profile_post, count_post, std_post, histogram, qual] = am3AlignCurves(amNormcube, ...
         amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, ...
-        run_type, detaillog, curveaveragingmethod);
+        run_type, detaillog, curveaveragingmethod, sigmamethod);
     fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
     if qual < best_qual
         % plot and save aligned curves (pre and post) if the result is best
         % so far
-        am3PlotAndSaveAlignedCurves(unaligned_profile, profile_post, count_post, offsets, qual, measures, 0, max_offset, align_wind, nmeasures, run_type, study, 0)
+        am3PlotAndSaveAlignedCurves(unaligned_profile, profile_post, count_post, std_post, offsets, qual, measures, 0, max_offset, align_wind, ...
+            nmeasures, run_type, study, 0)
         fprintf('Best so far is random start %d\n', j);
         best_offsets = offsets;
         best_initial_offsets = initial_offsets;
         best_profile_pre = profile_pre;
         best_profile_post = profile_post;
         best_count_post = count_post;
+        best_std_post = std_post;
         best_histogram = histogram;
         best_qual = qual; 
     end
@@ -232,9 +238,9 @@ fprintf('\n');
 run_type = 'Best Alignment';
 
 [sorted_interventions, max_points] = am3VisualiseAlignmentDetail(amDatacube, amInterventions, best_offsets, best_profile_pre, ...
-    best_profile_post, best_count_post, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, curveaveragingmethod);
+    best_profile_post, best_count_post, best_std_post, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, curveaveragingmethod);
 
-am3PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_offsets, best_qual, measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start)
+am3PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_std_post, best_offsets, best_qual, measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start)
 
 %return;
 
@@ -277,8 +283,8 @@ outputfilename = sprintf('%salignmentmodelv3results-obj%d.mat', study, round(bes
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');
 save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amNormcube', 'amInterventions','best_initial_offsets', ...
-    'best_offsets', 'best_profile_pre', 'best_profile_post', 'unaligned_profile', 'best_histogram', 'best_qual', ...
-    'best_count_post', 'sorted_interventions', 'ex_start', 'normmean', 'normstd', 'study', 'multiplicativenormmethod', ...
-    'max_offset', 'align_wind', 'measures', 'nmeasures', 'ninterventions', 'overall_hist');
+    'best_offsets', 'best_profile_pre', 'best_profile_post', 'unaligned_profile', 'best_histogram', 'overall_hist', 'best_qual', ...
+    'best_count_post', 'best_std_post', 'sorted_interventions', 'ex_start', 'normmean', 'normstd', 'study', 'sigmamethod', 'mumethod', ...
+    'curveaveragingmethod', 'max_offset', 'align_wind', 'measures', 'nmeasures', 'ninterventions', 'overall_hist');
 toc
 

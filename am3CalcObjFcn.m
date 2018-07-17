@@ -1,4 +1,4 @@
-function [dist, hstg] = am3CalcObjFcn(meancurvesum, meancurvecount, amDatacube, amInterventions, measures, normstd, hstg, currinter, curroffset, max_offset, align_wind, nmeasures, updatehistogram)
+function [dist, hstg] = am3CalcObjFcn(meancurvesum, meancurvecount, meancurvestd, amDatacube, amInterventions, measures, normstd, hstg, currinter, curroffset, max_offset, align_wind, nmeasures, update_histogram, sigmamethod)
 
 % am3CalcObjFcn - calculates residual sum of squares distance for points in
 % curve vs meancurve incorporating offset
@@ -7,7 +7,7 @@ dist = 0;
 scid   = amInterventions.SmartCareID(currinter);
 start = amInterventions.IVScaledDateNum(currinter);
 
-if (updatehistogram == 1)
+if (update_histogram == 1)
     for m = 1:nmeasures
         hstg(m, currinter, curroffset + 1) = 0;
     end
@@ -19,12 +19,15 @@ for i = 1:align_wind
             continue;
         end
         if ~isnan(amDatacube(scid, start - i, m))
-            %thisdist = ( (meancurvesum((max_offset + align_wind + 1) - i - curroffset, m)/meancurvecount((max_offset + align_wind + 1) - i - curroffset, m) ...
-            %    - amDatacube(scid, start - i, m)) ^ 2 ) / (2 * (measures.AlignWindStd(m)) ^ 2 ) ;
-            thisdist = ( (meancurvesum((max_offset + align_wind + 1) - i - curroffset, m)/meancurvecount((max_offset + align_wind + 1) - i - curroffset, m) ...
-                - amDatacube(scid, start - i, m)) ^ 2 ) / (2 * (normstd(scid, m)) ^ 2 ) ;
+            if sigmamethod == 4
+                thisdist = ( (meancurvesum((max_offset + align_wind + 1) - i - curroffset, m)/ meancurvecount((max_offset + align_wind + 1) - i - curroffset, m) ...
+                    - amDatacube(scid, start - i, m)) ^ 2 ) / (2 * (meancurvestd((max_offset + align_wind + 1) - i - curroffset, m) ^ 2) ) ;
+            else
+                thisdist = ( (meancurvesum((max_offset + align_wind + 1) - i - curroffset, m)/ meancurvecount((max_offset + align_wind + 1) - i - curroffset, m) ...
+                    - amDatacube(scid, start - i, m)) ^ 2 ) / (2 * (normstd(scid, m) ^ 2 ) ) ;
+            end
             dist = dist + thisdist;
-            if (updatehistogram == 1)
+            if (update_histogram == 1)
                 hstg(m, currinter, curroffset + 1) = hstg(m, currinter, curroffset + 1) + thisdist;
             end
         end

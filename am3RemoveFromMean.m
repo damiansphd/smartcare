@@ -1,4 +1,4 @@
-function [meancurvesum,meancurvecount] = am3RemoveFromMean(meancurvesum, meancurvecount, amDatacube, amInterventions, currinter, max_offset, align_wind, nmeasures, curveaveragingmethod)
+function [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3RemoveFromMean(meancurvedata, meancurvesum, meancurvecount, amDatacube, amInterventions, currinter, max_offset, align_wind, nmeasures, curveaveragingmethod)
 
 % am3RemoveFromMean - remove a curve from the mean curve (sum and count)
 
@@ -23,5 +23,9 @@ for m = 1:nmeasures
         end
     end
 end
+
+meancurvedata(:, :, currinter) = nan;
+% need to factor in ~isnan logic in a loop
+meancurvestd(:,:) = std(meancurvedata(:,:,:), 0, 3);
 
 end
