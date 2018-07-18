@@ -1,4 +1,4 @@
-function [dist, hstg] = am3CalcObjFcn(meancurvesum, meancurvecount, meancurvestd, amDatacube, amInterventions, measures, normstd, hstg, currinter, curroffset, max_offset, align_wind, nmeasures, update_histogram, sigmamethod)
+function [dist, hstg] = am3CalcObjFcn(meancurvesum, meancurvecount, meancurvestd, amDatacube, amInterventions, measuresmask, normstd, hstg, currinter, curroffset, max_offset, align_wind, nmeasures, update_histogram, sigmamethod)
 
 % am3CalcObjFcn - calculates residual sum of squares distance for points in
 % curve vs meancurve incorporating offset
@@ -28,7 +28,10 @@ for i = 1:align_wind
             end
             % add measures mask here to only include in the total for
             % subset of measures.
-            dist = dist + thisdist;
+            if measuresmask(m) == 1
+                dist = dist + thisdist;
+            end
+            
             if (update_histogram == 1)
                 hstg(m, currinter, curroffset + 1) = hstg(m, currinter, curroffset + 1) + thisdist;
             end

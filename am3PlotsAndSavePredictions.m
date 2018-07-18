@@ -53,7 +53,12 @@ for m = 1:nmeasures
     ydisplaymax = max(max(max(current) * 1.05, pmmid50mean * 1.05), max(best_profile_post(m,1:max_offset + align_wind - best_offsets(thisinter)) + normmean(thisinter, m)) * 1.05);
     yl = [ydisplaymin ydisplaymax];
     ylim(yl);
-    title(measures.DisplayName{m}, 'FontSize', 8);
+    if measures.Mask(m) == 1
+        title(measures.DisplayName(m), 'FontSize', 8, 'BackgroundColor', 'g');
+    else
+        title(measures.DisplayName(m),'FontSize', 8);
+    end
+    %title(measures.DisplayName{m}, 'FontSize', 8);
     xlabel('Days Prior', 'FontSize', 6);
     ylabel('Measure', 'FontSize', 6);
     hold on
@@ -74,11 +79,6 @@ for m = 1:nmeasures
         'LineStyle', '-', ...
         'LineWidth', 0.5);
     
-    % plot confidence bounds
-    %fill([(ex_start + problower(thisinter)) (ex_start + probupper(thisinter)) (ex_start + probupper(thisinter)) (ex_start + problower(thisinter))], ...
-    %        [ydisplaymin ydisplaymin ydisplaymax ydisplaymax], ...
-    %        'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
-    
     % plot short vertical line for average exacerbation start indicator
     line( [ex_start ex_start], [yl(1), yl(1) + ((yl(2)-yl(1)) * 0.1)], ...
         'Color', 'black', ...
@@ -89,15 +89,10 @@ for m = 1:nmeasures
         'Color', 'magenta', ...
         'LineStyle',':', ...
         'LineWidth', 0.5);
-    % plot horizontal line for mid50mean and shading for +/-1 std
-    %line( xl,[pmmid50mean pmmid50mean], ...
     line( xl,[normmean(thisinter, m) normmean(thisinter, m)], ...
         'Color', 'blue', ...
         'LineStyle', '--', ...
         'LineWidth', 0.5);
-    %fill([xl(1) xl(2) xl(2) xl(1)], ...
-    %    [pmmid50mean - pmmid50std pmmid50mean - pmmid50std pmmid50mean + pmmid50std pmmid50mean + pmmid50std], ...
-    %    'blue', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
     hold off;
 end
 
@@ -121,10 +116,11 @@ for m=1:nmeasures
     end
     line( [best_offsets(thisinter) best_offsets(thisinter)], yl, ...
         'Color', 'green', 'LineStyle', '-', 'LineWidth', 0.5);
-    %fill([problower(thisinter) probupper(thisinter) probupper(thisinter) problower(thisinter)], ...
-    %        [0 0 1 1], ...
-    %        'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
-    title(measures.DisplayName(m));
+    if measures.Mask(m) == 1
+        title(measures.DisplayName(m), 'BackgroundColor', 'g');
+    else
+        title(measures.DisplayName(m));
+    end
     xlim([0 max_offset-1]);
     ylim(yl);
     hold off;
@@ -149,7 +145,7 @@ else
 end
 line( [best_offsets(thisinter) best_offsets(thisinter)] , yl, ...
     'Color', 'green', 'LineStyle', '-', 'LineWidth', 0.5);
-title('Overall');
+title('Overall', 'BackgroundColor', 'g');
 xlim([0 max_offset-1]);
 ylim(yl);
 hold off;

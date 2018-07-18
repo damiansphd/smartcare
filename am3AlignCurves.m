@@ -53,7 +53,7 @@ while 1
         %fprintf('Got here ! Actually doing some shifting....\n');
         %dummy = input('Continue ?');
         [better_offset, hstg] = am3BestFit(meancurvesum, meancurvecount, meancurvestd, amDatacube, ...
-            amInterventions, measures, normstd, hstg, pnt, max_offset, align_wind, nmeasures, sigmamethod);
+            amInterventions, measures.Mask, normstd, hstg, pnt, max_offset, align_wind, nmeasures, sigmamethod);
     else
         better_offset = amInterventions.Offset(pnt);
     end
@@ -101,7 +101,7 @@ for i=1:ninterventions
     [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3RemoveFromMean(meancurvedata, meancurvesum, meancurvecount, meancurvestd, ...
         amDatacube, amInterventions, i, max_offset, align_wind, nmeasures, curveaveragingmethod);
     qual = qual + am3CalcObjFcn(meancurvesum, meancurvecount, meancurvestd, amDatacube, ...
-        amInterventions, measures, normstd, hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod);
+        amInterventions, measures.Mask, normstd, hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod);
     [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3AddToMean(meancurvedata, meancurvesum, meancurvecount, meancurvestd, ...
         amDatacube, amInterventions, i, max_offset, align_wind, nmeasures, curveaveragingmethod);
 end

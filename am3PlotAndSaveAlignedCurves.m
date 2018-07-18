@@ -55,7 +55,12 @@ for m = 1:nmeasures
     bar([-1 * (max_offset + align_wind): -1], count_post(m, :), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.25, 'LineWidth', 0.2);
     ylim([0 max(count_post(m, :) * 2)]);
     
-    title(measures.DisplayName(m));
+    if measures.Mask(m) == 1
+        title(measures.DisplayName(m), 'BackgroundColor', 'g');
+    else
+        title(measures.DisplayName(m));
+    end
+    
     hold off;
     
 end
