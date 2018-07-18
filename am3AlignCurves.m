@@ -17,14 +17,14 @@ qual = 0;
 
 % calculate mean curve over all interventions
 for i = 1:ninterventions
-    [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3AddToMean(meancurvedata, meancurvesum, meancurvecount, amDatacube, amInterventions, i, max_offset, ...
+    [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3AddToMean(meancurvedata, meancurvesum, meancurvecount, meancurvestd, amDatacube, amInterventions, i, max_offset, ...
        align_wind, nmeasures, curveaveragingmethod);
 end
 
 % store the mean curves pre-alignment for each measure for plotting
 for m = 1:nmeasures
     for day = 1:max_offset + align_wind
-        profile_pre(m, day) = meancurvesum(day, m)/meancurvecount(day, m);
+        profile_pre(m, day) = meancurvesum(day, m) / meancurvecount(day, m);
     end
 end
 
@@ -34,9 +34,9 @@ cnt = 0;
 iter = 0;
 ok  = 0;
 while 1
-    [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3RemoveFromMean(meancurvedata, meancurvesum, meancurvecount, amDatacube, amInterventions, pnt, ...
+    [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3RemoveFromMean(meancurvedata, meancurvesum, meancurvecount, meancurvestd, amDatacube, amInterventions, pnt, ...
         max_offset, align_wind, nmeasures, curveaveragingmethod);
-    %check safety
+    % check safety
     ok = 1;
     for i=2:max_offset + align_wind
         for m=1:nmeasures
@@ -65,8 +65,8 @@ while 1
         %end
         cnt = cnt+1;
     end
-    [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3AddToMean(meancurvedata, meancurvesum, meancurvecount, amDatacube, ...
-        amInterventions, pnt, max_offset, align_wind, nmeasures, curveaveragingmethod);
+    [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3AddToMean(meancurvedata, meancurvesum, meancurvecount, meancurvestd, ...
+        amDatacube, amInterventions, pnt, max_offset, align_wind, nmeasures, curveaveragingmethod);
         
     pnt = pnt+1;
     if pnt > ninterventions
@@ -98,11 +98,11 @@ end
 update_histogram = 0;
 
 for i=1:ninterventions
-    [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3RemoveFromMean(meancurvedata, meancurvesum, meancurvecount, ...
+    [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3RemoveFromMean(meancurvedata, meancurvesum, meancurvecount, meancurvestd, ...
         amDatacube, amInterventions, i, max_offset, align_wind, nmeasures, curveaveragingmethod);
     qual = qual + am3CalcObjFcn(meancurvesum, meancurvecount, meancurvestd, amDatacube, ...
         amInterventions, measures, normstd, hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod);
-    [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3AddToMean(meancurvedata, meancurvesum, meancurvecount, ...
+    [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3AddToMean(meancurvedata, meancurvesum, meancurvecount, meancurvestd, ...
         amDatacube, amInterventions, i, max_offset, align_wind, nmeasures, curveaveragingmethod);
 end
 

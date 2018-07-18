@@ -53,8 +53,9 @@ measures = table('Size',[nmeasures 4], 'VariableTypes', {'int32', 'cell', 'cell'
 measures.Index = [1:nmeasures]';
 measures.Name = unique(physdata.RecordingType);
 measures.DisplayName = replace(measures.Name, 'Recording', '');
-measures.AlignWindStd = zeros(nmeasures,1); % populate during model execution
-measures.OverallStd = zeros(nmeasures,1); % populate during model execution
+measures.AlignWindStd = zeros(nmeasures, 1); % populate during model execution
+measures.OverallStd = zeros(nmeasures, 1); % populate during model execution
+measures.Mask = zeros(nmeasures, 1); % populate during model execution
 
 for i = 1:size(measures,1)
      measures.Column(i) = cellstr(getColumnForMeasure(measures.Name{i}));

@@ -1,4 +1,4 @@
-function [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3AddToMean(meancurvedata, meancurvesum, meancurvecount, amDatacube, amInterventions, currinter, max_offset, align_wind, nmeasures, curveaveragingmethod)
+function [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3AddToMean(meancurvedata, meancurvesum, meancurvecount, meancurvestd, amDatacube, amInterventions, currinter, max_offset, align_wind, nmeasures, curveaveragingmethod)
 
 % am3AddToMean - add a curve to the mean curve (sum and count)
 
@@ -21,17 +21,8 @@ for m = 1:nmeasures
             meancurvedata((max_offset + align_wind + 1) - offset - i, m, currinter) = amDatacube(scid, start - i, m);
             meancurvesum((max_offset + align_wind + 1) - offset - i, m)   = meancurvesum((max_offset + align_wind + 1) - offset - i, m)   + amDatacube(scid, start - i, m);
             meancurvecount((max_offset + align_wind + 1) - offset - i, m) = meancurvecount((max_offset + align_wind + 1) - offset - i, m) + 1;
+            meancurvestd((max_offset + align_wind + 1) - offset - i, m) = std(meancurvedata((max_offset + align_wind + 1) - offset - i, m, ~isnan(meancurvedata((max_offset + align_wind + 1) - offset - i, m,:))));
         end
-    end
-end
-
-% need to factor in ~isnan
-for m = 1:nmeasures
-    for i = 1:averagewindow
-        if start - i <= 0
-            continue;
-        end
-        meancurvestd((max_offset + align_wind + 1) - offset - i, m) = std(meancurvedata((max_offset + align_wind + 1) - offset - i, m,~isnan(meancurvedata((max_offset + align_wind + 1) - offset - i, m,:))));
     end
 end
 

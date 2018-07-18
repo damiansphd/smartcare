@@ -1,4 +1,4 @@
-function [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3RemoveFromMean(meancurvedata, meancurvesum, meancurvecount, amDatacube, amInterventions, currinter, max_offset, align_wind, nmeasures, curveaveragingmethod)
+function [meancurvedata, meancurvesum, meancurvecount, meancurvestd] = am3RemoveFromMean(meancurvedata, meancurvesum, meancurvecount, meancurvestd, amDatacube, amInterventions, currinter, max_offset, align_wind, nmeasures, curveaveragingmethod)
 
 % am3RemoveFromMean - remove a curve from the mean curve (sum and count)
 
@@ -12,6 +12,8 @@ else
     averagewindow = max_offset + align_wind - offset;
 end
 
+meancurvedata(:, :, currinter) = nan;
+
 for m = 1:nmeasures
     for i = 1:averagewindow
         if start - i <= 0
@@ -20,12 +22,9 @@ for m = 1:nmeasures
         if ~isnan(amDatacube(scid, start - i, m))
             meancurvesum((max_offset + align_wind + 1) - offset - i, m)   = meancurvesum((max_offset + align_wind + 1) - offset - i, m)   - amDatacube(scid, start - i, m);
             meancurvecount((max_offset + align_wind + 1) - offset - i, m) = meancurvecount((max_offset + align_wind + 1) - offset - i, m) - 1;
+            meancurvestd((max_offset + align_wind + 1) - offset - i, m) = std(meancurvedata((max_offset + align_wind + 1) - offset - i, m, ~isnan(meancurvedata((max_offset + align_wind + 1) - offset - i, m,:))));
         end
     end
 end
-
-meancurvedata(:, :, currinter) = nan;
-% need to factor in ~isnan logic in a loop
-meancurvestd(:,:) = std(meancurvedata(:,:,:), 0, 3);
 
 end

@@ -1,4 +1,4 @@
-function am3PlotAndSaveAlignedCurves(profile_pre, profile_post, count_post, offsets, qual, measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start)
+function am3PlotAndSaveAlignedCurves(profile_pre, profile_post, count_post, std_post, offsets, qual, measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start)
 
 % am3PlotAndSaveAlignedCurves - plots the curves pre and post alignment for
 % each measure, and the histogram of offsets
@@ -20,7 +20,7 @@ p.FontWeight = 'bold';
 
 for m = 1:nmeasures
     xl = [((-1 * (max_offset + align_wind)) - 0.5), -0.5];
-    yl = [min(min(profile_pre(m,:)), min(profile_post(m,:))) max(max(profile_pre(m,:)), max(profile_post(m,:)))];
+    yl = [min(min(profile_pre(m,:)), min(profile_post(m,:) - std_post(m,:))) max(max(profile_pre(m,:)), max(profile_post(m,:) + std_post(m,:)))];
     ax = subplot(plotsdown,plotsacross,m,'Parent',p);
     
     yyaxis left;
@@ -36,6 +36,10 @@ for m = 1:nmeasures
     plot([-1 * (max_offset + align_wind): -1], smooth(profile_pre(m,:), 5), 'Color', 'red', 'LineStyle', '-');
     plot([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue', 'LineStyle', ':');
     plot([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:), 5), 'Color', 'blue', 'LineStyle', '-');
+    line([-1 * (max_offset + align_wind): -1], profile_post(m,:) + std_post(m,:), 'Color', 'blue', 'LineStyle', ':');
+    line([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:) + std_post(m,:), 5), 'Color', 'blue', 'LineStyle', '--');
+    line([-1 * (max_offset + align_wind): -1], profile_post(m,:) - std_post(m,:), 'Color', 'blue', 'LineStyle', ':');
+    line([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:) - std_post(m,:), 5), 'Color', 'blue', 'LineStyle', '--');
     
     if ex_start ~= 0
         line([ex_start ex_start], yl, 'Color', 'blue', 'LineStyle', '--');
