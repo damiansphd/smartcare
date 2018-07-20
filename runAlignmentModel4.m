@@ -1,5 +1,8 @@
 clear; close all; clc;
 
+fprintf('Running Alignment Model V4\n');
+fprintf('\n');
+
 studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
 fprintf('\n');
 
@@ -41,13 +44,24 @@ if mumethod > 3
     return;
 end
 
-fprintf('Methodology for curve averaging\n');
+fprintf('Methodology for duration of curve averaging\n');
 fprintf('-------------------------------------------\n');
 fprintf('1: Just data window\n');
 fprintf('2: Data window + data to the left\n');
 curveaveragingmethod = input('Choose methodology (1-2) ');
 fprintf('\n');
 if curveaveragingmethod > 2
+    fprintf('Invalid methodology\n');
+    return;
+end
+
+fprintf('Methodology for smoothing method of curve averaging\n');
+fprintf('---------------------------------------------------\n');
+fprintf('1: Raw data\n');
+fprintf('2: Smoothed data (5 days)\n');
+smoothingmethod = input('Choose methodology (1-2) ');
+fprintf('\n');
+if smoothingmethod > 2
     fprintf('Invalid methodology\n');
     return;
 end
@@ -209,6 +223,7 @@ for i = 1:ninterventions
         amNormcube(scid, (periodstart):(start), m) = amDatacube(scid, (periodstart):(start), m) - normmean(i,m);
     end
 end
+toc
 fprintf('\n');
 
 tic
@@ -219,9 +234,10 @@ end
 best_initial_offsets = amInterventions.Offset;
 
 run_type = 'Zero Offset Start';
-[best_offsets, best_profile_pre, best_profile_post, best_count_post, best_std_post, best_histogram, best_qual] = am3AlignCurves(amNormcube, ...
+[best_offsets, best_profile_pre, best_profile_post, best_count_post, best_std_post, best_histogram, best_qual, ...
+    best_meancurvedata, best_meancurvesum, best_meancurvecount, best_meancurvemean, best_meancurvestd] = am4AlignCurves(amNormcube, ...
     amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, ...
-    run_type, detaillog, curveaveragingmethod, sigmamethod);
+    run_type, detaillog, curveaveragingmethod, sigmamethod, smoothingmethod);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, best_qual);
 
 % save the zero offset pre-profile to unaligned_profile so all plots show a
@@ -229,8 +245,8 @@ fprintf('%s - ErrFcn = %7.4f\n', run_type, best_qual);
 unaligned_profile = best_profile_pre;
 
 % plot and save aligned curves (pre and post)
-am3PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_std_post, best_offsets, best_qual, measures, 0, max_offset, align_wind, ...
-    nmeasures, run_type, study, 0)
+am4PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_std_post, best_offsets, best_qual, ...
+    measures, 0, max_offset, align_wind, nmeasures, run_type, study, 0, smoothingmethod)
 toc
 fprintf('\n');
 
@@ -248,15 +264,15 @@ for j=1:niterations
     end
     initial_offsets = amInterventions.Offset;
     run_type = sprintf('Random Offset Start %d', j);
-    [offsets, profile_pre, profile_post, count_post, std_post, histogram, qual] = am3AlignCurves(amNormcube, ...
-        amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, ...
-        run_type, detaillog, curveaveragingmethod, sigmamethod);
+    [offsets, profile_pre, profile_post, count_post, std_post, histogram, qual, meancurvedata, meancurvesum, ...
+        meancurvecount, meancurvemean, meancurvestd] = am4AlignCurves(amNormcube, amInterventions, measures, normstd, ...
+        max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog, curveaveragingmethod, sigmamethod, smoothingmethod);
     fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
     if qual < best_qual
         % plot and save aligned curves (pre and post) if the result is best
         % so far
-        am3PlotAndSaveAlignedCurves(unaligned_profile, profile_post, count_post, std_post, offsets, qual, measures, 0, max_offset, align_wind, ...
-            nmeasures, run_type, study, 0)
+        am4PlotAndSaveAlignedCurves(unaligned_profile, profile_post, count_post, std_post, offsets, qual, measures, 0, ...
+            max_offset, align_wind, nmeasures, run_type, study, 0, smoothingmethod)
         fprintf('Best so far is random start %d\n', j);
         best_offsets = offsets;
         best_initial_offsets = initial_offsets;
@@ -265,7 +281,12 @@ for j=1:niterations
         best_count_post = count_post;
         best_std_post = std_post;
         best_histogram = histogram;
-        best_qual = qual; 
+        best_qual = qual;
+        best_meancurvedata = meancurvedata;
+        best_meancurvesum = meancurvesum;
+        best_meancurvecount = meancurvecount;
+        best_meancurvemean = meancurvemean;
+        best_meancurvestd = meancurvestd;
     end
     toc
 end
@@ -276,10 +297,11 @@ fprintf('\n');
 
 run_type = 'Best Alignment';
 
-[sorted_interventions, max_points] = am3VisualiseAlignmentDetail(amDatacube, amInterventions, best_offsets, best_profile_pre, ...
+[sorted_interventions, max_points] = am4VisualiseAlignmentDetail(amDatacube, amInterventions, best_offsets, best_profile_pre, ...
     best_profile_post, best_count_post, best_std_post, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, curveaveragingmethod);
 
-am3PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_std_post, best_offsets, best_qual, measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start)
+am4PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_std_post, best_offsets, best_qual, ...
+    measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, smoothingmethod)
 
 %return;
 
@@ -310,7 +332,7 @@ tic
 fprintf('Plotting prediction results\n');
 for i=1:ninterventions
 %for i = 42:44
-    am3PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, ...
+    am4PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, ...
         best_offsets, best_profile_post, normmean, ex_start, i, nmeasures, max_offset, align_wind, study);
 end
 toc
@@ -319,12 +341,13 @@ fprintf('\n');
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('%salignmentmodelv3results-obj%d.mat', study, round(best_qual*10000));
+outputfilename = sprintf('%salignmentmodelv4results-obj%d.mat', study, round(best_qual*10000));
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');
 save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amNormcube', 'amInterventions','best_initial_offsets', ...
     'best_offsets', 'best_profile_pre', 'best_profile_post', 'unaligned_profile', 'best_histogram', 'overall_hist', 'hstgorig', 'overall_hstorig', ...
     'best_qual', 'best_count_post', 'best_std_post', 'sorted_interventions', 'ex_start', 'normmean', 'normstd', 'study', 'sigmamethod', 'mumethod', ...
-    'curveaveragingmethod', 'measuresmask', 'max_offset', 'align_wind', 'measures', 'nmeasures', 'ninterventions', 'overall_hist');
+    'curveaveragingmethod', 'measuresmask', 'max_offset', 'align_wind', 'measures', 'nmeasures', 'ninterventions', 'overall_hist', ...
+    'best_meancurvedata', 'best_meancurvesum', 'best_meancurvecount', 'best_meancurvemean', 'best_meancurvestd');
 toc
 
