@@ -58,7 +58,7 @@ end
 fprintf('Methodology for smoothing method of curve averaging\n');
 fprintf('---------------------------------------------------\n');
 fprintf('1: Raw data\n');
-fprintf('2: Smoothed data (5 days)\n');
+fprintf('2: Smoothed data (3 days)\n');
 smoothingmethod = input('Choose methodology (1-2) ');
 fprintf('\n');
 if smoothingmethod > 2
@@ -297,8 +297,11 @@ fprintf('\n');
 
 run_type = 'Best Alignment';
 
-[sorted_interventions, max_points] = am4VisualiseAlignmentDetail(amDatacube, amInterventions, best_offsets, best_profile_pre, ...
-    best_profile_post, best_count_post, best_std_post, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, curveaveragingmethod);
+amInterventions.Offset = best_offsets;
+
+[sorted_interventions, max_points] = am4VisualiseAlignmentDetail(amNormcube, amInterventions, best_offsets, best_profile_pre, ...
+    best_profile_post, best_count_post, best_std_post, measures, max_offset, align_wind, nmeasures, run_type, study, ...
+    ex_start, curveaveragingmethod, smoothingmethod);
 
 am4PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_std_post, best_offsets, best_qual, ...
     measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, smoothingmethod)
@@ -307,8 +310,12 @@ am4PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_pos
 
 % create overall histogram (summed over measures by intervention/offset)
 overall_hist = zeros(ninterventions, max_offset);
+overall_hist_all = zeros(ninterventions, max_offset);
+overall_hist_xAL = zeros(ninterventions, max_offset);
 for j = 1:ninterventions
-    overall_hist(j, :) = reshape(sum(best_histogram(find(measures.Mask),j,:),1), [1, max_offset]);
+    overall_hist(j, :)     = reshape(sum(best_histogram(find(measures.Mask),j,:),1), [1, max_offset]);
+    overall_hist_all(j, :) = reshape(sum(best_histogram(:,j,:),1), [1, max_offset]);
+    overall_hist_xAL(j, :) = reshape(sum(best_histogram([2,3,4,5,6,7,8],j,:),1), [1, max_offset]);
 end
 
 % save raw results from objfcn
@@ -321,8 +328,12 @@ for j=1:ninterventions
         best_histogram(m, j, :) = exp(-1 * best_histogram(m, j, :));
         best_histogram(m, j, :) = best_histogram(m, j, :) / sum(best_histogram(m, j, :));
     end
-    overall_hist(j,:) = exp(-1 * overall_hist(j,:));
-    overall_hist(j,:) = overall_hist(j,:) / sum(overall_hist(j,:));
+    overall_hist(j,:)     = exp(-1 * overall_hist(j,:));
+    overall_hist(j,:)     = overall_hist(j,:) / sum(overall_hist(j,:));
+    overall_hist_all(j,:) = exp(-1 * overall_hist_all(j,:));
+    overall_hist_all(j,:) = overall_hist_all(j,:) / sum(overall_hist_all(j,:));
+    overall_hist_xAL(j,:) = exp(-1 * overall_hist_xAL(j,:));
+    overall_hist_xAL(j,:) = overall_hist_xAL(j,:) / sum(overall_hist_xAL(j,:));
 end
 
 toc
@@ -332,7 +343,7 @@ tic
 fprintf('Plotting prediction results\n');
 for i=1:ninterventions
 %for i = 42:44
-    am4PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, ...
+    am4PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, overall_hist_all, overall_hist_xAL, ...
         best_offsets, best_profile_post, normmean, ex_start, i, nmeasures, max_offset, align_wind, study);
 end
 toc
@@ -347,7 +358,7 @@ fprintf('\n');
 save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amNormcube', 'amInterventions','best_initial_offsets', ...
     'best_offsets', 'best_profile_pre', 'best_profile_post', 'unaligned_profile', 'best_histogram', 'overall_hist', 'hstgorig', 'overall_hstorig', ...
     'best_qual', 'best_count_post', 'best_std_post', 'sorted_interventions', 'ex_start', 'normmean', 'normstd', 'study', 'sigmamethod', 'mumethod', ...
-    'curveaveragingmethod', 'measuresmask', 'max_offset', 'align_wind', 'measures', 'nmeasures', 'ninterventions', 'overall_hist', ...
+    'curveaveragingmethod', 'smoothingmethod','measuresmask', 'max_offset', 'align_wind', 'measures', 'nmeasures', 'ninterventions', 'overall_hist', ...
     'best_meancurvedata', 'best_meancurvesum', 'best_meancurvecount', 'best_meancurvemean', 'best_meancurvestd');
 toc
 

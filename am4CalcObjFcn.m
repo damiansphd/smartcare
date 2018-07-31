@@ -23,12 +23,12 @@ for i = 1:align_wind
                 %thisdist = ( (meancurvesum((max_offset + align_wind + 1) - i - curroffset, m)/ meancurvecount((max_offset + align_wind + 1) - i - curroffset, m) ...
                 %    - amDatacube(scid, start - i, m)) ^ 2 ) / (2 * (meancurvestd((max_offset + align_wind + 1) - i - curroffset, m) ^ 2) ) ;
                 thisdist = ( (meancurvemean((max_offset + align_wind + 1) - i - curroffset, m) ...
-                    - amDatacube(scid, start - i, m)) ^ 2 ) / (2 * (meancurvestd((max_offset + align_wind + 1) - i - curroffset, m) ^ 2) ) ;
+                    - amDatacube(scid, start - i, m)) ^ 2 ) / ((meancurvestd((max_offset + align_wind + 1) - i - curroffset, m) ^ 2) ) ;
             else
                 %thisdist = ( (meancurvesum((max_offset + align_wind + 1) - i - curroffset, m)/ meancurvecount((max_offset + align_wind + 1) - i - curroffset, m) ...
                 %    - amDatacube(scid, start - i, m)) ^ 2 ) / (2 * (normstd(scid, m) ^ 2 ) ) ;
                 thisdist = ( (meancurvemean((max_offset + align_wind + 1) - i - curroffset, m) ...
-                    - amDatacube(scid, start - i, m)) ^ 2 ) / (2 * (normstd(scid, m) ^ 2 ) ) ;
+                    - amDatacube(scid, start - i, m)) ^ 2 ) / ((normstd(scid, m) ^ 2 ) ) ;
             end
             % add measures mask here to only include in the total for
             % subset of measures.

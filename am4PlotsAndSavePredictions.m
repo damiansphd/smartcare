@@ -1,4 +1,4 @@
-function am4PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, best_offsets, best_profile_post, normmean, ex_start, thisinter, nmeasures, max_offset, align_wind, study)
+function am4PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, overall_hist_all, overall_hist_xAL, best_offsets, best_profile_post, normmean, ex_start, thisinter, nmeasures, max_offset, align_wind, study)
 
 % am4PlotsAndSavePredictions - plots measures prior to
 % treatment with alignment model predictions and overlaid with the mean
@@ -8,7 +8,7 @@ function am4PlotsAndSavePredictions(amInterventions, amDatacube, measures, demog
 plotsdown = 9;
 plotsacross = 5;
 mpos = [ 1 2 6 7 ; 3 4 8 9 ; 11 12 16 17 ; 13 14 18 19 ; 21 22 26 27 ; 23 24 28 29 ; 31 32 36 37 ; 33 34 38 39];
-hpos = [ 5 ; 10 ; 15 ; 20 ; 25 ; 30 ; 35 ; 40; 45];
+hpos = [ 5 ; 10 ; 15 ; 20 ; 25 ; 30 ; 35 ; 40 ; 45 ; 44 ; 43 ; 42 ; 41 ];
 days = [-1 * (max_offset + align_wind): 0];
 
 scid = amInterventions.SmartCareID(thisinter);
@@ -43,7 +43,7 @@ for m = 1:nmeasures
             'MarkerEdgeColor','b',...
             'MarkerFaceColor','g');
     set(gca,'fontsize',6);
-    xl = [min(days) max(days)];
+    xl = [(min(days) + 1) max(days)];
     xlim(xl);
     column = getColumnForMeasure(measures.Name{m});
     ddcolumn = sprintf('Fun_%s',column);
@@ -109,10 +109,10 @@ for m=1:nmeasures
             'MarkerFaceColor', 'green');
     set(gca,'fontsize',6);
     hold on;
-    if (max(best_histogram(m,thisinter,:)) > 0.5)
+    if (max(best_histogram(m,thisinter,:)) > 0.25)
         yl = [0 max(best_histogram(m,thisinter,:))];
     else
-        yl = [0 0.5];
+        yl = [0 0.25];
     end
     line( [best_offsets(thisinter) best_offsets(thisinter)], yl, ...
         'Color', 'green', 'LineStyle', '-', 'LineWidth', 0.5);
@@ -127,7 +127,7 @@ for m=1:nmeasures
 end
 
 % plot the overall posterior distributions
-subplot(plotsdown, plotsacross, hpos(nmeasures+1,:),'Parent',p)
+subplot(plotsdown, plotsacross, hpos(nmeasures + 1,:),'Parent',p)
 plot([0:max_offset-1], overall_hist(thisinter,:), ...
     'Color', 'none', ...
     'LineStyle', 'none', ...
@@ -138,14 +138,60 @@ plot([0:max_offset-1], overall_hist(thisinter,:), ...
     'MarkerFaceColor', 'green');
 set(gca,'fontsize',6);
 hold on;
-if (max(overall_hist(thisinter,:)) > 0.5)
+if (max(overall_hist(thisinter,:)) > 0.25)
     yl = [0 max(overall_hist(thisinter,:))];
 else
-    yl = [0 0.5];
+    yl = [0 0.25];
 end
 line( [best_offsets(thisinter) best_offsets(thisinter)] , yl, ...
     'Color', 'green', 'LineStyle', '-', 'LineWidth', 0.5);
 title('Overall', 'BackgroundColor', 'g');
+xlim([0 max_offset-1]);
+ylim(yl);
+hold off;
+
+subplot(plotsdown, plotsacross, hpos(nmeasures + 2,:),'Parent',p)
+plot([0:max_offset-1], overall_hist_all(thisinter,:), ...
+    'Color', 'none', ...
+    'LineStyle', 'none', ...
+    'Marker', 'o', ...
+    'LineWidth', 1, ...
+    'MarkerSize', 2,...
+    'MarkerEdgeColor', 'blue',...
+    'MarkerFaceColor', 'green');
+set(gca,'fontsize',6);
+hold on;
+if (max(overall_hist_all(thisinter,:)) > 0.25)
+    yl = [0 max(overall_hist_all(thisinter,:))];
+else
+    yl = [0 0.25];
+end
+line( [best_offsets(thisinter) best_offsets(thisinter)] , yl, ...
+    'Color', 'green', 'LineStyle', '-', 'LineWidth', 0.5);
+title('Overall - All');
+xlim([0 max_offset-1]);
+ylim(yl);
+hold off;
+
+subplot(plotsdown, plotsacross, hpos(nmeasures + 3,:),'Parent',p)
+plot([0:max_offset-1], overall_hist_xAL(thisinter,:), ...
+    'Color', 'none', ...
+    'LineStyle', 'none', ...
+    'Marker', 'o', ...
+    'LineWidth', 1, ...
+    'MarkerSize', 2,...
+    'MarkerEdgeColor', 'blue',...
+    'MarkerFaceColor', 'green');
+set(gca,'fontsize',6);
+hold on;
+if (max(overall_hist_xAL(thisinter,:)) > 0.25)
+    yl = [0 max(overall_hist_xAL(thisinter,:))];
+else
+    yl = [0 0.25];
+end
+line( [best_offsets(thisinter) best_offsets(thisinter)] , yl, ...
+    'Color', 'green', 'LineStyle', '-', 'LineWidth', 0.5);
+title('Overall ex Act/Lung');
 xlim([0 max_offset-1]);
 ylim(yl);
 hold off;
