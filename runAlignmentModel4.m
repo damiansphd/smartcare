@@ -253,10 +253,10 @@ fprintf('\n');
 %return;
 
 fprintf('Running alignment with random offset start\n');
-if curveaveragingmethod == 1
+if smoothingmethod == 1
     niterations = 500;
 else
-    niterations = 500;
+    niterations = 250;
 end
 
 for j=1:niterations
