@@ -21,13 +21,14 @@ for m = 1:nmeasures
             meancurvedata((max_offset + align_wind + 1) - offset - i, m, currinter) = amDatacube(scid, start - i, m);
             meancurvesum((max_offset + align_wind + 1) - offset - i, m)   = meancurvesum((max_offset + align_wind + 1) - offset - i, m)   + amDatacube(scid, start - i, m);
             meancurvecount((max_offset + align_wind + 1) - offset - i, m) = meancurvecount((max_offset + align_wind + 1) - offset - i, m) + 1;
-            meancurvemean((max_offset + align_wind + 1) - offset - i, m) = meancurvesum((max_offset + align_wind + 1) - offset - i, m) / meancurvecount((max_offset + align_wind + 1) - offset - i, m);
+            %meancurvemean((max_offset + align_wind + 1) - offset - i, m) = meancurvesum((max_offset + align_wind + 1) - offset - i, m) / meancurvecount((max_offset + align_wind + 1) - offset - i, m);
             meancurvestd((max_offset + align_wind + 1) - offset - i, m) = std(meancurvedata((max_offset + align_wind + 1) - offset - i, m, ~isnan(meancurvedata((max_offset + align_wind + 1) - offset - i, m,:))));
         end
+        meancurvemean((max_offset + align_wind + 1) - offset - i, m) = meancurvesum((max_offset + align_wind + 1) - offset - i, m) / meancurvecount((max_offset + align_wind + 1) - offset - i, m);
     end
-    if smoothingmethod == 2
-        meancurvemean(:,m) = smooth(meancurvemean(:,m),3);
-    end
+    %if smoothingmethod == 2
+    %    meancurvemean(:,m) = smooth(meancurvemean(:,m),3);
+    %end
 end
 
 end

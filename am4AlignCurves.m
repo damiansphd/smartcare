@@ -56,16 +56,16 @@ while 1
         %fprintf('Got here ! Actually doing some shifting....\n');
         %dummy = input('Continue ?');
         [better_offset, hstg] = am4BestFit(meancurvemean, meancurvestd, amDatacube, ...
-            amInterventions, measures.Mask, normstd, hstg, pnt, max_offset, align_wind, nmeasures, sigmamethod);
+            amInterventions, measures.Mask, normstd, hstg, pnt, max_offset, align_wind, nmeasures, sigmamethod, smoothingmethod);
     else
         better_offset = amInterventions.Offset(pnt);
     end
     
     if better_offset ~= amInterventions.Offset(pnt)
+        if detaillog
+            fprintf('amIntervention.Offset(%d) updated from %d to %d\n', pnt, amInterventions.Offset(pnt), better_offset);
+        end
         amInterventions.Offset(pnt) = better_offset;
-        %if detaillog
-        %    fprintf('amIntervention.Offset(%d) set to %d\n', pnt, better_offset);
-        %end
         cnt = cnt+1;
     end
     [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvedata, meancurvesum, ...
@@ -106,7 +106,7 @@ for i=1:ninterventions
         meancurvecount, meancurvemean, meancurvestd, amDatacube, amInterventions, i, ...
         max_offset, align_wind, nmeasures, curveaveragingmethod, smoothingmethod);
     qual = qual + am4CalcObjFcn(meancurvemean, meancurvestd, amDatacube, amInterventions, measures.Mask, normstd, ...
-        hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod);
+        hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
     [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvedata, meancurvesum, ...
         meancurvecount, meancurvemean, meancurvestd, amDatacube, amInterventions, i, ...
         max_offset, align_wind, nmeasures, curveaveragingmethod, smoothingmethod);

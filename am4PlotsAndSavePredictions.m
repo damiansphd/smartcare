@@ -1,4 +1,4 @@
-function am4PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, overall_hist_all, overall_hist_xAL, best_offsets, best_profile_post, normmean, ex_start, thisinter, nmeasures, max_offset, align_wind, study)
+function am4PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, overall_hist_all, overall_hist_xAL, best_offsets, best_profile_post, fitmeasure, normmean, ex_start, thisinter, nmeasures, max_offset, align_wind, study)
 
 % am4PlotsAndSavePredictions - plots measures prior to
 % treatment with alignment model predictions and overlaid with the mean
@@ -117,9 +117,11 @@ for m=1:nmeasures
     line( [best_offsets(thisinter) best_offsets(thisinter)], yl, ...
         'Color', 'green', 'LineStyle', '-', 'LineWidth', 0.5);
     if measures.Mask(m) == 1
-        title(measures.DisplayName(m), 'BackgroundColor', 'g');
+        %title(measures.DisplayName(m), 'BackgroundColor', 'g');
+        title(sprintf('%s (%.1f)', measures.DisplayName{m}, fitmeasure(m, thisinter)), 'BackgroundColor', 'g');
     else
         title(measures.DisplayName(m));
+        title(sprintf('%s (%.1f)', measures.DisplayName{m}, fitmeasure(m, thisinter)));
     end
     xlim([0 max_offset-1]);
     ylim(yl);

@@ -19,13 +19,13 @@ p.FontSize = 16;
 p.FontWeight = 'bold';
 
 for m = 1:nmeasures
-    xl = [((-1 * (max_offset + align_wind)) - 0.5), -0.5];
+    xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
     yl = [min(min(profile_pre(m,:)), min(profile_post(m,:) - std_post(m,:))) max(max(profile_pre(m,:)), max(profile_post(m,:) + std_post(m,:)))];
     ax = subplot(plotsdown,plotsacross,m,'Parent',p);
     
     yyaxis left;
     hold on;
-    if smoothingmethod == 1
+    %if smoothingmethod == 1
         line([-1 * (max_offset + align_wind): -1], profile_pre(m,:), 'Color', 'red','LineStyle', ':');
         line([-1 * (max_offset + align_wind): -1], smooth(profile_pre(m,:), 5), 'Color', 'red', 'LineStyle', '-');
         line([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue', 'LineStyle', ':');
@@ -34,12 +34,12 @@ for m = 1:nmeasures
         line([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:) + std_post(m,:), 5), 'Color', 'blue', 'LineStyle', '--');
         line([-1 * (max_offset + align_wind): -1], profile_post(m,:) - std_post(m,:), 'Color', 'blue', 'LineStyle', ':');
         line([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:) - std_post(m,:), 5), 'Color', 'blue', 'LineStyle', '--');
-    else
-        line([-1 * (max_offset + align_wind): -1], profile_pre(m,:), 'Color', 'red','LineStyle', '-');
-        line([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue', 'LineStyle', '-');
-        line([-1 * (max_offset + align_wind): -1], profile_post(m,:) + std_post(m,:), 'Color', 'blue', 'LineStyle', '--');
-        line([-1 * (max_offset + align_wind): -1], profile_post(m,:) - std_post(m,:), 'Color', 'blue', 'LineStyle', '--');
-    end 
+    %else
+    %    line([-1 * (max_offset + align_wind): -1], profile_pre(m,:), 'Color', 'red','LineStyle', '-');
+    %    line([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue', 'LineStyle', '-');
+    %    line([-1 * (max_offset + align_wind): -1], profile_post(m,:) + std_post(m,:), 'Color', 'blue', 'LineStyle', '--');
+    %    line([-1 * (max_offset + align_wind): -1], profile_post(m,:) - std_post(m,:), 'Color', 'blue', 'LineStyle', '--');
+    %end 
     ax.XAxis.FontSize = 8;
     xlabel('Days prior to Intervention');
     ax.YAxis(1).Color = 'blue';
@@ -47,15 +47,6 @@ for m = 1:nmeasures
     ylabel('Normalised Measure', 'FontSize', 8);
     xlim(xl);
     ylim(yl);
-    %hold on;
-    %plot([-1 * (max_offset + align_wind): -1], smooth(profile_pre(m,:), 5), 'Color', 'red', 'LineStyle', '-');
-    %plot([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue', 'LineStyle', ':');
-    %plot([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:), 5), 'Color', 'blue', 'LineStyle', '-');
-    %line([-1 * (max_offset + align_wind): -1], profile_post(m,:) + std_post(m,:), 'Color', 'blue', 'LineStyle', ':');
-    %line([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:) + std_post(m,:), 5), 'Color', 'blue', 'LineStyle', '--');
-    %line([-1 * (max_offset + align_wind): -1], profile_post(m,:) - std_post(m,:), 'Color', 'blue', 'LineStyle', ':');
-    %line([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:) - std_post(m,:), 5), 'Color', 'blue', 'LineStyle', '--');
-    
     if ex_start ~= 0
         line([ex_start ex_start], yl, 'Color', 'blue', 'LineStyle', '--');
     end

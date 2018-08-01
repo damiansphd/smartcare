@@ -94,12 +94,12 @@ for m = 1:nmeasures
     xlim(xl);
     ylim(yl);
     hold on;
-    if smoothingmethod == 1
+    %if smoothingmethod == 1
         plot([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue','LineStyle', ':');
         plot([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:), 5), 'Color', 'blue', 'LineStyle', '-');
-    else
-        plot([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue','LineStyle', '-');
-    end
+    %else
+    %    plot([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue','LineStyle', '-');
+    %end
     if ex_start ~= 0
         line([ex_start ex_start], yl, 'Color', 'blue', 'LineStyle', '--');
     end
@@ -192,18 +192,21 @@ for m = 1:nmeasures
             xlim(xl);
             ylim(yl);
             hold on;
-            if smoothingmethod == 1
+            %if smoothingmethod == 1
                 line([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue','LineStyle', ':');
                 line([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:), 5), 'Color', 'blue', 'LineStyle', '-');
-            else
-                line([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue','LineStyle', '-');
-            end
+                line([-1 * qfrom: -1 * qto], temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 'Color', 'red','LineStyle', ':');
+                line([-1 * qfrom: -1 * qto], smooth(temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 5), 'Color', 'red','LineStyle', '-');
+            %else
+            %    line([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue','LineStyle', '-');
+            %    line([-1 * qfrom: -1 * qto], temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 'Color', 'red','LineStyle', '-');
+            %end
             if ex_start ~= 0
                 line([ex_start ex_start], yl, 'Color', 'blue', 'LineStyle', '--');
             end
             
             %line([-1 * (max_offset + align_wind): -1 * (qfrom + 1)], temp_meancurvemean(1:(max_offset - qfrom) + align_wind,m), 'Color', 'red','LineStyle', '-');
-            line([-1 * qfrom: -1 * qto], temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 'Color', 'red','LineStyle', '-');
+            %line([-1 * qfrom: -1 * qto], temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 'Color', 'red','LineStyle', '-');
             
             hold off;
 

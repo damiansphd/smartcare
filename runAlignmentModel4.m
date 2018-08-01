@@ -250,6 +250,8 @@ am4PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_pos
 toc
 fprintf('\n');
 
+%return;
+
 fprintf('Running alignment with random offset start\n');
 if curveaveragingmethod == 1
     niterations = 500;
@@ -268,6 +270,9 @@ for j=1:niterations
         meancurvecount, meancurvemean, meancurvestd] = am4AlignCurves(amNormcube, amInterventions, measures, normstd, ...
         max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog, curveaveragingmethod, sigmamethod, smoothingmethod);
     fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
+    %if qual == Inf
+    %    input('Infinity result - break ?');
+    %end
     if qual < best_qual
         % plot and save aligned curves (pre and post) if the result is best
         % so far
@@ -312,6 +317,8 @@ am4PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_pos
 overall_hist = zeros(ninterventions, max_offset);
 overall_hist_all = zeros(ninterventions, max_offset);
 overall_hist_xAL = zeros(ninterventions, max_offset);
+fitmeasure = zeros(nmeasures, ninterventions);
+
 for j = 1:ninterventions
     overall_hist(j, :)     = reshape(sum(best_histogram(find(measures.Mask),j,:),1), [1, max_offset]);
     overall_hist_all(j, :) = reshape(sum(best_histogram(:,j,:),1), [1, max_offset]);
@@ -325,6 +332,7 @@ overall_hstorig = overall_hist;
 % convert back from log space
 for j=1:ninterventions
     for m=1:nmeasures
+        fitmeasure(m, j) = sum(best_histogram(m, j, :));
         best_histogram(m, j, :) = exp(-1 * best_histogram(m, j, :));
         best_histogram(m, j, :) = best_histogram(m, j, :) / sum(best_histogram(m, j, :));
     end
@@ -344,7 +352,7 @@ fprintf('Plotting prediction results\n');
 for i=1:ninterventions
 %for i = 42:44
     am4PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, overall_hist_all, overall_hist_xAL, ...
-        best_offsets, best_profile_post, normmean, ex_start, i, nmeasures, max_offset, align_wind, study);
+        best_offsets, best_profile_post, fitmeasure, normmean, ex_start, i, nmeasures, max_offset, align_wind, study);
 end
 toc
 fprintf('\n');
@@ -352,13 +360,15 @@ fprintf('\n');
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('%salignmentmodelv4results-obj%d.mat', study, round(best_qual*10000));
+outputfilename = sprintf('%sAMv4_sig%d_mu%d_ca%d_sm%d_mm%d_mo%d_dw%d_ex%d_obj%d.mat', study, sigmamethod, mumethod, curveaveragingmethod, ...
+    smoothingmethod, measuresmask, max_offset, align_wind, ex_start, round(best_qual*10000));
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');
-save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amNormcube', 'amInterventions','best_initial_offsets', ...
-    'best_offsets', 'best_profile_pre', 'best_profile_post', 'unaligned_profile', 'best_histogram', 'overall_hist', 'hstgorig', 'overall_hstorig', ...
-    'best_qual', 'best_count_post', 'best_std_post', 'sorted_interventions', 'ex_start', 'normmean', 'normstd', 'study', 'sigmamethod', 'mumethod', ...
-    'curveaveragingmethod', 'smoothingmethod','measuresmask', 'max_offset', 'align_wind', 'measures', 'nmeasures', 'ninterventions', 'overall_hist', ...
-    'best_meancurvedata', 'best_meancurvesum', 'best_meancurvecount', 'best_meancurvemean', 'best_meancurvestd');
+save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amNormcube', 'amInterventions', ...
+    'best_initial_offsets', 'best_offsets', 'best_profile_pre', 'best_profile_post', 'best_qual', 'best_count_post', 'best_std_post', 'unaligned_profile', ...
+    'best_histogram', 'overall_hist', 'overall_hist_all', 'overall_hist_xAL', 'hstgorig', 'overall_hstorig', ...
+    'best_meancurvedata', 'best_meancurvesum', 'best_meancurvecount', 'best_meancurvemean', 'best_meancurvestd', ...
+    'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'sigmamethod', 'mumethod', ...
+    'curveaveragingmethod', 'smoothingmethod','measuresmask', 'max_offset', 'align_wind', 'ex_start', 'nmeasures', 'ninterventions');
 toc
 
