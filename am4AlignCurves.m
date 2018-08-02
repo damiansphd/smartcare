@@ -62,7 +62,7 @@ while 1
     end
     
     if better_offset ~= amInterventions.Offset(pnt)
-        if detaillog
+        if detaillog & iter > 20
             fprintf('amIntervention.Offset(%d) updated from %d to %d\n', pnt, amInterventions.Offset(pnt), better_offset);
         end
         amInterventions.Offset(pnt) = better_offset;

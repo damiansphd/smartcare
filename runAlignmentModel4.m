@@ -332,8 +332,8 @@ overall_hstorig = overall_hist;
 % convert back from log space
 for j=1:ninterventions
     for m=1:nmeasures
-        fitmeasure(m, j) = sum(best_histogram(m, j, :));
-        best_histogram(m, j, :) = exp(-1 * best_histogram(m, j, :));
+        fitmeasure(m, j) = sum(exp(-1 * best_histogram(m, j, :)));
+        best_histogram(m, j, :) = exp(-1 * (best_histogram(m, j, :) - max(best_histogram(m, j, :))));
         best_histogram(m, j, :) = best_histogram(m, j, :) / sum(best_histogram(m, j, :));
     end
     overall_hist(j,:)     = exp(-1 * overall_hist(j,:));
