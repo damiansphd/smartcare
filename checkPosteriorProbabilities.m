@@ -147,3 +147,11 @@ for offset = 0:max_offset-1
     rowtoadd2(:,nondaycols2+offset+1) = array2table(datawindowtable.CalcValue(datawindowtable.Offset==offset & ismember(datawindowtable.RowType, {rowtoadd2.RowType})));
 end
 offsettable = [offsettable ; rowtoadd2];
+
+
+for currinter = 1:ninterventions
+    for m = 1:nmeasures
+        pdoffset(m, currinter, :) = exp(-1 * (hstg(m, currinter, :) - max(hstg(m, currinter, :))));
+        pdoffset(m, currinter, :) = pdoffset(m, currinter, :) / sum(pdoffset(m, currinter, :));
+    end
+end

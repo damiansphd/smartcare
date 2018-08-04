@@ -15,9 +15,11 @@ end
 
 for m = 1:nmeasures
     if smoothingmethod == 2
-        tempmean(:,m) = smooth(meancurvemean(:,m),3);
+        tempmean(:,m) = smooth(meancurvemean(:,m),5);
+        tempstd(:,m) = smooth(meancurvestd(:,m),5);
     else
         tempmean(:,m) = meancurvemean(:,m);
+        tempstd(:,m) = meancurvestd(:,m);
     end
 end
 
@@ -32,8 +34,11 @@ for i = 1:align_wind
                 %    - amDatacube(scid, start - i, m)) ^ 2 ) / (2 * (meancurvestd((max_offset + align_wind + 1) - i - curroffset, m) ^ 2) ) ;
                 %thisdist = ( (meancurvemean((max_offset + align_wind + 1) - i - curroffset, m) ...
                 %    - amDatacube(scid, start - i, m)) ^ 2 ) / ((meancurvestd((max_offset + align_wind + 1) - i - curroffset, m) ^ 2) ) ;
+                %thisdist = ( (tempmean((max_offset + align_wind + 1) - i - curroffset, m) ...
+                %    - amDatacube(scid, start - i, m)) ^ 2 ) / ((meancurvestd((max_offset + align_wind + 1) - i - curroffset, m) ^ 2) ) ;
                 thisdist = ( (tempmean((max_offset + align_wind + 1) - i - curroffset, m) ...
-                    - amDatacube(scid, start - i, m)) ^ 2 ) / ((meancurvestd((max_offset + align_wind + 1) - i - curroffset, m) ^ 2) ) ;
+                    - amDatacube(scid, start - i, m)) ^ 2 ) / ((tempstd((max_offset + align_wind + 1) - i - curroffset, m) ^ 2) ) ;
+
             else
                 %thisdist = ( (meancurvesum((max_offset + align_wind + 1) - i - curroffset, m)/ meancurvecount((max_offset + align_wind + 1) - i - curroffset, m) ...
                 %    - amDatacube(scid, start - i, m)) ^ 2 ) / (2 * (normstd(scid, m) ^ 2 ) ) ;

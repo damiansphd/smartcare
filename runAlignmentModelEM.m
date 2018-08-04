@@ -1,6 +1,8 @@
 clear; close all; clc;
 
-fprintf('Running Alignment Model V4\n');
+version = 'vEM';
+
+fprintf('Running Alignment Model %s\n', version);
 fprintf('\n');
 
 studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
@@ -40,28 +42,6 @@ fprintf('3: Exclude bottom quartile from Mean for -/+ 4 days prior to data windo
 mumethod = input('Choose methodology (1-2) ');
 fprintf('\n');
 if mumethod > 3
-    fprintf('Invalid methodology\n');
-    return;
-end
-
-fprintf('Methodology for duration of curve averaging\n');
-fprintf('-------------------------------------------\n');
-fprintf('1: Just data window\n');
-fprintf('2: Data window + data to the left\n');
-curveaveragingmethod = input('Choose methodology (1-2) ');
-fprintf('\n');
-if curveaveragingmethod > 2
-    fprintf('Invalid methodology\n');
-    return;
-end
-
-fprintf('Methodology for smoothing method of curve averaging\n');
-fprintf('---------------------------------------------------\n');
-fprintf('1: Raw data\n');
-fprintf('2: Smoothed data (5 days)\n');
-smoothingmethod = input('Choose methodology (1-2) ');
-fprintf('\n');
-if smoothingmethod > 2
     fprintf('Invalid methodology\n');
     return;
 end
@@ -114,15 +94,6 @@ else
     % happens
     idx = ismember(measures.DisplayName, {'Cough'});
 end
-    
-%idx = ismember(measures.DisplayName, {'Temperature'});
-%idx = ismember(measures.DisplayName, {'Temperature', 'Wellness', 'Activity', 'LungFunction', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
-%idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
-%idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'Cough', 'LungFunction', 'SleepActivity', 'Wellness'});
-%amDatacube(:,:,measures.Index(idx)) = [];
-%measures(idx,:) = [];
-%nmeasures = size(measures,1);
-%measures.Index = [1:nmeasures]';
 
 % calculate the overall & alignment window std for each measure and store in measures
 % table
@@ -234,10 +205,9 @@ end
 best_initial_offsets = amInterventions.Offset;
 
 run_type = 'Zero Offset Start';
-[best_offsets, best_profile_pre, best_profile_post, best_count_post, best_std_post, best_histogram, best_qual, ...
-    best_meancurvedata, best_meancurvesum, best_meancurvecount, best_meancurvemean, best_meancurvestd] = am4AlignCurves(amNormcube, ...
-    amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, ...
-    run_type, detaillog, curveaveragingmethod, sigmamethod, smoothingmethod);
+[best_meancurvedata, best_meancurvesum, best_meancurvecount, best_meancurvemean, best_meancurvestd, best_profile_pre, ...
+    best_offsets, best_histogram, best_pdoffset, best_qual] = amEMAlignCurves(amNormcube, amInterventions, measures, ...
+    normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, best_qual);
 
 % save the zero offset pre-profile to unaligned_profile so all plots show a
@@ -245,57 +215,12 @@ fprintf('%s - ErrFcn = %7.4f\n', run_type, best_qual);
 unaligned_profile = best_profile_pre;
 
 % plot and save aligned curves (pre and post)
-am4PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_std_post, best_offsets, best_qual, ...
-    measures, 0, max_offset, align_wind, nmeasures, run_type, study, 0, smoothingmethod)
+amEMPlotAndSaveAlignedCurves(unaligned_profile, best_meancurvemean, best_meancurvecount, best_meancurvestd, best_offsets, best_qual, ...
+    measures, 0, max_offset, align_wind, nmeasures, run_type, study, 0, version)
 toc
 fprintf('\n');
 
-%return;
-
-fprintf('Running alignment with random offset start\n');
-if smoothingmethod == 1
-    niterations = 500;
-else
-    niterations = 250;
-end
-
-for j=1:niterations
-    tic
-    for i=1:ninterventions
-        amInterventions.Offset(i) = floor(rand * max_offset);
-    end
-    initial_offsets = amInterventions.Offset;
-    run_type = sprintf('Random Offset Start %d', j);
-    [offsets, profile_pre, profile_post, count_post, std_post, histogram, qual, meancurvedata, meancurvesum, ...
-        meancurvecount, meancurvemean, meancurvestd] = am4AlignCurves(amNormcube, amInterventions, measures, normstd, ...
-        max_offset, align_wind, nmeasures, ninterventions, run_type, detaillog, curveaveragingmethod, sigmamethod, smoothingmethod);
-    fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
-    %if qual == Inf
-    %    input('Infinity result - break ?');
-    %end
-    if qual < best_qual
-        % plot and save aligned curves (pre and post) if the result is best
-        % so far
-        am4PlotAndSaveAlignedCurves(unaligned_profile, profile_post, count_post, std_post, offsets, qual, measures, 0, ...
-            max_offset, align_wind, nmeasures, run_type, study, 0, smoothingmethod)
-        fprintf('Best so far is random start %d\n', j);
-        best_offsets = offsets;
-        best_initial_offsets = initial_offsets;
-        best_profile_pre = profile_pre;
-        best_profile_post = profile_post;
-        best_count_post = count_post;
-        best_std_post = std_post;
-        best_histogram = histogram;
-        best_qual = qual;
-        best_meancurvedata = meancurvedata;
-        best_meancurvesum = meancurvesum;
-        best_meancurvecount = meancurvecount;
-        best_meancurvemean = meancurvemean;
-        best_meancurvestd = meancurvestd;
-    end
-    toc
-end
-fprintf('\n');
+return;
 
 ex_start = input('Look at best start and enter exacerbation start: ');
 fprintf('\n');
@@ -304,12 +229,12 @@ run_type = 'Best Alignment';
 
 amInterventions.Offset = best_offsets;
 
-[sorted_interventions, max_points] = am4VisualiseAlignmentDetail(amNormcube, amInterventions, best_offsets, best_profile_pre, ...
-    best_profile_post, best_count_post, best_std_post, measures, max_offset, align_wind, nmeasures, run_type, study, ...
-    ex_start, curveaveragingmethod, smoothingmethod);
+[sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amNormcube, amInterventions, best_meancurvemean, ...
+    best_meancurvecount, best_meancurvestd, best_offsets, measures, max_offset, align_wind, nmeasures, run_type, ...
+    study, ex_start, version);
 
-am4PlotAndSaveAlignedCurves(unaligned_profile, best_profile_post, best_count_post, best_std_post, best_offsets, best_qual, ...
-    measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, smoothingmethod)
+amEMPlotAndSaveAlignedCurves(unaligned_profile, best_meancurvemean, best_meancurvecount, best_meancurvestd, best_offsets, best_qual, ...
+    measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, version)
 
 %return;
 
@@ -332,15 +257,15 @@ overall_hstorig = overall_hist;
 % convert back from log space
 for j=1:ninterventions
     for m=1:nmeasures
-        fitmeasure(m, j) = log(sum(exp(-1 * best_histogram(m, j, :))));
+        fitmeasure(m, j) = sum(exp(-1 * best_histogram(m, j, :)));
         best_histogram(m, j, :) = exp(-1 * (best_histogram(m, j, :) - max(best_histogram(m, j, :))));
         best_histogram(m, j, :) = best_histogram(m, j, :) / sum(best_histogram(m, j, :));
     end
-    overall_hist(j,:)     = exp(-1 * (overall_hist(j,:) - max(overall_hist(j, :))));
+    overall_hist(j,:)     = exp(-1 * overall_hist(j,:));
     overall_hist(j,:)     = overall_hist(j,:) / sum(overall_hist(j,:));
-    overall_hist_all(j,:) = exp(-1 * (overall_hist_all(j,:) - max(overall_hist_all(j, :))));
+    overall_hist_all(j,:) = exp(-1 * overall_hist_all(j,:));
     overall_hist_all(j,:) = overall_hist_all(j,:) / sum(overall_hist_all(j,:));
-    overall_hist_xAL(j,:) = exp(-1 * (overall_hist_xAL(j,:) - max(overall_hist_xAL(j, :))));
+    overall_hist_xAL(j,:) = exp(-1 * overall_hist_xAL(j,:));
     overall_hist_xAL(j,:) = overall_hist_xAL(j,:) / sum(overall_hist_xAL(j,:));
 end
 
@@ -360,15 +285,14 @@ fprintf('\n');
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('%sAMv4_sig%d_mu%d_ca%d_sm%d_mm%d_mo%d_dw%d_ex%d_obj%d.mat', study, sigmamethod, mumethod, curveaveragingmethod, ...
+outputfilename = sprintf('%sAM%s_sig%d_mu%d_ca%d_sm%d_mm%d_mo%d_dw%d_ex%d_obj%d.mat', study, version, sigmamethod, mumethod, curveaveragingmethod, ...
     smoothingmethod, measuresmask, max_offset, align_wind, ex_start, round(best_qual*10000));
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');
 save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amNormcube', 'amInterventions', ...
-    'best_initial_offsets', 'best_offsets', 'best_profile_pre', 'best_profile_post', 'best_qual', 'best_count_post', 'best_std_post', 'unaligned_profile', ...
-    'best_histogram', 'overall_hist', 'overall_hist_all', 'overall_hist_xAL', 'hstgorig', 'overall_hstorig', ...
     'best_meancurvedata', 'best_meancurvesum', 'best_meancurvecount', 'best_meancurvemean', 'best_meancurvestd', ...
+    'best_offsets', 'best_qual', 'unaligned_profile', 'best_histogram', 'best_pdoffset', 'overall_hist', 'overall_pdoffset', ...
+    'overall_hist_all', 'overall_pdoffset_all', 'overall_hist_xAL', 'overall_pdoffset_xAL', ...
     'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'sigmamethod', 'mumethod', ...
-    'curveaveragingmethod', 'smoothingmethod','measuresmask', 'max_offset', 'align_wind', 'ex_start', 'nmeasures', 'ninterventions');
+    'measuresmask', 'max_offset', 'align_wind', 'ex_start', 'nmeasures', 'ninterventions');
 toc
-
