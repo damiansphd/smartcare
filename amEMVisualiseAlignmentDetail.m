@@ -1,4 +1,4 @@
-function [sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amDatacube, amInterventions, meancurvemean, meancurvecount, meancurvestd, offsets, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, version)
+function [sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amDatacube, amInterventions, meancurvemean, meancurvecount, meancurvestd, pdoffset, offsets, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, version)
 
 % amEMVisualiseAlignmentDetail - creates a plot of horizontal bars showing 
 % the alignment of the data window (including the best_offset) for all 
@@ -9,12 +9,12 @@ datatable = table('Size',[1 3], ...
     'VariableNames', {'Intervention', 'ScaledDateNum', 'Count'});
 
 rowtoadd = datatable;
-max_points = zeros(1, max_offset + align_wind);
+max_points = zeros(1, max_offset + align_wind - 1);
 ninterventions = size(amInterventions,1);
 sorted_interventions = array2table(offsets);
 sorted_interventions.Intervention = [1:ninterventions]';
 sorted_interventions = sortrows(sorted_interventions, {'offsets', 'Intervention'}, {'descend', 'ascend'});
-for i = 1:max_offset+align_wind
+for i = 1:max_offset+align_wind-1
     max_points(1, i) = size(sorted_interventions.offsets(sorted_interventions.offsets <= (max_offset + align_wind - i) ...
             & sorted_interventions.offsets > (align_wind - i)),1);
 end
@@ -61,7 +61,7 @@ for m = 1:nmeasures
     p.FontWeight = 'bold';
     
     xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
-    yl = [min(min(profile_pre(:, m)), min(meancurvemean(:, m))) max(max(profile_pre(:, m)), max(meancurvemean(:, m)))];
+    yl = [min(meancurvemean(:, m)) max(meancurvemean(:, m))];
     
     ax = subplot(plotsdown,plotsacross,[1:6],'Parent',p);
     yyaxis left;
@@ -133,27 +133,23 @@ for m = 1:nmeasures
             temp_meancurvecount    = zeros(max_offset + align_wind - 1, nmeasures);
             temp_meancurvemean     = zeros(max_offset + align_wind - 1, nmeasures);
             temp_meancurvestd      = zeros(max_offset + align_wind - 1, nmeasures);
+            
             for i = 1:qnbr
-                [temp_meancurvedata, temp_meancurvesum, temp_meancurvecount, temp_meancurvemean, temp_meancurvestd] = am4AddToMean(temp_meancurvedata, temp_meancurvesum, ...
-                    temp_meancurvecount, temp_meancurvemean, temp_meancurvestd, amDatacube, amInterventions(sorted_interventions.Intervention(qlower:qupper),:), i, max_offset, ...
-                    align_wind, nmeasures, curveaveragingmethod, smoothingmethod);
+                [temp_meancurvedata, temp_meancurvesum, temp_meancurvecount, temp_meancurvemean, temp_meancurvestd] = amEMAddToMean(temp_meancurvedata, temp_meancurvesum, ...
+                    temp_meancurvecount, temp_meancurvemean, temp_meancurvestd, pdoffset(:, sorted_interventions.Intervention(qlower:qupper), :), amDatacube, amInterventions(sorted_interventions.Intervention(qlower:qupper),:), ...
+                    i, max_offset, align_wind, nmeasures);
             end
             
             qintrminoffset = min(amInterventions.Offset(sorted_interventions.Intervention(qlower:qupper)));
             qdataminoffset = max_offset + align_wind - max(find(max(temp_meancurvecount, [], 2)~=0)) + 1;
             qto = max(qintrminoffset, qdataminoffset);
             
-            if curveaveragingmethod == 1
-                qintrmaxoffset = max(amInterventions.Offset(sorted_interventions.Intervention(qlower:qupper))) + align_wind;
-                qdatamaxoffset = max_offset + align_wind - min(find(min(temp_meancurvecount, [], 2)~=0));
-                qfrom = max(qintrmaxoffset, qdatamaxoffset);
-                %qfrom = qdatamaxoffset;
-            else
-                qfrom = max_offset + align_wind - 1;
-            end
+            qintrmaxoffset = max(amInterventions.Offset(sorted_interventions.Intervention(qlower:qupper))) + align_wind;
+            qdatamaxoffset = max_offset + align_wind - min(find(min(temp_meancurvecount, [], 2)~=0));
+            qfrom = max(qintrmaxoffset, qdatamaxoffset);
             
             xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
-            yl = [min(min(temp_meancurvemean(:, m)), min(profile_post(m,:))) max(max(temp_meancurvemean(:, m)), max(profile_post(m,:)))];
+            yl = [min(min(temp_meancurvemean(:, m)), min(meancurvemean(:, m))) max(max(temp_meancurvemean(:, m)), max(meancurvemean(:, m)))];
     
             ax = subplot(plotsdown, plotsacross, q, 'Parent', p);
             ax.Title.FontSize = 8;
@@ -168,31 +164,20 @@ for m = 1:nmeasures
             xlim(xl);
             ylim(yl);
             hold on;
-            %if smoothingmethod == 1
-                line([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue','LineStyle', ':');
-                line([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:), 5), 'Color', 'blue', 'LineStyle', '-');
-                line([-1 * qfrom: -1 * qto], temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 'Color', 'red','LineStyle', ':');
-                line([-1 * qfrom: -1 * qto], smooth(temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 5), 'Color', 'red','LineStyle', '-');
-            %else
-            %    line([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue','LineStyle', '-');
-            %    line([-1 * qfrom: -1 * qto], temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 'Color', 'red','LineStyle', '-');
-            %end
+            line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:, m), 'Color', 'blue','LineStyle', ':');
+            line([-1 * (max_offset + align_wind - 1): -1], smooth(meancurvemean(:, m), 5), 'Color', 'blue', 'LineStyle', '-');
+            line([-1 * qfrom: -1 * qto], temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 'Color', 'red','LineStyle', ':');
+            line([-1 * qfrom: -1 * qto], smooth(temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 5), 'Color', 'red','LineStyle', '-');
             if ex_start ~= 0
                 line([ex_start ex_start], yl, 'Color', 'blue', 'LineStyle', '--');
             end
-            
-            %line([-1 * (max_offset + align_wind): -1 * (qfrom + 1)], temp_meancurvemean(1:(max_offset - qfrom) + align_wind,m), 'Color', 'red','LineStyle', '-');
-            %line([-1 * qfrom: -1 * qto], temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 'Color', 'red','LineStyle', '-');
-            
             hold off;
 
             yyaxis right
             ax.YAxis(2).Color = 'black';
             ax.YAxis(2).FontSize = 8;
             ylabel('Count of Data points');
-            %bar([-1 * (max_offset + align_wind): -1], max_points, 0.5, 'FaceColor', 'white','FaceAlpha', 0.1);
-            %bar([-1 * (max_offset + align_wind): -1 * (qintrminoffset + 1)], temp_meancurvecount(1:(max_offset - qintrminoffset) + align_wind, m), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.15);
-            bar([-1 * (max_offset + align_wind): -1], temp_meancurvecount(1:max_offset + align_wind, m), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.15);
+            bar([-1 * (max_offset + align_wind - 1): -1], temp_meancurvecount(1:max_offset + align_wind - 1, m), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.15);
             ylim([0 (max(max_points) * 4 / nbuckets)]);
         end
         

@@ -67,8 +67,8 @@ load(fullfile(basedir, subfolder, datademographicsfile));
 toc
 
 detaillog = true;
-max_offset = 30; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
-align_wind = 30;
+max_offset = 25; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
+align_wind = 25;
 
 % remove any interventions where the start is less than the alignment
 % window
@@ -220,7 +220,7 @@ amEMPlotAndSaveAlignedCurves(unaligned_profile, best_meancurvemean, best_meancur
 toc
 fprintf('\n');
 
-return;
+%return;
 
 ex_start = input('Look at best start and enter exacerbation start: ');
 fprintf('\n');
@@ -230,7 +230,7 @@ run_type = 'Best Alignment';
 amInterventions.Offset = best_offsets;
 
 [sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amNormcube, amInterventions, best_meancurvemean, ...
-    best_meancurvecount, best_meancurvestd, best_offsets, measures, max_offset, align_wind, nmeasures, run_type, ...
+    best_meancurvecount, best_meancurvestd, best_pdoffset, best_offsets, measures, max_offset, align_wind, nmeasures, run_type, ...
     study, ex_start, version);
 
 amEMPlotAndSaveAlignedCurves(unaligned_profile, best_meancurvemean, best_meancurvecount, best_meancurvestd, best_offsets, best_qual, ...
@@ -242,6 +242,9 @@ amEMPlotAndSaveAlignedCurves(unaligned_profile, best_meancurvemean, best_meancur
 overall_hist = zeros(ninterventions, max_offset);
 overall_hist_all = zeros(ninterventions, max_offset);
 overall_hist_xAL = zeros(ninterventions, max_offset);
+overall_pdoffset = zeros(ninterventions, max_offset);
+overall_pdoffset_all = zeros(ninterventions, max_offset);
+overall_pdoffset_xAL = zeros(ninterventions, max_offset);
 fitmeasure = zeros(nmeasures, ninterventions);
 
 for j = 1:ninterventions
@@ -250,23 +253,16 @@ for j = 1:ninterventions
     overall_hist_xAL(j, :) = reshape(sum(best_histogram([2,3,4,5,6,7,8],j,:),1), [1, max_offset]);
 end
 
-% save raw results from objfcn
-hstgorig = best_histogram;
-overall_hstorig = overall_hist;
-
 % convert back from log space
 for j=1:ninterventions
-    for m=1:nmeasures
-        fitmeasure(m, j) = sum(exp(-1 * best_histogram(m, j, :)));
-        best_histogram(m, j, :) = exp(-1 * (best_histogram(m, j, :) - max(best_histogram(m, j, :))));
-        best_histogram(m, j, :) = best_histogram(m, j, :) / sum(best_histogram(m, j, :));
-    end
-    overall_hist(j,:)     = exp(-1 * overall_hist(j,:));
-    overall_hist(j,:)     = overall_hist(j,:) / sum(overall_hist(j,:));
-    overall_hist_all(j,:) = exp(-1 * overall_hist_all(j,:));
-    overall_hist_all(j,:) = overall_hist_all(j,:) / sum(overall_hist_all(j,:));
-    overall_hist_xAL(j,:) = exp(-1 * overall_hist_xAL(j,:));
-    overall_hist_xAL(j,:) = overall_hist_xAL(j,:) / sum(overall_hist_xAL(j,:));
+    overall_pdoffset(j,:)     = exp(-1 * (overall_hist(j,:) - max(overall_hist(j, :))));
+    overall_pdoffset(j,:)     = overall_pdoffset(j,:) / sum(overall_pdoffset(j,:));
+    
+    overall_pdoffset_all(j,:)     = exp(-1 * (overall_hist_all(j,:) - max(overall_hist_all(j, :))));
+    overall_pdoffset_all(j,:)     = overall_pdoffset_all(j,:) / sum(overall_pdoffset_all(j,:));
+    
+    overall_pdoffset_xAL(j,:)     = exp(-1 * (overall_hist_xAL(j,:) - max(overall_hist_xAL(j, :))));
+    overall_pdoffset_xAL(j,:)     = overall_pdoffset_xAL(j,:) / sum(overall_pdoffset_xAL(j,:));
 end
 
 toc
@@ -276,8 +272,8 @@ tic
 fprintf('Plotting prediction results\n');
 for i=1:ninterventions
 %for i = 42:44
-    am4PlotsAndSavePredictions(amInterventions, amDatacube, measures, demographicstable, best_histogram, overall_hist, overall_hist_all, overall_hist_xAL, ...
-        best_offsets, best_profile_post, fitmeasure, normmean, ex_start, i, nmeasures, max_offset, align_wind, study);
+    amEMPlotsAndSavePredictions(amInterventions, amDatacube, measures, best_pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
+        best_offsets, best_meancurvemean, fitmeasure, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
 end
 toc
 fprintf('\n');
@@ -285,14 +281,15 @@ fprintf('\n');
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('%sAM%s_sig%d_mu%d_ca%d_sm%d_mm%d_mo%d_dw%d_ex%d_obj%d.mat', study, version, sigmamethod, mumethod, curveaveragingmethod, ...
-    smoothingmethod, measuresmask, max_offset, align_wind, ex_start, round(best_qual*10000));
+outputfilename = sprintf('%sAM%s_sig%d_mu%d_mm%d_mo%d_dw%d_ex%d_obj%d.mat', study, version, sigmamethod, mumethod, ...
+    measuresmask, max_offset, align_wind, ex_start, round(best_qual*10000));
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');
 save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amNormcube', 'amInterventions', ...
     'best_meancurvedata', 'best_meancurvesum', 'best_meancurvecount', 'best_meancurvemean', 'best_meancurvestd', ...
-    'best_offsets', 'best_qual', 'unaligned_profile', 'best_histogram', 'best_pdoffset', 'overall_hist', 'overall_pdoffset', ...
-    'overall_hist_all', 'overall_pdoffset_all', 'overall_hist_xAL', 'overall_pdoffset_xAL', ...
-    'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'sigmamethod', 'mumethod', ...
+    'best_offsets', 'best_qual', 'unaligned_profile', 'best_histogram', 'best_pdoffset', ...
+    'overall_hist', 'overall_hist_all', 'overall_hist_xAL', ...
+    'overall_pdoffset', 'overall_pdoffset_all', 'overall_pdoffset_xAL', ...
+    'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'sigmamethod', 'mumethod', ...
     'measuresmask', 'max_offset', 'align_wind', 'ex_start', 'nmeasures', 'ninterventions');
 toc

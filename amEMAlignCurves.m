@@ -28,9 +28,8 @@ for i = 1:ninterventions
         max_offset, align_wind, nmeasures);
 end
 
-meancurvemean
-
-temp = input('Continue ? ');
+%meancurvemean
+%temp = input('Continue ? ');
 
 % store the mean curves pre-alignment for each measure for plotting
 profile_pre = meancurvemean;
