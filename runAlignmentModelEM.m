@@ -74,6 +74,16 @@ align_wind = 25;
 % window
 amInterventions(amInterventions.IVScaledDateNum <= align_wind,:) = [];
 ninterventions = size(amInterventions,1);
+% remove any interventions that are within (max_offset+align_wind) or prior
+% intervention
+%prscid = amInterventions.SmartCareID(1);
+%prIVScaledDateNum = amInterventions.IVScaledDateNum(1);
+%for i = 2:ninterventions
+%    crscid = amInterventions.SmartCareID(i);
+%    crIVScaledDateNum = amInterventions.IVScaledDateNum(i);
+%    if (prscid==crscid) & ((crIVScaledDateNum - prIVScaledDateNum) < (max_offset-align_wind))
+%end   
+%ninterventions = size(amInterventions,1);
 
 % remove temperature readings as insufficient datapoints for a number of
 % the interventions
@@ -144,7 +154,7 @@ for i = 1:ninterventions
     if mumethod == 1
         meanwindow = 8;
     elseif mumethod == 2
-        meanwindow = 20;
+        meanwindow = 20;        
     else
         meanwindow = 10;
     end
@@ -155,7 +165,7 @@ for i = 1:ninterventions
     end
     for m = 1:nmeasures
         if mumethod == 3
-            meanwindowdata = amDatacube(scid, start - align_wind - round(meanwindow / 2): start - align_wind - 1 + round(meanwindow / 2), m);
+            meanwindowdata = amDatacube(scid, (start - align_wind - meanwindow): (start - 1 - align_wind), m);
         else
             meanwindowdata = amDatacube(scid, start - align_wind - meanwindow: start - align_wind - 1, m);
         end
@@ -184,14 +194,14 @@ for i = 1:ninterventions
                 normmean(i, m) = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}),{ddcolumn}}(5);
             else
                 fprintf('No measures for intervention %d, measure %d\n', i, m);
-                normean(i,m) = 0;
+                normmean(i,m) = 0;
             end
         end
-        periodstart = start - align_wind - max_offset;
+        periodstart = start - align_wind;
         if periodstart <= 0
             periodstart = 1;
         end
-        amNormcube(scid, (periodstart):(start), m) = amDatacube(scid, (periodstart):(start), m) - normmean(i,m);
+        amNormcube(scid, (periodstart):(start - 1), m) = amDatacube(scid, (periodstart):(start - 1), m) - normmean(i,m);
     end
 end
 toc

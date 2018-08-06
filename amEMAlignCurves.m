@@ -2,7 +2,7 @@ function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurves
 
 % amEMAlignCurves = function to align measurement curves prior to intervention
 
-meancurvedata     = nan(max_offset + align_wind - 1, nmeasures, ninterventions);
+meancurvedata     = zeros(max_offset + align_wind - 1, nmeasures, ninterventions);
 meancurvesum      = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvecount    = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvemean     = zeros(max_offset + align_wind - 1, nmeasures);

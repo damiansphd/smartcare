@@ -26,13 +26,13 @@ for m = 1:nmeasures
     yyaxis left;
     hold on;
     line([-1 * (max_offset + align_wind - 1): -1], profile_pre(:,m), 'Color', 'red','LineStyle', '-');
-    %line([-1 * (max_offset + align_wind - 1): -1], smooth(profile_pre(m,:), 5), 'Color', 'red', 'LineStyle', '-');
     line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:,m), 'Color', 'blue', 'LineStyle', ':');
     line([-1 * (max_offset + align_wind - 1): -1], smooth(meancurvemean(:,m), 5), 'Color', 'blue', 'LineStyle', '-');
-    %line([-1 * (max_offset + align_wind - 1): -1], profile_post(m,:) + std_post(m,:), 'Color', 'blue', 'LineStyle', ':');
-    %line([-1 * (max_offset + align_wind - 1): -1], (smooth(profile_post(m,:), 5) + smooth(std_post(m,:), 5)), 'Color', 'blue', 'LineStyle', '--');
-    %line([-1 * (max_offset + align_wind - 1): -1], profile_post(m,:) - std_post(m,:), 'Color', 'blue', 'LineStyle', ':');
-    %line([-1 * (max_offset + align_wind - 1): -1], (smooth(profile_post(m,:),5) - smooth(std_post(m,:), 5)), 'Color', 'blue', 'LineStyle', '--');
+   
+    %line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:,m) + meancurvestd(:,m), 'Color', 'blue', 'LineStyle', ':');
+    %line([-1 * (max_offset + align_wind - 1): -1], (smooth(meancurvemean(:,m), 5) + smooth(meancurvestd(:,m), 5)), 'Color', 'blue', 'LineStyle', '--');
+    %line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:,m) - meancurvestd(:,m), 'Color', 'blue', 'LineStyle', ':');
+    %line([-1 * (max_offset + align_wind - 1): -1], (smooth(meancurvemean(:,m), 5) - smooth(meancurvestd(:,m), 5)), 'Color', 'blue', 'LineStyle', '--');
      
     ax.XAxis.FontSize = 8;
     xlabel('Days prior to Intervention');
