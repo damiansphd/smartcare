@@ -50,9 +50,10 @@ fprintf('Measures to include in alignment calculation\n');
 fprintf('--------------------------------------------\n');
 fprintf('1: All\n');
 fprintf('2: Cough, Lung Function, Wellness\n');
-measuresmask = input('Choose measures (1-2) ');
+fprintf('3: All except Activity and Lung Function\n');
+measuresmask = input('Choose measures (1-3) ');
 fprintf('\n');
-if measuresmask > 2
+if measuresmask > 3
     fprintf('Invalid choice\n');
     return;
 end
@@ -99,6 +100,10 @@ if measuresmask == 1
 elseif measuresmask == 2
     idx = ismember(measures.DisplayName, {'Cough', 'LungFunction', 'Wellness'});
     measures.Mask(idx) = 1;
+elseif measuresmask == 3
+    measures.Mask(:) = 1;
+    idx = ismember(measures.DisplayName, {'Activity', 'LungFunction'});
+    measures.Mask(idx) = 0;
 else
     % shouldn't ever get here - but default to just cough if it ever
     % happens
@@ -265,13 +270,15 @@ end
 
 % convert back from log space
 for j=1:ninterventions
-    overall_pdoffset(j,:)     = exp(-1 * (overall_hist(j,:) - max(overall_hist(j, :))));
+    %overall_pdoffset(j,:)     = exp(-1 * (overall_hist(j,:) - max(overall_hist(j, :))));
+    overall_pdoffset(j,:)     = exp(-1 * (overall_hist(j,:) - min(overall_hist(j, :)))); 
+
     overall_pdoffset(j,:)     = overall_pdoffset(j,:) / sum(overall_pdoffset(j,:));
     
-    overall_pdoffset_all(j,:)     = exp(-1 * (overall_hist_all(j,:) - max(overall_hist_all(j, :))));
+    overall_pdoffset_all(j,:)     = exp(-1 * (overall_hist_all(j,:) - min(overall_hist_all(j, :))));
     overall_pdoffset_all(j,:)     = overall_pdoffset_all(j,:) / sum(overall_pdoffset_all(j,:));
     
-    overall_pdoffset_xAL(j,:)     = exp(-1 * (overall_hist_xAL(j,:) - max(overall_hist_xAL(j, :))));
+    overall_pdoffset_xAL(j,:)     = exp(-1 * (overall_hist_xAL(j,:) - min(overall_hist_xAL(j, :))));
     overall_pdoffset_xAL(j,:)     = overall_pdoffset_xAL(j,:) / sum(overall_pdoffset_xAL(j,:));
 end
 
@@ -283,7 +290,7 @@ fprintf('Plotting prediction results\n');
 for i=1:ninterventions
 %for i = 42:44
     amEMPlotsAndSavePredictions(amInterventions, amDatacube, measures, best_pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
-        best_offsets, best_meancurvemean, fitmeasure, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
+        best_offsets, best_meancurvemean, best_histogram, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
 end
 toc
 fprintf('\n');

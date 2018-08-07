@@ -1,4 +1,4 @@
-function amEMPlotsAndSavePredictions(amInterventions, amDatacube, measures, best_pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, best_offsets, best_meancurvemean, fitmeasure, normmean, ex_start, thisinter, nmeasures, max_offset, align_wind, study, version)
+function amEMPlotsAndSavePredictions(amInterventions, amDatacube, measures, best_pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, best_offsets, best_meancurvemean, best_histogram, normmean, ex_start, thisinter, nmeasures, max_offset, align_wind, study, version)
 
 % amEMPlotsAndSavePredictions - plots measures prior to
 % treatment with alignment model predictions and overlaid with the mean
@@ -114,9 +114,9 @@ for m=1:nmeasures
     line( [best_offsets(thisinter) best_offsets(thisinter)], yl, ...
         'Color', 'green', 'LineStyle', '-', 'LineWidth', 0.5);
     if measures.Mask(m) == 1
-        title(sprintf('%s (%.1f)', measures.DisplayName{m}, fitmeasure(m, thisinter)), 'BackgroundColor', 'g');
+        title(sprintf('%s (%.1f)', measures.DisplayName{m}, best_histogram(m, thisinter, best_offsets(thisinter) + 1)), 'BackgroundColor', 'g');
     else
-        title(sprintf('%s (%.1f)', measures.DisplayName{m}, fitmeasure(m, thisinter)));
+        title(sprintf('%s (%.1f)', measures.DisplayName{m}, best_histogram(m, thisinter, best_offsets(thisinter) + 1)));
     end
     xlim([0 max_offset-1]);
     ylim(yl);

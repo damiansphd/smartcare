@@ -80,26 +80,27 @@ for offset = 0:max_offset-1
     if sigmamethod == 4
         rowtoadd1(:,nondaycols1+1:nondaycols1+align_wind) = array2table(reshape(temp_meancurvestd(max_offset - offset:max_offset + align_wind - 1 - offset, measure), [1 align_wind]));
     else
-        rowtoadd1(:,nondaycols1+1:nondaycols1+align_wind) = array2table(normstd(intervention, measure));
+        rowtoadd1(:,nondaycols1+1:nondaycols1+align_wind) = array2table(normstd(scid, measure));
     end
     datawindowtable = [datawindowtable ; rowtoadd1];
 
     rowtoadd1.RowType = 'CalcObjFcn';
+    rowtoadd1(:,nondaycols1+1:nondaycols1+align_wind) = array2table([0]);
     dist = 0;
     for i = 1:align_wind
-        if ~isnan(amNormcube(scid, start - i, m))
+        if ~isnan(amNormcube(scid, start - i, measure))
             if sigmamethod == 4
-                thisdist = ((temp_meancurvemean(max_offset + align_wind - i - offset, m) - amNormcube(scid, start-i, measure)) ^ 2) ...
-                / (temp_meancurvestd(max_offset + align_wind - i - offset, measure) ^ 2);
+                thisdist = ((temp_meancurvemean(max_offset + align_wind - i - offset, measure) - amNormcube(scid, start - i, measure)) ^ 2) ...
+                / ((temp_meancurvestd(max_offset + align_wind - i - offset, measure)) ^ 2);
             else
-                thisdist = ((temp_meancurvemean(max_offset + align_wind - i - offset, m) - amNormcube(scid, start-i, measure)) ^ 2) ...
-                / (normstd(intervention, measure) ^ 2);
+                thisdist = ((temp_meancurvemean(max_offset + align_wind - i - offset, measure) - amNormcube(scid, start - i, measure)) ^ 2) ...
+                / ((normstd(scid, measure)) ^ 2);
             end
+            rowtoadd1(:,nondaycols1 + 1 + align_wind - i) = array2table(thisdist);
             dist = dist + thisdist;
         end
     end
     rowtoadd1.CalcValue = dist;
-    rowtoadd1(:,nondaycols1+1:nondaycols1+align_wind) = array2table([0]);
     datawindowtable = [datawindowtable ; rowtoadd1];
 
     rowtoadd1.RowType = 'ObjFcn';
@@ -108,7 +109,7 @@ for offset = 0:max_offset-1
     datawindowtable = [datawindowtable ; rowtoadd1];
     
     rowtoadd1.RowType = 'ExpObjFcn';
-    rowtoadd1.CalcValue = exp(-1 * best_histogram(m, intervention, offset+1));
+    rowtoadd1.CalcValue = exp(-1 * best_histogram(measure, intervention, offset+1));
     rowtoadd1(:,nondaycols1+1:nondaycols1+align_wind) = array2table([0]);
     datawindowtable = [datawindowtable ; rowtoadd1];
     

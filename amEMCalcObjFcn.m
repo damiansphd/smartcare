@@ -21,10 +21,10 @@ for i = 1:align_wind
         if ~isnan(amDatacube(scid, start - i, m))
             if sigmamethod == 4
                 thisdist = ( (meancurvemean(max_offset + align_wind - i - curroffset, m) ...
-                    - amDatacube(scid, start - i, m)) ^ 2 ) / ((meancurvestd(max_offset + align_wind - i - curroffset, m) ^ 2) ) ;
+                    - amDatacube(scid, start - i, m)) ^ 2 ) / ((meancurvestd(max_offset + align_wind - i - curroffset, m)) ^ 2) ;
             else
                 thisdist = ( (meancurvemean(max_offset + align_wind - i - curroffset, m) ...
-                    - amDatacube(scid, start - i, m)) ^ 2 ) / (normstd(scid, m) ^ 2 ) ;
+                    - amDatacube(scid, start - i, m)) ^ 2 ) / ((normstd(scid, m)) ^ 2 ) ;
             end
             % only include desired measures in overall alignment
             % optimisation

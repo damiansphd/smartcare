@@ -20,7 +20,7 @@ for i = 0:max_offset - 1
 end
 
 for m=1:nmeasures
-    pdoffset(m, currinter, :) = exp(-1 * (hstg(m, currinter, :) - max(hstg(m, currinter, :))));
+    pdoffset(m, currinter, :) = exp(-1 * (hstg(m, currinter, :) - min(hstg(m, currinter, :))));
     pdoffset(m, currinter, :) = pdoffset(m, currinter, :) / sum(pdoffset(m, currinter, :));
 end
 

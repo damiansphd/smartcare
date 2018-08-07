@@ -39,7 +39,7 @@ pnt = 1;
 cnt = 0;
 iter = 0;
 ok  = 0;
-while 1
+while iter < 100
     [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMRemoveFromMean(meancurvedata, meancurvesum, ...
         meancurvecount, meancurvemean, meancurvestd, pdoffset, amDatacube, amInterventions, pnt, ...
         max_offset, align_wind, nmeasures);
@@ -86,14 +86,14 @@ while 1
         pnt = pnt - ninterventions;
         if cnt == 0
             if detaillog
-                fprintf('Converged after %2d iterations\n', iter);
+                fprintf('No changes on iteration %2d\n', iter);
+                %break;
             end
-            break;
         else 
             if detaillog
                 fprintf('Changed %2d offsets on iteration %2d\n', cnt, iter);
             end
-            if iter > 35
+            if iter > 100
                 if detaillog
                     fprintf('Iteration count limit exceeded - breaking\n');
                 end
