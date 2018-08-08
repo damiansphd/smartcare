@@ -1,4 +1,4 @@
-function amEMPlotsAndSavePredictions(amInterventions, amDatacube, measures, best_pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, best_offsets, best_meancurvemean, best_histogram, normmean, ex_start, thisinter, nmeasures, max_offset, align_wind, study, version)
+function amEMPlotsAndSavePredictions(amInterventions, amDatacube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, offsets, meancurvemean, hstg, normmean, ex_start, thisinter, nmeasures, max_offset, align_wind, study, version)
 
 % amEMPlotsAndSavePredictions - plots measures prior to
 % treatment with alignment model predictions and overlaid with the mean
@@ -13,11 +13,11 @@ days = [-1 * (max_offset + align_wind - 1): 0];
 
 scid = amInterventions.SmartCareID(thisinter);
 start = amInterventions.IVScaledDateNum(thisinter);
-name = sprintf('%sAlignment Model%s Prediction - Exacerbation %d - ID %d Date %s', study, version, thisinter, scid, datestr(amInterventions.IVStartDate(thisinter),29));
+name = sprintf('%s_AM%s Exacerbation %d - ID %d Date %s, Offset %d', study, version, thisinter, scid, datestr(amInterventions.IVStartDate(thisinter),29), offsets(thisinter));
 f = figure('Name', name);
 set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
 p = uipanel('Parent',f,'BorderType','none');
-fprintf('%s - Best Offset = %d\n', name, best_offsets(thisinter));
+fprintf('%s - Best Offset = %d\n', name, offsets(thisinter));
 p.Title = name;
 p.TitlePosition = 'centertop';
 p.FontSize = 12;
@@ -45,8 +45,8 @@ for m = 1:nmeasures
     set(gca,'fontsize',6);
     xl = [min(days) max(days)];
     xlim(xl);
-    ydisplaymin = min(min(current * 0.95), min(best_meancurvemean(1:max_offset + align_wind - 1 - best_offsets(thisinter), m) + normmean(thisinter, m) * 0.95));
-    ydisplaymax = max(max(current * 1.05), max(best_meancurvemean(1:max_offset + align_wind - 1 - best_offsets(thisinter), m) + normmean(thisinter, m) * 1.05));
+    ydisplaymin = min(min(current * 0.99), min(meancurvemean(1:max_offset + align_wind - 1 - offsets(thisinter), m) + normmean(thisinter, m) * 0.99));
+    ydisplaymax = max(max(current * 1.01), max(meancurvemean(1:max_offset + align_wind - 1 - offsets(thisinter), m) + normmean(thisinter, m) * 1.01));
     yl = [ydisplaymin ydisplaymax];
     ylim(yl);
     if measures.Mask(m) == 1
@@ -59,18 +59,18 @@ for m = 1:nmeasures
     ylabel('Measure', 'FontSize', 6);
     hold on
     % plot mean curve (actual in dotted line, smoothed in solid line)
-    plot([(-1 * (max_offset + align_wind - 1)) + best_offsets(thisinter): -1], ...
-        best_meancurvemean(1:max_offset + align_wind - 1 - best_offsets(thisinter), m) + normmean(thisinter, m), ...
+    plot([(-1 * (max_offset + align_wind - 1)) + offsets(thisinter): -1], ...
+        meancurvemean(1:max_offset + align_wind - 1 - offsets(thisinter), m) + normmean(thisinter, m), ...
         'Color', 'red', ...
         'LineStyle', ':', ...
         'LineWidth', 1);
-    plot([(-1 * (max_offset + align_wind - 1)) + best_offsets(thisinter): -1], ...
-        smooth(best_meancurvemean(1:max_offset + align_wind - 1 - best_offsets(thisinter), m) + normmean(thisinter, m), 5), ...
+    plot([(-1 * (max_offset + align_wind - 1)) + offsets(thisinter): -1], ...
+        smooth(meancurvemean(1:max_offset + align_wind - 1 - offsets(thisinter), m) + normmean(thisinter, m), 5), ...
         'Color', 'red', ...
         'LineStyle', '-', ...
         'LineWidth', 1);
     % plot vertical line for predicted exacerbation start
-    line( [ex_start + best_offsets(thisinter) ex_start + best_offsets(thisinter)] , yl, ...
+    line( [ex_start + offsets(thisinter) ex_start + offsets(thisinter)] , yl, ...
         'Color', 'green', ...
         'LineStyle', '-', ...
         'LineWidth', 0.5);
@@ -96,7 +96,7 @@ end
 % plot the posterior distributions for each measure
 for m=1:nmeasures
     subplot(plotsdown, plotsacross, hpos(m,:),'Parent',p) 
-    plot([0:max_offset-1], reshape(best_pdoffset(m,thisinter,:), [max_offset,1]), ...
+    plot([0:max_offset-1], reshape(pdoffset(m,thisinter,:), [max_offset,1]), ...
             'Color', 'none', ...
             'LineStyle', 'none', ...
             'Marker', 'o', ...
@@ -106,17 +106,17 @@ for m=1:nmeasures
             'MarkerFaceColor', 'green');
     set(gca,'fontsize',6);
     hold on;
-    if (max(best_pdoffset(m,thisinter,:)) > 0.25)
-        yl = [0 max(best_pdoffset(m,thisinter,:))];
+    if (max(pdoffset(m,thisinter,:)) > 0.25)
+        yl = [0 max(pdoffset(m,thisinter,:))];
     else
         yl = [0 0.25];
     end
-    line( [best_offsets(thisinter) best_offsets(thisinter)], yl, ...
+    line( [offsets(thisinter) offsets(thisinter)], yl, ...
         'Color', 'green', 'LineStyle', '-', 'LineWidth', 0.5);
     if measures.Mask(m) == 1
-        title(sprintf('%s (%.1f)', measures.DisplayName{m}, best_histogram(m, thisinter, best_offsets(thisinter) + 1)), 'BackgroundColor', 'g');
+        title(sprintf('%s (%.1f)', measures.DisplayName{m}, hstg(m, thisinter, offsets(thisinter) + 1)), 'BackgroundColor', 'g');
     else
-        title(sprintf('%s (%.1f)', measures.DisplayName{m}, best_histogram(m, thisinter, best_offsets(thisinter) + 1)));
+        title(sprintf('%s (%.1f)', measures.DisplayName{m}, hstg(m, thisinter, offsets(thisinter) + 1)));
     end
     xlim([0 max_offset-1]);
     ylim(yl);
@@ -140,7 +140,7 @@ if (max(overall_pdoffset(thisinter,:)) > 0.25)
 else
     yl = [0 0.25];
 end
-line( [best_offsets(thisinter) best_offsets(thisinter)] , yl, ...
+line( [offsets(thisinter) offsets(thisinter)] , yl, ...
     'Color', 'green', 'LineStyle', '-', 'LineWidth', 0.5);
 title('Overall', 'BackgroundColor', 'g');
 xlim([0 max_offset-1]);
@@ -163,7 +163,7 @@ if (max(overall_pdoffset_all(thisinter,:)) > 0.25)
 else
     yl = [0 0.25];
 end
-line( [best_offsets(thisinter) best_offsets(thisinter)] , yl, ...
+line( [offsets(thisinter) offsets(thisinter)] , yl, ...
     'Color', 'green', 'LineStyle', '-', 'LineWidth', 0.5);
 title('Overall - All');
 xlim([0 max_offset-1]);
@@ -186,7 +186,7 @@ if (max(overall_pdoffset_xAL(thisinter,:)) > 0.25)
 else
     yl = [0 0.25];
 end
-line( [best_offsets(thisinter) best_offsets(thisinter)] , yl, ...
+line( [offsets(thisinter) offsets(thisinter)] , yl, ...
     'Color', 'green', 'LineStyle', '-', 'LineWidth', 0.5);
 title('Overall ex Act/Lung');
 xlim([0 max_offset-1]);

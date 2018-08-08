@@ -1,11 +1,9 @@
-function [dist, hstg] = amEMCalcObjFcn(meancurvemean, meancurvestd, amDatacube, amInterventions, measuresmask, normstd, hstg, currinter, curroffset, max_offset, align_wind, nmeasures, update_histogram, sigmamethod)
+function [dist, hstg] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measuresmask, normstd, hstg, currinter, curroffset, max_offset, align_wind, nmeasures, update_histogram, sigmamethod)
 
 % amEMCalcObjFcn - calculates residual sum of squares distance for points in
 % curve vs meancurve incorporating offset
 
 dist = 0;
-scid   = amInterventions.SmartCareID(currinter);
-start = amInterventions.IVScaledDateNum(currinter);
 
 if (update_histogram == 1)
     for m = 1:nmeasures
@@ -15,16 +13,13 @@ end
 
 for i = 1:align_wind
     for m = 1:nmeasures
-        if start - i <= 0
-            continue;
-        end
-        if ~isnan(amDatacube(scid, start - i, m))
+        if ~isnan(amIntrCube(currinter, align_wind + 1 - i, m))
             if sigmamethod == 4
                 thisdist = ( (meancurvemean(max_offset + align_wind - i - curroffset, m) ...
-                    - amDatacube(scid, start - i, m)) ^ 2 ) / ((meancurvestd(max_offset + align_wind - i - curroffset, m)) ^ 2) ;
+                    - amIntrCube(currinter, align_wind + 1 - i, m)) ^ 2 ) / ((meancurvestd(max_offset + align_wind - i - curroffset, m)) ^ 2) ;
             else
                 thisdist = ( (meancurvemean(max_offset + align_wind - i - curroffset, m) ...
-                    - amDatacube(scid, start - i, m)) ^ 2 ) / ((normstd(scid, m)) ^ 2 ) ;
+                    - amIntrCube(currinter, align_wind + 1 - i, m)) ^ 2 ) / ((normstd(currinter, m)) ^ 2 ) ;
             end
             % only include desired measures in overall alignment
             % optimisation

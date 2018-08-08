@@ -70,9 +70,10 @@ fprintf('Measures to include in alignment calculation\n');
 fprintf('--------------------------------------------\n');
 fprintf('1: All\n');
 fprintf('2: Cough, Lung Function, Wellness\n');
-measuresmask = input('Choose measures (1-2) ');
+fprintf('3: All except Activity and Lung Function\n');
+measuresmask = input('Choose measures (1-3) ');
 fprintf('\n');
-if measuresmask > 2
+if measuresmask > 3
     fprintf('Invalid choice\n');
     return;
 end
@@ -109,20 +110,26 @@ if measuresmask == 1
 elseif measuresmask == 2
     idx = ismember(measures.DisplayName, {'Cough', 'LungFunction', 'Wellness'});
     measures.Mask(idx) = 1;
+elseif measuresmask == 3
+    measures.Mask(:) = 1;
+    idx = ismember(measures.DisplayName, {'Activity', 'LungFunction'});
+    measures.Mask(idx) = 0;
 else
     % shouldn't ever get here - but default to just cough if it ever
     % happens
     idx = ismember(measures.DisplayName, {'Cough'});
 end
+
+% create cube for data window data by intervention (for each measure)
+amIntrDatacube = NaN(ninterventions, max_offset + align_wind - 1, nmeasures);
+for i = 1:ninterventions
+    scid   = amInterventions.SmartCareID(i);
+    start = amInterventions.IVScaledDateNum(i);
     
-%idx = ismember(measures.DisplayName, {'Temperature'});
-%idx = ismember(measures.DisplayName, {'Temperature', 'Wellness', 'Activity', 'LungFunction', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
-%idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'O2Saturation', 'PulseRate', 'SleepActivity', 'Weight'});
-%idx = ismember(measures.DisplayName, {'Temperature', 'Activity', 'Cough', 'LungFunction', 'SleepActivity', 'Wellness'});
-%amDatacube(:,:,measures.Index(idx)) = [];
-%measures(idx,:) = [];
-%nmeasures = size(measures,1);
-%measures.Index = [1:nmeasures]';
+    for m = 1:nmeasures
+        amIntrDatacube(i, (1:align_wind), m) = amDatacube(scid, (start - align_wind):(start - 1), m);
+    end
+end
 
 % calculate the overall & alignment window std for each measure and store in measures
 % table

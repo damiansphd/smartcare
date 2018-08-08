@@ -1,4 +1,4 @@
-function [sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amDatacube, amInterventions, meancurvemean, meancurvecount, meancurvestd, pdoffset, offsets, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, version)
+function [sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amIntrCube, amInterventions, meancurvemean, meancurvecount, meancurvestd, overall_pdoffset, offsets, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, version)
 
 % amEMVisualiseAlignmentDetail - creates a plot of horizontal bars showing 
 % the alignment of the data window (including the best_offset) for all 
@@ -26,15 +26,12 @@ for m = 1:nmeasures
         start = amInterventions.IVScaledDateNum(i);
         offset = offsets(i);
 
-        fprintf('Intervention %2d, patient %3d, start %3d, best_offset %2d\n', i, scid, start, offset);
+        %fprintf('Intervention %2d, patient %3d, start %3d, best_offset %2d\n', i, scid, start, offset);
     
         rowtoadd.Intervention = i;
         rowtoadd.Count = 2;
         for d = 1:align_wind
-            if start - d <= 0
-              continue;
-            end
-            if ~isnan(amDatacube(scid, start - d, m))
+            if ~isnan(amIntrCube(i, align_wind + 1 - d, m))
                 rowtoadd.ScaledDateNum = 0 - d - offset;
                 datatable = [datatable ; rowtoadd];
             end
@@ -136,8 +133,8 @@ for m = 1:nmeasures
             
             for i = 1:qnbr
                 [temp_meancurvedata, temp_meancurvesum, temp_meancurvecount, temp_meancurvemean, temp_meancurvestd] = amEMAddToMean(temp_meancurvedata, temp_meancurvesum, ...
-                    temp_meancurvecount, temp_meancurvemean, temp_meancurvestd, pdoffset(:, sorted_interventions.Intervention(qlower:qupper), :), amDatacube, amInterventions(sorted_interventions.Intervention(qlower:qupper),:), ...
-                    i, max_offset, align_wind, nmeasures);
+                    temp_meancurvecount, temp_meancurvemean, temp_meancurvestd, overall_pdoffset(sorted_interventions.Intervention(qlower:qupper), :),...
+                    amIntrCube(sorted_interventions.Intervention(qlower:qupper), :, :), i, max_offset, align_wind, nmeasures);
             end
             
             qintrminoffset = min(amInterventions.Offset(sorted_interventions.Intervention(qlower:qupper)));

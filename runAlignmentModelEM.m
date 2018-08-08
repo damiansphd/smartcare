@@ -67,6 +67,9 @@ fprintf('Loading datademographics by patient\n');
 load(fullfile(basedir, subfolder, datademographicsfile));
 toc
 
+tic
+fprintf('Preparing input data\n');
+
 detaillog = true;
 max_offset = 25; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
 align_wind = 25;
@@ -75,16 +78,6 @@ align_wind = 25;
 % window
 amInterventions(amInterventions.IVScaledDateNum <= align_wind,:) = [];
 ninterventions = size(amInterventions,1);
-% remove any interventions that are within (max_offset+align_wind) or prior
-% intervention
-%prscid = amInterventions.SmartCareID(1);
-%prIVScaledDateNum = amInterventions.IVScaledDateNum(1);
-%for i = 2:ninterventions
-%    crscid = amInterventions.SmartCareID(i);
-%    crIVScaledDateNum = amInterventions.IVScaledDateNum(i);
-%    if (prscid==crscid) & ((crIVScaledDateNum - prIVScaledDateNum) < (max_offset-align_wind))
-%end   
-%ninterventions = size(amInterventions,1);
 
 % remove temperature readings as insufficient datapoints for a number of
 % the interventions
@@ -110,6 +103,16 @@ else
     idx = ismember(measures.DisplayName, {'Cough'});
 end
 
+% create cube for data window data by intervention (for each measure)
+amIntrDatacube = NaN(ninterventions, align_wind, nmeasures);
+for i = 1:ninterventions
+    scid   = amInterventions.SmartCareID(i);
+    start = amInterventions.IVScaledDateNum(i);
+    for m = 1:nmeasures
+        amIntrDatacube(i, (1:align_wind), m) = amDatacube(scid, (start - align_wind):(start - 1), m);
+    end
+end
+
 % calculate the overall & alignment window std for each measure and store in measures
 % table
 for m = 1:nmeasures
@@ -126,24 +129,23 @@ end
 
 % populate multiplicative normalisation (sigma) values based on methodology
 % selected
-validids = unique(demographicstable.SmartCareID);
-normstd = zeros(npatients, nmeasures);
-for i = 1:npatients
+%validids = unique(demographicstable.SmartCareID);
+normstd = zeros(ninterventions, nmeasures);
+for i = 1:ninterventions
     for m = 1:nmeasures
         if sigmamethod == 1
             normstd(i,m) = measures.AlignWindStd(m);
         elseif sigmamethod == 2
             normstd(i,m) = measures.OverallStd(m);
         elseif sigmamethod == 3
-            if ismember(i,validids)
-                scid = i;
-                column = getColumnForMeasure(measures.Name{m});
-                ddcolumn = sprintf('Fun_%s',column);
-                if size(find(demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m})),1) == 0
-                    normstd(i,m) = measures.OverallStd(m);
-                else
-                    normstd(i,m) = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}),{ddcolumn}}(2);
-                end
+            scid = amInterventions.SmartCareID(i);
+            column = getColumnForMeasure(measures.Name{m});
+            ddcolumn = sprintf('Fun_%s',column);
+            if size(find(demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m})),1) == 0
+                fprintf('Could not find std for patient %d and measure %d so using overall std for measure instead\n', scid, m);
+                normstd(i,m) = measures.OverallStd(m);
+            else
+                normstd(i,m) = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}),{ddcolumn}}(2);
             end
         else 
             % for methodology 4, need to calculate dynamically during
@@ -154,7 +156,7 @@ end
 
 % adjust by additive normalisation (mu) based on methodology
 normmean = zeros(ninterventions, nmeasures);
-amNormcube = amDatacube;
+amIntrNormcube = amIntrDatacube;
 for i = 1:ninterventions
     if mumethod == 1
         meanwindow = 8;
@@ -202,11 +204,7 @@ for i = 1:ninterventions
                 normmean(i,m) = 0;
             end
         end
-        periodstart = start - align_wind;
-        if periodstart <= 0
-            periodstart = 1;
-        end
-        amNormcube(scid, (periodstart):(start - 1), m) = amDatacube(scid, (periodstart):(start - 1), m) - normmean(i,m);
+        amIntrNormcube(i, 1:align_wind, m) = amIntrDatacube(i, 1:align_wind, m) - normmean(i,m);
     end
 end
 toc
@@ -220,17 +218,17 @@ end
 best_initial_offsets = amInterventions.Offset;
 
 run_type = 'Zero Offset Start';
-[best_meancurvedata, best_meancurvesum, best_meancurvecount, best_meancurvemean, best_meancurvestd, best_profile_pre, ...
-    best_offsets, best_histogram, best_pdoffset, best_qual] = amEMAlignCurves(amNormcube, amInterventions, measures, ...
-    normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod);
-fprintf('%s - ErrFcn = %7.4f\n', run_type, best_qual);
+[meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, profile_pre, ...
+ offsets, hstg, pdoffset, overall_hist, overall_pdoffset, qual] = amEMAlignCurves(amIntrNormcube, amInterventions, measures, ...
+ normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod);
+fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
 
 % save the zero offset pre-profile to unaligned_profile so all plots show a
 % consistent unaligned curve as the pre-profile.
-unaligned_profile = best_profile_pre;
+unaligned_profile = profile_pre;
 
 % plot and save aligned curves (pre and post)
-amEMPlotAndSaveAlignedCurves(unaligned_profile, best_meancurvemean, best_meancurvecount, best_meancurvestd, best_offsets, best_qual, ...
+amEMPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, qual, ...
     measures, 0, max_offset, align_wind, nmeasures, run_type, study, 0, version)
 toc
 fprintf('\n');
@@ -240,41 +238,34 @@ fprintf('\n');
 ex_start = input('Look at best start and enter exacerbation start: ');
 fprintf('\n');
 
+tic
 run_type = 'Best Alignment';
 
-amInterventions.Offset = best_offsets;
+amInterventions.Offset = offsets;
 
-[sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amNormcube, amInterventions, best_meancurvemean, ...
-    best_meancurvecount, best_meancurvestd, best_pdoffset, best_offsets, measures, max_offset, align_wind, nmeasures, run_type, ...
+[sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amIntrNormcube, amInterventions, meancurvemean, ...
+    meancurvecount, meancurvestd, overall_pdoffset, offsets, measures, max_offset, align_wind, nmeasures, run_type, ...
     study, ex_start, version);
 
-amEMPlotAndSaveAlignedCurves(unaligned_profile, best_meancurvemean, best_meancurvecount, best_meancurvestd, best_offsets, best_qual, ...
+amEMPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, qual, ...
     measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, version)
 
 %return;
 
-% create overall histogram (summed over measures by intervention/offset)
-overall_hist = zeros(ninterventions, max_offset);
+% create additional overall histograms and prob distributions
 overall_hist_all = zeros(ninterventions, max_offset);
 overall_hist_xAL = zeros(ninterventions, max_offset);
-overall_pdoffset = zeros(ninterventions, max_offset);
 overall_pdoffset_all = zeros(ninterventions, max_offset);
 overall_pdoffset_xAL = zeros(ninterventions, max_offset);
 fitmeasure = zeros(nmeasures, ninterventions);
 
 for j = 1:ninterventions
-    overall_hist(j, :)     = reshape(sum(best_histogram(find(measures.Mask),j,:),1), [1, max_offset]);
-    overall_hist_all(j, :) = reshape(sum(best_histogram(:,j,:),1), [1, max_offset]);
-    overall_hist_xAL(j, :) = reshape(sum(best_histogram([2,3,4,5,6,7,8],j,:),1), [1, max_offset]);
+    overall_hist_all(j, :) = reshape(sum(hstg(:,j,:),1), [1, max_offset]);
+    overall_hist_xAL(j, :) = reshape(sum(hstg([2,3,4,5,6,7,8],j,:),1), [1, max_offset]);
 end
 
 % convert back from log space
 for j=1:ninterventions
-    %overall_pdoffset(j,:)     = exp(-1 * (overall_hist(j,:) - max(overall_hist(j, :))));
-    overall_pdoffset(j,:)     = exp(-1 * (overall_hist(j,:) - min(overall_hist(j, :)))); 
-
-    overall_pdoffset(j,:)     = overall_pdoffset(j,:) / sum(overall_pdoffset(j,:));
-    
     overall_pdoffset_all(j,:)     = exp(-1 * (overall_hist_all(j,:) - min(overall_hist_all(j, :))));
     overall_pdoffset_all(j,:)     = overall_pdoffset_all(j,:) / sum(overall_pdoffset_all(j,:));
     
@@ -289,8 +280,8 @@ tic
 fprintf('Plotting prediction results\n');
 for i=1:ninterventions
 %for i = 42:44
-    amEMPlotsAndSavePredictions(amInterventions, amDatacube, measures, best_pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
-        best_offsets, best_meancurvemean, best_histogram, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
+    amEMPlotsAndSavePredictions(amInterventions, amDatacube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
+        offsets, meancurvemean, hstg, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
 end
 toc
 fprintf('\n');
@@ -298,13 +289,13 @@ fprintf('\n');
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('%sAM%s_sig%d_mu%d_mm%d_mo%d_dw%d_ex%d_obj%d.mat', study, version, sigmamethod, mumethod, ...
-    measuresmask, max_offset, align_wind, ex_start, round(best_qual*10000));
+outputfilename = sprintf('%s_AM%s_sig%d_mu%d_mm%d_mo%d_dw%d_ex%d_obj%d.mat', study, version, sigmamethod, mumethod, ...
+    measuresmask, max_offset, align_wind, ex_start, round(qual*10000));
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');
-save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amNormcube', 'amInterventions', ...
-    'best_meancurvedata', 'best_meancurvesum', 'best_meancurvecount', 'best_meancurvemean', 'best_meancurvestd', ...
-    'best_offsets', 'best_qual', 'unaligned_profile', 'best_histogram', 'best_pdoffset', ...
+save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube', 'amIntrNormcube', 'amInterventions', ...
+    'meancurvedata', 'meancurvesum', 'meancurvecount', 'meancurvemean', 'meancurvestd', ...
+    'offsets', 'qual', 'unaligned_profile', 'hstg', 'pdoffset', ...
     'overall_hist', 'overall_hist_all', 'overall_hist_xAL', ...
     'overall_pdoffset', 'overall_pdoffset_all', 'overall_pdoffset_xAL', ...
     'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'sigmamethod', 'mumethod', ...

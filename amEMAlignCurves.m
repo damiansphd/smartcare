@@ -1,4 +1,4 @@
-function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, profile_pre, offsets, hstg, pdoffset, qual] = amEMAlignCurves(amDatacube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod)
+function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, profile_pre, offsets, hstg, pdoffset, overall_hstg, overall_pdoffset, qual] = amEMAlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod)
 
 % amEMAlignCurves = function to align measurement curves prior to intervention
 
@@ -10,21 +10,24 @@ meancurvestd      = zeros(max_offset + align_wind - 1, nmeasures);
 offsets           = zeros(ninterventions, 1);
 hstg              = zeros(nmeasures, ninterventions, max_offset);
 pdoffset          = zeros(nmeasures, ninterventions, max_offset);
-qual = 0;
+overall_hstg      = zeros(ninterventions, max_offset);
+overall_pdoffset  = zeros(ninterventions, max_offset);
 
-% populate pdoffset with uniform prior distribution (and hstg)
+% populate pdoffset & overall_pdoffset with uniform prior distribution
 for i = 1:ninterventions
     for m = 1:nmeasures
-        pdoffset(m, i, :) = exp(-1 * (hstg(m, i, :) - max(hstg(m, i, :))));
+        pdoffset(m, i, :) = exp(-1 * (hstg(m, i, :) - min(hstg(m, i, :))));
         pdoffset(m, i, :) = pdoffset(m, i, :) / sum(pdoffset(m, i, :));
     end
+    overall_pdoffset(i,:)     = exp(-1 * (overall_hstg(i,:) - min(overall_hstg(i, :)))); 
+    overall_pdoffset(i,:)     = overall_pdoffset(i,:) / sum(overall_pdoffset(i,:));
 end
 
 % calculate initial mean curve over all interventions & prior prob
 % distribution for offsets
 for i = 1:ninterventions
     [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMAddToMean(meancurvedata, meancurvesum, ...
-        meancurvecount, meancurvemean, meancurvestd, pdoffset, amDatacube, amInterventions, i, ...
+        meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, i, ...
         max_offset, align_wind, nmeasures);
 end
 
@@ -39,9 +42,12 @@ pnt = 1;
 cnt = 0;
 iter = 0;
 ok  = 0;
-while iter < 100
+pddiff = 100;
+prior_overall_pdoffset = overall_pdoffset;
+
+while (pddiff > 0.001)
     [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMRemoveFromMean(meancurvedata, meancurvesum, ...
-        meancurvecount, meancurvemean, meancurvestd, pdoffset, amDatacube, amInterventions, pnt, ...
+        meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, pnt, ...
         max_offset, align_wind, nmeasures);
     % check safety
     ok = 1;
@@ -57,69 +63,59 @@ while iter < 100
     end
     
     if ok == 1
-        %fprintf('Got here ! Actually doing some shifting....\n');
-        %dummy = input('Continue ?');
-        [better_offset, hstg, pdoffset] = amEMBestFit(meancurvemean, meancurvestd, amDatacube, ...
-            amInterventions, measures.Mask, normstd, hstg, pdoffset, pnt, max_offset, align_wind, nmeasures, sigmamethod);
-        %better_offset
-        %reshape(hstg(:,pnt,:), [nmeasures, max_offset])
-        %reshape(pdoffset(:,pnt,:), [nmeasures, max_offset])
-        %dummy = input('Continue ?');
+        [better_offset, better_dist, hstg, pdoffset, overall_hstg, overall_pdoffset] = amEMBestFit(meancurvemean, meancurvestd, amIntrCube, ...
+            measures.Mask, normstd, hstg, pdoffset, overall_hstg, overall_pdoffset, ...
+            pnt, max_offset, align_wind, nmeasures, sigmamethod);
     else
         better_offset = amInterventions.Offset(pnt);
     end
     
     if better_offset ~= amInterventions.Offset(pnt)
-        if detaillog %& iter > 20
+        if detaillog
             fprintf('amIntervention.Offset(%d) updated from %d to %d\n', pnt, amInterventions.Offset(pnt), better_offset);
         end
         amInterventions.Offset(pnt) = better_offset;
         cnt = cnt+1;
     end
     [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMAddToMean(meancurvedata, meancurvesum, ...
-        meancurvecount, meancurvemean, meancurvestd, pdoffset, amDatacube, amInterventions, pnt, ...
+        meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, pnt, ...
         max_offset, align_wind, nmeasures);
         
     pnt = pnt+1;
     if pnt > ninterventions
         iter = iter + 1;
         pnt = pnt - ninterventions;
+        pddiff = calcDiffOverallPD(overall_pdoffset, prior_overall_pdoffset);
+        % compute the overall objective function each time we've iterated
+        % through the full set of interventions
+        % ** don't update the histogram here to avoid double counting on the best
+        % offset day **
+        update_histogram = 0;
+        qual = 0;
+        for i=1:ninterventions
+            [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMRemoveFromMean(meancurvedata, meancurvesum, ...
+                meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, i, ...
+                max_offset, align_wind, nmeasures);
+    
+            qual = qual + amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measures.Mask, normstd, ...
+                hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod);
+    
+            [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMAddToMean(meancurvedata, meancurvesum, ...
+                meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, i, ...
+                max_offset, align_wind, nmeasures);
+        end
         if cnt == 0
             if detaillog
-                fprintf('No changes on iteration %2d\n', iter);
-                %break;
+                fprintf('No changes on iteration %2d, obj fcn = %.4f, prob distrib diff = %.4f\n', iter, qual, pddiff);
             end
         else 
             if detaillog
-                fprintf('Changed %2d offsets on iteration %2d\n', cnt, iter);
+                fprintf('Changed %2d offsets on iteration %2d, obj fcn = %.4f, prob distrib diff = %.4f\n', cnt, iter, qual, pddiff);
             end
-            if iter > 100
-                if detaillog
-                    fprintf('Iteration count limit exceeded - breaking\n');
-                end
-                break;
-            end
-            cnt = 0;
         end
+        cnt = 0;
+        prior_overall_pdoffset = overall_pdoffset;
     end
-end
-
-% computing the objective function result for converged offset array
-% don't update the histogram here to avoid double counting on the best
-% offset day
-update_histogram = 0;
-
-for i=1:ninterventions
-    [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMRemoveFromMean(meancurvedata, meancurvesum, ...
-        meancurvecount, meancurvemean, meancurvestd, pdoffset, amDatacube, amInterventions, i, ...
-        max_offset, align_wind, nmeasures);
-    
-    qual = qual + amEMCalcObjFcn(meancurvemean, meancurvestd, amDatacube, amInterventions, measures.Mask, normstd, ...
-        hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod);
-    
-    [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMAddToMean(meancurvedata, meancurvesum, ...
-        meancurvecount, meancurvemean, meancurvestd, pdoffset, amDatacube, amInterventions, i, ...
-        max_offset, align_wind, nmeasures);
 end
 
 for i=1:ninterventions 
