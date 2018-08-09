@@ -46,6 +46,17 @@ if mumethod > 3
     return;
 end
 
+fprintf('Methodology for duration of curve averaging\n');
+fprintf('-------------------------------------------\n');
+fprintf('1: Just data window\n');
+fprintf('2: Data window + data to the left\n');
+curveaveragingmethod = input('Choose methodology (1-2) ');
+fprintf('\n');
+if curveaveragingmethod > 2
+    fprintf('Invalid methodology\n');
+    return;
+end
+
 fprintf('Measures to include in alignment calculation\n');
 fprintf('--------------------------------------------\n');
 fprintf('1: All\n');
@@ -104,12 +115,39 @@ else
 end
 
 % create cube for data window data by intervention (for each measure)
-amIntrDatacube = NaN(ninterventions, align_wind, nmeasures);
+%amIntrDatacube = NaN(ninterventions, align_wind, nmeasures);
+%for i = 1:ninterventions
+%    scid   = amInterventions.SmartCareID(i);
+%    start = amInterventions.IVScaledDateNum(i);
+%    for m = 1:nmeasures
+%        amIntrDatacube(i, (1:align_wind), m) = amDatacube(scid, (start - align_wind):(start - 1), m);
+%    end
+%end
+
+% create cube for data window data by intervention (for each measure)
+amIntrDatacube = NaN(ninterventions, max_offset + align_wind - 1, nmeasures);
 for i = 1:ninterventions
     scid   = amInterventions.SmartCareID(i);
     start = amInterventions.IVScaledDateNum(i);
+    
+    icperiodend = align_wind + max_offset -1;
+    dcperiodend = start - 1;
+    
+    if curveaveragingmethod == 1
+        icperiodstart = align_wind;
+        dcperiodstart = start - align_wind;
+    else
+        icperiodstart = 1;
+        dcperiodstart = start - (align_wind + max_offset - 1);
+    end
+    
+    if dcperiodstart <= 0
+        icperiodstart = icperiodstart - dcperiodstart + 1;
+        dcperiodstart = 1;
+    end
+    
     for m = 1:nmeasures
-        amIntrDatacube(i, (1:align_wind), m) = amDatacube(scid, (start - align_wind):(start - 1), m);
+        amIntrDatacube(i, (icperiodstart:icperiodend), m) = amDatacube(scid, dcperiodstart:dcperiodend, m);
     end
 end
 
@@ -204,7 +242,7 @@ for i = 1:ninterventions
                 normmean(i,m) = 0;
             end
         end
-        amIntrNormcube(i, 1:align_wind, m) = amIntrDatacube(i, 1:align_wind, m) - normmean(i,m);
+        amIntrNormcube(i, 1:(max_offset + align_wind -1), m) = amIntrDatacube(i, 1:(max_offset + align_wind -1), m) - normmean(i,m);
     end
 end
 toc
@@ -245,7 +283,7 @@ amInterventions.Offset = offsets;
 
 [sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amIntrNormcube, amInterventions, meancurvemean, ...
     meancurvecount, meancurvestd, overall_pdoffset, offsets, measures, max_offset, align_wind, nmeasures, run_type, ...
-    study, ex_start, version);
+    study, ex_start, version, curveaveragingmethod);
 
 amEMPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, qual, ...
     measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, version)
@@ -298,6 +336,6 @@ save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube
     'offsets', 'qual', 'unaligned_profile', 'hstg', 'pdoffset', ...
     'overall_hist', 'overall_hist_all', 'overall_hist_xAL', ...
     'overall_pdoffset', 'overall_pdoffset_all', 'overall_pdoffset_xAL', ...
-    'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'sigmamethod', 'mumethod', ...
+    'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'sigmamethod', 'mumethod', 'curveaveragingmethod', ...
     'measuresmask', 'max_offset', 'align_wind', 'ex_start', 'nmeasures', 'ninterventions');
 toc

@@ -126,8 +126,24 @@ for i = 1:ninterventions
     scid   = amInterventions.SmartCareID(i);
     start = amInterventions.IVScaledDateNum(i);
     
+    icperiodend = align_wind + max_offset -1;
+    dcperiodend = start - 1;
+    
+    if curveaveragingmethod == 1
+        icperiodstart = align_wind;
+        dcperiodstart = start - align_wind;
+    else
+        icperiodstart = 1;
+        dcperiodstart = start - (align_wind + max_offset - 1);
+    end
+    
+    if dcperiodstart <= 0
+        icperiodstart = icperiodstart - dcperiodstart + 1;
+        dcperiodstart = 1;
+    end
+    
     for m = 1:nmeasures
-        amIntrDatacube(i, (1:align_wind), m) = amDatacube(scid, (start - align_wind):(start - 1), m);
+        amIntrDatacube(i, (icperiodstart:icperiodend), m) = amDatacube(scid, dcperiodstart:dcperiodend, m);
     end
 end
 

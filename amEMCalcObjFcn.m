@@ -13,13 +13,13 @@ end
 
 for i = 1:align_wind
     for m = 1:nmeasures
-        if ~isnan(amIntrCube(currinter, align_wind + 1 - i, m))
+        if ~isnan(amIntrCube(currinter, max_offset + align_wind - i, m))
             if sigmamethod == 4
                 thisdist = ( (meancurvemean(max_offset + align_wind - i - curroffset, m) ...
-                    - amIntrCube(currinter, align_wind + 1 - i, m)) ^ 2 ) / ((meancurvestd(max_offset + align_wind - i - curroffset, m)) ^ 2) ;
+                    - amIntrCube(currinter, max_offset + align_wind - i, m)) ^ 2 ) / ((meancurvestd(max_offset + align_wind - i - curroffset, m)) ^ 2) ;
             else
                 thisdist = ( (meancurvemean(max_offset + align_wind - i - curroffset, m) ...
-                    - amIntrCube(currinter, align_wind + 1 - i, m)) ^ 2 ) / ((normstd(currinter, m)) ^ 2 ) ;
+                    - amIntrCube(currinter, max_offset + align_wind - i, m)) ^ 2 ) / ((normstd(currinter, m)) ^ 2 ) ;
             end
             % only include desired measures in overall alignment
             % optimisation

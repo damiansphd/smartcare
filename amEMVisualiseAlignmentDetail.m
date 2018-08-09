@@ -1,4 +1,4 @@
-function [sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amIntrCube, amInterventions, meancurvemean, meancurvecount, meancurvestd, overall_pdoffset, offsets, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, version)
+function [sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amIntrCube, amInterventions, meancurvemean, meancurvecount, meancurvestd, overall_pdoffset, offsets, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, version, curveaveragingmethod)
 
 % amEMVisualiseAlignmentDetail - creates a plot of horizontal bars showing 
 % the alignment of the data window (including the best_offset) for all 
@@ -14,9 +14,21 @@ ninterventions = size(amInterventions,1);
 sorted_interventions = array2table(offsets);
 sorted_interventions.Intervention = [1:ninterventions]';
 sorted_interventions = sortrows(sorted_interventions, {'offsets', 'Intervention'}, {'descend', 'ascend'});
-for i = 1:max_offset+align_wind-1
-    max_points(1, i) = size(sorted_interventions.offsets(sorted_interventions.offsets <= (max_offset + align_wind - i) ...
+%for i = 1:max_offset+align_wind-1
+%    max_points(1, i) = size(sorted_interventions.offsets(sorted_interventions.offsets <= (max_offset + align_wind - i) ...
+%            & sorted_interventions.offsets > (align_wind - i)),1);
+%end
+for i = 1:max_offset+align_wind - 1
+    if curveaveragingmethod == 1
+        max_points(1, i) = size(sorted_interventions.offsets(sorted_interventions.offsets <= (max_offset + align_wind - i) ...
             & sorted_interventions.offsets > (align_wind - i)),1);
+    else
+        if (i - align_wind) <= 0
+            max_points(1, i) = ninterventions;
+        else
+            max_points(1,i) = size(sorted_interventions.offsets(sorted_interventions.offsets <= (max_offset + align_wind - i)),1);
+        end
+    end
 end
 
 for m = 1:nmeasures
@@ -27,15 +39,32 @@ for m = 1:nmeasures
         offset = offsets(i);
 
         %fprintf('Intervention %2d, patient %3d, start %3d, best_offset %2d\n', i, scid, start, offset);
-    
         rowtoadd.Intervention = i;
         rowtoadd.Count = 2;
         for d = 1:align_wind
-            if ~isnan(amIntrCube(i, align_wind + 1 - d, m))
+            if ~isnan(amIntrCube(i, max_offset + align_wind - d, m))
                 rowtoadd.ScaledDateNum = 0 - d - offset;
                 datatable = [datatable ; rowtoadd];
             end
         end
+        rowtoadd.Count = 1;
+        if curveaveragingmethod == 2
+            for d = 1:max_offset - 1
+                if ~isnan(amIntrCube(i, max_offset - d, m))
+                    rowtoadd.ScaledDateNum = 0 - align_wind - d - offset;
+                    datatable = [datatable ; rowtoadd];
+                end
+            end
+        end
+        
+        %rowtoadd.Intervention = i;
+        %rowtoadd.Count = 2;
+        %for d = 1:align_wind
+        %    if ~isnan(amIntrCube(i, align_wind + 1 - d, m))
+        %        rowtoadd.ScaledDateNum = 0 - d - offset;
+        %        datatable = [datatable ; rowtoadd];
+        %    end
+        %end
     end
 
     temp = hsv;
