@@ -277,6 +277,8 @@ else
     niterations = 250;
 end
 
+niterations = 0;
+
 for j=1:niterations
     tic
     for i=1:ninterventions

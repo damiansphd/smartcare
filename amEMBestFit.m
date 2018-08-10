@@ -1,4 +1,4 @@
-function [better_offset, mini, hstg, pdoffset, overall_hstg, overall_pdoffset] = amEMBestFit(meancurvemean, meancurvestd, amIntrCube, measuresmask, normstd, hstg, pdoffset, overall_hstg, overall_pdoffset, currinter, max_offset, align_wind, nmeasures, sigmamethod)
+function [better_offset, mini, hstg, pdoffset, overall_hstg, overall_pdoffset] = amEMBestFit(meancurvemean, meancurvestd, amIntrCube, measuresmask, normstd, hstg, pdoffset, overall_hstg, overall_pdoffset, currinter, max_offset, align_wind, nmeasures, sigmamethod, emalignmethod)
 
 % amEMBestFit - calculates the offset for an intervention by minimising the
 % objective function
@@ -26,7 +26,12 @@ end
 
 overall_hstg(currinter, :)     = reshape(sum(hstg(find(measuresmask),currinter,:),1), [1, max_offset]);
 
-overall_pdoffset(currinter,:)     = exp(-1 * (overall_hstg(currinter,:) - min(overall_hstg(currinter, :)))); 
-overall_pdoffset(currinter,:)     = overall_pdoffset(currinter,:) / sum(overall_pdoffset(currinter,:));
-    
+if emalignmethod == 1
+    overall_pdoffset(currinter,:)     = exp(-1 * (overall_hstg(currinter,:) - min(overall_hstg(currinter, :)))); 
+    overall_pdoffset(currinter,:)     = overall_pdoffset(currinter,:) / sum(overall_pdoffset(currinter,:));
+else
+    overall_pdoffset(currinter,:) = 0;
+    overall_pdoffset(currinter, better_offset + 1) = 1;
+end
+
 end

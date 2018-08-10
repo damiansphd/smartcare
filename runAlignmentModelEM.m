@@ -69,6 +69,17 @@ if measuresmask > 3
     return;
 end
 
+fprintf('Methodology for EM alignment\n');
+fprintf('----------------------------\n');
+fprintf('1: Use prob distribution\n');
+fprintf('2: Use point mass of offset\n');
+emalignmethod = input('Choose methodology (1-2) ');
+fprintf('\n');
+if emalignmethod > 2
+    fprintf('Invalid methodology\n');
+    return;
+end
+
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
@@ -253,7 +264,7 @@ best_initial_offsets = amInterventions.Offset;
 run_type = 'Zero Offset Start';
 [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, profile_pre, ...
  offsets, hstg, pdoffset, overall_hist, overall_pdoffset, qual] = amEMAlignCurves(amIntrNormcube, amInterventions, measures, ...
- normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod);
+ normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, emalignmethod);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
 
 % save the zero offset pre-profile to unaligned_profile so all plots show a
