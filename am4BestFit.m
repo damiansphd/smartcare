@@ -1,10 +1,7 @@
-function [better_offset, hstg] = am4BestFit(meancurvemean, meancurvestd, amDatacube, amInterventions, measuresmask, normstd, hstg, currinter, max_offset, align_wind, nmeasures, sigmamethod, smoothingmethod)
+function [better_offset, hstg] = am4BestFit(meancurvemean, meancurvestd, amIntrCube, measuresmask, normstd, hstg, currinter, max_offset, align_wind, nmeasures, sigmamethod, smoothingmethod)
 
 % am4BestFit - calculates the offset for an intervention by minimising the
 % objective function
-
-scid   = amInterventions.SmartCareID(currinter);
-start = amInterventions.IVScaledDateNum(currinter);
 
 % update the histogram during alignment process
 update_histogram = 1;
@@ -14,7 +11,7 @@ better_offset = 0;
 mini = 1000000;
 
 for i = 0:max_offset - 1
-    [currdist, hstg] = am4CalcObjFcn(meancurvemean, meancurvestd, amDatacube, amInterventions, measuresmask, ...
+    [currdist, hstg] = am4CalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measuresmask, ...
         normstd, hstg, currinter, i, max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
     if currdist < mini
         better_offset = i;

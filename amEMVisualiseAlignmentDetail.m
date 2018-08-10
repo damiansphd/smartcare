@@ -14,11 +14,8 @@ ninterventions = size(amInterventions,1);
 sorted_interventions = array2table(offsets);
 sorted_interventions.Intervention = [1:ninterventions]';
 sorted_interventions = sortrows(sorted_interventions, {'offsets', 'Intervention'}, {'descend', 'ascend'});
-%for i = 1:max_offset+align_wind-1
-%    max_points(1, i) = size(sorted_interventions.offsets(sorted_interventions.offsets <= (max_offset + align_wind - i) ...
-%            & sorted_interventions.offsets > (align_wind - i)),1);
-%end
-for i = 1:max_offset+align_wind - 1
+
+for i = 1:max_offset + align_wind - 1
     if curveaveragingmethod == 1
         max_points(1, i) = size(sorted_interventions.offsets(sorted_interventions.offsets <= (max_offset + align_wind - i) ...
             & sorted_interventions.offsets > (align_wind - i)),1);
@@ -77,7 +74,7 @@ for m = 1:nmeasures
 
     plotsacross = 2;
     plotsdown = 8;
-    plottitle = sprintf('%sAlignment Model%s %s - %s', study, version, run_type, measures.DisplayName{m});
+    plottitle = sprintf('%s_AM%s %s - %s', study, version, run_type, measures.DisplayName{m});
     f = figure('Name', plottitle);
     set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
     p = uipanel('Parent',f,'BorderType','none'); 
@@ -139,7 +136,7 @@ for m = 1:nmeasures
         nbuckets = 5;
         plotsacross = 2;
         plotsdown = round(nbuckets/plotsacross);
-        plottitle = sprintf('%sAlignment Model%s - Alignment By Quintile - %s', study, version, measures.DisplayName{m});
+        plottitle = sprintf('%s_AM%s - Alignment By Quintile - %s', study, version, measures.DisplayName{m});
         f = figure('Name', plottitle);
         set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
         p = uipanel('Parent',f,'BorderType','none'); 
@@ -154,7 +151,7 @@ for m = 1:nmeasures
             qnbr   = qupper - qlower + 1;
             fprintf('Quintile %d, Lower = %d, Upper = %d, Size = %d\n', q, qlower, qupper, qnbr);
             
-            temp_meancurvedata     = nan(max_offset + align_wind - 1, nmeasures, qnbr);
+            temp_meancurvedata     = zeros(max_offset + align_wind - 1, nmeasures, qnbr);
             temp_meancurvesum      = zeros(max_offset + align_wind - 1, nmeasures);
             temp_meancurvecount    = zeros(max_offset + align_wind - 1, nmeasures);
             temp_meancurvemean     = zeros(max_offset + align_wind - 1, nmeasures);

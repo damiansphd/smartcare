@@ -1,4 +1,4 @@
-function [sorted_interventions, max_points] = am4VisualiseAlignmentDetail(amDatacube, amInterventions, offsets, profile_pre, profile_post, count_post, std_post, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, curveaveragingmethod, smoothingmethod)
+function [sorted_interventions, max_points] = am4VisualiseAlignmentDetail(amIntrCube, amInterventions, meancurvemean, meancurvecount, meancurvestd, offsets, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, version, curveaveragingmethod, smoothingmethod)
 
 % am4VisualiseAlignmentDetail - creates a plot of horizontal bars showing 
 % the alignment of the data window (including the best_offset) for all 
@@ -9,12 +9,13 @@ datatable = table('Size',[1 3], ...
     'VariableNames', {'Intervention', 'ScaledDateNum', 'Count'});
 
 rowtoadd = datatable;
-max_points = zeros(1, max_offset + align_wind);
+max_points = zeros(1, max_offset + align_wind - 1);
 nInterventions = size(amInterventions,1);
 sorted_interventions = array2table(offsets);
 sorted_interventions.Intervention = [1:nInterventions]';
 sorted_interventions = sortrows(sorted_interventions, {'offsets', 'Intervention'}, {'descend', 'ascend'});
-for i = 1:max_offset+align_wind
+
+for i = 1:max_offset + align_wind - 1
     if curveaveragingmethod == 1
         max_points(1, i) = size(sorted_interventions.offsets(sorted_interventions.offsets <= (max_offset + align_wind - i) ...
             & sorted_interventions.offsets > (align_wind - i)),1);
@@ -39,21 +40,15 @@ for m = 1:nmeasures
         rowtoadd.Intervention = i;
         rowtoadd.Count = 2;
         for d = 1:align_wind
-            if start - d <= 0
-              continue;
-            end
-            if ~isnan(amDatacube(scid, start - d, m))
+            if ~isnan(amIntrCube(i, max_offset + align_wind - d, m))
                 rowtoadd.ScaledDateNum = 0 - d - offset;
                 datatable = [datatable ; rowtoadd];
             end
         end
         rowtoadd.Count = 1;
         if curveaveragingmethod == 2
-            for d = 1:max_offset
-                if start -align_wind - d <= 0
-                    continue;
-                end
-                if ~isnan(amDatacube(scid, start - align_wind - d, m))
+            for d = 1:max_offset - 1
+                if ~isnan(amIntrCube(i, max_offset - d, m))
                     rowtoadd.ScaledDateNum = 0 - align_wind - d - offset;
                     datatable = [datatable ; rowtoadd];
                 end
@@ -71,7 +66,7 @@ for m = 1:nmeasures
 
     plotsacross = 2;
     plotsdown = 8;
-    plottitle = sprintf('%sAlignment Model4 %s - %s', study,run_type, measures.DisplayName{m});
+    plottitle = sprintf('%s_AM%s %s - %s', study, version, run_type, measures.DisplayName{m});
     f = figure('Name', plottitle);
     set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
     p = uipanel('Parent',f,'BorderType','none'); 
@@ -81,7 +76,7 @@ for m = 1:nmeasures
     p.FontWeight = 'bold';
     
     xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
-    yl = [min(min(profile_pre(m,:)), min(profile_post(m,:))) max(max(profile_pre(m,:)), max(profile_post(m,:)))];
+    yl = [min(meancurvemean(:, m)) max(meancurvemean(:, m))];
     
     ax = subplot(plotsdown,plotsacross,[1:6],'Parent',p);
     yyaxis left;
@@ -94,12 +89,8 @@ for m = 1:nmeasures
     xlim(xl);
     ylim(yl);
     hold on;
-    %if smoothingmethod == 1
-        plot([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue','LineStyle', ':');
-        plot([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:), 5), 'Color', 'blue', 'LineStyle', '-');
-    %else
-    %    plot([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue','LineStyle', '-');
-    %end
+    plot([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:, m), 'Color', 'blue','LineStyle', ':');
+    plot([-1 * (max_offset + align_wind - 1): -1], smooth(meancurvemean(:, m), 5), 'Color', 'blue', 'LineStyle', '-');
     if ex_start ~= 0
         line([ex_start ex_start], yl, 'Color', 'blue', 'LineStyle', '--');
     end
@@ -108,8 +99,8 @@ for m = 1:nmeasures
     ax.YAxis(2).Color = 'black';
     ax.YAxis(2).FontSize = 8;
     ylabel('Count of Data points');
-    bar([-1 * (max_offset + align_wind): -1], max_points, 0.5, 'FaceColor', 'white','FaceAlpha', 0.1);
-    bar([-1 * (max_offset + align_wind): -1], count_post(m, :), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.15);
+    bar([-1 * (max_offset + align_wind - 1): -1], max_points, 0.5, 'FaceColor', 'white','FaceAlpha', 0.1);
+    bar([-1 * (max_offset + align_wind - 1): -1], meancurvecount(:, m), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.15);
     ylim([0 (max(max_points) * 4)]);
     
     hold off;
@@ -137,7 +128,7 @@ for m = 1:nmeasures
         nbuckets = 5;
         plotsacross = 2;
         plotsdown = round(nbuckets/plotsacross);
-        plottitle = sprintf('%sAlignment Model4 - Alignment By Quintile - %s', study, measures.DisplayName{m});
+        plottitle = sprintf('%s_AM%s - Alignment By Quintile - %s', study, version, measures.DisplayName{m});
         f = figure('Name', plottitle);
         set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
         p = uipanel('Parent',f,'BorderType','none'); 
@@ -152,15 +143,18 @@ for m = 1:nmeasures
             qnbr   = qupper - qlower + 1;
             fprintf('Quintile %d, Lower = %d, Upper = %d, Size = %d\n', q, qlower, qupper, qnbr);
             
-            temp_meancurvedata     = nan(max_offset + align_wind, nmeasures, qnbr);
-            temp_meancurvesum      = zeros(max_offset + align_wind, nmeasures);
-            temp_meancurvecount    = zeros(max_offset + align_wind, nmeasures);
-            temp_meancurvemean     = zeros(max_offset + align_wind, nmeasures);
-            temp_meancurvestd      = zeros(max_offset + align_wind, nmeasures);
+            temp_meancurvedata     = zeros(max_offset + align_wind - 1, nmeasures, qnbr);
+            temp_meancurvesum      = zeros(max_offset + align_wind - 1, nmeasures);
+            temp_meancurvecount    = zeros(max_offset + align_wind - 1, nmeasures);
+            temp_meancurvemean     = zeros(max_offset + align_wind - 1, nmeasures);
+            temp_meancurvestd      = zeros(max_offset + align_wind - 1, nmeasures);
+            
+            temp_interventions = amInterventions(sorted_interventions.Intervention(qlower:qupper),:);
+            
             for i = 1:qnbr
                 [temp_meancurvedata, temp_meancurvesum, temp_meancurvecount, temp_meancurvemean, temp_meancurvestd] = am4AddToMean(temp_meancurvedata, temp_meancurvesum, ...
-                    temp_meancurvecount, temp_meancurvemean, temp_meancurvestd, amDatacube, amInterventions(sorted_interventions.Intervention(qlower:qupper),:), i, max_offset, ...
-                    align_wind, nmeasures, curveaveragingmethod, smoothingmethod);
+                    temp_meancurvecount, temp_meancurvemean, temp_meancurvestd, amIntrCube(sorted_interventions.Intervention(qlower:qupper), :, :), ...
+                    temp_interventions.Offset(i), i, max_offset, align_wind, nmeasures);
             end
             
             qintrminoffset = min(amInterventions.Offset(sorted_interventions.Intervention(qlower:qupper)));
@@ -177,7 +171,7 @@ for m = 1:nmeasures
             end
             
             xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
-            yl = [min(min(temp_meancurvemean(:, m)), min(profile_post(m,:))) max(max(temp_meancurvemean(:, m)), max(profile_post(m,:)))];
+            yl = [min(min(temp_meancurvemean(:, m)), min(meancurvemean(:, m))) max(max(temp_meancurvemean(:, m)), max(meancurvemean(:, m)))];
     
             ax = subplot(plotsdown, plotsacross, q, 'Parent', p);
             ax.Title.FontSize = 8;
@@ -192,31 +186,20 @@ for m = 1:nmeasures
             xlim(xl);
             ylim(yl);
             hold on;
-            %if smoothingmethod == 1
-                line([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue','LineStyle', ':');
-                line([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:), 5), 'Color', 'blue', 'LineStyle', '-');
-                line([-1 * qfrom: -1 * qto], temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 'Color', 'red','LineStyle', ':');
-                line([-1 * qfrom: -1 * qto], smooth(temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 5), 'Color', 'red','LineStyle', '-');
-            %else
-            %    line([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue','LineStyle', '-');
-            %    line([-1 * qfrom: -1 * qto], temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 'Color', 'red','LineStyle', '-');
-            %end
+            line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:, m), 'Color', 'blue','LineStyle', ':');
+            line([-1 * (max_offset + align_wind - 1): -1], smooth(meancurvemean(:, m), 5), 'Color', 'blue', 'LineStyle', '-');
+            line([-1 * qfrom: -1 * qto], temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 'Color', 'red','LineStyle', ':');
+            line([-1 * qfrom: -1 * qto], smooth(temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 5), 'Color', 'red','LineStyle', '-');
             if ex_start ~= 0
                 line([ex_start ex_start], yl, 'Color', 'blue', 'LineStyle', '--');
             end
-            
-            %line([-1 * (max_offset + align_wind): -1 * (qfrom + 1)], temp_meancurvemean(1:(max_offset - qfrom) + align_wind,m), 'Color', 'red','LineStyle', '-');
-            %line([-1 * qfrom: -1 * qto], temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 'Color', 'red','LineStyle', '-');
-            
             hold off;
 
             yyaxis right
             ax.YAxis(2).Color = 'black';
             ax.YAxis(2).FontSize = 8;
             ylabel('Count of Data points');
-            %bar([-1 * (max_offset + align_wind): -1], max_points, 0.5, 'FaceColor', 'white','FaceAlpha', 0.1);
-            %bar([-1 * (max_offset + align_wind): -1 * (qintrminoffset + 1)], temp_meancurvecount(1:(max_offset - qintrminoffset) + align_wind, m), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.15);
-            bar([-1 * (max_offset + align_wind): -1], temp_meancurvecount(1:max_offset + align_wind, m), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.15);
+            bar([-1 * (max_offset + align_wind - 1): -1], temp_meancurvecount(1:max_offset + align_wind - 1, m), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.15);
             ylim([0 (max(max_points) * 4 / nbuckets)]);
         end
         

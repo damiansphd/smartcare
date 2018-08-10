@@ -8,7 +8,7 @@ subfolder = 'Plots';
 
 plotsacross = 3;
 plotsdown = round((nmeasures + 1) / plotsacross);
-plottitle = sprintf('%sAlignment Model%s - %s - ErrFcn = %7.4f', study,version, run_type, qual);
+plottitle = sprintf('%s_AM%s - %s - ErrFcn = %7.4f', study,version, run_type, qual);
 
 f = figure;
 set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');

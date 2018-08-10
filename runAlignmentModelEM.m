@@ -167,7 +167,6 @@ end
 
 % populate multiplicative normalisation (sigma) values based on methodology
 % selected
-%validids = unique(demographicstable.SmartCareID);
 normstd = zeros(ninterventions, nmeasures);
 for i = 1:ninterventions
     for m = 1:nmeasures
@@ -209,11 +208,7 @@ for i = 1:ninterventions
         meanwindow = start - align_wind - 1;
     end
     for m = 1:nmeasures
-        if mumethod == 3
-            meanwindowdata = amDatacube(scid, (start - align_wind - meanwindow): (start - 1 - align_wind), m);
-        else
-            meanwindowdata = amDatacube(scid, start - align_wind - meanwindow: start - align_wind - 1, m);
-        end
+        meanwindowdata = amDatacube(scid, (start - align_wind - meanwindow): (start - 1 - align_wind), m);
         meanwindowdata = sort(meanwindowdata(~isnan(meanwindowdata)), 'ascend');
         if size(meanwindowdata,2) >= 3
             if mumethod == 1
@@ -327,8 +322,8 @@ fprintf('\n');
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('%s_AM%s_sig%d_mu%d_mm%d_mo%d_dw%d_ex%d_obj%d.mat', study, version, sigmamethod, mumethod, ...
-    measuresmask, max_offset, align_wind, ex_start, round(qual*10000));
+outputfilename = sprintf('%s_AM%s_sig%d_mu%d_ca%d_mm%d_mo%d_dw%d_ex%d_obj%d.mat', study, version, sigmamethod, mumethod, ...
+    curveaveragingmethod, measuresmask, max_offset, align_wind, ex_start, round(qual*10000));
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');
 save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube', 'amIntrNormcube', 'amInterventions', ...

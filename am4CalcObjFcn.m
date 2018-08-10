@@ -1,11 +1,11 @@
-function [dist, hstg] = am4CalcObjFcn(meancurvemean, meancurvestd, amDatacube, amInterventions, measuresmask, normstd, hstg, currinter, curroffset, max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod)
+function [dist, hstg] = am4CalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measuresmask, normstd, hstg, currinter, curroffset, max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod)
 
 % am4CalcObjFcn - calculates residual sum of squares distance for points in
 % curve vs meancurve incorporating offset
 
 dist = 0;
-scid   = amInterventions.SmartCareID(currinter);
-start = amInterventions.IVScaledDateNum(currinter);
+tempmean = zeros(max_offset + align_wind - 1, nmeasures);
+tempstd  = zeros(max_offset + align_wind - 1, nmeasures);
 
 if (update_histogram == 1)
     for m = 1:nmeasures
@@ -25,27 +25,13 @@ end
 
 for i = 1:align_wind
     for m = 1:nmeasures
-        if start - i <= 0
-            continue;
-        end
-        if ~isnan(amDatacube(scid, start - i, m))
+        if ~isnan(amIntrCube(currinter, max_offset + align_wind - i, m))
             if sigmamethod == 4
-                %thisdist = ( (meancurvesum((max_offset + align_wind + 1) - i - curroffset, m)/ meancurvecount((max_offset + align_wind + 1) - i - curroffset, m) ...
-                %    - amDatacube(scid, start - i, m)) ^ 2 ) / (2 * (meancurvestd((max_offset + align_wind + 1) - i - curroffset, m) ^ 2) ) ;
-                %thisdist = ( (meancurvemean((max_offset + align_wind + 1) - i - curroffset, m) ...
-                %    - amDatacube(scid, start - i, m)) ^ 2 ) / ((meancurvestd((max_offset + align_wind + 1) - i - curroffset, m) ^ 2) ) ;
-                %thisdist = ( (tempmean((max_offset + align_wind + 1) - i - curroffset, m) ...
-                %    - amDatacube(scid, start - i, m)) ^ 2 ) / ((meancurvestd((max_offset + align_wind + 1) - i - curroffset, m) ^ 2) ) ;
-                thisdist = ( (tempmean((max_offset + align_wind + 1) - i - curroffset, m) ...
-                    - amDatacube(scid, start - i, m)) ^ 2 ) / ((tempstd((max_offset + align_wind + 1) - i - curroffset, m) ^ 2) ) ;
-
+                    thisdist = ( (tempean(max_offset + align_wind - i - curroffset, m) ...
+                        - amIntrCube(currinter, max_offset + align_wind - i, m)) ^ 2 ) / (tempstd(max_offset + align_wind - i - curroffset, m) ^ 2 ) ;
             else
-                %thisdist = ( (meancurvesum((max_offset + align_wind + 1) - i - curroffset, m)/ meancurvecount((max_offset + align_wind + 1) - i - curroffset, m) ...
-                %    - amDatacube(scid, start - i, m)) ^ 2 ) / (2 * (normstd(scid, m) ^ 2 ) ) ;
-                %thisdist = ( (meancurvemean((max_offset + align_wind + 1) - i - curroffset, m) ...
-                %    - amDatacube(scid, start - i, m)) ^ 2 ) / ((normstd(scid, m) ^ 2 ) ) ;
-                thisdist = ( (tempmean((max_offset + align_wind + 1) - i - curroffset, m) ...
-                    - amDatacube(scid, start - i, m)) ^ 2 ) / ((normstd(scid, m) ^ 2 ) ) ;
+                thisdist = ( (tempmean(max_offset + align_wind - i - curroffset, m) ...
+                    - amIntrCube(currinter, max_offset + align_wind - i, m)) ^ 2 ) / (normstd(currinter, m) ^ 2 ) ;
             end
             % add measures mask here to only include in the total for
             % subset of measures.

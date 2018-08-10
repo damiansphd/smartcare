@@ -1,4 +1,4 @@
-function am4PlotAndSaveAlignedCurves(profile_pre, profile_post, count_post, std_post, offsets, qual, measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, smoothingmethod)
+function am4PlotAndSaveAlignedCurves(profile_pre, meancurvemean, meancurvecount, meancurvestd, offsets, qual, measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, smoothingmethod, version)
 
 % am4PlotAndSaveAlignedCurves - plots the curves pre and post alignment for
 % each measure, and the histogram of offsets
@@ -8,7 +8,7 @@ subfolder = 'Plots';
 
 plotsacross = 3;
 plotsdown = round((nmeasures + 1) / plotsacross);
-plottitle = sprintf('%sAlignment Model4 - %s - ErrFcn = %7.4f', study,run_type, qual);
+plottitle = sprintf('%s_AM%s - %s - ErrFcn = %7.4f', study, version, run_type, qual);
 
 f = figure;
 set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
@@ -20,26 +20,20 @@ p.FontWeight = 'bold';
 
 for m = 1:nmeasures
     xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
-    yl = [min(min(profile_pre(m,:)), min(profile_post(m,:) - std_post(m,:))) max(max(profile_pre(m,:)), max(profile_post(m,:) + std_post(m,:)))];
+    yl = [min(min(profile_pre(:, m)), min(meancurvemean(:, m) - meancurvestd(:, m))) max(max(profile_pre(:, m)), max(meancurvemean(:, m) + meancurvestd(:, m)))];
     ax = subplot(plotsdown,plotsacross,m,'Parent',p);
     
     yyaxis left;
     hold on;
-    %if smoothingmethod == 1
-        line([-1 * (max_offset + align_wind): -1], profile_pre(m,:), 'Color', 'red','LineStyle', ':');
-        line([-1 * (max_offset + align_wind): -1], smooth(profile_pre(m,:), 5), 'Color', 'red', 'LineStyle', '-');
-        line([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue', 'LineStyle', ':');
-        line([-1 * (max_offset + align_wind): -1], smooth(profile_post(m,:), 5), 'Color', 'blue', 'LineStyle', '-');
-        line([-1 * (max_offset + align_wind): -1], profile_post(m,:) + std_post(m,:), 'Color', 'blue', 'LineStyle', ':');
-        line([-1 * (max_offset + align_wind): -1], (smooth(profile_post(m,:), 5) + smooth(std_post(m,:), 5)), 'Color', 'blue', 'LineStyle', '--');
-        line([-1 * (max_offset + align_wind): -1], profile_post(m,:) - std_post(m,:), 'Color', 'blue', 'LineStyle', ':');
-        line([-1 * (max_offset + align_wind): -1], (smooth(profile_post(m,:),5) - smooth(std_post(m,:), 5)), 'Color', 'blue', 'LineStyle', '--');
-    %else
-    %    line([-1 * (max_offset + align_wind): -1], profile_pre(m,:), 'Color', 'red','LineStyle', '-');
-    %    line([-1 * (max_offset + align_wind): -1], profile_post(m,:), 'Color', 'blue', 'LineStyle', '-');
-    %    line([-1 * (max_offset + align_wind): -1], profile_post(m,:) + std_post(m,:), 'Color', 'blue', 'LineStyle', '--');
-    %    line([-1 * (max_offset + align_wind): -1], profile_post(m,:) - std_post(m,:), 'Color', 'blue', 'LineStyle', '--');
-    %end 
+    line([-1 * (max_offset + align_wind - 1): -1], profile_pre(:, m), 'Color', 'red','LineStyle', ':');
+    line([-1 * (max_offset + align_wind - 1): -1], smooth(profile_pre(:, m), 5), 'Color', 'red', 'LineStyle', '-');
+    line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:, m), 'Color', 'blue', 'LineStyle', ':');
+    line([-1 * (max_offset + align_wind - 1): -1], smooth(meancurvemean(:, m), 5), 'Color', 'blue', 'LineStyle', '-');
+    line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:, m) + meancurvestd(:, m), 'Color', 'blue', 'LineStyle', ':');
+    line([-1 * (max_offset + align_wind - 1): -1], (smooth(meancurvemean(:, m), 5) + smooth(meancurvestd(:, m), 5)), 'Color', 'blue', 'LineStyle', '--');
+    line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:, m) - meancurvestd(:, m), 'Color', 'blue', 'LineStyle', ':');
+    line([-1 * (max_offset + align_wind - 1): -1], (smooth(meancurvemean(:, m),5) - smooth(meancurvestd(:, m), 5)), 'Color', 'blue', 'LineStyle', '--');
+    
     ax.XAxis.FontSize = 8;
     xlabel('Days prior to Intervention');
     ax.YAxis(1).Color = 'blue';
@@ -56,13 +50,13 @@ for m = 1:nmeasures
     ax.YAxis(2).FontSize = 8;
     ylabel('Count of Data points');
     if isequal(run_type,'Best Alignment')
-        bar([-1 * (max_offset + align_wind): -1], max_points, 0.5, 'FaceColor', 'white', 'FaceAlpha', 0.1);
+        bar([-1 * (max_offset + align_wind - 1): -1], max_points, 0.5, 'FaceColor', 'white', 'FaceAlpha', 0.1);
     end
-    bar([-1 * (max_offset + align_wind): -1], count_post(m, :), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.25, 'LineWidth', 0.2);
+    bar([-1 * (max_offset + align_wind - 1): -1], meancurvecount(:, m), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.25, 'LineWidth', 0.2);
     if isequal(run_type,'Best Alignment')
         ylim([0 max(max_points) * 4]);
     else
-        ylim([0 max(count_post(m, :) * 4)]);
+        ylim([0 max(meancurvecount(:, m) * 4)]);
     end
     if measures.Mask(m) == 1
         title(measures.DisplayName(m), 'BackgroundColor', 'g');
