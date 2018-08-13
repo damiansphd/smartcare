@@ -1,4 +1,4 @@
-function am4PlotAndSaveAlignedCurves(profile_pre, meancurvemean, meancurvecount, meancurvestd, offsets, qual, measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, smoothingmethod, version)
+function am4PlotAndSaveAlignedCurves(profile_pre, meancurvemean, meancurvecount, meancurvestd, offsets, measures, max_points, max_offset, align_wind, nmeasures, run_type, plotname, ex_start, sigmamethod)
 
 % am4PlotAndSaveAlignedCurves - plots the curves pre and post alignment for
 % each measure, and the histogram of offsets
@@ -8,19 +8,24 @@ subfolder = 'Plots';
 
 plotsacross = 3;
 plotsdown = round((nmeasures + 1) / plotsacross);
-plottitle = sprintf('%s_AM%s - %s - ErrFcn = %7.4f', study, version, run_type, qual);
+%plottitle = sprintf('%s_AM%s - %s - ErrFcn = %7.4f', study, version, run_type, qual);
+plottitle = sprintf('%s - %s', plotname, run_type);
 
 f = figure;
 set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
 p = uipanel('Parent',f,'BorderType','none'); 
 p.Title = plottitle;
 p.TitlePosition = 'centertop'; 
-p.FontSize = 16;
+p.FontSize = 14;
 p.FontWeight = 'bold';
 
 for m = 1:nmeasures
     xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
-    yl = [min(min(profile_pre(:, m)), min(meancurvemean(:, m) - meancurvestd(:, m))) max(max(profile_pre(:, m)), max(meancurvemean(:, m) + meancurvestd(:, m)))];
+    if sigmamethod == 4
+        yl = [min(min(profile_pre(:, m)), min(meancurvemean(:, m) - meancurvestd(:, m))) max(max(profile_pre(:, m)), max(meancurvemean(:, m) + meancurvestd(:, m)))];
+    else
+        yl = [min(min(profile_pre(:, m)), min(meancurvemean(:, m))) max(max(profile_pre(:, m)), max(meancurvemean(:, m)))];
+    end
     ax = subplot(plotsdown,plotsacross,m,'Parent',p);
     
     yyaxis left;
@@ -29,10 +34,13 @@ for m = 1:nmeasures
     line([-1 * (max_offset + align_wind - 1): -1], smooth(profile_pre(:, m), 5), 'Color', 'red', 'LineStyle', '-');
     line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:, m), 'Color', 'blue', 'LineStyle', ':');
     line([-1 * (max_offset + align_wind - 1): -1], smooth(meancurvemean(:, m), 5), 'Color', 'blue', 'LineStyle', '-');
-    line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:, m) + meancurvestd(:, m), 'Color', 'blue', 'LineStyle', ':');
-    line([-1 * (max_offset + align_wind - 1): -1], (smooth(meancurvemean(:, m), 5) + smooth(meancurvestd(:, m), 5)), 'Color', 'blue', 'LineStyle', '--');
-    line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:, m) - meancurvestd(:, m), 'Color', 'blue', 'LineStyle', ':');
-    line([-1 * (max_offset + align_wind - 1): -1], (smooth(meancurvemean(:, m),5) - smooth(meancurvestd(:, m), 5)), 'Color', 'blue', 'LineStyle', '--');
+    
+    if sigmamethod == 4
+        line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:, m) + meancurvestd(:, m), 'Color', 'blue', 'LineStyle', ':');
+        line([-1 * (max_offset + align_wind - 1): -1], (smooth(meancurvemean(:, m), 5) + smooth(meancurvestd(:, m), 5)), 'Color', 'blue', 'LineStyle', '--');
+        line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:, m) - meancurvestd(:, m), 'Color', 'blue', 'LineStyle', ':');
+        line([-1 * (max_offset + align_wind - 1): -1], (smooth(meancurvemean(:, m),5) - smooth(meancurvestd(:, m), 5)), 'Color', 'blue', 'LineStyle', '--');
+    end
     
     ax.XAxis.FontSize = 8;
     xlabel('Days prior to Intervention');

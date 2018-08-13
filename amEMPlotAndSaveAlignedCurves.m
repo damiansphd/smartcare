@@ -1,4 +1,4 @@
-function amEMPlotAndSaveAlignedCurves(profile_pre, meancurvemean, meancurvecount, meancurvestd, offsets, qual, measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, version)
+function amEMPlotAndSaveAlignedCurves(profile_pre, meancurvemean, meancurvecount, meancurvestd, offsets, qual, measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, sigmamethod, version)
 
 % amEMPlotAndSaveAlignedCurves - plots the curves pre and post alignment for
 % each measure, and the histogram of offsets
@@ -20,7 +20,12 @@ p.FontWeight = 'bold';
 
 for m = 1:nmeasures
     xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
-    yl = [min(min(profile_pre(:,m)), min(meancurvemean(:,m))) max(max(profile_pre(:,m)), max(meancurvemean(:,m)))];
+    if sigmamethod == 4
+        yl = [min(min(profile_pre(:, m)), min(meancurvemean(:, m) - meancurvestd(:, m))) max(max(profile_pre(:, m)), max(meancurvemean(:, m) + meancurvestd(:, m)))];
+    else
+        yl = [min(min(profile_pre(:, m)), min(meancurvemean(:, m))) max(max(profile_pre(:, m)), max(meancurvemean(:, m)))];
+    end
+    
     ax = subplot(plotsdown,plotsacross,m,'Parent',p);
     
     yyaxis left;
@@ -28,12 +33,14 @@ for m = 1:nmeasures
     line([-1 * (max_offset + align_wind - 1): -1], profile_pre(:,m), 'Color', 'red','LineStyle', '-');
     line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:,m), 'Color', 'blue', 'LineStyle', ':');
     line([-1 * (max_offset + align_wind - 1): -1], smooth(meancurvemean(:,m), 5), 'Color', 'blue', 'LineStyle', '-');
-   
-    %line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:,m) + meancurvestd(:,m), 'Color', 'blue', 'LineStyle', ':');
-    %line([-1 * (max_offset + align_wind - 1): -1], (smooth(meancurvemean(:,m), 5) + smooth(meancurvestd(:,m), 5)), 'Color', 'blue', 'LineStyle', '--');
-    %line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:,m) - meancurvestd(:,m), 'Color', 'blue', 'LineStyle', ':');
-    %line([-1 * (max_offset + align_wind - 1): -1], (smooth(meancurvemean(:,m), 5) - smooth(meancurvestd(:,m), 5)), 'Color', 'blue', 'LineStyle', '--');
-     
+    
+    if sigmamethod == 4
+        line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:,m) + meancurvestd(:,m), 'Color', 'blue', 'LineStyle', ':');
+        line([-1 * (max_offset + align_wind - 1): -1], (smooth(meancurvemean(:,m), 5) + smooth(meancurvestd(:,m), 5)), 'Color', 'blue', 'LineStyle', '--');
+        line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:,m) - meancurvestd(:,m), 'Color', 'blue', 'LineStyle', ':');
+        line([-1 * (max_offset + align_wind - 1): -1], (smooth(meancurvemean(:,m), 5) - smooth(meancurvestd(:,m), 5)), 'Color', 'blue', 'LineStyle', '--');
+    end
+    
     ax.XAxis.FontSize = 8;
     xlabel('Days prior to Intervention');
     ax.YAxis(1).Color = 'blue';

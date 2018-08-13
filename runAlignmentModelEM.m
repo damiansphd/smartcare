@@ -273,7 +273,7 @@ unaligned_profile = profile_pre;
 
 % plot and save aligned curves (pre and post)
 amEMPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, qual, ...
-    measures, 0, max_offset, align_wind, nmeasures, run_type, study, 0, version)
+    measures, 0, max_offset, align_wind, nmeasures, run_type, study, 0, sigmamethod, version)
 toc
 fprintf('\n');
 
@@ -292,7 +292,7 @@ amInterventions.Offset = offsets;
     study, ex_start, version, curveaveragingmethod);
 
 amEMPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, qual, ...
-    measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, version)
+    measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, sigmamethod, version)
 
 %return;
 
@@ -321,16 +321,6 @@ toc
 fprintf('\n');
 
 tic
-fprintf('Plotting prediction results\n');
-for i=1:ninterventions
-%for i = 42:44
-    amEMPlotsAndSavePredictions(amInterventions, amDatacube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
-        offsets, meancurvemean, hstg, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
-end
-toc
-fprintf('\n');
-
-tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
 outputfilename = sprintf('%s_AM%s_sig%d_mu%d_ca%d_mm%d_mo%d_dw%d_ex%d_obj%d.mat', study, version, sigmamethod, mumethod, ...
@@ -345,3 +335,15 @@ save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube
     'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'sigmamethod', 'mumethod', 'curveaveragingmethod', ...
     'measuresmask', 'max_offset', 'align_wind', 'ex_start', 'nmeasures', 'ninterventions');
 toc
+fprintf('\n');
+
+tic
+fprintf('Plotting prediction results\n');
+for i=1:ninterventions
+%for i = 42:44
+    amEMPlotsAndSavePredictions(amInterventions, amDatacube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
+        offsets, meancurvemean, hstg, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
+end
+toc
+fprintf('\n');
+

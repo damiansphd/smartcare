@@ -80,6 +80,18 @@ if measuresmask > 3
     return;
 end
 
+fprintf('Mode for number of starts\n');
+fprintf('--------------------------------------------\n');
+fprintf('1: Just zero offset start\n');
+fprintf('2: Zero offset + 250 Random starts\n');
+fprintf('3: Zero offset + 500 Random starts\n');
+rndstartmode = input('Choose mode (1-3) ');
+fprintf('\n');
+if rndstartmode > 3
+    fprintf('Invalid choice\n');
+    return;
+end
+
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
@@ -92,6 +104,8 @@ toc
 detaillog = true;
 max_offset = 25; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
 align_wind = 25;
+baseplotname = sprintf('%s_AM%s_sig%d_mu%d_ca%d_sm%d_mm%d_mo%d_dw%d', study, version, sigmamethod, mumethod, curveaveragingmethod, ...
+    smoothingmethod, measuresmask, max_offset, align_wind);
 
 % remove any interventions where the start is less than the alignment
 % window
@@ -245,6 +259,8 @@ end
 toc
 fprintf('\n');
 
+
+
 tic
 fprintf('Running alignment with zero offset start\n');
 for i=1:size(amInterventions,1)
@@ -262,22 +278,24 @@ fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
 % consistent unaligned curve as the pre-profile.
 unaligned_profile = profile_pre;
 
+plotname = sprintf('%s_obj%.4f', baseplotname, qual);
+
 % plot and save aligned curves (pre and post)
-am4PlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, qual, ...
-    measures, 0, max_offset, align_wind, nmeasures, run_type, study, 0, smoothingmethod, version)
+am4PlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, ...
+    measures, 0, max_offset, align_wind, nmeasures, run_type, plotname, 0, sigmamethod)
 toc
 fprintf('\n');
 
 %return;
 
 fprintf('Running alignment with random offset start\n');
-if smoothingmethod == 1
+if rndstartmode == 3
     niterations = 500;
-else
+elseif rndstartmode == 2
     niterations = 250;
+else
+    niterations = 0;
 end
-
-niterations = 0;
 
 for j=1:niterations
     tic
@@ -291,14 +309,13 @@ for j=1:niterations
         max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod);
 
     fprintf('%s - ErrFcn = %7.4f\n', run_type, temp_qual);
-    %if qual == Inf
-    %    input('Infinity result - break ?');
-    %end
+
     if temp_qual < qual
         % plot and save aligned curves (pre and post) if the result is best
         % so far
-        am4PlotAndSaveAlignedCurves(unaligned_profile, temp_meancurvemean, temp_meancurvecount, temp_meancurvestd, temp_offsets, temp_qual, measures, 0, ...
-            max_offset, align_wind, nmeasures, run_type, study, 0, smoothingmethod, version)
+        plotname = sprintf('%s_obj%.4f', base_plotname, temp_qual);
+        am4PlotAndSaveAlignedCurves(unaligned_profile, temp_meancurvemean, temp_meancurvecount, temp_meancurvestd, ...
+            temp_offsets, measures, 0, max_offset, align_wind, nmeasures, run_type, plotname, 0, sigmamethod)
         fprintf('Best so far is random start %d\n', j);
         offsets = temp_offsets;
         initial_offsets = temp_initial_offsets;
@@ -322,12 +339,14 @@ run_type = 'Best Alignment';
 
 amInterventions.Offset = offsets;
 
+plotname = sprintf('%s_ex%d_obj%.4f', base_plotname, ex_start, qual);
+
 [sorted_interventions, max_points] = am4VisualiseAlignmentDetail(amIntrNormcube, amInterventions, meancurvemean, ...
     meancurvecount, meancurvestd, offsets, measures, max_offset, align_wind, nmeasures, run_type, ...
     study, ex_start, version, curveaveragingmethod, smoothingmethod);
 
-am4PlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, qual, ...
-    measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, smoothingmethod, version)
+am4PlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, ...
+    measures, max_points, max_offset, align_wind, nmeasures, run_type, plotname, ex_start, sigmamethod)
 
 % create overall histogram (summed over measures by intervention/offset)
 pdoffset        = zeros(nmeasures, ninterventions, max_offset);
@@ -363,16 +382,6 @@ toc
 fprintf('\n');
 
 tic
-fprintf('Plotting prediction results\n');
-for i=1:ninterventions
-%for i = 42:44
-    am4PlotsAndSavePredictions(amInterventions, amDatacube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
-        offsets, meancurvemean, hstg, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
-end
-toc
-fprintf('\n');
-
-tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
 outputfilename = sprintf('%s_AM%s__sig%d_mu%d_ca%d_sm%d_mm%d_mo%d_dw%d_ex%d_obj%d.mat', study, version, sigmamethod, mumethod, curveaveragingmethod, ...
@@ -386,4 +395,16 @@ save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube
     'overall_pdoffset', 'overall_pdoffset_all', 'overall_pdoffset_xAL', ...
     'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'sigmamethod', 'mumethod', 'curveaveragingmethod', 'smoothingmethod', ...
     'measuresmask', 'max_offset', 'align_wind', 'ex_start', 'nmeasures', 'ninterventions');
+toc
+fprintf('\n');
+
+tic
+fprintf('Plotting prediction results\n');
+for i=1:ninterventions
+%for i = 42:44
+    am4PlotsAndSavePredictions(amInterventions, amDatacube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
+        offsets, meancurvemean, hstg, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
+end
+toc
+fprintf('\n');
 
