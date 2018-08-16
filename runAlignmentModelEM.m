@@ -17,7 +17,7 @@ elseif studynbr == 2
     modelinputsmatfile = 'TMalignmentmodelinputs.mat';
     datademographicsfile = 'TMdatademographicsbypatient.mat';
 else
-    fprintf('Invalid study\n');
+    fprintf('Invalid choice\n');
     return;
 end
 
@@ -30,7 +30,11 @@ fprintf('4: Std for each data point in the average curve\n');
 sigmamethod = input('Choose methodology (1-4) ');
 fprintf('\n');
 if sigmamethod > 4
-    fprintf('Invalid methodology\n');
+    fprintf('Invalid choice\n');
+    return;
+end
+if isequal(sigmamethod,'')
+    fprintf('Invalid choice\n');
     return;
 end
 
@@ -42,7 +46,11 @@ fprintf('3: Exclude bottom quartile from Mean for -/+ 4 days prior to data windo
 mumethod = input('Choose methodology (1-2) ');
 fprintf('\n');
 if mumethod > 3
-    fprintf('Invalid methodology\n');
+    fprintf('Invalid choice\n');
+    return;
+end
+if isequal(mumethod,'')
+    fprintf('Invalid choice\n');
     return;
 end
 
@@ -53,7 +61,11 @@ fprintf('2: Data window + data to the left\n');
 curveaveragingmethod = input('Choose methodology (1-2) ');
 fprintf('\n');
 if curveaveragingmethod > 2
-    fprintf('Invalid methodology\n');
+    fprintf('Invalid choice\n');
+    return;
+end
+if isequal(curveaveragingmethod,'')
+    fprintf('Invalid choice\n');
     return;
 end
 
@@ -68,6 +80,10 @@ if measuresmask > 3
     fprintf('Invalid choice\n');
     return;
 end
+if isequal(measuresmask,'')
+    fprintf('Invalid choice\n');
+    return;
+end
 
 fprintf('Methodology for EM alignment\n');
 fprintf('----------------------------\n');
@@ -76,7 +92,22 @@ fprintf('2: Use point mass of offset\n');
 emalignmethod = input('Choose methodology (1-2) ');
 fprintf('\n');
 if emalignmethod > 2
-    fprintf('Invalid methodology\n');
+    fprintf('Invalid choice\n');
+    return;
+end
+if isequal(emalignmethod,'')
+    fprintf('Invalid choice\n');
+    return;
+end
+
+fprintf('\n');
+printpredictions = input('Print predictions (1=Yes, 2=No) ? ');
+if printpredictions > 2
+    fprintf('Invalid choice\n');
+    return;
+end
+if isequal(printpredictions,'')
+    fprintf('Invalid choice\n');
     return;
 end
 
@@ -95,6 +126,9 @@ fprintf('Preparing input data\n');
 detaillog = true;
 max_offset = 25; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
 align_wind = 25;
+baseplotname = sprintf('%s_AM%s_sig%d_mu%d_ca%d_ea%d_mm%d_mo%d_dw%d', study, version, sigmamethod, mumethod, curveaveragingmethod, ...
+    emalignmethod, measuresmask, max_offset, align_wind);
+
 
 % remove any interventions where the start is less than the alignment
 % window
@@ -124,16 +158,6 @@ else
     % happens
     idx = ismember(measures.DisplayName, {'Cough'});
 end
-
-% create cube for data window data by intervention (for each measure)
-%amIntrDatacube = NaN(ninterventions, align_wind, nmeasures);
-%for i = 1:ninterventions
-%    scid   = amInterventions.SmartCareID(i);
-%    start = amInterventions.IVScaledDateNum(i);
-%    for m = 1:nmeasures
-%        amIntrDatacube(i, (1:align_wind), m) = amDatacube(scid, (start - align_wind):(start - 1), m);
-%    end
-%end
 
 % create cube for data window data by intervention (for each measure)
 amIntrDatacube = NaN(ninterventions, max_offset + align_wind - 1, nmeasures);
@@ -271,9 +295,12 @@ fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
 % consistent unaligned curve as the pre-profile.
 unaligned_profile = profile_pre;
 
+plotname = sprintf('%s_obj%.4f', baseplotname, qual);
+
 % plot and save aligned curves (pre and post)
-amEMPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, qual, ...
-    measures, 0, max_offset, align_wind, nmeasures, run_type, study, 0, sigmamethod, version)
+amEMPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, ...
+    measures, 0, max_offset, align_wind, nmeasures, run_type, plotname, 0, sigmamethod);
+
 toc
 fprintf('\n');
 
@@ -287,12 +314,14 @@ run_type = 'Best Alignment';
 
 amInterventions.Offset = offsets;
 
+plotname = sprintf('%s_ex%d_obj%.4f', baseplotname, ex_start, qual);
+
 [sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amIntrNormcube, amInterventions, meancurvemean, ...
     meancurvecount, meancurvestd, overall_pdoffset, offsets, measures, max_offset, align_wind, nmeasures, run_type, ...
     study, ex_start, version, curveaveragingmethod);
 
-amEMPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, qual, ...
-    measures, max_points, max_offset, align_wind, nmeasures, run_type, study, ex_start, sigmamethod, version)
+amEMPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, ...
+    measures, max_points, max_offset, align_wind, nmeasures, run_type, plotname, ex_start, sigmamethod);
 
 %return;
 
@@ -323,8 +352,9 @@ fprintf('\n');
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('%s_AM%s_sig%d_mu%d_ca%d_mm%d_mo%d_dw%d_ex%d_obj%d.mat', study, version, sigmamethod, mumethod, ...
-    curveaveragingmethod, measuresmask, max_offset, align_wind, ex_start, round(qual*10000));
+outputfilename = sprintf('%s_ex%d_obj%.4f.mat', baseplotname, ex_start, qual);
+%outputfilename = sprintf('%s_AM%s_sig%d_mu%d_ca%d_mm%d_mo%d_dw%d_ex%d_obj%d.mat', study, version, sigmamethod, mumethod, ...
+%    curveaveragingmethod, measuresmask, max_offset, align_wind, ex_start, round(qual*10000));
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');
 save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube', 'amIntrNormcube', 'amInterventions', ...
@@ -333,17 +363,18 @@ save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube
     'overall_hist', 'overall_hist_all', 'overall_hist_xAL', ...
     'overall_pdoffset', 'overall_pdoffset_all', 'overall_pdoffset_xAL', ...
     'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'sigmamethod', 'mumethod', 'curveaveragingmethod', ...
-    'measuresmask', 'max_offset', 'align_wind', 'ex_start', 'nmeasures', 'ninterventions');
+    'measuresmask', 'emalignmethod', 'printpredictions','max_offset', 'align_wind', 'ex_start', 'nmeasures', 'ninterventions');
 toc
 fprintf('\n');
 
-tic
-fprintf('Plotting prediction results\n');
-for i=1:ninterventions
-%for i = 42:44
-    amEMPlotsAndSavePredictions(amInterventions, amDatacube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
-        offsets, meancurvemean, hstg, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
+if printpredictions == 1
+    tic
+    fprintf('Plotting prediction results\n');
+    for i=1:ninterventions
+        amEMPlotsAndSavePredictions(amInterventions, amDatacube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
+            offsets, meancurvemean, hstg, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
+    end
+    toc
+    fprintf('\n');
 end
-toc
-fprintf('\n');
 

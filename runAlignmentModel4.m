@@ -319,7 +319,7 @@ plotname = sprintf('%s_obj%.4f', baseplotname, qual);
 
 % plot and save aligned curves (pre and post)
 am4PlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, ...
-    measures, 0, max_offset, align_wind, nmeasures, run_type, plotname, 0, sigmamethod)
+    measures, 0, max_offset, align_wind, nmeasures, run_type, plotname, 0, sigmamethod);
 toc
 fprintf('\n');
 
@@ -352,7 +352,7 @@ for j=1:niterations
         % so far
         plotname = sprintf('%s_obj%.4f', baseplotname, temp_qual);
         am4PlotAndSaveAlignedCurves(unaligned_profile, temp_meancurvemean, temp_meancurvecount, temp_meancurvestd, ...
-            temp_offsets, measures, 0, max_offset, align_wind, nmeasures, run_type, plotname, 0, sigmamethod)
+            temp_offsets, measures, 0, max_offset, align_wind, nmeasures, run_type, plotname, 0, sigmamethod);
         fprintf('Best so far is random start %d\n', j);
         offsets = temp_offsets;
         initial_offsets = temp_initial_offsets;
@@ -383,7 +383,7 @@ plotname = sprintf('%s_ex%d_obj%.4f', baseplotname, ex_start, qual);
     study, ex_start, version, curveaveragingmethod, smoothingmethod);
 
 am4PlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, ...
-    measures, max_points, max_offset, align_wind, nmeasures, run_type, plotname, ex_start, sigmamethod)
+    measures, max_points, max_offset, align_wind, nmeasures, run_type, plotname, ex_start, sigmamethod);
 
 % create overall histogram (summed over measures by intervention/offset)
 pdoffset        = zeros(nmeasures, ninterventions, max_offset);
@@ -422,8 +422,6 @@ tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
 outputfilename = sprintf('%s_ex%d_obj%.4f.mat', baseplotname, ex_start, qual);
-%outputfilename = sprintf('%s_AM%s_sig%d_mu%d_ca%d_sm%d_mm%d_mo%d_dw%d_ex%d_obj%d.mat', study, version, sigmamethod, mumethod, curveaveragingmethod, ...
-%    smoothingmethod, measuresmask, max_offset, align_wind, ex_start, round(qual*10000));
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');   
 save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube', 'amIntrNormcube', 'amInterventions', ...
@@ -432,7 +430,7 @@ save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube
     'overall_hist', 'overall_hist_all', 'overall_hist_xAL', ...
     'overall_pdoffset', 'overall_pdoffset_all', 'overall_pdoffset_xAL', ...
     'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'sigmamethod', 'mumethod', 'curveaveragingmethod', 'smoothingmethod', ...
-    'measuresmask', 'max_offset', 'align_wind', 'ex_start', 'nmeasures', 'ninterventions');
+    'measuresmask', 'runmode', 'printpredictions','max_offset', 'align_wind', 'ex_start', 'nmeasures', 'ninterventions');
 toc
 fprintf('\n');
 

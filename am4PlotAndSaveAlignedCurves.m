@@ -8,7 +8,6 @@ subfolder = 'Plots';
 
 plotsacross = 3;
 plotsdown = round((nmeasures + 1) / plotsacross);
-%plottitle = sprintf('%s_AM%s - %s - ErrFcn = %7.4f', study, version, run_type, qual);
 plottitle = sprintf('%s - %s', plotname, run_type);
 
 f = figure;
