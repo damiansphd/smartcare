@@ -407,12 +407,12 @@ for j=1:ninterventions
         pdoffset(m, j, :) = exp(-1 * (hstg(m, j, :) - min(hstg(m, j, :))));
         pdoffset(m, j, :) = pdoffset(m, j, :) / sum(pdoffset(m, j, :));
     end
-    overall_hist(j,:)     = exp(-1 * (overall_hist(j,:) - min(overall_hist(j, :))));
-    overall_hist(j,:)     = overall_hist(j,:) / sum(overall_hist(j,:));
-    overall_hist_all(j,:) = exp(-1 * (overall_hist_all(j,:) - min(overall_hist_all(j, :))));
-    overall_hist_all(j,:) = overall_hist_all(j,:) / sum(overall_hist_all(j,:));
-    overall_hist_xAL(j,:) = exp(-1 * (overall_hist_xAL(j,:) - min(overall_hist_xAL(j, :))));
-    overall_hist_xAL(j,:) = overall_hist_xAL(j,:) / sum(overall_hist_xAL(j,:));
+    overall_pdoffset(j,:)     = exp(-1 * (overall_hist(j,:) - min(overall_hist(j, :))));
+    overall_pdoffset(j,:)     = overall_pdoffset(j,:) / sum(overall_pdoffset(j,:));
+    overall_pdoffset_all(j,:) = exp(-1 * (overall_hist_all(j,:) - min(overall_hist_all(j, :))));
+    overall_pdoffset_all(j,:) = overall_pdoffset_all(j,:) / sum(overall_pdoffset_all(j,:));
+    overall_pdoffset_xAL(j,:) = exp(-1 * (overall_hist_xAL(j,:) - min(overall_hist_xAL(j, :))));
+    overall_pdoffset_xAL(j,:) = overall_pdoffset_xAL(j,:) / sum(overall_pdoffset_xAL(j,:));
 end
 
 toc
@@ -429,8 +429,9 @@ save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube
     'initial_offsets', 'offsets', 'qual', 'unaligned_profile', 'hstg', 'pdoffset', ...
     'overall_hist', 'overall_hist_all', 'overall_hist_xAL', ...
     'overall_pdoffset', 'overall_pdoffset_all', 'overall_pdoffset_xAL', ...
-    'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'sigmamethod', 'mumethod', 'curveaveragingmethod', 'smoothingmethod', ...
-    'measuresmask', 'runmode', 'printpredictions','max_offset', 'align_wind', 'ex_start', 'nmeasures', 'ninterventions');
+    'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'max_offset', 'align_wind', 'ex_start', ...
+    'sigmamethod', 'mumethod', 'curveaveragingmethod', 'smoothingmethod', ...
+    'measuresmask', 'runmode', 'printpredictions', 'nmeasures', 'ninterventions');
 toc
 fprintf('\n');
 

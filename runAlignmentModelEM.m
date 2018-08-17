@@ -69,6 +69,21 @@ if isequal(curveaveragingmethod,'')
     return;
 end
 
+fprintf('Methodology for smoothing method of curve averaging\n');
+fprintf('---------------------------------------------------\n');
+fprintf('1: Raw data\n');
+fprintf('2: Smoothed data (5 days)\n');
+smoothingmethod = input('Choose methodology (1-2) ');
+fprintf('\n');
+if smoothingmethod > 2
+    fprintf('Invalid choice\n');
+    return;
+end
+if isequal(smoothingmethod,'')
+    fprintf('Invalid choice\n');
+    return;
+end
+
 fprintf('Measures to include in alignment calculation\n');
 fprintf('--------------------------------------------\n');
 fprintf('1: All\n');
@@ -87,15 +102,15 @@ end
 
 fprintf('Methodology for EM alignment\n');
 fprintf('----------------------------\n');
-fprintf('1: Use prob distribution\n');
-fprintf('2: Use point mass of offset\n');
-emalignmethod = input('Choose methodology (1-2) ');
+fprintf('4: Use prob distribution\n');
+fprintf('5: Use point mass of offset\n');
+runmode = input('Choose methodology (1-2) ');
 fprintf('\n');
-if emalignmethod > 2
+if runmode < 4 || runmode > 5
     fprintf('Invalid choice\n');
     return;
 end
-if isequal(emalignmethod,'')
+if isequal(runmode,'')
     fprintf('Invalid choice\n');
     return;
 end
@@ -126,8 +141,8 @@ fprintf('Preparing input data\n');
 detaillog = true;
 max_offset = 25; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
 align_wind = 25;
-baseplotname = sprintf('%s_AM%s_sig%d_mu%d_ca%d_ea%d_mm%d_mo%d_dw%d', study, version, sigmamethod, mumethod, curveaveragingmethod, ...
-    emalignmethod, measuresmask, max_offset, align_wind);
+baseplotname = sprintf('%s_AM%s_sig%d_mu%d_ca%d_sm%d_rm%d_mm%d_mo%d_dw%d', study, version, sigmamethod, mumethod, curveaveragingmethod, ...
+    smoothingmethod, runmode, measuresmask, max_offset, align_wind);
 
 
 % remove any interventions where the start is less than the alignment
@@ -279,16 +294,16 @@ toc
 fprintf('\n');
 
 tic
-fprintf('Running alignment with zero offset start\n');
+fprintf('Running alignment with uniform start\n');
 for i=1:size(amInterventions,1)
         amInterventions.Offset(i) = 0;
 end
 best_initial_offsets = amInterventions.Offset;
 
-run_type = 'Zero Offset Start';
+run_type = 'Uniform Start';
 [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, profile_pre, ...
  offsets, hstg, pdoffset, overall_hist, overall_pdoffset, qual] = amEMAlignCurves(amIntrNormcube, amInterventions, measures, ...
- normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, emalignmethod);
+ normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, runmode);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
 
 % save the zero offset pre-profile to unaligned_profile so all plots show a
@@ -362,8 +377,9 @@ save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube
     'offsets', 'qual', 'unaligned_profile', 'hstg', 'pdoffset', ...
     'overall_hist', 'overall_hist_all', 'overall_hist_xAL', ...
     'overall_pdoffset', 'overall_pdoffset_all', 'overall_pdoffset_xAL', ...
-    'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'sigmamethod', 'mumethod', 'curveaveragingmethod', ...
-    'measuresmask', 'emalignmethod', 'printpredictions','max_offset', 'align_wind', 'ex_start', 'nmeasures', 'ninterventions');
+    'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'max_offset', 'align_wind', 'ex_start', ...
+    'sigmamethod', 'mumethod', 'curveaveragingmethod', 'smoothingmethod', ...
+    'measuresmask', 'runmode', 'printpredictions', 'nmeasures', 'ninterventions');
 toc
 fprintf('\n');
 

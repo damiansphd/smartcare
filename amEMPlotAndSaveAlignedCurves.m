@@ -15,7 +15,7 @@ set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOr
 p = uipanel('Parent',f,'BorderType','none'); 
 p.Title = plottitle;
 p.TitlePosition = 'centertop'; 
-p.FontSize = 14;
+p.FontSize = 12;
 p.FontWeight = 'bold';
 
 for m = 1:nmeasures

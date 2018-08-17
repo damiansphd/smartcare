@@ -1,4 +1,4 @@
-function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, profile_pre, offsets, hstg, pdoffset, overall_hstg, overall_pdoffset, qual] = amEMAlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, emalignmethod)
+function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, profile_pre, offsets, hstg, pdoffset, overall_hstg, overall_pdoffset, qual] = amEMAlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, runmode)
 
 % amEMAlignCurves = function to align measurement curves prior to intervention
 
@@ -19,7 +19,7 @@ for i = 1:ninterventions
         pdoffset(m, i, :) = exp(-1 * (hstg(m, i, :) - min(hstg(m, i, :))));
         pdoffset(m, i, :) = pdoffset(m, i, :) / sum(pdoffset(m, i, :));
     end
-    if emalignmethod == 1
+    if runmode == 4
         overall_pdoffset(i,:)     = exp(-1 * (overall_hstg(i,:) - min(overall_hstg(i, :)))); 
         overall_pdoffset(i,:)     = overall_pdoffset(i,:) / sum(overall_pdoffset(i,:));
     else
@@ -67,7 +67,7 @@ while (pddiff > 0.001)
     if ok == 1
         [better_offset, better_dist, hstg, pdoffset, overall_hstg, overall_pdoffset] = amEMBestFit(meancurvemean, meancurvestd, amIntrCube, ...
             measures.Mask, normstd, hstg, pdoffset, overall_hstg, overall_pdoffset, ...
-            pnt, max_offset, align_wind, nmeasures, sigmamethod, emalignmethod);
+            pnt, max_offset, align_wind, nmeasures, sigmamethod, runmode);
     else
         better_offset = amInterventions.Offset(pnt);
     end
