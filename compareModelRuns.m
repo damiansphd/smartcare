@@ -173,22 +173,97 @@ for i = 0:max_offset-1
                 start = amInterventions1.IVScaledDateNum(idx(a));
                 name = sprintf('%s_AM%s Exacerbation %d - ID %d Date %s Offsets %2d vs %2d', study1, version1, idx(a), scid, ...
                     datestr(amInterventions1.IVStartDate(idx(a)),29), offset_array(idx(a),1), offset_array(idx(a),2));
+                
                 [f, p] = createFigureAndPanel(name, 'portrait', 'a4');
+                
                 for m = 1:nmeasures
                     if all(isnan(amIntrDatacube(idx(a), :, m)))
                         continue;
                     end
+                    % initialise plot areas
                     xl = [0 0];
                     yl = [min((meancurvemean2(1:max_offset2 + align_wind2 - 1 - offsets2(idx(a)), m) + normmean1(idx(a), m)) * .99) ...
                         max((meancurvemean2(1:max_offset2 + align_wind2 - 1 - offsets2(idx(a)), m) + normmean1(idx(a), m)) * 1.01)];
+                    
+                    % create subplot and plot required data arrays
                     ax = subplot(plotsdown, plotsacross, mpos(m,:), 'Parent',p);
-                    [xl, yl] = plotMeasurementDataAndMean(ax, days, amIntrDatacube1(idx(a), :, m), xl, yl, normmean1(idx(a), m), measures1(m,:));
-                    [xl, yl] = plotLatentCurveAndExStart(ax, [(-1 * (max_offset1 + align_wind1 - 1)) + offsets1(idx(a)): -1], ...
-                        meancurvemean1(1:max_offset1 + align_wind1 - 1 - offsets1(idx(a)), m), xl, yl, normmean1(idx(a), m), ex_start1, offsets1(idx(a)), 'red');
-                    [xl, yl] = plotLatentCurveAndExStart(ax, [(-1 * (max_offset2 + align_wind2 - 1)) + offsets2(idx(a)): -1], ...
-                        meancurvemean2(1:max_offset2 + align_wind2 - 1 - offsets2(idx(a)), m), xl, yl, normmean2(idx(a), m), ex_start2, offsets2(idx(a)), 'magenta');
-                    [xl, yl] = plotTreatmentStart(ax, 0, xl, yl);
+                    
+                    [xl, yl] = plotMeasurementData(ax, days, amIntrDatacube1(idx(a), :, m), xl, yl, measures1(m,:), [0, 0.65, 1], '-', 1.0, 'o', 2.0, 'blue', 'green');
+                    [xl, yl] = plotHorizontalLine(ax, normmean1(idx(a), m), xl, yl, 'blue', '--', 0.5); % plot mean
+                    
+                    [xl, yl] = plotLatentCurve(ax, max_offset1, align_wind1, offsets1(idx(a)), (meancurvemean1(:, m) + normmean1(idx(a), m)), xl, yl, 'red', ':', 1.0);
+                    [xl, yl] = plotLatentCurve(ax, max_offset1, align_wind1, offsets1(idx(a)), smooth(meancurvemean1(:, m) + normmean1(idx(a), m),5), xl, yl, 'red', '-', 1.0);
+                    
+                    [xl, yl] = plotLatentCurve(ax, max_offset2, align_wind2, offsets2(idx(a)), (meancurvemean2(:, m) + normmean2(idx(a), m)), xl, yl, 'magenta', ':', 1.0);
+                    [xl, yl] = plotLatentCurve(ax, max_offset2, align_wind2, offsets2(idx(a)), smooth(meancurvemean2(:, m) + normmean2(idx(a), m),5), xl, yl, 'magenta', '-', 1.0);
+                    
+                    [xl, yl] = plotExStart(ax, ex_start1, offsets1(idx(a)), xl, yl,  'red', '-', 0.5);
+                    [xl, yl] = plotExStart(ax, ex_start2, offsets2(idx(a)), xl, yl, 'magenta', '-', 0.5);
+                    
+                    [xl, yl] = plotVerticalLine(ax, 0, xl, yl, 'cyan', '-', 0.5); % plot treatment start
+                    
+                    xl2 = [0 max_offset-1];
+                    yl2 = [0 0.25];
+                    
+                    ax2 = subplot(plotsdown, plotsacross, hpos(m,:),'Parent',p); 
+                    
+                    [xl2, yl2] = plotProbDistribution(ax2, max_offset1, pdoffset1(m, idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'blue', 'blue');
+                    [xl2, yl2] = plotProbDistribution(ax2, max_offset2, pdoffset2(m, idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'green', 'green'); 
+                    
+                    [xl2, yl2] = plotVerticalLine(ax2, offsets1(idx(a)), xl2, yl2, 'blue', '-', 0.5); % plot predicted offset
+                    [xl2, yl2] = plotVerticalLine(ax2, offsets2(idx(a)), xl2, yl2, 'green', '-', 0.5); % plot predicted offset
+                    
+                    set(gca,'fontsize',6);
+                    if measures1.Mask(m) == 1
+                        title(sprintf('%s %.1f %.1f', measures1.DisplayName{m}, hstg1(m, idx(a), offsets1(idx(a)) + 1), hstg2(m, idx(a), offsets2(idx(a)) + 1)), 'BackgroundColor', 'g');
+                    else
+                        title(sprintf('%s %.1f %.1f', measures1.DisplayName{m}, hstg1(m, idx(a), offsets1(idx(a)) + 1), hstg2(m, idx(a), offsets2(idx(a)) + 1)));
+                    end
+                    
                 end
+                
+                xl2 = [0 max_offset-1];
+                yl2 = [0 0.25];
+                
+                ax2 = subplot(plotsdown, plotsacross, hpos(nmeasures + 1,:),'Parent',p); 
+                
+                [xl2, yl2] = plotProbDistribution(ax2, max_offset1, overall_pdoffset1(idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'blue', 'blue');
+                [xl2, yl2] = plotProbDistribution(ax2, max_offset2, overall_pdoffset2(idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'green', 'green'); 
+                    
+                [xl2, yl2] = plotVerticalLine(ax2, offsets1(idx(a)), xl2, yl2, 'blue', '-', 0.5); % plot predicted offset
+                [xl2, yl2] = plotVerticalLine(ax2, offsets2(idx(a)), xl2, yl2, 'green', '-', 0.5); % plot predicted offset
+                
+                set(gca,'fontsize',6);
+                title('Overall', 'BackgroundColor', 'g');
+                
+                xl2 = [0 max_offset-1];
+                yl2 = [0 0.25];
+                
+                ax2 = subplot(plotsdown, plotsacross, hpos(nmeasures + 2,:),'Parent',p); 
+                
+                [xl2, yl2] = plotProbDistribution(ax2, max_offset1, overall_pdoffset_all1(idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'blue', 'blue');
+                [xl2, yl2] = plotProbDistribution(ax2, max_offset2, overall_pdoffset_all2(idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'green', 'green'); 
+                    
+                [xl2, yl2] = plotVerticalLine(ax2, offsets1(idx(a)), xl2, yl2, 'blue', '-', 0.5); % plot predicted offset
+                [xl2, yl2] = plotVerticalLine(ax2, offsets2(idx(a)), xl2, yl2, 'green', '-', 0.5); % plot predicted offset
+                
+                set(gca,'fontsize',6);
+                title('Overall - All');
+                
+                xl2 = [0 max_offset-1];
+                yl2 = [0 0.25];
+                
+                ax2 = subplot(plotsdown, plotsacross, hpos(nmeasures + 3,:),'Parent',p); 
+                
+                [xl2, yl2] = plotProbDistribution(ax2, max_offset1, overall_pdoffset_xAL1(idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'blue', 'blue');
+                [xl2, yl2] = plotProbDistribution(ax2, max_offset2, overall_pdoffset_xAL2(idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'green', 'green'); 
+                    
+                [xl2, yl2] = plotVerticalLine(ax2, offsets1(idx(a)), xl2, yl2, 'blue', '-', 0.5); % plot predicted offset
+                [xl2, yl2] = plotVerticalLine(ax2, offsets2(idx(a)), xl2, yl2, 'green', '-', 0.5); % plot predicted offset
+                
+                set(gca,'fontsize',6);
+                title('Overall - xAL');
+                
                 savePlot(f, name);
                 close(f);
             end
