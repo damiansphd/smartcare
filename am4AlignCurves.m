@@ -1,13 +1,17 @@
-function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, profile_pre, offsets, hstg, qual] = am4AlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod)
+function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, offsets, animatedoffsets, hstg, qual] = am4AlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod)
 
 % am4AlignCurves = function to align measurement curves prior to intervention
+
+aniterations      = 2000;
 
 meancurvedata     = zeros(max_offset + align_wind - 1, nmeasures, ninterventions);
 meancurvesum      = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvecount    = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvemean     = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvestd      = zeros(max_offset + align_wind - 1, nmeasures);
+animatedmeancurvemean = zeros(max_offset + align_wind - 1, nmeasures, aniterations);
 offsets           = zeros(ninterventions, 1);
+animatedoffsets   = zeros(ninterventions, aniterations);
 hstg              = zeros(nmeasures, ninterventions, max_offset);
 
 qual = 0;
@@ -27,6 +31,8 @@ pnt = 1;
 cnt = 0;
 iter = 0;
 ok  = 0;
+miniiter = 0;
+
 while 1
     [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4RemoveFromMean(meancurvedata, meancurvesum, ...
         meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(pnt), pnt, ...
@@ -35,7 +41,8 @@ while 1
     ok = 1;
     for i=1:max_offset + align_wind - 1
         for m=1:nmeasures
-            if meancurvecount(i,m) < 2
+            if (measures.Mask(m) == 1) && (meancurvecount(i,m) < 2)
+            %if meancurvecount(i,m) < 2
                 %if detaillog
                 %    fprintf('Intervention %d, Measure %s, dayprior %d <3 datapoints\n', pnt, measures.Name{m}, i);
                 %end
@@ -59,6 +66,13 @@ while 1
         end
         amInterventions.Offset(pnt) = better_offset;
         cnt = cnt+1;
+        miniiter = miniiter+1;
+        if miniiter < aniterations
+            animatedmeancurvemean(:, :, miniiter) = meancurvemean;
+            animatedoffsets(:,miniiter) = amInterventions.Offset;
+        else
+            fprintf('Exceeded storage for animated iterations\n');
+        end
     end
     [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvedata, meancurvesum, ...
         meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(pnt), pnt, ...

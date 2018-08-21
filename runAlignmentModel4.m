@@ -42,7 +42,7 @@ fprintf('Methodology for additive normalisation (mu)\n');
 fprintf('-------------------------------------------\n');
 fprintf('1: Mean for 8 days prior to data window\n');
 fprintf('2: Upper Quartile Mean for 20 days prior to data window\n');
-fprintf('3: Exclude bottom quartile from Mean for -/+ 4 days prior to data window\n');
+fprintf('3: Exclude bottom quartile from Mean for 10 days prior to data window\n');
 mumethod = input('Choose methodology (1-2) ');
 fprintf('\n');
 if mumethod > 3
@@ -306,8 +306,8 @@ end
 initial_offsets = amInterventions.Offset;
 
 run_type = 'Zero Offset Start';
-[meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, profile_pre, ...
-    offsets, hstg, qual] = am4AlignCurves(amIntrNormcube, amInterventions, measures, normstd, ...
+[meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, ...
+    offsets, animatedoffsets, hstg, qual] = am4AlignCurves(amIntrNormcube, amInterventions, measures, normstd, ...
     max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
 
@@ -341,8 +341,8 @@ for j=1:niterations
     end
     temp_initial_offsets = amInterventions.Offset;
     run_type = sprintf('Random Offset Start %d', j);
-    [temp_meancurvedata, temp_meancurvesum, temp_meancurvecount, temp_meancurvemean, temp_meancurvestd, temp_profile_pre, ...
-        temp_offsets, temp_hstg, temp_qual] = am4AlignCurves(amIntrNormcube, amInterventions, measures, normstd, ...
+    [temp_meancurvedata, temp_meancurvesum, temp_meancurvecount, temp_meancurvemean, temp_meancurvestd, temp_animatedmeancurvemean, temp_profile_pre, ...
+        temp_offsets, temp_animatedoffsets, temp_hstg, temp_qual] = am4AlignCurves(amIntrNormcube, amInterventions, measures, normstd, ...
         max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod);
 
     fprintf('%s - ErrFcn = %7.4f\n', run_type, temp_qual);
@@ -364,6 +364,8 @@ for j=1:niterations
         meancurvecount = temp_meancurvecount;
         meancurvemean = temp_meancurvemean;
         meancurvestd = temp_meancurvestd;
+        animatedmeancurvemean = temp_animatedmeancurvemean;
+        animatedoffsets = temp_animatedoffsets;
     end
     toc
 end
@@ -398,7 +400,7 @@ fitmeasure = zeros(nmeasures, ninterventions);
 for j = 1:ninterventions
     overall_hist(j, :)     = reshape(sum(hstg(find(measures.Mask),j,:),1), [1, max_offset]);
     overall_hist_all(j, :) = reshape(sum(hstg(:,j,:),1), [1, max_offset]);
-    overall_hist_xAL(j, :) = reshape(sum(hstg([2,3,4,5,6,7,8],j,:),1), [1, max_offset]);
+    overall_hist_xAL(j, :) = reshape(sum(hstg(~ismember(measures.DisplayName, {'Activity', 'LungFunction'}),j,:),1), [1, max_offset]);
 end
 
 % convert back from log space
@@ -425,8 +427,8 @@ outputfilename = sprintf('%s_ex%d_obj%.4f.mat', baseplotname, ex_start, qual);
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');   
 save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube', 'amIntrNormcube', 'amInterventions', ...
-    'meancurvedata', 'meancurvesum', 'meancurvecount', 'meancurvemean', 'meancurvestd', ...
-    'initial_offsets', 'offsets', 'qual', 'unaligned_profile', 'hstg', 'pdoffset', ...
+    'meancurvedata', 'meancurvesum', 'meancurvecount', 'meancurvemean', 'meancurvestd', 'animatedmeancurvemean', ...
+    'initial_offsets', 'offsets', 'animatedoffsets', 'qual', 'unaligned_profile', 'hstg', 'pdoffset', ...
     'overall_hist', 'overall_hist_all', 'overall_hist_xAL', ...
     'overall_pdoffset', 'overall_pdoffset_all', 'overall_pdoffset_xAL', ...
     'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'max_offset', 'align_wind', 'ex_start', ...
@@ -439,8 +441,8 @@ if printpredictions == 1
     tic
     fprintf('Plotting prediction results\n');
     for i=1:ninterventions
-        am4PlotsAndSavePredictions(amInterventions, amDatacube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
-            offsets, meancurvemean, hstg, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
+        am4PlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
+            hstg, overall_hist, overall_hist_all, overall_hist_xAL, offsets, meancurvemean, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
     end
     toc
     fprintf('\n');

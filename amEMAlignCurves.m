@@ -1,17 +1,24 @@
-function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, profile_pre, offsets, hstg, pdoffset, overall_hstg, overall_pdoffset, qual] = amEMAlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, runmode)
+function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, ...
+    offsets, animatedoffsets, hstg, pdoffset, overall_hstg, overall_pdoffset, animated_overall_pdoffset, qual] = ...
+    amEMAlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, runmode)
 
-% amEMAlignCurves = function to align measurement curves prior to intervention
+% amEMAlignCurves - function to align measurement curves prior to intervention
+
+aniterations      = 2000;
 
 meancurvedata     = zeros(max_offset + align_wind - 1, nmeasures, ninterventions);
 meancurvesum      = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvecount    = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvemean     = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvestd      = zeros(max_offset + align_wind - 1, nmeasures);
+animatedmeancurvemean = zeros(max_offset + align_wind - 1, nmeasures, aniterations);
 offsets           = zeros(ninterventions, 1);
+animatedoffsets   = zeros(ninterventions, aniterations);
 hstg              = zeros(nmeasures, ninterventions, max_offset);
 pdoffset          = zeros(nmeasures, ninterventions, max_offset);
 overall_hstg      = zeros(ninterventions, max_offset);
 overall_pdoffset  = zeros(ninterventions, max_offset);
+animated_overall_pdoffset  = zeros(ninterventions, max_offset, aniterations);
 
 % populate pdoffset & overall_pdoffset with uniform prior distribution
 for i = 1:ninterventions
@@ -27,6 +34,8 @@ for i = 1:ninterventions
         overall_pdoffset(i, 1) = 1;
     end
 end
+
+animated_overall_pdoffset(:, :, 1) = overall_pdoffset;
 
 % calculate initial mean curve over all interventions & prior prob
 % distribution for offsets
@@ -46,24 +55,28 @@ iter = 0;
 ok  = 0;
 pddiff = 100;
 prior_overall_pdoffset = overall_pdoffset;
+miniiter = 0;
 
-while (pddiff > 0.001)
+while (pddiff > 0.01)
     [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMRemoveFromMean(meancurvedata, meancurvesum, ...
         meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, pnt, ...
         max_offset, align_wind, nmeasures);
     % check safety
     ok = 1;
-    for i=1:max_offset + align_wind - 1
-        for m=1:nmeasures
-            if meancurvecount(i,m) < 2
-                %if detaillog
-                %    fprintf('Intervention %d, Measure %s, dayprior %d <3 datapoints\n', pnt, measures.Name{m}, i);
-                %end
-                ok = 0;
+    %if runmode == 5
+        for i=1:max_offset + align_wind - 1
+            for m=1:nmeasures
+                if (measures.Mask(m) == 1) && (meancurvecount(i,m) < 2)
+                %if (meancurvecount(i,m) < 2)
+                    %if detaillog
+                    %    fprintf('Intervention %d, Measure %s, dayprior %d <3 datapoints\n', pnt, measures.Name{m}, i);
+                    %end
+                    ok = 0;
+                end
             end
         end
-    end
-    
+    %end
+        
     if ok == 1
         [better_offset, better_dist, hstg, pdoffset, overall_hstg, overall_pdoffset] = amEMBestFit(meancurvemean, meancurvestd, amIntrCube, ...
             measures.Mask, normstd, hstg, pdoffset, overall_hstg, overall_pdoffset, ...
@@ -78,6 +91,14 @@ while (pddiff > 0.001)
         end
         amInterventions.Offset(pnt) = better_offset;
         cnt = cnt+1;
+        miniiter = miniiter+1;
+        if miniiter < 2000
+            animatedmeancurvemean(:, :, miniiter) = meancurvemean;
+            animatedoffsets(:,miniiter) = amInterventions.Offset;
+            animated_overall_pdoffset(:, :, miniiter+1) = overall_pdoffset;
+        else
+            fprintf('Exceeded storage for animated iterations\n');
+        end
     end
     [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMAddToMean(meancurvedata, meancurvesum, ...
         meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, pnt, ...
@@ -87,6 +108,7 @@ while (pddiff > 0.001)
     if pnt > ninterventions
         iter = iter + 1;
         pnt = pnt - ninterventions;
+        %animatedmeancurvemean(:, :, iter) = meancurvemean;
         pddiff = calcDiffOverallPD(overall_pdoffset, prior_overall_pdoffset);
         % compute the overall objective function each time we've iterated
         % through the full set of interventions

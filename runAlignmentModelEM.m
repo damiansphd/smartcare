@@ -42,7 +42,7 @@ fprintf('Methodology for additive normalisation (mu)\n');
 fprintf('-------------------------------------------\n');
 fprintf('1: Mean for 8 days prior to data window\n');
 fprintf('2: Upper Quartile Mean for 20 days prior to data window\n');
-fprintf('3: Exclude bottom quartile from Mean for -/+ 4 days prior to data window\n');
+fprintf('3: Exclude bottom quartile from Mean for 10 days prior to data window\n');
 mumethod = input('Choose methodology (1-2) ');
 fprintf('\n');
 if mumethod > 3
@@ -165,9 +165,8 @@ elseif measuresmask == 2
     idx = ismember(measures.DisplayName, {'Cough', 'LungFunction', 'Wellness'});
     measures.Mask(idx) = 1;
 elseif measuresmask == 3
-    measures.Mask(:) = 1;
-    idx = ismember(measures.DisplayName, {'Activity', 'LungFunction'});
-    measures.Mask(idx) = 0;
+    idx = ~ismember(measures.DisplayName, {'Activity', 'LungFunction'});
+    measures.Mask(idx) = 1;
 else
     % shouldn't ever get here - but default to just cough if it ever
     % happens
@@ -301,8 +300,8 @@ end
 initial_offsets = amInterventions.Offset;
 
 run_type = 'Uniform Start';
-[meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, profile_pre, ...
- offsets, hstg, pdoffset, overall_hist, overall_pdoffset, qual] = amEMAlignCurves(amIntrNormcube, amInterventions, measures, ...
+[meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, ...
+ offsets, animatedoffsets, hstg, pdoffset, overall_hist, overall_pdoffset, animated_overall_pdoffset, qual] = amEMAlignCurves(amIntrNormcube, amInterventions, measures, ...
  normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, runmode);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
 
@@ -349,7 +348,7 @@ fitmeasure = zeros(nmeasures, ninterventions);
 
 for j = 1:ninterventions
     overall_hist_all(j, :) = reshape(sum(hstg(:,j,:),1), [1, max_offset]);
-    overall_hist_xAL(j, :) = reshape(sum(hstg([2,3,4,5,6,7,8],j,:),1), [1, max_offset]);
+    overall_hist_xAL(j, :) = reshape(sum(hstg(~ismember(measures.DisplayName, {'Activity', 'LungFunction'}),j,:),1), [1, max_offset]);
 end
 
 % convert back from log space
@@ -373,10 +372,10 @@ outputfilename = sprintf('%s_ex%d_obj%.4f.mat', baseplotname, ex_start, qual);
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');
 save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube', 'amIntrNormcube', 'amInterventions', ...
-    'meancurvedata', 'meancurvesum', 'meancurvecount', 'meancurvemean', 'meancurvestd', ...
-    'initial_offsets', 'offsets', 'qual', 'unaligned_profile', 'hstg', 'pdoffset', ...
+    'meancurvedata', 'meancurvesum', 'meancurvecount', 'meancurvemean', 'meancurvestd', 'animatedmeancurvemean', ...
+    'initial_offsets', 'offsets', 'animatedoffsets', 'qual', 'unaligned_profile', 'hstg', 'pdoffset', ...
     'overall_hist', 'overall_hist_all', 'overall_hist_xAL', ...
-    'overall_pdoffset', 'overall_pdoffset_all', 'overall_pdoffset_xAL', ...
+    'overall_pdoffset', 'overall_pdoffset_all', 'overall_pdoffset_xAL', 'animated_overall_pdoffset', ...
     'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'max_offset', 'align_wind', 'ex_start', ...
     'sigmamethod', 'mumethod', 'curveaveragingmethod', 'smoothingmethod', ...
     'measuresmask', 'runmode', 'printpredictions', 'nmeasures', 'ninterventions');
@@ -387,8 +386,8 @@ if printpredictions == 1
     tic
     fprintf('Plotting prediction results\n');
     for i=1:ninterventions
-        amEMPlotsAndSavePredictions(amInterventions, amDatacube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
-            offsets, meancurvemean, hstg, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
+        amEMPlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
+            hstg, overall_hist, overall_hist_all, overall_hist_xAL, offsets, meancurvemean, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
     end
     toc
     fprintf('\n');

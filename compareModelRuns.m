@@ -6,6 +6,18 @@ models = {  'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4609.9914.mat'
             'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-27_obj4557.8883.mat';
             'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-26_obj4609.9914.mat';
             'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-27_obj4587.4418.mat';
+            
+            'TM_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-25_obj1824.1270.mat';
+            'TM_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-26_obj1767.7903.mat';
+            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-25_obj1824.1270.mat';
+            'TM_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-26_obj1800.7496.mat';
+            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm1_mo25_dw25_ex-25_obj4936.7227.mat';
+            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm3_mo25_dw25_ex-26_obj3100.1715.mat';
+            
+            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4595.2626.mat';
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-26_obj4595.2626.mat';
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-27_obj4536.9297.mat';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-27_obj4602.0068.mat';
          };
      
 % other models to potentially add
@@ -170,8 +182,7 @@ for i = 0:max_offset-1
             for a = 1:size(idx,1)
                 fprintf('%2d: Offset %2d vs %2d\n', idx(a), offset_array(idx(a),1), offset_array(idx(a),2));
                 scid = amInterventions1.SmartCareID(idx(a));
-                start = amInterventions1.IVScaledDateNum(idx(a));
-                name = sprintf('%s_AM%s Exacerbation %d - ID %d Date %s Offsets %2d vs %2d', study1, version1, idx(a), scid, ...
+                name = sprintf('%s_AM Prediction Comparison m%d vs m%d - Ex %d (ID %d Date %s) Offset %2d vs %2d', study1, modelidx1, modelidx2, idx(a), scid, ...
                     datestr(amInterventions1.IVStartDate(idx(a)),29), offset_array(idx(a),1), offset_array(idx(a),2));
                 
                 [f, p] = createFigureAndPanel(name, 'portrait', 'a4');
@@ -207,8 +218,8 @@ for i = 0:max_offset-1
                     
                     ax2 = subplot(plotsdown, plotsacross, hpos(m,:),'Parent',p); 
                     
-                    [xl2, yl2] = plotProbDistribution(ax2, max_offset1, pdoffset1(m, idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'blue', 'blue');
-                    [xl2, yl2] = plotProbDistribution(ax2, max_offset2, pdoffset2(m, idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'green', 'green'); 
+                    [xl2, yl2] = plotProbDistribution(ax2, max_offset1, pdoffset1(m, idx(a),:), xl2, yl2, 'o', 0.5, 2.0, 'blue', 'blue');
+                    [xl2, yl2] = plotProbDistribution(ax2, max_offset2, pdoffset2(m, idx(a),:), xl2, yl2, 'o', 0.5, 2.0, 'green', 'green'); 
                     
                     [xl2, yl2] = plotVerticalLine(ax2, offsets1(idx(a)), xl2, yl2, 'blue', '-', 0.5); % plot predicted offset
                     [xl2, yl2] = plotVerticalLine(ax2, offsets2(idx(a)), xl2, yl2, 'green', '-', 0.5); % plot predicted offset
@@ -227,42 +238,45 @@ for i = 0:max_offset-1
                 
                 ax2 = subplot(plotsdown, plotsacross, hpos(nmeasures + 1,:),'Parent',p); 
                 
-                [xl2, yl2] = plotProbDistribution(ax2, max_offset1, overall_pdoffset1(idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'blue', 'blue');
-                [xl2, yl2] = plotProbDistribution(ax2, max_offset2, overall_pdoffset2(idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'green', 'green'); 
+                [xl2, yl2] = plotProbDistribution(ax2, max_offset1, overall_pdoffset1(idx(a),:), xl2, yl2, 'o', 0.5, 2.0, 'blue', 'blue');
+                [xl2, yl2] = plotProbDistribution(ax2, max_offset2, overall_pdoffset2(idx(a),:), xl2, yl2, 'o', 0.5, 2.0, 'green', 'green'); 
                     
                 [xl2, yl2] = plotVerticalLine(ax2, offsets1(idx(a)), xl2, yl2, 'blue', '-', 0.5); % plot predicted offset
                 [xl2, yl2] = plotVerticalLine(ax2, offsets2(idx(a)), xl2, yl2, 'green', '-', 0.5); % plot predicted offset
                 
                 set(gca,'fontsize',6);
-                title('Overall', 'BackgroundColor', 'g');
+                %title('Overall', 'BackgroundColor', 'g');
+                title(sprintf('Overall %.1f %.1f', overall_hist1(idx(a), offsets1(idx(a)) + 1), overall_hist2(idx(a), offsets2(idx(a)) + 1)), 'BackgroundColor', 'g');
                 
                 xl2 = [0 max_offset-1];
                 yl2 = [0 0.25];
                 
                 ax2 = subplot(plotsdown, plotsacross, hpos(nmeasures + 2,:),'Parent',p); 
                 
-                [xl2, yl2] = plotProbDistribution(ax2, max_offset1, overall_pdoffset_all1(idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'blue', 'blue');
-                [xl2, yl2] = plotProbDistribution(ax2, max_offset2, overall_pdoffset_all2(idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'green', 'green'); 
+                [xl2, yl2] = plotProbDistribution(ax2, max_offset1, overall_pdoffset_all1(idx(a),:), xl2, yl2, 'o', 0.5, 2.0, 'blue', 'blue');
+                [xl2, yl2] = plotProbDistribution(ax2, max_offset2, overall_pdoffset_all2(idx(a),:), xl2, yl2, 'o', 0.5, 2.0, 'green', 'green'); 
                     
                 [xl2, yl2] = plotVerticalLine(ax2, offsets1(idx(a)), xl2, yl2, 'blue', '-', 0.5); % plot predicted offset
                 [xl2, yl2] = plotVerticalLine(ax2, offsets2(idx(a)), xl2, yl2, 'green', '-', 0.5); % plot predicted offset
                 
                 set(gca,'fontsize',6);
-                title('Overall - All');
+                %title('Overall - All');
+                title(sprintf('Overall - All %.1f %.1f', overall_hist_all1(idx(a), offsets1(idx(a)) + 1), overall_hist_all2(idx(a), offsets2(idx(a)) + 1)));
                 
                 xl2 = [0 max_offset-1];
                 yl2 = [0 0.25];
                 
                 ax2 = subplot(plotsdown, plotsacross, hpos(nmeasures + 3,:),'Parent',p); 
                 
-                [xl2, yl2] = plotProbDistribution(ax2, max_offset1, overall_pdoffset_xAL1(idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'blue', 'blue');
-                [xl2, yl2] = plotProbDistribution(ax2, max_offset2, overall_pdoffset_xAL2(idx(a),:), xl2, yl2, 'o', 0.5, 1.0, 'green', 'green'); 
+                [xl2, yl2] = plotProbDistribution(ax2, max_offset1, overall_pdoffset_xAL1(idx(a),:), xl2, yl2, 'o', 0.5, 2.0, 'blue', 'blue');
+                [xl2, yl2] = plotProbDistribution(ax2, max_offset2, overall_pdoffset_xAL2(idx(a),:), xl2, yl2, 'o', 0.5, 2.0, 'green', 'green'); 
                     
                 [xl2, yl2] = plotVerticalLine(ax2, offsets1(idx(a)), xl2, yl2, 'blue', '-', 0.5); % plot predicted offset
                 [xl2, yl2] = plotVerticalLine(ax2, offsets2(idx(a)), xl2, yl2, 'green', '-', 0.5); % plot predicted offset
                 
                 set(gca,'fontsize',6);
-                title('Overall - xAL');
+                %title('Overall - xAL');
+                title(sprintf('Overall - xAL %.1f %.1f', overall_hist_xAL1(idx(a), offsets1(idx(a)) + 1), overall_hist_xAL2(idx(a), offsets2(idx(a)) + 1)));
                 
                 savePlot(f, name);
                 close(f);
