@@ -19,9 +19,9 @@ ylim(yl);
 
 set(gca,'fontsize',6);
 if measure.Mask == 1
-    title(measure.DisplayName, 'FontSize', 8, 'BackgroundColor', 'green');
+    title(measure.DisplayName, 'FontSize', 6, 'BackgroundColor', 'green');
 else
-    title(measure.DisplayName,'FontSize', 8);
+    title(measure.DisplayName,'FontSize', 6);
 end
 xlabel('Days Prior', 'FontSize', 6);
 ylabel('Measure', 'FontSize', 6);

@@ -66,6 +66,7 @@ subfolder = 'MatlabSavedVariables';
 fprintf('Loading output from model run\n');
 load(fullfile(basedir, subfolder, models{modelidx1}));
 
+subfolder = 'AnimatedPlots';
 if runfunction == 1
     tic
     fprintf('Plotting prediction results\n');
@@ -78,19 +79,22 @@ if runfunction == 1
 elseif runfunction == 2
     tic
     fprintf('Running concurrent alignment animation\n');
-    [f, p, niterations] = animatedAlignmentConcurrent(animatedmeancurvemean, animatedoffsets, unaligned_profile, measures, max_offset, align_wind, nmeasures, ninterventions);
+    moviefilename = sprintf('%s-ConcurrentAlignment', models{modelidx1});
+    [f, p, niterations] = animatedAlignmentConcurrent(animatedmeancurvemean, animatedoffsets, unaligned_profile, measures, max_offset, align_wind, nmeasures, ninterventions, fullfile(basedir, subfolder, moviefilename));
     toc
     fprintf('\n');
 elseif runfunction == 3
     tic
     fprintf('Running sequential alignment animation\n');
-    [f, p, niterations] = animatedAlignmentSequential(animatedmeancurvemean, unaligned_profile, measures, max_offset, align_wind, nmeasures);
+    moviefilename = sprintf('%s-SequentialAlignment', models{modelidx1});
+    [f, p, niterations] = animatedAlignmentSequential(animatedmeancurvemean, unaligned_profile, measures, max_offset, align_wind, nmeasures, fullfile(basedir, subfolder, moviefilename));
     toc
     fprintf('\n');
 else
     tic
     fprintf('Running concurrent prod distribution animation\n');
-    [f, p, niterations] = animatedProbDistConcurrent(animated_overall_pdoffset, max_offset, ninterventions);
+    moviefilename = sprintf('%s-ProbDistribution', models{modelidx1});
+    [f, p, niterations] = animatedProbDistConcurrent(animated_overall_pdoffset, max_offset, ninterventions, fullfile(basedir, subfolder, moviefilename));
     toc
     fprintf('\n');
     

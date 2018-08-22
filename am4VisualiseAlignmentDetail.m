@@ -35,7 +35,7 @@ for m = 1:nmeasures
         start = amInterventions.IVScaledDateNum(i);
         offset = offsets(i);
 
-        fprintf('Intervention %2d, patient %3d, start %3d, best_offset %2d\n', i, scid, start, offset);
+        %fprintf('Intervention %2d, patient %3d, start %3d, best_offset %2d\n', i, scid, start, offset);
     
         rowtoadd.Intervention = i;
         rowtoadd.Count = 2;

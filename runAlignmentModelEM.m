@@ -86,7 +86,8 @@ end
 
 fprintf('Measures to include in alignment calculation\n');
 fprintf('--------------------------------------------\n');
-fprintf('1: All\n');
+%fprintf('1: All\n');
+fprintf('1: All exceot Activity and O2 Saturation\n');
 fprintf('2: Cough, Lung Function, Wellness\n');
 fprintf('3: All except Activity and Lung Function\n');
 measuresmask = input('Choose measures (1-3) ');
@@ -160,7 +161,9 @@ measures.Index = [1:nmeasures]';
 
 % set the measures mask depending on option chosen
 if measuresmask == 1
-    measures.Mask(:) = 1;
+    %measures.Mask(:) = 1;
+    idx = ~ismember(measures.DisplayName, {'Activity', 'O2Saturation'});
+    measures.Mask(idx) = 1;
 elseif measuresmask == 2
     idx = ismember(measures.DisplayName, {'Cough', 'LungFunction', 'Wellness'});
     measures.Mask(idx) = 1;

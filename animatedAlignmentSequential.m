@@ -1,4 +1,7 @@
-function [f, p, niterations] = animatedAlignmentSequential(animatedmeancurvemean, profile_pre, measures, max_offset, align_wind, nmeasures)
+function [f, p, niterations] = animatedAlignmentSequential(animatedmeancurvemean, profile_pre, measures, max_offset, align_wind, nmeasures, moviefilename)
+
+v = VideoWriter(moviefilename, 'MPEG-4');
+open(v);
 
 plotsacross = 3;
 plotsdown = 3;
@@ -29,6 +32,10 @@ for m = 1:nmeasures
 
     an1 = animatedline(days, profile_pre(:,m), 'Color', 'blue', 'LineStyle', ':', 'Linewidth', 0.5);
     an2 = animatedline(days, smooth(profile_pre(:,m),5), 'Color', 'blue', 'LineStyle', '-', 'Linewidth', 0.5);
+    
+    frame = getframe(f);
+    writeVideo(v,frame);
+
     pause(0.5);
 
     for i = 1:niterations
@@ -44,9 +51,16 @@ for m = 1:nmeasures
         addpoints(an2, days, smooth(animatedmeancurvemean(:, m, i),5));
         drawnow nocallbacks;
         %pause(0.01);
+        
+        frame = getframe(f);
+        writeVideo(v,frame);
+        
     end
 
 end
+
+close(v);
+close(f);
 
 end
 

@@ -1,7 +1,10 @@
-function [f, p, niterations] = animatedProbDistConcurrent(animated_overall_pdoffset, max_offset, ninterventions)
+function [f, p, niterations] = animatedProbDistConcurrent(animated_overall_pdoffset, max_offset, ninterventions, moviefilename)
 
 % animatedALingmentConcurrent - function to display animated curve
 % alignment and offset histogram through the iterative alignment process
+
+v = VideoWriter(moviefilename, 'MPEG-4');
+open(v);
 
 plotsacross = 10;
 plotsdown = 10;
@@ -23,10 +26,15 @@ for a = 1:ninterventions
           max(max(max(animated_overall_pdoffset(:,:,1:niterations),[],3), [], 2))];
     ylim(yl);
     title(ax(a), sprintf('%d', a));
-    [xl, yl] = plotProbDistribution(ax(a), max_offset, animated_overall_pdoffset(a,:, 1), xl, yl, 'o', 0.5, 2.0, 'blue', 'blue');
+    [xl, yl] = plotProbDistribution(ax(a), max_offset, animated_overall_pdoffset(a,:, 1), xl, yl, 'o', 0.5, 2.0, 'red', 'red');
 
     an(a) = animatedline(ax(a), days, animated_overall_pdoffset(a,:, 1), 'Color', 'blue', 'LineStyle', '-', 'Linewidth', 0.5, 'Marker', 'o', 'MarkerSize', 2.0, 'MarkerEdgeColor', 'blue', 'MarkerFaceColor', 'blue'); 
 end
+
+frame = getframe(f);
+writeVideo(v,frame);
+frame = getframe(f);
+writeVideo(v,frame);
 
 for i = 1:niterations
     for a = 1:ninterventions
@@ -36,7 +44,15 @@ for i = 1:niterations
         addpoints(an(a), days, animated_overall_pdoffset(a,:, i));
     end
     drawnow nocallbacks;
+    
+    frame = getframe(f);
+    writeVideo(v,frame);
+    frame = getframe(f);
+    writeVideo(v,frame);
 end
+
+close(v);
+close(f);
 
 end
 

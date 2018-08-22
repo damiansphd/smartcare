@@ -1,7 +1,10 @@
-function [f, p, niterations] = animatedAlignmentConcurrent(animatedmeancurvemean, animatedoffsets, profile_pre, measures, max_offset, align_wind, nmeasures, ninterventions)
+function [f, p, niterations] = animatedAlignmentConcurrent(animatedmeancurvemean, animatedoffsets, profile_pre, measures, max_offset, align_wind, nmeasures, ninterventions, moviefilename)
 
 % animatedALingmentConcurrent - function to display animated curve
 % alignment and offset histogram through the iterative alignment process
+
+v = VideoWriter(moviefilename, 'MPEG-4');
+open(v);
 
 plotsacross = 3;
 plotsdown = 3;
@@ -39,6 +42,12 @@ title(ax(m + 1), sprintf('Histogram of Offsets - Iteration %2d', 1));
 histogram(-1 * animatedoffsets(:,1))
 xlim([(-1 * max_offset) + 0.5, 0.5]);
 ylim([0 ninterventions]);
+
+frame = getframe(f);
+writeVideo(v,frame);
+frame = getframe(f);
+writeVideo(v,frame);
+
 pause(1);
 
 for i = 1:niterations
@@ -58,7 +67,15 @@ for i = 1:niterations
     histogram(ax(m+1), -1 * animatedoffsets(:,i))
     xlim([(-1 * max_offset) + 0.5, 0.5]);
     ylim([0 ninterventions]);
+    
+    frame = getframe(f);
+    writeVideo(v,frame);
+    frame = getframe(f);
+    writeVideo(v,frame);
 end
+
+close(v);
+close(f);
 
 end
 

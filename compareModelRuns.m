@@ -1,24 +1,40 @@
 clear; close all; clc;
 
-models = {  'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4609.9914.mat';
-            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-26_obj4593.9558.mat';
-            'SC_AMv4c_sig3_mu3_ca2_sm1_rm2_mm2_mo25_dw25_ex-26_obj4565.2372.mat';
-            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-27_obj4557.8883.mat';
-            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-26_obj4609.9914.mat';
-            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-27_obj4587.4418.mat';
-            
-            'TM_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-25_obj1824.1270.mat';
-            'TM_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-26_obj1767.7903.mat';
-            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-25_obj1824.1270.mat';
-            'TM_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-26_obj1800.7496.mat';
-            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm1_mo25_dw25_ex-25_obj4936.7227.mat';
-            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm3_mo25_dw25_ex-26_obj3100.1715.mat';
-            
+models = {  
             'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4595.2626.mat';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-27_obj4602.0068.mat';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-27_obj4557.8883.mat';
             'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-26_obj4595.2626.mat';
             'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-27_obj4536.9297.mat';
-            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-27_obj4602.0068.mat';
+            
+            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm3_mo25_dw25_ex-27_obj10964.9323.mat';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm3_mo25_dw25_ex-27_obj10815.2946.mat';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm3_mo25_dw25_ex-xx_objxxxxx.xxxx.mat';
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm3_mo25_dw25_ex-27_obj10964.9323.mat';
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm3_mo25_dw25_ex-27_obj10775.2724.mat';
+            
          };
+
+
+%models = {  'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4609.9914.mat';
+%            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-26_obj4593.9558.mat';
+%            'SC_AMv4c_sig3_mu3_ca2_sm1_rm2_mm2_mo25_dw25_ex-26_obj4565.2372.mat';
+%            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-27_obj4557.8883.mat';
+%            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-26_obj4609.9914.mat';
+%            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-27_obj4587.4418.mat';
+%            
+%            'TM_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-25_obj1824.1270.mat';
+%            'TM_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-26_obj1767.7903.mat';
+%            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-25_obj1824.1270.mat';
+%            'TM_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-26_obj1800.7496.mat';
+%            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm1_mo25_dw25_ex-25_obj4936.7227.mat';
+%            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm3_mo25_dw25_ex-26_obj3100.1715.mat';
+%            
+%            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4595.2626.mat';
+%            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-26_obj4595.2626.mat';
+%            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-27_obj4536.9297.mat';
+%            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-27_obj4602.0068.mat';
+%         };
      
 % other models to potentially add
 % sig4 version (although zero offset start is infinity
@@ -180,7 +196,24 @@ for i = 0:max_offset-1
             fprintf('\n\n');
         else
             for a = 1:size(idx,1)
-                fprintf('%2d: Offset %2d vs %2d\n', idx(a), offset_array(idx(a),1), offset_array(idx(a),2));
+                actualpoints1 = 0;
+                maxpoints1 = 0;
+                actualpoints2 = 0;
+                maxpoints2 = 0;
+                for m = 1:nmeasures
+                    if (measures1.Mask(m) == 1)
+                        actualpoints1 = actualpoints1 + sum(~isnan(amIntrDatacube1(idx(a), max_offset1:max_offset1+align_wind1-1, m)));
+                        maxpoints1 = maxpoints1 + align_wind1;
+                    end
+                    if (measures2.Mask(m) == 1)
+                        actualpoints2 = actualpoints2 + sum(~isnan(amIntrDatacube2(idx(a), max_offset2:max_offset2+align_wind2-1, m)));
+                        maxpoints2 = maxpoints2 + align_wind2;
+                    end  
+                end
+                datacompleteness1 = 100 * actualpoints1/maxpoints1;
+                datacompleteness2 = 100 * actualpoints2/maxpoints2;
+                
+                fprintf('%2d: Offset %2d vs %2d, Data Completeness = %.2f%% %.2f%%\n', idx(a), offset_array(idx(a),1), offset_array(idx(a),2), datacompleteness1, datacompleteness2);
                 scid = amInterventions1.SmartCareID(idx(a));
                 name = sprintf('%s_AM Prediction Comparison m%d vs m%d - Ex %d (ID %d Date %s) Offset %2d vs %2d', study1, modelidx1, modelidx2, idx(a), scid, ...
                     datestr(amInterventions1.IVStartDate(idx(a)),29), offset_array(idx(a),1), offset_array(idx(a),2));
@@ -200,6 +233,16 @@ for i = 0:max_offset-1
                     ax = subplot(plotsdown, plotsacross, mpos(m,:), 'Parent',p);
                     
                     [xl, yl] = plotMeasurementData(ax, days, amIntrDatacube1(idx(a), :, m), xl, yl, measures1(m,:), [0, 0.65, 1], '-', 1.0, 'o', 2.0, 'blue', 'green');
+                    if measures1.Mask(m) == 1 && measures2.Mask(m) == 1
+                        title(measures1.DisplayName(m), 'FontSize', 6, 'BackgroundColor', 'yellow');
+                    elseif measures1.Mask(m) == 1
+                        title(measures1.DisplayName(m), 'FontSize', 6, 'BackgroundColor', 'cyan');
+                    elseif measures2.Mask(m) == 1
+                        title(measures1.DisplayName(m), 'FontSize', 6, 'BackgroundColor', 'green');
+                    else
+                        title(measures1.DisplayName(m),'FontSize', 6);
+                    end
+                    
                     [xl, yl] = plotHorizontalLine(ax, normmean1(idx(a), m), xl, yl, 'blue', '--', 0.5); % plot mean
                     
                     [xl, yl] = plotLatentCurve(ax, max_offset1, align_wind1, offsets1(idx(a)), (meancurvemean1(:, m) + normmean1(idx(a), m)), xl, yl, 'red', ':', 1.0);
@@ -225,8 +268,12 @@ for i = 0:max_offset-1
                     [xl2, yl2] = plotVerticalLine(ax2, offsets2(idx(a)), xl2, yl2, 'green', '-', 0.5); % plot predicted offset
                     
                     set(gca,'fontsize',6);
-                    if measures1.Mask(m) == 1
-                        title(sprintf('%s %.1f %.1f', measures1.DisplayName{m}, hstg1(m, idx(a), offsets1(idx(a)) + 1), hstg2(m, idx(a), offsets2(idx(a)) + 1)), 'BackgroundColor', 'g');
+                    if measures1.Mask(m) == 1 && measures2.Mask(m) == 1
+                        title(sprintf('%s %.1f %.1f', measures1.DisplayName{m}, hstg1(m, idx(a), offsets1(idx(a)) + 1), hstg2(m, idx(a), offsets2(idx(a)) + 1)), 'BackgroundColor', 'yellow');
+                    elseif measures1.Mask(m) == 1
+                        title(sprintf('%s %.1f %.1f', measures1.DisplayName{m}, hstg1(m, idx(a), offsets1(idx(a)) + 1), hstg2(m, idx(a), offsets2(idx(a)) + 1)), 'BackgroundColor', 'cyan');
+                    elseif measures2.Mask(m) == 1
+                        title(sprintf('%s %.1f %.1f', measures1.DisplayName{m}, hstg1(m, idx(a), offsets1(idx(a)) + 1), hstg2(m, idx(a), offsets2(idx(a)) + 1)), 'BackgroundColor', 'green');
                     else
                         title(sprintf('%s %.1f %.1f', measures1.DisplayName{m}, hstg1(m, idx(a), offsets1(idx(a)) + 1), hstg2(m, idx(a), offsets2(idx(a)) + 1)));
                     end
@@ -246,7 +293,7 @@ for i = 0:max_offset-1
                 
                 set(gca,'fontsize',6);
                 %title('Overall', 'BackgroundColor', 'g');
-                title(sprintf('Overall %.1f %.1f', overall_hist1(idx(a), offsets1(idx(a)) + 1), overall_hist2(idx(a), offsets2(idx(a)) + 1)), 'BackgroundColor', 'g');
+                title(sprintf('Overall %.1f %.1f', overall_hist1(idx(a), offsets1(idx(a)) + 1), overall_hist2(idx(a), offsets2(idx(a)) + 1)), 'BackgroundColor', 'yellow');
                 
                 xl2 = [0 max_offset-1];
                 yl2 = [0 0.25];
