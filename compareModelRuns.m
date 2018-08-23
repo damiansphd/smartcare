@@ -9,9 +9,11 @@ models = {
             
             'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm3_mo25_dw25_ex-27_obj10964.9323.mat';
             'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm3_mo25_dw25_ex-27_obj10815.2946.mat';
-            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm3_mo25_dw25_ex-xx_objxxxxx.xxxx.mat';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm3_mo25_dw25_ex-27_obj10753.8213.mat';
             'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm3_mo25_dw25_ex-27_obj10964.9323.mat';
             'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm3_mo25_dw25_ex-27_obj10775.2724.mat';
+            
+            'SC_AMv4c_sig4_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-26_obj5292.6620.mat'
             
          };
 

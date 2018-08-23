@@ -408,15 +408,19 @@ end
 % convert back from log space
 for j=1:ninterventions
     for m=1:nmeasures
-        pdoffset(m, j, :) = exp(-1 * (hstg(m, j, :) - min(hstg(m, j, :))));
-        pdoffset(m, j, :) = pdoffset(m, j, :) / sum(pdoffset(m, j, :));
+        pdoffset(m, j, :) = convertFromLogSpaceAndNormalise(hstg(m, j, :));
+        %pdoffset(m, j, :) = exp(-1 * (hstg(m, j, :) - min(hstg(m, j, :))));
+        %pdoffset(m, j, :) = pdoffset(m, j, :) / sum(pdoffset(m, j, :));
     end
-    overall_pdoffset(j,:)     = exp(-1 * (overall_hist(j,:) - min(overall_hist(j, :))));
-    overall_pdoffset(j,:)     = overall_pdoffset(j,:) / sum(overall_pdoffset(j,:));
-    overall_pdoffset_all(j,:) = exp(-1 * (overall_hist_all(j,:) - min(overall_hist_all(j, :))));
-    overall_pdoffset_all(j,:) = overall_pdoffset_all(j,:) / sum(overall_pdoffset_all(j,:));
-    overall_pdoffset_xAL(j,:) = exp(-1 * (overall_hist_xAL(j,:) - min(overall_hist_xAL(j, :))));
-    overall_pdoffset_xAL(j,:) = overall_pdoffset_xAL(j,:) / sum(overall_pdoffset_xAL(j,:));
+    overall_pdoffset(j,:)      = convertFromLogSpaceAndNormalise(overall_hist(j,:));
+    %overall_pdoffset(j,:)     = exp(-1 * (overall_hist(j,:) - min(overall_hist(j, :))));
+    %overall_pdoffset(j,:)     = overall_pdoffset(j,:) / sum(overall_pdoffset(j,:));
+    overall_pdoffset_all(j,:)  = convertFromLogSpaceAndNormalise(overall_hist_all(j,:));
+    %overall_pdoffset_all(j,:) = exp(-1 * (overall_hist_all(j,:) - min(overall_hist_all(j, :))));
+    %overall_pdoffset_all(j,:) = overall_pdoffset_all(j,:) / sum(overall_pdoffset_all(j,:));
+    overall_pdoffset_xAL(j,:)  = convertFromLogSpaceAndNormalise(overall_hist_xAL(j,:));
+    %overall_pdoffset_xAL(j,:) = exp(-1 * (overall_hist_xAL(j,:) - min(overall_hist_xAL(j, :))));
+    %overall_pdoffset_xAL(j,:) = overall_pdoffset_xAL(j,:) / sum(overall_pdoffset_xAL(j,:));
 end
 
 toc

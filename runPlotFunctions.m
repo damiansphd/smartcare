@@ -1,24 +1,40 @@
 clear; close all; clc;
 
-models = {  'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4609.9914.mat';
-            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-26_obj4593.9558.mat';
-            'SC_AMv4c_sig3_mu3_ca2_sm1_rm2_mm2_mo25_dw25_ex-26_obj4565.2372.mat';
-            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-27_obj4557.8883.mat';
-            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-26_obj4609.9914.mat';
-            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-27_obj4587.4418.mat';
-            
-            'TM_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-25_obj1824.1270.mat';
-            'TM_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-26_obj1767.7903.mat';
-            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-25_obj1824.1270.mat';
-            'TM_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-26_obj1800.7496.mat';
-            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm1_mo25_dw25_ex-25_obj4936.7227.mat';
-            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm3_mo25_dw25_ex-26_obj3100.1715.mat';
-            
+models = {  
             'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4595.2626.mat';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-27_obj4602.0068.mat';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-27_obj4557.8883.mat';
             'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-26_obj4595.2626.mat';
             'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-27_obj4536.9297.mat';
-            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-27_obj4602.0068.mat';
+            
+            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm3_mo25_dw25_ex-27_obj10964.9323.mat';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm3_mo25_dw25_ex-27_obj10815.2946.mat';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm3_mo25_dw25_ex-27_obj10753.8213.mat';
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm3_mo25_dw25_ex-27_obj10964.9323.mat';
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm3_mo25_dw25_ex-27_obj10775.2724.mat';
+            
+            'SC_AMv4c_sig4_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-26_obj5292.6620.mat'
+            
          };
+%models = {  'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4609.9914.mat';
+%            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-26_obj4593.9558.mat';
+%            'SC_AMv4c_sig3_mu3_ca2_sm1_rm2_mm2_mo25_dw25_ex-26_obj4565.2372.mat';
+%            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-27_obj4557.8883.mat';
+%            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-26_obj4609.9914.mat';
+%            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-27_obj4587.4418.mat';
+%            
+%            'TM_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-25_obj1824.1270.mat';
+%            'TM_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-26_obj1767.7903.mat';
+%            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-25_obj1824.1270.mat';
+%            'TM_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-26_obj1800.7496.mat';
+%            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm1_mo25_dw25_ex-25_obj4936.7227.mat';
+%            'TM_AMvEM_sig3_mu3_ca2_sm1_rm5_mm3_mo25_dw25_ex-26_obj3100.1715.mat';
+%            
+%            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4595.2626.mat';
+%            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-26_obj4595.2626.mat';
+%            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-27_obj4536.9297.mat';
+%            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-27_obj4602.0068.mat';
+%         };
      
 % other models to potentially add
 % sig4 version (although zero offset start is infinity

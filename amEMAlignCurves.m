@@ -23,12 +23,14 @@ animated_overall_pdoffset  = zeros(ninterventions, max_offset, aniterations);
 % populate pdoffset & overall_pdoffset with uniform prior distribution
 for i = 1:ninterventions
     for m = 1:nmeasures
-        pdoffset(m, i, :) = exp(-1 * (hstg(m, i, :) - min(hstg(m, i, :))));
-        pdoffset(m, i, :) = pdoffset(m, i, :) / sum(pdoffset(m, i, :));
+        pdoffset(m, i, :) = convertFromLogSpaceAndNormalise(hstg(m, i, :));
+        %pdoffset(m, i, :) = exp(-1 * (hstg(m, i, :) - min(hstg(m, i, :))));
+        %pdoffset(m, i, :) = pdoffset(m, i, :) / sum(pdoffset(m, i, :));
     end
     if runmode == 4
-        overall_pdoffset(i,:)     = exp(-1 * (overall_hstg(i,:) - min(overall_hstg(i, :)))); 
-        overall_pdoffset(i,:)     = overall_pdoffset(i,:) / sum(overall_pdoffset(i,:));
+        overall_pdoffset(i,:) = convertFromLogSpaceAndNormalise(overall_hstg(i,:));
+        %overall_pdoffset(i,:)     = exp(-1 * (overall_hstg(i,:) - min(overall_hstg(i, :)))); 
+        %overall_pdoffset(i,:)     = overall_pdoffset(i,:) / sum(overall_pdoffset(i,:));
     else
         overall_pdoffset(i,:) = 0;
         overall_pdoffset(i, 1) = 1;

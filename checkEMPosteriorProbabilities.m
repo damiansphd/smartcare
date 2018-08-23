@@ -109,7 +109,7 @@ for offset = 0:max_offset-1
     datawindowtable = [datawindowtable ; rowtoadd1];
     
     rowtoadd1.RowType = 'ExpObjFcn';
-    rowtoadd1.CalcValue = exp(-1 * best_histogram(measure, intervention, offset+1));
+    rowtoadd1.CalcValue = exp(-1 * (best_histogram(measure, intervention, offset+1) - min(best_histogram(measure, intervention, offset+1))));
     rowtoadd1(:,nondaycols1+1:nondaycols1+align_wind) = array2table([0]);
     datawindowtable = [datawindowtable ; rowtoadd1];
     
