@@ -1,9 +1,12 @@
-function [dist, hstg] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measuresmask, normstd, hstg, currinter, curroffset, max_offset, align_wind, nmeasures, update_histogram, sigmamethod)
+function [dist, hstg] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measuresmask, normstd, hstg, ...
+    currinter, curroffset, max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod)
 
 % amEMCalcObjFcn - calculates residual sum of squares distance for points in
 % curve vs meancurve incorporating offset
 
 dist = 0;
+tempmean = zeros(max_offset + align_wind - 1, nmeasures);
+tempstd  = zeros(max_offset + align_wind - 1, nmeasures);
 
 if (update_histogram == 1)
     for m = 1:nmeasures
@@ -11,15 +14,25 @@ if (update_histogram == 1)
     end
 end
 
+for m = 1:nmeasures
+    if smoothingmethod == 2
+        tempmean(:,m) = smooth(meancurvemean(:,m),5);
+        tempstd(:,m) = smooth(meancurvestd(:,m),5);
+    else
+        tempmean(:,m) = meancurvemean(:,m);
+        tempstd(:,m) = meancurvestd(:,m);
+    end
+end
+
 for i = 1:align_wind
     for m = 1:nmeasures
         if ~isnan(amIntrCube(currinter, max_offset + align_wind - i, m))
             if sigmamethod == 4
-                thisdist = ( (meancurvemean(max_offset + align_wind - i - curroffset, m) ...
-                    - amIntrCube(currinter, max_offset + align_wind - i, m)) ^ 2 ) / ((meancurvestd(max_offset + align_wind - i - curroffset, m)) ^ 2) ;
+                thisdist = ( (tempmean(max_offset + align_wind - i - curroffset, m) ...
+                    - amIntrCube(currinter, max_offset + align_wind - i, m)) ^ 2 ) / ( tempstd(max_offset + align_wind - i - curroffset, m) ^ 2 ) ;
             else
-                thisdist = ( (meancurvemean(max_offset + align_wind - i - curroffset, m) ...
-                    - amIntrCube(currinter, max_offset + align_wind - i, m)) ^ 2 ) / ((normstd(currinter, m)) ^ 2 ) ;
+                thisdist = ( (tempmean(max_offset + align_wind - i - curroffset, m) ...
+                    - amIntrCube(currinter, max_offset + align_wind - i, m)) ^ 2 ) / ( normstd(currinter, m) ^ 2 ) ;
             end
             % only include desired measures in overall alignment
             % optimisation

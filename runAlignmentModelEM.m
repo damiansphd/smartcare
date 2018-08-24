@@ -103,17 +103,24 @@ end
 
 fprintf('Methodology for EM alignment\n');
 fprintf('----------------------------\n');
-fprintf('4: Use prob distribution\n');
-fprintf('5: Use point mass of offset\n');
+fprintf('4: Uniform start, use prob distribution in alignment\n');
+fprintf('5: Uniform start, use point mass of offset in alignment\n');
+fprintf('6: Pick start state from other model runs\n');
 runmode = input('Choose methodology (1-2) ');
 fprintf('\n');
-if runmode < 4 || runmode > 5
+if runmode < 4 || runmode > 6
     fprintf('Invalid choice\n');
     return;
 end
 if isequal(runmode,'')
     fprintf('Invalid choice\n');
     return;
+end
+
+if runmode == 6
+    modelrun = selectModelRunFromList('pd');
+else
+    modelrun = '';
 end
 
 fprintf('\n');
@@ -130,6 +137,7 @@ end
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
+fnmodelrun = fullfile(basedir, subfolder, sprintf('%s.mat',modelrun));
 fprintf('Loading alignment model Inputs data\n');
 load(fullfile(basedir, subfolder, modelinputsmatfile));
 fprintf('Loading datademographics by patient\n');
@@ -296,16 +304,22 @@ toc
 fprintf('\n');
 
 tic
-fprintf('Running alignment with uniform start\n');
+fprintf('Running alignment\n');
+% should really move this into AlignCurves function or override with value
+% loaded in there
 for i=1:size(amInterventions,1)
         amInterventions.Offset(i) = 0;
 end
 initial_offsets = amInterventions.Offset;
 
-run_type = 'Uniform Start';
+if runmode == 6
+    run_type = 'Pre-selected Start';
+else
+    run_type = 'Uniform Start';
+end
 [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, ...
  offsets, animatedoffsets, hstg, pdoffset, overall_hist, overall_pdoffset, animated_overall_pdoffset, qual] = amEMAlignCurves(amIntrNormcube, amInterventions, measures, ...
- normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, runmode);
+ normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod, runmode, fnmodelrun);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
 
 % save the zero offset pre-profile to unaligned_profile so all plots show a

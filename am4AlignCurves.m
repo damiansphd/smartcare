@@ -1,4 +1,6 @@
-function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, offsets, animatedoffsets, hstg, qual] = am4AlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod)
+function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, ...
+    offsets, animatedoffsets, hstg, qual] = am4AlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, ...
+    align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod)
 
 % am4AlignCurves = function to align measurement curves prior to intervention
 

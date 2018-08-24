@@ -1,4 +1,5 @@
-function [f, p, niterations] = animatedAlignmentConcurrent(animatedmeancurvemean, animatedoffsets, profile_pre, measures, max_offset, align_wind, nmeasures, ninterventions, moviefilename)
+function [f, p, niterations] = animatedAlignmentConcurrent(animatedmeancurvemean, animatedoffsets, animated_overall_pdoffset, ...
+    profile_pre, measures, max_offset, align_wind, nmeasures, ninterventions, runmode, moviefilename)
 
 % animatedALingmentConcurrent - function to display animated curve
 % alignment and offset histogram through the iterative alignment process
@@ -37,11 +38,16 @@ for m = 1:nmeasures
     ansm(m) = animatedline(ax(m), days, smooth(profile_pre(:,m),5), 'Color', 'blue', 'LineStyle', '-', 'Linewidth', 0.5);
     
 end
+
 ax(m + 1) = subplot(plotsdown, plotsacross, m + 1, 'Parent', p);
 title(ax(m + 1), sprintf('Histogram of Offsets - Iteration %2d', 1));
-histogram(-1 * animatedoffsets(:,1))
-xlim([(-1 * max_offset) + 0.5, 0.5]);
-ylim([0 ninterventions]);
+if runmode == 4 || runmode == 6
+    bar((-1 * max_offset) + 1: 0, sum(animated_overall_pdoffset(:, max_offset:-1:1, 1),1), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.25, 'LineWidth', 0.2);
+else
+    histogram(-1 * animatedoffsets(:,1))
+end
+xlim([((-1 * max_offset) + 0.5) 0.5]);
+ylim([0 ninterventions/2]);
 
 frame = getframe(f);
 writeVideo(v,frame);
@@ -64,9 +70,13 @@ for i = 1:niterations
     end
     drawnow nocallbacks;
     title(ax(m + 1), sprintf('Histogram of Offsets - Iteration %2d', i));
-    histogram(ax(m+1), -1 * animatedoffsets(:,i))
-    xlim([(-1 * max_offset) + 0.5, 0.5]);
-    ylim([0 ninterventions]);
+    if runmode == 4 || runmode == 6
+        bar((-1 * max_offset) + 1: 0, sum(animated_overall_pdoffset(:,max_offset:-1:1, i),1), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.25, 'LineWidth', 0.2);
+    else
+        histogram(-1 * animatedoffsets(:,i))
+    end
+    xlim([((-1 * max_offset) + 0.5) 0.5]);
+    ylim([0 ninterventions/2]);
     
     frame = getframe(f);
     writeVideo(v,frame);

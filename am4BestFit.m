@@ -1,4 +1,5 @@
-function [better_offset, hstg] = am4BestFit(meancurvemean, meancurvestd, amIntrCube, measuresmask, normstd, hstg, currinter, max_offset, align_wind, nmeasures, sigmamethod, smoothingmethod)
+function [better_offset, hstg] = am4BestFit(meancurvemean, meancurvestd, amIntrCube, measuresmask, normstd, ...
+    hstg, currinter, max_offset, align_wind, nmeasures, sigmamethod, smoothingmethod)
 
 % am4BestFit - calculates the offset for an intervention by minimising the
 % objective function

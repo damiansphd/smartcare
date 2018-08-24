@@ -1,4 +1,6 @@
-function [sorted_interventions, max_points] = am4VisualiseAlignmentDetail(amIntrCube, amInterventions, meancurvemean, meancurvecount, meancurvestd, offsets, measures, max_offset, align_wind, nmeasures, run_type, study, ex_start, version, curveaveragingmethod, smoothingmethod)
+function [sorted_interventions, max_points] = am4VisualiseAlignmentDetail(amIntrCube, amInterventions, ...
+    meancurvemean, meancurvecount, meancurvestd, offsets, measures, max_offset, align_wind, nmeasures, ...
+    run_type, study, ex_start, version, curveaveragingmethod)
 
 % am4VisualiseAlignmentDetail - creates a plot of horizontal bars showing 
 % the alignment of the data window (including the best_offset) for all 
