@@ -1,21 +1,21 @@
 clear; close all; clc;
 
-models = {  
-            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4595.2626.mat';
-            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-27_obj4602.0068.mat';
-            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-27_obj4557.8883.mat';
-            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-26_obj4595.2626.mat';
-            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-27_obj4536.9297.mat';
-            
-            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm3_mo25_dw25_ex-27_obj10964.9323.mat';
-            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm3_mo25_dw25_ex-27_obj10815.2946.mat';
-            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm3_mo25_dw25_ex-27_obj10753.8213.mat';
-            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm3_mo25_dw25_ex-27_obj10964.9323.mat';
-            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm3_mo25_dw25_ex-27_obj10775.2724.mat';
-            
-            'SC_AMv4c_sig4_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-26_obj5292.6620.mat'
-            
-         };
+%models = {  
+%            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4595.2626.mat';
+%            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-27_obj4602.0068.mat';
+%            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-27_obj4557.8883.mat';
+%            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm2_mo25_dw25_ex-26_obj4595.2626.mat';
+%            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm2_mo25_dw25_ex-27_obj4536.9297.mat';
+%            
+%            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm3_mo25_dw25_ex-27_obj10964.9323.mat';
+%            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm3_mo25_dw25_ex-27_obj10815.2946.mat';
+%            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm3_mo25_dw25_ex-27_obj10753.8213.mat';
+%            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_mm3_mo25_dw25_ex-27_obj10964.9323.mat';
+%            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_mm3_mo25_dw25_ex-27_obj10775.2724.mat';
+%            
+%            'SC_AMv4c_sig4_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-26_obj5292.6620.mat'
+%            
+%         };
 
 
 %models = {  'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4609.9914.mat';
@@ -42,45 +42,55 @@ models = {
 % sig4 version (although zero offset start is infinity
 % vEM with bet random start from 3 or 4
 
-nmodels = size(models,1);
+%nmodels = size(models,1);
+%
+%fprintf('Models available for comparison\n');
+%fprintf('-------------------------------\n');
+%for i = 1:nmodels
+%    fprintf('%d: %s\n', i, models{i});
+%end
+%fprintf('\n');
 
-fprintf('Models available for comparison\n');
-fprintf('-------------------------------\n');
-for i = 1:nmodels
-    fprintf('%d: %s\n', i, models{i});
-end
+%modelidx1 = input('Choose first model ? ');
+%if modelidx1 > nmodels 
+%    fprintf('Invalid choice\n');
+%    return;
+%end
+%if isequal(modelidx1,'')
+%    fprintf('Invalid choice\n');
+%    return;
+%end
+%
+%modelidx2 = input('Choose second model ? ');
+%if modelidx2 > nmodels 
+%    fprintf('Invalid choice\n');
+%    return;
+%end
+%if isequal(modelidx2,'')
+%    fprintf('Invalid choice\n');
+%    return;
+%end
+%
+%if modelidx1 == modelidx2
+%    fprintf('Invalid choice\n');
+%    return;
+%end
+
+fprintf('Select first model to compare\n');
 fprintf('\n');
 
-modelidx1 = input('Choose first model ? ');
-if modelidx1 > nmodels 
-    fprintf('Invalid choice\n');
-    return;
-end
-if isequal(modelidx1,'')
-    fprintf('Invalid choice\n');
-    return;
-end
+[modelrun1, modelidx1] = selectModelRunFromList('');
 
-modelidx2 = input('Choose second model ? ');
-if modelidx2 > nmodels 
-    fprintf('Invalid choice\n');
-    return;
-end
-if isequal(modelidx2,'')
-    fprintf('Invalid choice\n');
-    return;
-end
+fprintf('Select second model to compare\n');
+fprintf('\n');
 
-if modelidx1 == modelidx2
-    fprintf('Invalid choice\n');
-    return;
-end
+[modelrun2, modelidx2] = selectModelRunFromList('');
 
 fprintf('\n');
 basedir = './';
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading output from first model run\n');
-load(fullfile(basedir, subfolder, models{modelidx1}));
+load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun1)));
 
 amDatacube1           = amDatacube;
 amIntrDatacube1       = amIntrDatacube;
@@ -123,7 +133,7 @@ nmeasures1            = nmeasures;
 ninterventions1       = ninterventions;
 
 fprintf('Loading output from second model run\n');
-load(fullfile(basedir, subfolder, models{modelidx2}));
+load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun2)));
 
 amDatacube2           = amDatacube;
 amIntrDatacube2       = amIntrDatacube;
@@ -167,8 +177,8 @@ ninterventions2       = ninterventions;
 
 fprintf('\n');
 fprintf('Comparing models:\n');
-fprintf('%s\n', models{modelidx1});
-fprintf('%s\n', models{modelidx2});
+fprintf('%s\n', modelrun1);
+fprintf('%s\n', modelrun2);
 fprintf('\n');
 
 plotsdown = 9;

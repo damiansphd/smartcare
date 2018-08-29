@@ -3,7 +3,7 @@ function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurves
 % am4RemoveFromMean - remove a curve from the mean curve (sum and count)
 
 
-meancurvedata(:, :, currinter) = 0;
+meancurvedata(:, :, currinter) = nan;
 
 for m = 1:nmeasures
     for i = 1:(max_offset + align_wind - 1 - offset)
@@ -12,7 +12,7 @@ for m = 1:nmeasures
             meancurvecount(max_offset + align_wind - offset - i, m) = meancurvecount(max_offset + align_wind - offset - i, m) - 1;
         end
         meancurvemean(max_offset + align_wind - offset - i, m) = meancurvesum(max_offset + align_wind - offset - i, m) / meancurvecount(max_offset + align_wind - offset - i, m);
-        meancurvestd(max_offset + align_wind - offset - i, m) = std(meancurvedata(max_offset + align_wind - offset - i, m, meancurvedata(max_offset + align_wind - offset - i, m,:)~=0));
+        meancurvestd(max_offset + align_wind - offset - i, m) = std(meancurvedata(max_offset + align_wind - offset - i, m, ~isnan(meancurvedata(max_offset + align_wind - offset - i, m,:))));
     end
 end
 

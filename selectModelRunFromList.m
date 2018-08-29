@@ -1,4 +1,4 @@
-function [modelrun] = selectModelRunFromList(loadtype)
+function [modelrun, modelidx] = selectModelRunFromList(loadtype)
 
 % selectModelRunFromList - allows you to load the saved variables from a
 % historical model run (either all the variables or just the prob

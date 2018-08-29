@@ -6,7 +6,7 @@ function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurves
 
 aniterations      = 2000;
 
-meancurvedata     = zeros(max_offset + align_wind - 1, nmeasures, ninterventions);
+meancurvedata     = nan(max_offset + align_wind - 1, nmeasures, ninterventions);
 meancurvesum      = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvecount    = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvemean     = zeros(max_offset + align_wind - 1, nmeasures);
