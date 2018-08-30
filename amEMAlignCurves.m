@@ -69,28 +69,37 @@ pddiff = 100;
 prior_overall_pdoffset = overall_pdoffset;
 miniiter = 0;
 
-while (pddiff > 0.001)
+while (pddiff > 0.008)
     [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMRemoveFromMean(meancurvedata, meancurvesum, ...
         meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, amInterventions.Offset(pnt), pnt, ...
         max_offset, align_wind, nmeasures);
     % check safety
     ok = 1;
-    %if runmode == 5
+    if runmode == 5
         for i=1:max_offset + align_wind - 1
             for m=1:nmeasures
                 if (measures.Mask(m) == 1) && (meancurvecount(i, m) < 2)
                 %if (measures.Mask(m) == 1) && ~isnan(meancurvedata(i, m, :))
                     if detaillog
-                        fprintf('Intervention %d, Measure %s, dayprior %d <3 datapoints, Count: %.2f StdDev: %.2f\n', pnt, measures.Name{m}, i, meancurvecount(i,m), meancurvestd(i,m));
+                        fprintf('Intervention %d, Measure %s, dayprior %d <3 datapoints, Count: %d StdDev: %.6f\n', pnt, measures.Name{m}, i, meancurvecount(i,m), meancurvestd(i,m));
                     end
                     ok = 0;
-                    %temp = input('Continue ? ');
                 end
             end
         end
-    %end
+    else
+        for i=1:max_offset + align_wind - 1
+            for m=1:nmeasures
+                if (measures.Mask(m) == 1) && (sum(meancurvedata(i,m,:)~=0) < 2)
+                    if detaillog
+                        fprintf('Intervention %d, Measure %s, dayprior %d <3 datapoints, Count: %d StdDev: %.6f\n', pnt, measures.Name{m}, i, sum(meancurvedata(i,m,:)~=0), meancurvestd(i,m));
+                    end
+                    ok = 0;
+                end
+            end
+        end
+    end
         
-    
     if ok == 1
         [better_offset, better_dist, hstg, pdoffset, overall_hstg, overall_pdoffset] = amEMBestFit(meancurvemean, meancurvestd, amIntrCube, ...
             measures.Mask, normstd, hstg, pdoffset, overall_hstg, overall_pdoffset, ...
@@ -138,7 +147,7 @@ while (pddiff > 0.001)
             qual = qual + amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measures.Mask, normstd, ...
                 hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
             
-            fprintf('Intervention %d, qual = %.4f\n', i, qual);
+            %fprintf('Intervention %d, qual = %.4f\n', i, qual);
     
             [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMAddToMean(meancurvedata, meancurvesum, ...
                 meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, amInterventions.Offset(i), i, ...

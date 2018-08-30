@@ -1,6 +1,6 @@
 clear; close all; clc;
 
-modelrun = selectModelRunFromList('');
+[modelrun, modelidx] = selectModelRunFromList('');
 
 % other models to potentially add
 % sig4 version (although zero offset start is infinity
@@ -14,12 +14,14 @@ fprintf('3: Run alignment animation (sequential)\n');
 fprintf('4: Run prod dist animation (concurrent)\n');
 fprintf('5: Extract and save prob distributions\n');
 fprintf('6: Label exacerbation plots for test data\n');
-fprintf('7: Check model run results vs labelled test data\n');
+fprintf('7: Compare results to another model run\n');
+fprintf('8: Compare results to labelled test data\n');
+fprintf('\n');
 runfunction = input('Choose function (1-7) ');
 
 fprintf('\n');
 
-if runfunction > 7
+if runfunction > 8
     fprintf('Invalid choice\n');
     return;
 end
@@ -28,7 +30,6 @@ if isequal(runfunction,'')
     return;
 end
 
-fprintf('\n');
 basedir = './';
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading output from model run\n');
@@ -115,7 +116,7 @@ elseif runfunction == 6
         interto = ninterventions;
     elseif labelmode == 2
         fprintf('Loading latest labelled test data file\n');
-        inputfilename = 'LabelledInterventions.mat';
+        inputfilename = sprintf('%s_LabelledInterventions.mat', study);
         load(fullfile(basedir, subfolder, inputfilename));
         interfrom = input('Enter intervention to restart from ? ');
         if interfrom < 2 || interfrom > ninterventions 
@@ -129,7 +130,7 @@ elseif runfunction == 6
         interto = ninterventions;
     else
         fprintf('Loading latest labelled test data file\n');
-        inputfilename = 'LabelledInterventions.mat';
+        inputfilename = sprintf('%s_LabelledInterventions.mat', study);
         load(fullfile(basedir, subfolder, inputfilename));
         interfrom = input('Enter intervention to update ? ');
         if interfrom < 1 || interfrom > ninterventions 
@@ -148,15 +149,26 @@ elseif runfunction == 6
     
     fprintf('Saving labelled interventions to a separate matlab file\n');
     subfolder = 'MatlabSavedVariables';
-    outputfilename = sprintf('LabelledInterventions%s.mat', datestr(clock(),30));
+    outputfilename = sprintf('%s_LabelledInterventions%s.mat', study, datestr(clock(),30));
     save(fullfile(basedir, subfolder, outputfilename), 'amLabelledInterventions');
-    outputfilename = sprintf('LabelledInterventions.mat');
+    outputfilename = sprintf('%s_LabelledInterventions.mat', study);
     save(fullfile(basedir, subfolder, outputfilename), 'amLabelledInterventions');
+elseif runfunction ==7
+    fprintf('Comparing results to another model run\n');
+    fprintf('\n');
+    fprintf('Select second model to compare\n');
+    fprintf('\n');
+    [modelrun2, modelidx2] = selectModelRunFromList('');
+    compareModelRuns(modelrun, modelidx, modelrun2, modelidx2);
 else
-    fprintf('Checking model run results against the labelled test data\n');
-    
+    fprintf('Comparing results to the labelled test data\n');
+    fprintf('\n');
+    subfolder = 'MatlabSavedVariables';
+    testdatafilename = sprintf('%s_LabelledInterventions.mat', study);
+    load(fullfile(basedir, subfolder, testdatafilename));
+    compareModelRunToTestData(amLabelledInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, hstg, overall_hist, ...
+        offsets, meancurvemean, normmean, ex_start, nmeasures, ninterventions, max_offset, align_wind, study, version, modelrun, modelidx);
 end
     
 
     
-

@@ -10,8 +10,9 @@ for m = 1:nmeasures
             meancurvecount(max_offset + align_wind - offset - i, m) = meancurvecount(max_offset + align_wind - offset - i, m) + 1;
         end
         meancurvemean(max_offset + align_wind - offset - i, m) = meancurvesum(max_offset + align_wind - offset - i, m) / meancurvecount(max_offset + align_wind - offset - i, m);
-        meancurvestd(max_offset + align_wind - offset - i, m) = std(meancurvedata(max_offset + align_wind - offset - i, m, ~isnan(meancurvedata(max_offset + align_wind - offset - i, m,:))));
+        meancurvestd(max_offset + align_wind - offset - i, m) = std(meancurvedata(max_offset + align_wind - offset - i, m, :), 'omitnan');
     end
+    % remember to move std calc outside days loop and do as over a 2d array
 end
 
 end

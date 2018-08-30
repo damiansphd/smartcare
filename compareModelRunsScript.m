@@ -1,4 +1,14 @@
-function compareModelRuns(modelrun1, modelidx1, modelrun2, modelidx2)
+clear; close all; clc;
+
+fprintf('Select first model to compare\n');
+fprintf('\n');
+
+[modelrun1, modelidx1] = selectModelRunFromList('');
+
+fprintf('Select second model to compare\n');
+fprintf('\n');
+
+[modelrun2, modelidx2] = selectModelRunFromList('');
 
 fprintf('\n');
 basedir = './';
@@ -257,8 +267,6 @@ for i = 0:max_offset-1
             fprintf('\n');
         end
     end
-end
-
 end
 
 
