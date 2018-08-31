@@ -1,4 +1,4 @@
-function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, ...
+function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, ...
     offsets, animatedoffsets, hstg, qual] = am4AlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, ...
     align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod)
 
@@ -6,7 +6,8 @@ function [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurves
 
 aniterations      = 2000;
 
-meancurvedata     = nan(max_offset + align_wind - 1, nmeasures, ninterventions);
+%meancurvedata     = nan(max_offset + align_wind - 1, nmeasures, ninterventions);
+meancurvesumsq    = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvesum      = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvecount    = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvemean     = zeros(max_offset + align_wind - 1, nmeasures);
@@ -16,11 +17,9 @@ offsets           = zeros(ninterventions, 1);
 animatedoffsets   = zeros(ninterventions, aniterations);
 hstg              = zeros(nmeasures, ninterventions, max_offset);
 
-qual = 0;
-
 % calculate mean curve over all interventions
 for i = 1:ninterventions
-    [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvedata, meancurvesum, ...
+    [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvesumsq, meancurvesum, ...
         meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(i), i, max_offset, ...
        align_wind, nmeasures);
 end
@@ -36,7 +35,7 @@ ok  = 0;
 miniiter = 0;
 
 while 1
-    [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4RemoveFromMean(meancurvedata, meancurvesum, ...
+    [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4RemoveFromMean(meancurvesumsq, meancurvesum, ...
         meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(pnt), pnt, ...
         max_offset, align_wind, nmeasures);
     % check safety
@@ -44,7 +43,6 @@ while 1
     for i=1:max_offset + align_wind - 1
         for m=1:nmeasures
             if (measures.Mask(m) == 1) && (meancurvecount(i,m) < 2)
-            %if meancurvecount(i,m) < 2
                 %if detaillog
                 %    fprintf('Intervention %d, Measure %s, dayprior %d <3 datapoints\n', pnt, measures.Name{m}, i);
                 %end
@@ -76,7 +74,7 @@ while 1
             fprintf('Exceeded storage for animated iterations\n');
         end
     end
-    [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvedata, meancurvesum, ...
+    [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvesumsq, meancurvesum, ...
         meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(pnt), pnt, ...
         max_offset, align_wind, nmeasures);
         
@@ -84,14 +82,34 @@ while 1
     if pnt > ninterventions
         iter = iter + 1;
         pnt = pnt - ninterventions;
+        % compute the overall objective function each time we've iterated
+        % through the full set of interventions
+        % ** don't update the histogram here to avoid double counting on the best
+        % offset day **
+        update_histogram = 0;
+        qual = 0;
+        for i=1:ninterventions
+            [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4RemoveFromMean(meancurvesumsq, meancurvesum, ...
+                meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(i), i, ...
+                max_offset, align_wind, nmeasures);
+    
+            qual = qual + am4CalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measures.Mask, normstd, ...
+                hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
+    
+            %fprintf('Intervention %d, qual = %.4f\n', i, qual);
+    
+            [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvesumsq, meancurvesum, ...
+                meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(i), i, ...
+                max_offset, align_wind, nmeasures);
+        end
         if cnt == 0
             if detaillog
-                fprintf('Converged after %2d iterations\n', iter);
+                fprintf('No changes on iteration %2d, obj fcn = %.4f\n', iter, qual);
             end
             break;
         else 
             if detaillog
-                fprintf('Changed %2d offsets on iteration %2d\n', cnt, iter);
+                fprintf('Changed %2d offsets on iteration %2d, obj fcn = %.4f\n', cnt, iter, qual);
             end
             if iter > 35
                 if detaillog
@@ -102,26 +120,6 @@ while 1
             cnt = 0;
         end
     end
-end
-
-% computing the objective function result for converged offset array
-% don't update the histogram here to avoid double counting on the best
-% offset day
-update_histogram = 0;
-
-for i=1:ninterventions
-    [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4RemoveFromMean(meancurvedata, meancurvesum, ...
-        meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(i), i, ...
-        max_offset, align_wind, nmeasures);
-    
-    qual = qual + am4CalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measures.Mask, normstd, ...
-        hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
-    
-    fprintf('Intervention %d, qual = %.4f\n', i, qual);
-    
-    [meancurvedata, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvedata, meancurvesum, ...
-        meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(i), i, ...
-        max_offset, align_wind, nmeasures);
 end
 
 for i=1:ninterventions 

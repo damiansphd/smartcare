@@ -23,8 +23,6 @@ end
 
 for m=1:nmeasures
     pdoffset(m, currinter, :) = convertFromLogSpaceAndNormalise(hstg(m, currinter, :));
-    %pdoffset(m, currinter, :) = exp(-1 * (hstg(m, currinter, :) - min(hstg(m, currinter, :))));
-    %pdoffset(m, currinter, :) = pdoffset(m, currinter, :) / sum(pdoffset(m, currinter, :));
 end
 
 overall_hstg(currinter, :)     = reshape(sum(hstg(find(measuresmask),currinter,:),1), [1, max_offset]);
@@ -34,8 +32,6 @@ if runmode == 5
     overall_pdoffset(currinter, better_offset + 1) = 1;
 else
     overall_pdoffset(currinter,:) = convertFromLogSpaceAndNormalise(overall_hstg(currinter,:));
-    %overall_pdoffset(currinter,:)     = exp(-1 * (overall_hstg(currinter,:) - min(overall_hstg(currinter, :)))); 
-    %overall_pdoffset(currinter,:)     = overall_pdoffset(currinter,:) / sum(overall_pdoffset(currinter,:));
 end
     
 end

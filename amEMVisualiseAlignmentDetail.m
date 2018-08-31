@@ -153,7 +153,7 @@ for m = 1:nmeasures
             qnbr   = qupper - qlower + 1;
             fprintf('Quintile %d, Lower = %d, Upper = %d, Size = %d\n', q, qlower, qupper, qnbr);
             
-            temp_meancurvedata     = zeros(max_offset + align_wind - 1, nmeasures, qnbr);
+            temp_meancurvesumsq    = zeros(max_offset + align_wind - 1, nmeasures);
             temp_meancurvesum      = zeros(max_offset + align_wind - 1, nmeasures);
             temp_meancurvecount    = zeros(max_offset + align_wind - 1, nmeasures);
             temp_meancurvemean     = zeros(max_offset + align_wind - 1, nmeasures);
@@ -162,9 +162,9 @@ for m = 1:nmeasures
             temp_interventions = amInterventions(sorted_interventions.Intervention(qlower:qupper),:);
             
             for i = 1:qnbr
-                [temp_meancurvedata, temp_meancurvesum, temp_meancurvecount, temp_meancurvemean, temp_meancurvestd] = amEMAddToMean(temp_meancurvedata, temp_meancurvesum, ...
+                [temp_meancurvesumsq, temp_meancurvesum, temp_meancurvecount, temp_meancurvemean, temp_meancurvestd] = amEMAddToMean(temp_meancurvesumsq, temp_meancurvesum, ...
                     temp_meancurvecount, temp_meancurvemean, temp_meancurvestd, overall_pdoffset(sorted_interventions.Intervention(qlower:qupper), :),...
-                    amIntrCube(sorted_interventions.Intervention(qlower:qupper), :, :), temp_interventions.Offset(i), i, max_offset, align_wind, nmeasures);
+                    amIntrCube(sorted_interventions.Intervention(qlower:qupper), :, :), i, max_offset, align_wind, nmeasures);
             end
             
             qintrminoffset = min(amInterventions.Offset(sorted_interventions.Intervention(qlower:qupper)));
