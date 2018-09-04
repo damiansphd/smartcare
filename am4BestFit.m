@@ -1,5 +1,5 @@
 function [better_offset, hstg] = am4BestFit(meancurvemean, meancurvestd, amIntrCube, measuresmask, normstd, ...
-    hstg, currinter, max_offset, align_wind, nmeasures, sigmamethod, smoothingmethod)
+    hstg, currinter, min_offset, max_offset, align_wind, nmeasures, sigmamethod, smoothingmethod)
 
 % am4BestFit - calculates the offset for an intervention by minimising the
 % objective function
@@ -11,7 +11,7 @@ update_histogram = 1;
 better_offset = 0;
 mini = 1000000;
 
-for i = 0:max_offset - 1
+for i = min_offset:max_offset - 1
     [currdist, hstg] = am4CalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measuresmask, ...
         normstd, hstg, currinter, i, max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
     if currdist < mini

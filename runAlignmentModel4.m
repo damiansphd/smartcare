@@ -56,7 +56,7 @@ end
 
 fprintf('Methodology for duration of curve averaging\n');
 fprintf('-------------------------------------------\n');
-fprintf('1: Just data window\n');
+fprintf('1: Just data window (DO NOT USE)\n');
 fprintf('2: Data window + data to the left\n');
 curveaveragingmethod = input('Choose methodology (1-2) ');
 fprintf('\n');
@@ -81,6 +81,21 @@ if smoothingmethod > 2
     return;
 end
 if isequal(smoothingmethod,'')
+    fprintf('Invalid choice\n');
+    return;
+end
+
+fprintf('Methodology for offset blocking\n');
+fprintf('-------------------------------\n');
+fprintf('1: Disable offset blocking\n');
+fprintf('2: Enable offset blocking\n');
+offsetblockingmethod = input('Choose methodology (1-2) ');
+fprintf('\n');
+if offsetblockingmethod > 2
+    fprintf('Invalid choice\n');
+    return;
+end
+if isequal(offsetblockingmethod,'')
     fprintf('Invalid choice\n');
     return;
 end
@@ -309,8 +324,8 @@ initial_offsets = amInterventions.Offset;
 
 run_type = 'Zero Offset Start';
 [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, ...
-    offsets, animatedoffsets, hstg, qual] = am4AlignCurves(amIntrNormcube, amInterventions, measures, normstd, ...
-    max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod);
+    offsets, animatedoffsets, hstg, qual, min_offset] = am4AlignCurves(amIntrNormcube, amInterventions, measures, normstd, ...
+    max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod, offsetblockingmethod);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
 
 % save the zero offset pre-profile to unaligned_profile so all plots show a
@@ -321,7 +336,7 @@ plotname = sprintf('%s_obj%.4f', baseplotname, qual);
 
 % plot and save aligned curves (pre and post)
 am4PlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, ...
-    measures, 0, max_offset, align_wind, nmeasures, run_type, plotname, 0, sigmamethod);
+    measures, 0, min_offset, max_offset, align_wind, nmeasures, run_type, plotname, 0, sigmamethod);
 toc
 fprintf('\n');
 
@@ -344,8 +359,8 @@ for j=1:niterations
     temp_initial_offsets = amInterventions.Offset;
     run_type = sprintf('Random Offset Start %d', j);
     [temp_meancurvesumsq, temp_meancurvesum, temp_meancurvecount, temp_meancurvemean, temp_meancurvestd, temp_animatedmeancurvemean, temp_profile_pre, ...
-        temp_offsets, temp_animatedoffsets, temp_hstg, temp_qual] = am4AlignCurves(amIntrNormcube, amInterventions, measures, normstd, ...
-        max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod);
+        temp_offsets, temp_animatedoffsets, temp_hstg, temp_qual, temp_min_offset] = am4AlignCurves(amIntrNormcube, amInterventions, measures, normstd, ...
+        max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod, offsetblockingmethod);
 
     fprintf('%s - ErrFcn = %7.4f\n', run_type, temp_qual);
 
@@ -354,13 +369,14 @@ for j=1:niterations
         % so far
         plotname = sprintf('%s_obj%.4f', baseplotname, temp_qual);
         am4PlotAndSaveAlignedCurves(unaligned_profile, temp_meancurvemean, temp_meancurvecount, temp_meancurvestd, ...
-            temp_offsets, measures, 0, max_offset, align_wind, nmeasures, run_type, plotname, 0, sigmamethod);
+            temp_offsets, measures, 0, temp_min_offset, max_offset, align_wind, nmeasures, run_type, plotname, 0, sigmamethod);
         fprintf('Best so far is random start %d\n', j);
         offsets = temp_offsets;
         initial_offsets = temp_initial_offsets;
         profile_pre = temp_profile_pre;
         hstg = temp_hstg;
         qual = temp_qual;
+        min_offset = temp_min_offset;
         meancurvesumsq = temp_meancurvesumsq;
         meancurvesum = temp_meancurvesum;
         meancurvecount = temp_meancurvecount;
@@ -383,11 +399,11 @@ amInterventions.Offset = offsets;
 plotname = sprintf('%s_ex%d_obj%.4f', baseplotname, ex_start, qual);
 
 [sorted_interventions, max_points] = am4VisualiseAlignmentDetail(amIntrNormcube, amInterventions, meancurvemean, ...
-    meancurvecount, meancurvestd, offsets, measures, max_offset, align_wind, nmeasures, run_type, ...
+    meancurvecount, meancurvestd, offsets, measures, min_offset, max_offset, align_wind, nmeasures, run_type, ...
     study, ex_start, version, curveaveragingmethod);
 
 am4PlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, ...
-    measures, max_points, max_offset, align_wind, nmeasures, run_type, plotname, ex_start, sigmamethod);
+    measures, max_points, min_offset, max_offset, align_wind, nmeasures, run_type, plotname, ex_start, sigmamethod);
 
 % create overall histogram (summed over measures by intervention/offset)
 pdoffset        = zeros(nmeasures, ninterventions, max_offset);
@@ -408,19 +424,11 @@ end
 % convert back from log space
 for j=1:ninterventions
     for m=1:nmeasures
-        pdoffset(m, j, :) = convertFromLogSpaceAndNormalise(hstg(m, j, :));
-        %pdoffset(m, j, :) = exp(-1 * (hstg(m, j, :) - min(hstg(m, j, :))));
-        %pdoffset(m, j, :) = pdoffset(m, j, :) / sum(pdoffset(m, j, :));
+        pdoffset(m, j, min_offset+1:max_offset) = convertFromLogSpaceAndNormalise(hstg(m, j, min_offset+1:max_offset));
     end
-    overall_pdoffset(j,:)      = convertFromLogSpaceAndNormalise(overall_hist(j,:));
-    %overall_pdoffset(j,:)     = exp(-1 * (overall_hist(j,:) - min(overall_hist(j, :))));
-    %overall_pdoffset(j,:)     = overall_pdoffset(j,:) / sum(overall_pdoffset(j,:));
-    overall_pdoffset_all(j,:)  = convertFromLogSpaceAndNormalise(overall_hist_all(j,:));
-    %overall_pdoffset_all(j,:) = exp(-1 * (overall_hist_all(j,:) - min(overall_hist_all(j, :))));
-    %overall_pdoffset_all(j,:) = overall_pdoffset_all(j,:) / sum(overall_pdoffset_all(j,:));
-    overall_pdoffset_xAL(j,:)  = convertFromLogSpaceAndNormalise(overall_hist_xAL(j,:));
-    %overall_pdoffset_xAL(j,:) = exp(-1 * (overall_hist_xAL(j,:) - min(overall_hist_xAL(j, :))));
-    %overall_pdoffset_xAL(j,:) = overall_pdoffset_xAL(j,:) / sum(overall_pdoffset_xAL(j,:));
+    overall_pdoffset(j, min_offset+1:max_offset)      = convertFromLogSpaceAndNormalise(overall_hist(j, min_offset+1:max_offset));
+    overall_pdoffset_all(j, min_offset+1:max_offset)  = convertFromLogSpaceAndNormalise(overall_hist_all(j, min_offset+1:max_offset));
+    overall_pdoffset_xAL(j, min_offset+1:max_offset)  = convertFromLogSpaceAndNormalise(overall_hist_xAL(j, min_offset+1:max_offset));
 end
 
 toc
@@ -437,7 +445,8 @@ save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube
     'initial_offsets', 'offsets', 'animatedoffsets', 'qual', 'unaligned_profile', 'hstg', 'pdoffset', ...
     'overall_hist', 'overall_hist_all', 'overall_hist_xAL', ...
     'overall_pdoffset', 'overall_pdoffset_all', 'overall_pdoffset_xAL', ...
-    'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', 'max_offset', 'align_wind', 'ex_start', ...
+    'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', ...
+    'min_offset', 'max_offset', 'align_wind', 'ex_start', ...
     'sigmamethod', 'mumethod', 'curveaveragingmethod', 'smoothingmethod', ...
     'measuresmask', 'runmode', 'printpredictions', 'nmeasures', 'ninterventions');
 toc

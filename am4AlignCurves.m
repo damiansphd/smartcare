@@ -1,12 +1,11 @@
 function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, ...
-    offsets, animatedoffsets, hstg, qual] = am4AlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, ...
-    align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod)
+    offsets, animatedoffsets, hstg, qual, min_offset] = am4AlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, ...
+    align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod, offsetblockingmethod)
 
 % am4AlignCurves = function to align measurement curves prior to intervention
 
 aniterations      = 2000;
 
-%meancurvedata     = nan(max_offset + align_wind - 1, nmeasures, ninterventions);
 meancurvesumsq    = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvesum      = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvecount    = zeros(max_offset + align_wind - 1, nmeasures);
@@ -31,23 +30,67 @@ profile_pre = meancurvemean;
 pnt = 1;
 cnt = 0;
 iter = 0;
-ok  = 0;
 miniiter = 0;
+min_offset = 0; % start at zero, and only adjust if we encounter too few data points at right hand end of latent curve
 
 while 1
     [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4RemoveFromMean(meancurvesumsq, meancurvesum, ...
         meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(pnt), pnt, ...
         max_offset, align_wind, nmeasures);
+    
     % check safety
     ok = 1;
-    for i=1:max_offset + align_wind - 1
+    block_offset = 0;
+    
+    for a=1:max_offset + align_wind - 1 - min_offset
         for m=1:nmeasures
-            if (measures.Mask(m) == 1) && (meancurvecount(i,m) < 2)
-                %if detaillog
-                %    fprintf('Intervention %d, Measure %s, dayprior %d <3 datapoints\n', pnt, measures.Name{m}, i);
-                %end
+            if (measures.Mask(m) == 1) && (meancurvecount(a,m) < 2)
+                if detaillog
+                    fprintf('Intervention %d, Measure %s, dayprior %d <3 datapoints\n', pnt, measures.Name{m}, a);
+                end
                 ok = 0;
+                if iter >= 10 && a == max_offset + align_wind - 1 - min_offset
+                    block_offset = 1;
+                end
             end
+        end
+    end
+    
+    if offsetblockingmethod == 2 && block_offset == 1
+        if detaillog
+            fprintf('Blocking offset %d: ', min_offset);
+        end
+        % put current intervention back in mean curve temporarily
+        [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvesumsq, meancurvesum, ...
+            meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(pnt), pnt, ...
+            max_offset, align_wind, nmeasures);
+        idx = find(amInterventions.Offset == min_offset);
+        if size(idx,1) >= 1
+            % for each intervention with offset giving too few data
+            % points at right hand end of curve, remove from mean,
+            % increment offset by one, and then add back to mean.
+            % Also zero out that offset day in hstg across all
+            % measures.
+            fprintf('Updating offset for interventions ');
+            for i = 1:size(idx, 1)
+                fprintf('%d, ', idx(i));
+                [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4RemoveFromMean(meancurvesumsq, meancurvesum, ...
+                    meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(idx(i)), idx(i), ...
+                    max_offset, align_wind, nmeasures);
+                amInterventions.Offset(idx(i)) = min_offset + 1;
+                [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvesumsq, meancurvesum, ...
+                    meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(idx(i)), idx(i), ...
+                    max_offset, align_wind, nmeasures);
+            end
+            fprintf('\n');
+            hstg(:, :, min_offset + 1) = 0;
+            min_offset = min_offset + 1;
+            %ok = 1;
+            % remove current intervention from mean curve before
+            % proceeding
+            [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4RemoveFromMean(meancurvesumsq, meancurvesum, ...
+                meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(pnt), pnt, ...
+                max_offset, align_wind, nmeasures);
         end
     end
     
@@ -55,13 +98,13 @@ while 1
         %fprintf('Got here ! Actually doing some shifting....\n');
         %dummy = input('Continue ?');
         [better_offset, hstg] = am4BestFit(meancurvemean, meancurvestd, amIntrCube, ...
-            measures.Mask, normstd, hstg, pnt, max_offset, align_wind, nmeasures, sigmamethod, smoothingmethod);
+            measures.Mask, normstd, hstg, pnt, min_offset, max_offset, align_wind, nmeasures, sigmamethod, smoothingmethod);
     else
         better_offset = amInterventions.Offset(pnt);
     end
     
     if better_offset ~= amInterventions.Offset(pnt)
-        if detaillog & iter > 20
+        if detaillog & iter >= 10
             fprintf('amIntervention.Offset(%d) updated from %d to %d\n', pnt, amInterventions.Offset(pnt), better_offset);
         end
         amInterventions.Offset(pnt) = better_offset;
@@ -103,18 +146,12 @@ while 1
                 max_offset, align_wind, nmeasures);
         end
         if cnt == 0
-            if detaillog
-                fprintf('No changes on iteration %2d, obj fcn = %.4f\n', iter, qual);
-            end
+            fprintf('No changes on iteration %2d, obj fcn = %.4f\n', iter, qual);
             break;
-        else 
-            if detaillog
-                fprintf('Changed %2d offsets on iteration %2d, obj fcn = %.4f\n', cnt, iter, qual);
-            end
+        else
+            fprintf('Changed %2d offsets on iteration %2d, obj fcn = %.4f\n', cnt, iter, qual);
             if iter > 35
-                if detaillog
-                    fprintf('Iteration count limit exceeded - breaking\n');
-                end
+                fprintf('Iteration count limit exceeded - breaking\n');
                 break;
             end
             cnt = 0;

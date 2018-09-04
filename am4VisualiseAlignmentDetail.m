@@ -1,5 +1,5 @@
 function [sorted_interventions, max_points] = am4VisualiseAlignmentDetail(amIntrCube, amInterventions, ...
-    meancurvemean, meancurvecount, meancurvestd, offsets, measures, max_offset, align_wind, nmeasures, ...
+    meancurvemean, meancurvecount, meancurvestd, offsets, measures, min_offset, max_offset, align_wind, nmeasures, ...
     run_type, study, ex_start, version, curveaveragingmethod)
 
 % am4VisualiseAlignmentDetail - creates a plot of horizontal bars showing 
@@ -69,13 +69,9 @@ for m = 1:nmeasures
     plotsacross = 2;
     plotsdown = 8;
     plottitle = sprintf('%s_AM%s %s - %s', study, version, run_type, measures.DisplayName{m});
-    f = figure('Name', plottitle);
-    set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
-    p = uipanel('Parent',f,'BorderType','none'); 
-    p.Title = plottitle; 
-    p.TitlePosition = 'centertop';
-    p.FontSize = 20;
-    p.FontWeight = 'bold';
+    anchor = 1; % latent curve is to be anchored on the plot (right side at min_offset)
+    
+    [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
     
     xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
     yl = [min(meancurvemean(:, m)) max(meancurvemean(:, m))];
@@ -83,29 +79,33 @@ for m = 1:nmeasures
     ax = subplot(plotsdown,plotsacross,[1:6],'Parent',p);
     yyaxis left;
     
+    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, (meancurvemean(:, m)), xl, yl, 'blue', ':', 0.5, anchor);
+    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(meancurvemean(:, m), 5), xl, yl, 'blue', '-', 0.5, anchor);
+    
     ax.XAxis.FontSize = 8;
     xlabel('Days prior to Intervention');
     ax.YAxis(1).Color = 'blue';
     ax.YAxis(1).FontSize = 8;
     ylabel('Normalised Measure', 'FontSize', 8);
-    xlim(xl);
-    ylim(yl);
-    hold on;
-    plot([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:, m), 'Color', 'blue','LineStyle', ':');
-    plot([-1 * (max_offset + align_wind - 1): -1], smooth(meancurvemean(:, m), 5), 'Color', 'blue', 'LineStyle', '-');
+    
     if ex_start ~= 0
-        line([ex_start ex_start], yl, 'Color', 'blue', 'LineStyle', '--');
+        [xl, yl] = plotVerticalLine(ax, ex_start, xl, yl, 'blue', '--', 0.5); % plot ex_start
     end
     
     yyaxis right
     ax.YAxis(2).Color = 'black';
     ax.YAxis(2).FontSize = 8;
     ylabel('Count of Data points');
-    bar([-1 * (max_offset + align_wind - 1): -1], max_points, 0.5, 'FaceColor', 'white','FaceAlpha', 0.1);
-    bar([-1 * (max_offset + align_wind - 1): -1], meancurvecount(:, m), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.15);
-    ylim([0 (max(max_points) * 4)]);
     
-    hold off;
+    if isequal(run_type,'Best Alignment')
+        bar([-1 * (max_offset + align_wind - 1): -1], max_points, 0.5, 'FaceColor', 'white', 'FaceAlpha', 0.1);
+    end
+    bar([-1 * (max_offset + align_wind - 1): -1], meancurvecount(:, m), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.25, 'LineWidth', 0.2);
+    if isequal(run_type,'Best Alignment')
+        ylim([0 max(max_points) * 4]);
+    else
+        ylim([0 max(meancurvecount(:, m) * 4)]);
+    end
     
     subplot(plotsdown,plotsacross,[7:16],'Parent',p);
     h = heatmap(p, datatable, 'ScaledDateNum', 'Intervention', 'Colormap', colors, 'MissingDataColor', 'white', ...
@@ -131,13 +131,8 @@ for m = 1:nmeasures
         plotsacross = 2;
         plotsdown = round(nbuckets/plotsacross);
         plottitle = sprintf('%s_AM%s - Alignment By Quintile - %s', study, version, measures.DisplayName{m});
-        f = figure('Name', plottitle);
-        set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
-        p = uipanel('Parent',f,'BorderType','none'); 
-        p.Title = plottitle; 
-        p.TitlePosition = 'centertop';
-        p.FontSize = 20;
-        p.FontWeight = 'bold';
+        
+        [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
         
         for q = 1:nbuckets
             qlower = 1 + round((nInterventions * (q - 1))/nbuckets);
@@ -167,7 +162,6 @@ for m = 1:nmeasures
                 qintrmaxoffset = max(amInterventions.Offset(sorted_interventions.Intervention(qlower:qupper))) + align_wind;
                 qdatamaxoffset = max_offset + align_wind - min(find(min(temp_meancurvecount, [], 2)~=0));
                 qfrom = max(qintrmaxoffset, qdatamaxoffset);
-                %qfrom = qdatamaxoffset;
             else
                 qfrom = max_offset + align_wind - 1;
             end
@@ -180,6 +174,14 @@ for m = 1:nmeasures
             ax.Title.String = sprintf('Quintile %d', q);
             
             yyaxis left;
+            
+            % plot latent curve and vertical line for ex_start (if chosen at this point)
+            [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, (meancurvemean(:, m)), xl, yl, 'blue', ':', 0.5, anchor);
+            [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(meancurvemean(:, m), 5), xl, yl, 'blue', '-', 0.5, anchor);
+            if ex_start ~= 0
+                [xl, yl] = plotVerticalLine(ax, ex_start, xl, yl, 'blue', '--', 0.5); % plot ex_start
+            end
+            
             ax.XAxis.FontSize = 8;
             xlabel('Days prior to Intervention');
             ax.YAxis(1).Color = 'blue';
@@ -187,15 +189,10 @@ for m = 1:nmeasures
             ylabel('Normalised Measure', 'FontSize', 8);
             xlim(xl);
             ylim(yl);
-            hold on;
-            line([-1 * (max_offset + align_wind - 1): -1], meancurvemean(:, m), 'Color', 'blue','LineStyle', ':');
-            line([-1 * (max_offset + align_wind - 1): -1], smooth(meancurvemean(:, m), 5), 'Color', 'blue', 'LineStyle', '-');
+            
+            % plot latent curve for the quintile of interventions
             line([-1 * qfrom: -1 * qto], temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 'Color', 'red','LineStyle', ':');
             line([-1 * qfrom: -1 * qto], smooth(temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 5), 'Color', 'red','LineStyle', '-');
-            if ex_start ~= 0
-                line([ex_start ex_start], yl, 'Color', 'blue', 'LineStyle', '--');
-            end
-            hold off;
 
             yyaxis right
             ax.YAxis(2).Color = 'black';
@@ -205,13 +202,9 @@ for m = 1:nmeasures
             ylim([0 (max(max_points) * 4 / nbuckets)]);
         end
         
-        filename = sprintf('%s.png', plottitle);
-        saveas(f,fullfile(basedir, subfolder, filename));
-        filename = sprintf('%s.svg', plottitle);
-        saveas(f,fullfile(basedir, subfolder, filename));
-    
+        % save plot
+        savePlot(f, plottitle);
         close(f);
-            
     end
 end
 
