@@ -6,8 +6,8 @@ function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurve
 
 aniterations      = 2000;
 
-meancurvesumsq    = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvesum      = zeros(max_offset + align_wind - 1, nmeasures);
+meancurvesumsq    = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvecount    = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvemean     = zeros(max_offset + align_wind - 1, nmeasures);
 meancurvestd      = zeros(max_offset + align_wind - 1, nmeasures);
@@ -46,7 +46,7 @@ while 1
         for m=1:nmeasures
             if (measures.Mask(m) == 1) && (meancurvecount(a,m) < 2)
                 if detaillog
-                    fprintf('Intervention %d, Measure %s, dayprior %d <3 datapoints\n', pnt, measures.Name{m}, a);
+                    fprintf('After removing intervention %d, %s on day %d has <3 datapoints\n', pnt, measures.Name{m}, a);
                 end
                 ok = 0;
                 if iter >= 10 && a == max_offset + align_wind - 1 - min_offset
@@ -56,7 +56,7 @@ while 1
         end
     end
     
-    if offsetblockingmethod == 2 && block_offset == 1
+    if offsetblockingmethod == 2 && block_offset == 1 && min_offset < 3
         if detaillog
             fprintf('Blocking offset %d: ', min_offset);
         end
@@ -153,9 +153,9 @@ while 1
             if iter > 35
                 fprintf('Iteration count limit exceeded - breaking\n');
                 break;
-            end
-            cnt = 0;
+            end  
         end
+        cnt = 0;
     end
 end
 

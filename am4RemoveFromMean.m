@@ -1,4 +1,5 @@
-function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4RemoveFromMean(meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, amIntrCube, offset, currinter, max_offset, align_wind, nmeasures)
+function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4RemoveFromMean(meancurvesumsq, meancurvesum, ...
+    meancurvecount, meancurvemean, meancurvestd, amIntrCube, offset, currinter, max_offset, align_wind, nmeasures)
 
 % am4RemoveFromMean - remove a curve from the mean curve (sum and count)
 

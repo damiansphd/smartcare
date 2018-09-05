@@ -1,4 +1,5 @@
-function amEMPlotAndSaveAlignedCurves(profile_pre, meancurvemean, meancurvecount, meancurvestd, offsets, measures, max_points, max_offset, align_wind, nmeasures, run_type, plotname, ex_start, sigmamethod)
+function amEMPlotAndSaveAlignedCurves(profile_pre, meancurvemean, meancurvecount, meancurvestd, offsets, ...
+    measures, max_points, min_offset, max_offset, align_wind, nmeasures, run_type, plotname, ex_start, sigmamethod)
 
 % amEMPlotAndSaveAlignedCurves - plots the curves pre and post alignment for
 % each measure, and the histogram of offsets
@@ -6,6 +7,7 @@ function amEMPlotAndSaveAlignedCurves(profile_pre, meancurvemean, meancurvecount
 plotsacross = 3;
 plotsdown = round((nmeasures + 1) / plotsacross);
 plottitle = sprintf('%s - %s', plotname, run_type);
+anchor = 1; % latent curve is to be anchored on the plot (right side at min_offset)
 
 [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 
@@ -18,15 +20,16 @@ for m = 1:nmeasures
     ax = subplot(plotsdown,plotsacross,m,'Parent',p);
     yyaxis left;
     
-    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, 0, (profile_pre(:, m)), xl, yl, 'red', '-', 0.5);
-    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, 0, (meancurvemean(:, m)), xl, yl, 'blue', ':', 0.5);
-    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, 0, smooth(meancurvemean(:, m), 5), xl, yl, 'blue', '-', 0.5);
+    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, (profile_pre(:, m)), xl, yl, 'red', ':', 0.5, anchor);
+    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(profile_pre(:, m), 5), xl, yl, 'red', '-', 0.5, anchor);
+    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, (meancurvemean(:, m)), xl, yl, 'blue', ':', 0.5, anchor);
+    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(meancurvemean(:, m), 5), xl, yl, 'blue', '-', 0.5, anchor);
     
     if sigmamethod == 4
-        [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, 0, (meancurvemean(:, m) + meancurvestd(:,m)), xl, yl, 'blue', ':', 0.5);
-        [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, 0, smooth(meancurvemean(:, m) + meancurvestd(:,m), 5), xl, yl, 'blue', '--', 0.5);
-        [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, 0, (meancurvemean(:, m) - meancurvestd(:,m)), xl, yl, 'blue', ':', 0.5);
-        [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, 0, smooth(meancurvemean(:, m) - meancurvestd(:,m), 5), xl, yl, 'blue', '--', 0.5);
+        [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, (meancurvemean(:, m) + meancurvestd(:,m)), xl, yl, 'blue', ':', 0.5, anchor);
+        [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(meancurvemean(:, m) + meancurvestd(:,m), 5), xl, yl, 'blue', '--', 0.5, anchor);
+        [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, (meancurvemean(:, m) - meancurvestd(:,m)), xl, yl, 'blue', ':', 0.5, anchor);
+        [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(meancurvemean(:, m) - meancurvestd(:,m), 5), xl, yl, 'blue', '--', 0.5, anchor);
     end
     
     ax.XAxis.FontSize = 6;
@@ -57,8 +60,6 @@ for m = 1:nmeasures
     else
         title(measures.DisplayName(m));
     end
-    
-    hold off;
     
 end
 

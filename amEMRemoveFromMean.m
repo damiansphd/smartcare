@@ -1,11 +1,10 @@
-function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMRemoveFromMean(meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, currinter, max_offset, align_wind, nmeasures)
+function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMRemoveFromMean(meancurvesumsq, meancurvesum, ...
+    meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, currinter, min_offset, max_offset, align_wind, nmeasures)
 
-% amEMRemoveFromMean - remove a curve from the mean curve (sum and count) 
-% - from all possible offsets, weighted by the overall probability of 
-% each offset
+% amEMRemoveFromMean - remove a curve from the mean curve from all 
+% possible offsets, weighted by the overall probability of each offset
 
-
-for offset = 0:max_offset-1
+for offset = min_offset:max_offset-1
     % place the current intervention curve into every possible offset
     % position, weighted by the probability each offset position is the
     % right one
@@ -20,7 +19,19 @@ for offset = 0:max_offset-1
     end
 end
 
+
+%meancurvemean(1:(max_offset + align_wind - 1 - min_offset),:) = meancurvesum(1:(max_offset + align_wind - 1 - min_offset),:) ./ meancurvecount(1:(max_offset + align_wind - 1 - min_offset),:);
+
+%meancurvestd(1:(max_offset + align_wind - 1 - min_offset),:)  = ((meancurvesumsq(1:(max_offset + align_wind - 1 - min_offset),:) ./ meancurvecount(1:(max_offset + align_wind - 1 - min_offset),:)) ...
+%                                                                - (meancurvemean(1:(max_offset + align_wind - 1 - min_offset),:) .* meancurvemean(1:(max_offset + align_wind - 1 - min_offset),:))) .^ 0.5;
+
+
 meancurvemean = meancurvesum ./ meancurvecount;
-meancurvestd  = ((meancurvesumsq ./ meancurvecount) - (meancurvemean .* meancurvemean)) .^ 0.5;
+meancurvestd  = (abs((meancurvesumsq ./ meancurvecount) - (meancurvemean .* meancurvemean))) .^ 0.5;
+
+if min_offset > 0
+    meancurvemean((max_offset + align_wind - min_offset): (max_offset + align_wind - 1),:) = 0;
+    meancurvestd((max_offset + align_wind - min_offset): (max_offset + align_wind - 1),:)  = 0;
+end
 
 end

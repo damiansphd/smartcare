@@ -156,8 +156,8 @@ toc
 detaillog = true;
 max_offset = 25; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
 align_wind = 25;
-baseplotname = sprintf('%s_AM%s_sig%d_mu%d_ca%d_sm%d_rm%d_mm%d_mo%d_dw%d', study, version, sigmamethod, mumethod, curveaveragingmethod, ...
-    smoothingmethod, runmode, measuresmask, max_offset, align_wind);
+baseplotname = sprintf('%s_AM%s_sig%d_mu%d_ca%d_sm%d_rm%d_ob%d_mm%d_mo%d_dw%d', study, version, sigmamethod, mumethod, curveaveragingmethod, ...
+    smoothingmethod, runmode, offsetblockingmethod, measuresmask, max_offset, align_wind);
 
 % remove any interventions where the start is less than the alignment
 % window
@@ -300,13 +300,13 @@ for i = 1:ninterventions
                 normmean(i, m) = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}),{ddcolumn}}(5);
             else
                 fprintf('No measures for intervention %d, measure %d\n', i, m);
-                normean(i,m) = 0;
+                normmean(i,m) = 0;
             end
         end
-        periodstart = start - align_wind - max_offset;
-        if periodstart <= 0
-            periodstart = 1;
-        end
+        %periodstart = start - align_wind - max_offset;
+        %if periodstart <= 0
+        %    periodstart = 1;
+        %end
         amIntrNormcube(i, 1:(max_offset + align_wind -1), m) = amIntrDatacube(i, 1:(max_offset + align_wind -1), m) - normmean(i,m);
     end
 end
@@ -392,6 +392,7 @@ fprintf('\n');
 ex_start = input('Look at best start and enter exacerbation start: ');
 fprintf('\n');
 
+tic
 run_type = 'Best Alignment';
 
 amInterventions.Offset = offsets;
@@ -445,9 +446,9 @@ save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube
     'initial_offsets', 'offsets', 'animatedoffsets', 'qual', 'unaligned_profile', 'hstg', 'pdoffset', ...
     'overall_hist', 'overall_hist_all', 'overall_hist_xAL', ...
     'overall_pdoffset', 'overall_pdoffset_all', 'overall_pdoffset_xAL', ...
-    'sorted_interventions',  'normmean', 'normstd', 'measures', 'study', 'version', ...
+    'sorted_interventions', 'normmean', 'normstd', 'measures', 'study', 'version', ...
     'min_offset', 'max_offset', 'align_wind', 'ex_start', ...
-    'sigmamethod', 'mumethod', 'curveaveragingmethod', 'smoothingmethod', 'offsetblockingmethod',...
+    'sigmamethod', 'mumethod', 'curveaveragingmethod', 'smoothingmethod', 'offsetblockingmethod', ...
     'measuresmask', 'runmode', 'printpredictions', 'nmeasures', 'ninterventions');
 toc
 fprintf('\n');

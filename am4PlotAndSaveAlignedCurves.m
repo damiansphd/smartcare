@@ -4,9 +4,6 @@ function am4PlotAndSaveAlignedCurves(profile_pre, meancurvemean, meancurvecount,
 % am4PlotAndSaveAlignedCurves - plots the curves pre and post alignment for
 % each measure, and the histogram of offsets
 
-basedir = './';
-subfolder = 'Plots';
-
 plotsacross = 3;
 plotsdown = round((nmeasures + 1) / plotsacross);
 plottitle = sprintf('%s - %s', plotname, run_type);

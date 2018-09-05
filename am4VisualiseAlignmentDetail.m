@@ -1,6 +1,6 @@
 function [sorted_interventions, max_points] = am4VisualiseAlignmentDetail(amIntrCube, amInterventions, ...
-    meancurvemean, meancurvecount, meancurvestd, offsets, measures, min_offset, max_offset, align_wind, nmeasures, ...
-    run_type, study, ex_start, version, curveaveragingmethod)
+    meancurvemean, meancurvecount, meancurvestd, offsets, measures, min_offset, max_offset, align_wind, ...
+    nmeasures, run_type, study, ex_start, version, curveaveragingmethod)
 
 % am4VisualiseAlignmentDetail - creates a plot of horizontal bars showing 
 % the alignment of the data window (including the best_offset) for all 
@@ -12,9 +12,9 @@ datatable = table('Size',[1 3], ...
 
 rowtoadd = datatable;
 max_points = zeros(1, max_offset + align_wind - 1);
-nInterventions = size(amInterventions,1);
+ninterventions = size(amInterventions,1);
 sorted_interventions = array2table(offsets);
-sorted_interventions.Intervention = [1:nInterventions]';
+sorted_interventions.Intervention = [1:ninterventions]';
 sorted_interventions = sortrows(sorted_interventions, {'offsets', 'Intervention'}, {'descend', 'ascend'});
 
 for i = 1:max_offset + align_wind - 1
@@ -23,7 +23,7 @@ for i = 1:max_offset + align_wind - 1
             & sorted_interventions.offsets > (align_wind - i)),1);
     else
         if (i - align_wind) <= 0
-            max_points(1, i) = nInterventions;
+            max_points(1, i) = ninterventions;
         else
             max_points(1,i) = size(sorted_interventions.offsets(sorted_interventions.offsets <= (max_offset + align_wind - i)),1);
         end
@@ -32,7 +32,7 @@ end
 
 for m = 1:nmeasures
     datatable(1:size(datatable,1),:) = [];
-    for i = 1:nInterventions
+    for i = 1:ninterventions
         scid = amInterventions.SmartCareID(i);
         start = amInterventions.IVScaledDateNum(i);
         offset = offsets(i);
@@ -62,9 +62,6 @@ for m = 1:nmeasures
     brightness = .9;
     colors(1,:)  = temp(8,:)  .* brightness;
     colors(2,:)  = temp(16,:)  .* brightness;
-
-    basedir = './';
-    subfolder = 'Plots';
 
     plotsacross = 2;
     plotsdown = 8;
@@ -114,15 +111,11 @@ for m = 1:nmeasures
     h.XLabel = 'Days Prior to Intervention';
     h.YLabel = 'Intervention';
     h.YDisplayData = sorted_interventions.Intervention;
-    h.XLimits = {0 - align_wind - max_offset + 1, -1};
+    h.XLimits = {-1 * (max_offset + align_wind - 1), -1};
     h.CellLabelColor = 'none';
     h.GridVisible = 'on';
     
-    filename = sprintf('%s.png', plottitle);
-    saveas(f,fullfile(basedir, subfolder, filename));
-    filename = sprintf('%s.svg', plottitle);
-    saveas(f,fullfile(basedir, subfolder, filename));
-    
+    savePlot(f, plottitle);
     close(f);
     
     if measures.Mask(m) == 1
@@ -135,8 +128,8 @@ for m = 1:nmeasures
         [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
         
         for q = 1:nbuckets
-            qlower = 1 + round((nInterventions * (q - 1))/nbuckets);
-            qupper = round((nInterventions * q)/nbuckets);
+            qlower = 1 + round((ninterventions * (q - 1))/nbuckets);
+            qupper = round((ninterventions * q)/nbuckets);
             qnbr   = qupper - qlower + 1;
             fprintf('Quintile %d, Lower = %d, Upper = %d, Size = %d\n', q, qlower, qupper, qnbr);
             
@@ -187,8 +180,6 @@ for m = 1:nmeasures
             ax.YAxis(1).Color = 'blue';
             ax.YAxis(1).FontSize = 8;
             ylabel('Normalised Measure', 'FontSize', 8);
-            xlim(xl);
-            ylim(yl);
             
             % plot latent curve for the quintile of interventions
             line([-1 * qfrom: -1 * qto], temp_meancurvemean(max_offset + align_wind - qfrom : max_offset + align_wind - qto, m), 'Color', 'red','LineStyle', ':');

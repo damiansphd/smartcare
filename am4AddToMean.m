@@ -1,4 +1,5 @@
-function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, amIntrCube, offset, currinter, max_offset, align_wind, nmeasures)
+function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvesumsq, meancurvesum, ...
+    meancurvecount, meancurvemean, meancurvestd, amIntrCube, offset, currinter, max_offset, align_wind, nmeasures)
 
 % am4AddToMean - add a curve to the mean curve (sum and count)
     
