@@ -100,6 +100,7 @@ plotsacross = 5;
 mpos = [ 1 2 6 7 ; 3 4 8 9 ; 11 12 16 17 ; 13 14 18 19 ; 21 22 26 27 ; 23 24 28 29 ; 31 32 36 37 ; 33 34 38 39];
 hpos = [ 5 ; 10 ; 15 ; 20 ; 25 ; 30 ; 35 ; 40 ; 45 ; 44 ; 43 ; 42 ; 41 ];
 days = [-1 * (max_offset1 + align_wind1 - 1): -1];
+anchor = 1; % latent curve is to be anchored on the plot (right side at min_offset)
 
 % comparing offsets
 fprintf('Comparing offsets:\n\n');
@@ -171,11 +172,11 @@ for i = 0:max_offset-1
                     
                     [xl, yl] = plotHorizontalLine(ax, normmean1(idx(a), m), xl, yl, 'blue', '--', 0.5); % plot mean
                     
-                    [xl, yl] = plotLatentCurve(ax, max_offset1, align_wind1, offsets1(idx(a)), (meancurvemean1(:, m) + normmean1(idx(a), m)), xl, yl, 'red', ':', 1.0);
-                    [xl, yl] = plotLatentCurve(ax, max_offset1, align_wind1, offsets1(idx(a)), smooth(meancurvemean1(:, m) + normmean1(idx(a), m),5), xl, yl, 'red', '-', 1.0);
+                    [xl, yl] = plotLatentCurve(ax, max_offset1, align_wind1, offsets1(idx(a)), (meancurvemean1(:, m) + normmean1(idx(a), m)), xl, yl, 'red', ':', 1.0, anchor);
+                    [xl, yl] = plotLatentCurve(ax, max_offset1, align_wind1, offsets1(idx(a)), smooth(meancurvemean1(:, m) + normmean1(idx(a), m),5), xl, yl, 'red', '-', 1.0, anchor);
                     
-                    [xl, yl] = plotLatentCurve(ax, max_offset2, align_wind2, offsets2(idx(a)), (meancurvemean2(:, m) + normmean2(idx(a), m)), xl, yl, 'magenta', ':', 1.0);
-                    [xl, yl] = plotLatentCurve(ax, max_offset2, align_wind2, offsets2(idx(a)), smooth(meancurvemean2(:, m) + normmean2(idx(a), m),5), xl, yl, 'magenta', '-', 1.0);
+                    [xl, yl] = plotLatentCurve(ax, max_offset2, align_wind2, offsets2(idx(a)), (meancurvemean2(:, m) + normmean2(idx(a), m)), xl, yl, 'magenta', ':', 1.0, anchor);
+                    [xl, yl] = plotLatentCurve(ax, max_offset2, align_wind2, offsets2(idx(a)), smooth(meancurvemean2(:, m) + normmean2(idx(a), m),5), xl, yl, 'magenta', '-', 1.0, anchor);
                     
                     [xl, yl] = plotExStart(ax, ex_start1, offsets1(idx(a)), xl, yl,  'red', '-', 0.5);
                     [xl, yl] = plotExStart(ax, ex_start2, offsets2(idx(a)), xl, yl, 'magenta', '-', 0.5);

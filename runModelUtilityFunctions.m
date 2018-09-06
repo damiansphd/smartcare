@@ -17,7 +17,7 @@ fprintf('6: Label exacerbation plots for test data\n');
 fprintf('7: Compare results to another model run\n');
 fprintf('8: Compare results to labelled test data\n');
 fprintf('\n');
-runfunction = input('Choose function (1-7) ');
+runfunction = input('Choose function (1-8) ');
 
 fprintf('\n');
 
