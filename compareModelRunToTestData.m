@@ -1,5 +1,5 @@
 function compareModelRunToTestData(amLabelledInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, ...
-    hstg, overall_hist, offsets, meancurvemean, normmean, ex_start, nmeasures, ninterventions, max_offset, ...
+    hstg, overall_hist, offsets, meancurvemean, normmean, ex_start, nmeasures, ninterventions, min_offset, max_offset, ...
     align_wind, study, version, modelrun, modelidx)
 
 % compareModelRunToTestData - compares the output of a chosen model run to
@@ -17,7 +17,15 @@ testset_ex_start = testset.ExStart(1);
 
 diff_ex_start = testset_ex_start - ex_start;
 
-matchidx = ((modeloffsets >= (testset.LowerBound + diff_ex_start)) & (modeloffsets <= (testset.UpperBound+ diff_ex_start)));
+matchidx = ((modeloffsets >= (testset.LowerBound + diff_ex_start)) & (modeloffsets <= (testset.UpperBound + diff_ex_start)));
+if diff_ex_start < 0
+    matchidx2 = (modeloffsets >= max_offset + diff_ex_start) & (testset.UpperBound == max_offset - 1);
+elseif diff_ex_start > 0
+    matchidx2 = (modeloffsets <= min_offset + diff_ex_start) & (testset.LowerBound == min_offset);
+else
+    matchidx2 = (modeloffsets == -10);
+end
+matchidx = matchidx | matchidx2;
 
 fprintf('For model %d: %s:\n', modelidx, modelrun);
 fprintf('%2d of %2d results match labelled test data\n', sum(matchidx), testsetsize);
@@ -34,7 +42,8 @@ for i = 1:testsetsize
     scid = testset.SmartCareID(i);
     thisinter = testset.InterNbr(i);
     offset = modeloffsets(i);
-    if ((modeloffsets(i) >= (testset.LowerBound(i) + diff_ex_start)) && (modeloffsets(i) <= (testset.UpperBound(i) + diff_ex_start)))
+    %if ((modeloffsets(i) >= (testset.LowerBound(i) + diff_ex_start)) && (modeloffsets(i) <= (testset.UpperBound(i) + diff_ex_start)))
+    if matchidx(i)
         result = 'MATCH';
     else
         result = 'MISMATCH';

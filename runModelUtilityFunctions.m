@@ -167,7 +167,7 @@ else
     testdatafilename = sprintf('%s_LabelledInterventions.mat', study);
     load(fullfile(basedir, subfolder, testdatafilename));
     compareModelRunToTestData(amLabelledInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, hstg, overall_hist, ...
-        offsets, meancurvemean, normmean, ex_start, nmeasures, ninterventions, max_offset, align_wind, study, version, modelrun, modelidx);
+        offsets, meancurvemean, normmean, ex_start, nmeasures, ninterventions, min_offset, max_offset, align_wind, study, version, modelrun, modelidx);
 end
     
 
