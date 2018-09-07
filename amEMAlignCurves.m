@@ -82,21 +82,12 @@ while (pddiff > 0.00001)
                     fprintf('After removing intervention %d, %s on day %d has <3 datapoints, Count: %.6f StdDev: %.6f\n', pnt, measures.Name{m}, a, meancurvecount(a, m), meancurvestd(a, m));
                 end
                 ok = 0;
-                %if iter >= 10 && a == max_offset + align_wind - 1 - min_offset
                 if pddiff < 0.1 && a == max_offset + align_wind - 1 - min_offset
                     block_offset = 1;
                 end
             end
         end
     end
-    
-    %if offsetblockingmethod == 2 && block_offset == 1
-    %    fprintf('Preparing to Block offset %d\n', min_offset);
-    %    temp = input('Go ahead (1) or not (2) ? ');
-    %    if temp == 2
-    %        block_offset = 0;
-    %    end
-    %end
         
     if offsetblockingmethod == 2 && block_offset == 1 && min_offset < 3
         
@@ -146,8 +137,6 @@ while (pddiff > 0.00001)
                 meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, i, ...
                 min_offset, max_offset, align_wind, nmeasures);
         end
-        
-        %ok = 1;
         
         % remove current intervention from mean curve before
         % proceeding
@@ -203,7 +192,7 @@ while (pddiff > 0.00001)
             qual = qual + amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measures.Mask, normstd, ...
                 hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
             
-            %fprintf('Intervention %d, qual = %.4f\n', i, qual);
+            fprintf('Intervention %d, qual = %.4f\n', i, qual);
     
             [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMAddToMean(meancurvesumsq, meancurvesum, ...
                 meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, i, ...

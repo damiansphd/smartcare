@@ -44,7 +44,7 @@ while 1
     
     for a=1:max_offset + align_wind - 1 - min_offset
         for m=1:nmeasures
-            if (measures.Mask(m) == 1) && (meancurvecount(a,m) < 2)
+            if (measures.Mask(m) == 1) && (meancurvecount(a,m) < 3)
                 if detaillog
                     fprintf('After removing intervention %d, %s on day %d has <3 datapoints\n', pnt, measures.Name{m}, a);
                 end
@@ -139,7 +139,7 @@ while 1
             qual = qual + am4CalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measures.Mask, normstd, ...
                 hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
     
-            %fprintf('Intervention %d, qual = %.4f\n', i, qual);
+            fprintf('Intervention %d, qual = %.4f\n', i, qual);
     
             [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvesumsq, meancurvesum, ...
                 meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(i), i, ...
