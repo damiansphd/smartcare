@@ -4,7 +4,7 @@ function [modelrun, modelidx] = selectModelRunFromList(loadtype)
 % historical model run (either all the variables or just the prob
 % distributions/distance function arrays.
 
-models = {  
+damianmodels = {  
             'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4595.2626';
             'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-27_obj4602.0068';
             'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-27_obj4557.8883';
@@ -48,13 +48,38 @@ models = {
             'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm2_mo25_dw25_ex-28_obj355367416437.6850';
             
          };
+     
+dragomodels = {  
+            '<insert name of matlab saved variable file here>';
+            '<leave off the .mat from the name';
+            'etc';
+            
+         };
 
-% other models to potentially add
-% sig4 version (although zero offset start is infinity
-% vEM with bet random start from 3 or 4
+fprintf('Pick Model set\n');
+fprintf('--------------\n');
+fprintf('1: Damian\n');
+fprintf('2: Drago\n');
+
+modelset = input('Choose model set (1-2) ');
+
+if modelset > 2
+    fprintf('Invalid choice\n');
+    return;
+end
+if isequal(modelset,'')
+    fprintf('Invalid choice\n');
+    return;
+end
+
+if modelset == 1
+    models = damianmodels;
+else
+    models = dragomodels;
+end
+
 
 nmodels = size(models,1);
-
 fprintf('Model runs available\n');
 fprintf('--------------------\n');
 for i = 1:nmodels
