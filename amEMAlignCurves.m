@@ -21,6 +21,9 @@ overall_hstg      = zeros(ninterventions, max_offset);
 overall_pdoffset  = zeros(ninterventions, max_offset);
 animated_overall_pdoffset  = zeros(ninterventions, max_offset, aniterations);
 
+min_offset = 0; % start at zero, and only adjust if we encounter too few data points at right hand end of latent curve
+countthreshold    = 5; % minimum number of undelying curves that must contribute to a point in the average curve
+
 if runmode == 6
     load(fnmodelrun);
     overall_hstg = overall_hist;
@@ -45,15 +48,13 @@ end
 
 animated_overall_pdoffset(:, :, 1) = overall_pdoffset;
 
-min_offset = 0; % start at zero, and only adjust if we encounter too few data points at right hand end of latent curve
-
 % calculate initial mean curve over all interventions & prior prob
 % distribution for offsets
 for i = 1:ninterventions
-    [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMAddToMean(meancurvesumsq, meancurvesum, ...
-        meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, i, ...
-        min_offset, max_offset, align_wind, nmeasures);
+    [meancurvesumsq, meancurvesum, meancurvecount] = amEMAddToMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+        overall_pdoffset, amIntrCube, i, min_offset, max_offset, align_wind, nmeasures);
 end
+[meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
 
 % store the mean curves pre-alignment for each measure for plotting
 profile_pre = meancurvemean;
@@ -67,36 +68,39 @@ prior_overall_pdoffset = overall_pdoffset;
 miniiter = 0;
 
 while (pddiff > 0.00001)
-    [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMRemoveFromMean(meancurvesumsq, meancurvesum, ...
-        meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, pnt, ...
-        min_offset, max_offset, align_wind, nmeasures);
-    
-    % check safety
     ok = 1;
     block_offset = 0;
     
-    for a=1:max_offset + align_wind - 1 - min_offset
-        for m=1:nmeasures
-            if (measures.Mask(m) == 1) && (meancurvecount(a, m) < 2)
-                if detaillog
-                    fprintf('After removing intervention %d, %s on day %d has <3 datapoints, Count: %.6f StdDev: %.6f\n', pnt, measures.Name{m}, a, meancurvecount(a, m), meancurvestd(a, m));
-                end
-                ok = 0;
-                if pddiff < 0.1 && a == max_offset + align_wind - 1 - min_offset
-                    block_offset = 1;
-                end
-            end
-        end
-    end
-        
+    % remove current curve from the sum, sumsq, count average curve arrays 
+    % before doing bestfit alignment
+    [meancurvesumsq, meancurvesum, meancurvecount] = amEMRemoveFromMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+        overall_pdoffset, amIntrCube, pnt, min_offset, max_offset, align_wind, nmeasures);
+    
+    % find and keep track of points that have too few data points contributing 
+    % to them 
+    [ppts] = findProblemDataPoints(meancurvesumsq, meancurvesum, meancurvecount, measures.Mask, min_offset, max_offset, align_wind, nmeasures, countthreshold);
+    
+    % uncomment this if we need to enable offset blocking in the future
+    %if size(ppts,1) >= 1
+    %    block_offset = 1;
+    %end
+    
+    % add the adjustments to the various meancurve arrays 
+    % and recalc mean and std arrays
+    [meancurvesumsq, meancurvesum, meancurvecount] = addAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
+    [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
+    
+    % ******** Offset blocking should not be used - leaving the code here
+    % in case it's useful in the future but it should not be executed
     if offsetblockingmethod == 2 && block_offset == 1 && min_offset < 3
         
         fprintf('Blocking offset %d\n', min_offset);
 
         % put current intervention back in mean curve temporarily
-        [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMAddToMean(meancurvesumsq, meancurvesum, ...
-            meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, pnt, ...
-            min_offset, max_offset, align_wind, nmeasures);
+        [meancurvesumsq, meancurvesum, meancurvecount] = removeAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
+        [meancurvesumsq, meancurvesum, meancurvecount] = amEMAddToMean(meancurvesumsq, meancurvesum, meancurvecount, ... 
+            overall_pdoffset, amIntrCube, pnt, min_offset, max_offset, align_wind, nmeasures);
+        %[meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
 
         % for all interventions remove from mean
         % **** avoids small number inaccuracies - just zero out all the
@@ -107,12 +111,6 @@ while (pddiff > 0.00001)
         % renormalise pdoffset and overall_pdoffset
         % 
         % for all interventions, add to mean with min_offset incremented
-        
-        %for i = 1:ninterventions
-        %    [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMRemoveFromMean(meancurvesumsq, meancurvesum, ...
-        %        meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, i, ...
-        %        min_offset, max_offset, align_wind, nmeasures);
-        %end
         
         meancurvesum(:,:)   = 0;
         meancurvesumsq(:,:) = 0;
@@ -132,17 +130,19 @@ while (pddiff > 0.00001)
                 pdoffset(m, i, (min_offset + 1):max_offset) = pdoffset(m, i, (min_offset + 1):max_offset) ./ sum(pdoffset(m, i, (min_offset + 1):max_offset));
             end
             overall_pdoffset(i, (min_offset + 1):max_offset) = overall_pdoffset(i, (min_offset + 1):max_offset) ./ sum(overall_pdoffset(i, (min_offset + 1):max_offset));
-        
-            [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMAddToMean(meancurvesumsq, meancurvesum, ...
-                meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, i, ...
-                min_offset, max_offset, align_wind, nmeasures);
+            
+            [meancurvesumsq, meancurvesum, meancurvecount] = amEMAddToMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+                overall_pdoffset, amIntrCube, i, min_offset, max_offset, align_wind, nmeasures);
+            
         end
+        [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
         
         % remove current intervention from mean curve before
         % proceeding
-        [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMRemoveFromMean(meancurvesumsq, meancurvesum, ...
-            meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, pnt, ...
-            min_offset, max_offset, align_wind, nmeasures);
+        [meancurvesumsq, meancurvesum, meancurvecount] = amEMRemoveFromMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+            overall_pdoffset, amIntrCube, pnt, min_offset, max_offset, align_wind, nmeasures);
+        [meancurvesumsq, meancurvesum, meancurvecount] = addAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
+        [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
     end
      
     if ok == 1
@@ -168,10 +168,11 @@ while (pddiff > 0.00001)
             fprintf('Exceeded storage for animated iterations\n');
         end
     end
-    [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMAddToMean(meancurvesumsq, meancurvesum, ...
-        meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, pnt, ...
-        min_offset, max_offset, align_wind, nmeasures);
-        
+    [meancurvesumsq, meancurvesum, meancurvecount] = removeAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
+    [meancurvesumsq, meancurvesum, meancurvecount] = amEMAddToMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+        overall_pdoffset, amIntrCube, pnt, min_offset, max_offset, align_wind, nmeasures);
+    [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
+    
     pnt = pnt+1;
     if pnt > ninterventions
         iter = iter + 1;
@@ -185,21 +186,23 @@ while (pddiff > 0.00001)
         update_histogram = 0;
         qual = 0;
         for i=1:ninterventions
-            [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMRemoveFromMean(meancurvesumsq, meancurvesum, ...
-                meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, i, ...
-                min_offset, max_offset, align_wind, nmeasures);
+            [meancurvesumsq, meancurvesum, meancurvecount] = amEMRemoveFromMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+                overall_pdoffset, amIntrCube, i, min_offset, max_offset, align_wind, nmeasures);
+            [meancurvesumsq, meancurvesum, meancurvecount] = addAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
+            [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
     
             qual = qual + amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measures.Mask, normstd, ...
                 hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
             
-            fprintf('Intervention %d, qual = %.4f\n', i, qual);
+            %fprintf('Intervention %d, qual = %.4f\n', i, qual);
     
-            [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = amEMAddToMean(meancurvesumsq, meancurvesum, ...
-                meancurvecount, meancurvemean, meancurvestd, overall_pdoffset, amIntrCube, i, ...
-                min_offset, max_offset, align_wind, nmeasures);
+            [meancurvesumsq, meancurvesum, meancurvecount] = removeAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
+            [meancurvesumsq, meancurvesum, meancurvecount] = amEMAddToMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+                overall_pdoffset, amIntrCube, i, min_offset, max_offset, align_wind, nmeasures);
+            [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
         end
         if cnt == 0
-            fprintf('No changes on iteration %2d, obj fcn = %.4f, prob distrib diff = %.4f\n', iter, qual, pddiff);
+            fprintf('No changes on iteration %2d, obj fcn = %.4f, prob distrib diff = %.6f\n', iter, qual, pddiff);
         else
             fprintf('Changed %2d offsets on iteration %2d, obj fcn = %.4f, prob distrib diff = %.4f\n', cnt, iter, qual, pddiff);
         end

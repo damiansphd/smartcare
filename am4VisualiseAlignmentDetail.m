@@ -142,9 +142,9 @@ for m = 1:nmeasures
             temp_interventions = amInterventions(sorted_interventions.Intervention(qlower:qupper),:);
             
             for i = 1:qnbr
-                [temp_meancurvesumsq, temp_meancurvesum, temp_meancurvecount, temp_meancurvemean, temp_meancurvestd] = am4AddToMean(temp_meancurvesumsq, temp_meancurvesum, ...
-                    temp_meancurvecount, temp_meancurvemean, temp_meancurvestd, amIntrCube(sorted_interventions.Intervention(qlower:qupper), :, :), ...
-                    temp_interventions.Offset(i), i, max_offset, align_wind, nmeasures);
+                [temp_meancurvesumsq, temp_meancurvesum, temp_meancurvecount] = am4AddToMean(temp_meancurvesumsq, temp_meancurvesum, temp_meancurvecount, ...
+                    amIntrCube(sorted_interventions.Intervention(qlower:qupper), :, :), temp_interventions.Offset(i), i, min_offset, max_offset, align_wind, nmeasures);
+                [temp_meancurvemean, temp_meancurvestd] = calcMeanAndStd(temp_meancurvesumsq, temp_meancurvesum, temp_meancurvecount, min_offset, max_offset, align_wind);
             end
             
             qintrminoffset = min(amInterventions.Offset(sorted_interventions.Intervention(qlower:qupper)));

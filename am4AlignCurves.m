@@ -16,11 +16,14 @@ offsets           = zeros(ninterventions, 1);
 animatedoffsets   = zeros(ninterventions, aniterations);
 hstg              = zeros(nmeasures, ninterventions, max_offset);
 
+min_offset        = 0; % start at zero, and only adjust if we encounter too few data points at right hand end of latent curve
+countthreshold    = 5; % minimum number of undelying curves that must contribute to a point in the average curve
+
 % calculate mean curve over all interventions
 for i = 1:ninterventions
-    [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvesumsq, meancurvesum, ...
-        meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(i), i, max_offset, ...
-       align_wind, nmeasures);
+    [meancurvesumsq, meancurvesum, meancurvecount] = am4AddToMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+        amIntrCube, amInterventions.Offset(i), i, min_offset, max_offset, align_wind, nmeasures);
+    [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
 end
 
 % store the mean curves pre-alignment for each measure for plotting
@@ -31,39 +34,42 @@ pnt = 1;
 cnt = 0;
 iter = 0;
 miniiter = 0;
-min_offset = 0; % start at zero, and only adjust if we encounter too few data points at right hand end of latent curve
 
 while 1
-    [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4RemoveFromMean(meancurvesumsq, meancurvesum, ...
-        meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(pnt), pnt, ...
-        max_offset, align_wind, nmeasures);
-    
-    % check safety
     ok = 1;
     block_offset = 0;
     
-    for a=1:max_offset + align_wind - 1 - min_offset
-        for m=1:nmeasures
-            if (measures.Mask(m) == 1) && (meancurvecount(a,m) < 3)
-                if detaillog
-                    fprintf('After removing intervention %d, %s on day %d has <3 datapoints\n', pnt, measures.Name{m}, a);
-                end
-                ok = 0;
-                if iter >= 10 && a == max_offset + align_wind - 1 - min_offset
-                    block_offset = 1;
-                end
-            end
-        end
-    end
+    % remove current curve from the sum, sumsq, count average curve arrays 
+    % before doing bestfit alignment
+    [meancurvesumsq, meancurvesum, meancurvecount] = am4RemoveFromMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+        amIntrCube, amInterventions.Offset(pnt), pnt, min_offset, max_offset, align_wind, nmeasures);
     
+    % find and keep track of points that have too few data points contributing 
+    % to them 
+    [ppts] = findProblemDataPoints(meancurvesumsq, meancurvesum, meancurvecount, measures.Mask, min_offset, max_offset, align_wind, nmeasures, countthreshold);
+    
+    % uncomment this if we need to enable offset blocking in the future
+    %if size(ppts,1) >= 1
+    %    block_offset = 1;
+    %end
+    
+    % add the adjustments to the various meancurve arrays 
+    % and recalc mean and std arrays
+    [meancurvesumsq, meancurvesum, meancurvecount] = addAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
+    [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
+        
+    % ******** Offset blocking should not be used - leaving the code here
+    % in case it's useful in the future but it should not be executed
     if offsetblockingmethod == 2 && block_offset == 1 && min_offset < 3
         if detaillog
             fprintf('Blocking offset %d: ', min_offset);
         end
         % put current intervention back in mean curve temporarily
-        [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvesumsq, meancurvesum, ...
-            meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(pnt), pnt, ...
-            max_offset, align_wind, nmeasures);
+        [meancurvesumsq, meancurvesum, meancurvecount] = removeAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
+        [meancurvesumsq, meancurvesum, meancurvecount] = am4AddToMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+            amIntrCube, amInterventions.Offset(pnt), pnt, min_offset, max_offset, align_wind, nmeasures);
+        %[meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
+        
         idx = find(amInterventions.Offset == min_offset);
         if size(idx,1) >= 1
             % for each intervention with offset giving too few data
@@ -74,13 +80,14 @@ while 1
             fprintf('Updating offset for interventions ');
             for i = 1:size(idx, 1)
                 fprintf('%d, ', idx(i));
-                [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4RemoveFromMean(meancurvesumsq, meancurvesum, ...
-                    meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(idx(i)), idx(i), ...
-                    max_offset, align_wind, nmeasures);
+                
+                [meancurvesumsq, meancurvesum, meancurvecount] = am4RemoveFromMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+                    amIntrCube, amInterventions.Offset(idx(i)), idx(i), min_offset, max_offset, align_wind, nmeasures);
+                
                 amInterventions.Offset(idx(i)) = min_offset + 1;
-                [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvesumsq, meancurvesum, ...
-                    meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(idx(i)), idx(i), ...
-                    max_offset, align_wind, nmeasures);
+                
+                [meancurvesumsq, meancurvesum, meancurvecount] = am4AddToMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+                    amIntrCube, amInterventions.Offset(idx(i)), idx(i), min_offset, max_offset, align_wind, nmeasures);
             end
             fprintf('\n');
             hstg(:, :, min_offset + 1) = 0;
@@ -88,9 +95,10 @@ while 1
             %ok = 1;
             % remove current intervention from mean curve before
             % proceeding
-            [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4RemoveFromMean(meancurvesumsq, meancurvesum, ...
-                meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(pnt), pnt, ...
-                max_offset, align_wind, nmeasures);
+            [meancurvesumsq, meancurvesum, meancurvecount] = am4RemoveFromMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+                amIntrCube, amInterventions.Offset(pnt), pnt, min_offset, max_offset, align_wind, nmeasures);
+            [meancurvesumsq, meancurvesum, meancurvecount] = addAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
+            [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
         end
     end
     
@@ -104,7 +112,7 @@ while 1
     end
     
     if better_offset ~= amInterventions.Offset(pnt)
-        if detaillog & iter >= 10
+        if detaillog %& iter >= 10
             fprintf('amIntervention.Offset(%d) updated from %d to %d\n', pnt, amInterventions.Offset(pnt), better_offset);
         end
         amInterventions.Offset(pnt) = better_offset;
@@ -117,9 +125,14 @@ while 1
             fprintf('Exceeded storage for animated iterations\n');
         end
     end
-    [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvesumsq, meancurvesum, ...
-        meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(pnt), pnt, ...
-        max_offset, align_wind, nmeasures);
+    
+    
+    % remove the adjustments from the verious meancurve arrays and recalc mean
+    % and std arrays and add current curve back to mean curve after doing alignment
+    [meancurvesumsq, meancurvesum, meancurvecount] = removeAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
+    [meancurvesumsq, meancurvesum, meancurvecount] = am4AddToMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+        amIntrCube, amInterventions.Offset(pnt), pnt, min_offset, max_offset, align_wind, nmeasures);
+    [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
         
     pnt = pnt+1;
     if pnt > ninterventions
@@ -132,25 +145,28 @@ while 1
         update_histogram = 0;
         qual = 0;
         for i=1:ninterventions
-            [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4RemoveFromMean(meancurvesumsq, meancurvesum, ...
-                meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(i), i, ...
-                max_offset, align_wind, nmeasures);
+            [meancurvesumsq, meancurvesum, meancurvecount] = am4RemoveFromMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+                amIntrCube, amInterventions.Offset(i), i, min_offset, max_offset, align_wind, nmeasures);
+            [meancurvesumsq, meancurvesum, meancurvecount] = addAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
+            [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
     
             qual = qual + am4CalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measures.Mask, normstd, ...
                 hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
     
-            fprintf('Intervention %d, qual = %.4f\n', i, qual);
-    
-            [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd] = am4AddToMean(meancurvesumsq, meancurvesum, ...
-                meancurvecount, meancurvemean, meancurvestd, amIntrCube, amInterventions.Offset(i), i, ...
-                max_offset, align_wind, nmeasures);
+            %fprintf('Intervention %d, qual = %.4f\n', i, qual);
+            
+            [meancurvesumsq, meancurvesum, meancurvecount] = removeAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
+            [meancurvesumsq, meancurvesum, meancurvecount] = am4AddToMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+                amIntrCube, amInterventions.Offset(i), i, min_offset, max_offset, align_wind, nmeasures);
+            [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
         end
+        fprintf('On iteration %2d: Handled %d points with insufficient data\n', iter, size(unique(ppts(:,1)),1));
         if cnt == 0
-            fprintf('No changes on iteration %2d, obj fcn = %.4f\n', iter, qual);
+            fprintf('On iteration %2d: No changes, obj fcn = %.4f\n', iter, qual);
             break;
         else
-            fprintf('Changed %2d offsets on iteration %2d, obj fcn = %.4f\n', cnt, iter, qual);
-            if iter > 35
+            fprintf('On iteration %2d: Changed %2d offsets, obj fcn = %.4f\n', iter, cnt, qual);
+            if iter > 100
                 fprintf('Iteration count limit exceeded - breaking\n');
                 break;
             end  

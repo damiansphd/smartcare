@@ -29,23 +29,53 @@ damianmodels = {
             'placeholder';
             'placeholder';
             
-            'SC_AMv4c_sig4_mu3_ca2_sm1_rm1_ob2_mm2_mo25_dw25_ex-28_obj5783.1800';
-            'SC_AMv4c_sig4_mu3_ca2_sm2_rm1_ob2_mm2_mo25_dw25_ex-25_obj5769.8313';
-            'SC_AMv4c_sig4_mu3_ca2_sm2_rm2_ob2_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
-            'SC_AMvEM_sig4_mu3_ca2_sm1_rm5_ob2_mm2_mo25_dw25_ex-28_obj5783.1800';
-            'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob2_mm2_mo25_dw25_ex-28_obj5653.5605';
+            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_ob1_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_ob1_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_ob1_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_ob1_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_ob1_mm2_mo25_dw25_ex-27_obj17384.2629';
             
-            'SC_AMv4c_sig4_mu3_ca2_sm1_rm1_ob2_mm3_mo25_dw25_ex-25_obj11684.8944';
-            'SC_AMv4c_sig4_mu3_ca2_sm2_rm1_ob2_mm3_mo25_dw25_ex-25_obj11063.4751';
-            'SC_AMv4c_sig4_mu3_ca2_sm2_rm2_ob2_mm3_mo25_dw25_ex-xx_objxxxxx.xxxx';
-            'SC_AMvEM_sig4_mu3_ca2_sm1_rm5_ob2_mm3_mo25_dw25_ex-28_obj11684.8944';
-            'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob2_mm3_mo25_dw25_ex-25_obj11572.1696';
+            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_ob1_mm3_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_ob1_mm3_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_ob1_mm3_mo25_dw25_ex-xx_objxxxxx.xxxx';
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_ob1_mm3_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-xx_objxxxx.xxxx';
             
-            'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob2_mm2_mo25_dw25_ex-28_obj5496.1805';
-            'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob2_mm3_mo25_dw25_ex-25_obj10946.4110';
-            'SC_AMv4c_sig4_mu3_ca2_sm1_rm2_ob2_mm2_mo25_dw25_ex-28_obj5636.3818';
-            'SC_AMv4c_sig4_mu3_ca2_sm1_rm2_ob2_mm3_mo25_dw25_ex-25_obj11226.4275';
-            'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm2_mo25_dw25_ex-28_obj355367416437.6850';
+            'SC_AMvEM_sig3_mu3_ca2_sm2_rm4_ob1_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMvEM_sig3_mu3_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMv4c_sig3_mu3_ca2_sm1_rm2_ob1_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMv4c_sig3_mu3_ca2_sm1_rm2_ob1_mm3_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'placeholder';
+            
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            
+            'SC_AMv4c_sig4_mu3_ca2_sm1_rm1_ob1_mm2_mo25_dw25_ex-28_obj17836.3116';
+            'SC_AMv4c_sig4_mu3_ca2_sm2_rm1_ob1_mm2_mo25_dw25_ex-28_obj17850.8576';
+            'SC_AMv4c_sig4_mu3_ca2_sm2_rm2_ob1_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMvEM_sig4_mu3_ca2_sm1_rm5_ob1_mm2_mo25_dw25_ex-28_obj17836.3116';
+            'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm2_mo25_dw25_ex-28_obj17797.4510';
+            
+            'SC_AMv4c_sig4_mu3_ca2_sm1_rm1_ob1_mm3_mo25_dw25_ex-28_obj32500.5703';
+            'SC_AMv4c_sig4_mu3_ca2_sm2_rm1_ob1_mm3_mo25_dw25_ex-28_obj32461.0147';
+            'SC_AMv4c_sig4_mu3_ca2_sm2_rm2_ob1_mm3_mo25_dw25_ex-xx_objxxxxx.xxxx';
+            'SC_AMvEM_sig4_mu3_ca2_sm1_rm5_ob1_mm3_mo25_dw25_ex-28_obj32500.5703';
+            'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj32486.8715';
+            
+            'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm2_mo25_dw25_ex-28_obj17826.4088';
+            'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj32464.4365';
+            'SC_AMv4c_sig4_mu3_ca2_sm1_rm2_ob1_mm2_mo25_dw25_ex-28_obj17778.1399';
+            'SC_AMv4c_sig4_mu3_ca2_sm1_rm2_ob1_mm3_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'placeholder';
+            
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
             
          };
      

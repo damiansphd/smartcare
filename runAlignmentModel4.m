@@ -88,7 +88,7 @@ end
 fprintf('Methodology for offset blocking\n');
 fprintf('-------------------------------\n');
 fprintf('1: Disable offset blocking\n');
-fprintf('2: Enable offset blocking\n');
+fprintf('2: Enable offset blocking (DO NOT USE)\n');
 offsetblockingmethod = input('Choose methodology (1-2) ');
 fprintf('\n');
 if offsetblockingmethod > 2
