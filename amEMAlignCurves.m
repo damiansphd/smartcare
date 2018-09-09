@@ -1,5 +1,5 @@
 function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, ...
-    offsets, animatedoffsets, hstg, pdoffset, overall_hstg, overall_pdoffset, animated_overall_pdoffset, qual, min_offset] = ...
+    offsets, animatedoffsets, hstg, pdoffset, overall_hstg, overall_pdoffset, animated_overall_pdoffset, ppts, qual, min_offset] = ...
     amEMAlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, ...
     detaillog, sigmamethod, smoothingmethod, offsetblockingmethod, runmode, fnmodelrun)
 
@@ -67,7 +67,7 @@ pddiff = 100;
 prior_overall_pdoffset = overall_pdoffset;
 miniiter = 0;
 
-while (pddiff > 0.00001)
+while (pddiff > 0.00001 && iter < 100)
     ok = 1;
     block_offset = 0;
     
@@ -213,6 +213,9 @@ while (pddiff > 0.00001)
     end
 end
 
+[meancurvesumsq, meancurvesum, meancurvecount] = addAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
+[meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
+            
 for i=1:ninterventions 
     offsets(i) = amInterventions.Offset(i);
 end

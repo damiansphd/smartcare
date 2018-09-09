@@ -1,6 +1,6 @@
 clear; close all; clc;
 
-[modelrun, modelidx] = selectModelRunFromList('');
+[modelrun, modelidx, models] = selectModelRunFromList('');
 
 % other models to potentially add
 % sig4 version (although zero offset start is infinity
@@ -8,20 +8,22 @@ clear; close all; clc;
 
 fprintf('Choose function to run\n');
 fprintf('----------------------\n');
-fprintf('1: Run prediction plots\n');
-fprintf('2: Run alignment animation (concurrent)\n');
-fprintf('3: Run alignment animation (sequential)\n');
-fprintf('4: Run prod dist animation (concurrent)\n');
-fprintf('5: Extract and save prob distributions\n');
-fprintf('6: Label exacerbation plots for test data\n');
-fprintf('7: Compare results to another model run\n');
-fprintf('8: Compare results to labelled test data\n');
+fprintf(' 1: Run prediction plots\n');
+fprintf(' 2: Run alignment animation (concurrent)\n');
+fprintf(' 3: Run alignment animation (sequential)\n');
+fprintf(' 4: Run prod dist animation (concurrent)\n');
+fprintf(' 5: Extract and save prob distributions\n');
+fprintf(' 6: Label exacerbation plots for test data\n');
+fprintf(' 7: Compare results to another model run\n');
+fprintf(' 8: Compare results to labelled test data and plot results\n');
+fprintf(' 9: <placeholder for Dragos new option\n');
+fprintf('10: Compare results for multiple model runs to labelled test data\n');
 fprintf('\n');
-runfunction = input('Choose function (1-8) ');
+runfunction = input('Choose function (1-10) ');
 
 fprintf('\n');
 
-if runfunction > 8
+if runfunction > 10
     fprintf('Invalid choice\n');
     return;
 end
@@ -153,14 +155,14 @@ elseif runfunction == 6
     save(fullfile(basedir, subfolder, outputfilename), 'amLabelledInterventions');
     outputfilename = sprintf('%s_LabelledInterventions.mat', study);
     save(fullfile(basedir, subfolder, outputfilename), 'amLabelledInterventions');
-elseif runfunction ==7
+elseif runfunction == 7
     fprintf('Comparing results to another model run\n');
     fprintf('\n');
     fprintf('Select second model to compare\n');
     fprintf('\n');
     [modelrun2, modelidx2] = selectModelRunFromList('');
     compareModelRuns(modelrun, modelidx, modelrun2, modelidx2);
-else
+elseif runfunction == 8
     fprintf('Comparing results to the labelled test data\n');
     fprintf('\n');
     subfolder = 'MatlabSavedVariables';
@@ -168,6 +170,15 @@ else
     load(fullfile(basedir, subfolder, testdatafilename));
     compareModelRunToTestData(amLabelledInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, hstg, overall_hist, ...
         offsets, meancurvemean, normmean, ex_start, nmeasures, ninterventions, min_offset, max_offset, align_wind, study, version, modelrun, modelidx);
+elseif runfunction == 9
+    fprintf('<placeholder for Dragos new option>\n');
+else
+    fprintf('Comparing results of multiple model runs to the labelled test data\n');
+    fprintf('\n');
+    subfolder = 'MatlabSavedVariables';
+    testdatafilename = sprintf('%s_LabelledInterventions.mat', study);
+    load(fullfile(basedir, subfolder, testdatafilename));
+    compareMultipleModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models);
 end
     
 

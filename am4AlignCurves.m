@@ -1,5 +1,5 @@
 function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, ...
-    offsets, animatedoffsets, hstg, qual, min_offset] = am4AlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, ...
+    offsets, animatedoffsets, hstg, ppts, qual, min_offset] = am4AlignCurves(amIntrCube, amInterventions, measures, normstd, max_offset, ...
     align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod, offsetblockingmethod)
 
 % am4AlignCurves = function to align measurement curves prior to intervention
@@ -126,7 +126,6 @@ while 1
         end
     end
     
-    
     % remove the adjustments from the verious meancurve arrays and recalc mean
     % and std arrays and add current curve back to mean curve after doing alignment
     [meancurvesumsq, meancurvesum, meancurvecount] = removeAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
@@ -166,7 +165,7 @@ while 1
             break;
         else
             fprintf('On iteration %2d: Changed %2d offsets, obj fcn = %.4f\n', iter, cnt, qual);
-            if iter > 100
+            if iter > 50
                 fprintf('Iteration count limit exceeded - breaking\n');
                 break;
             end  
@@ -174,6 +173,9 @@ while 1
         cnt = 0;
     end
 end
+
+[meancurvesumsq, meancurvesum, meancurvecount] = addAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
+[meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
 
 for i=1:ninterventions 
     offsets(i) = amInterventions.Offset(i);

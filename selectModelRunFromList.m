@@ -1,4 +1,4 @@
-function [modelrun, modelidx] = selectModelRunFromList(loadtype)
+function [modelrun, modelidx, models] = selectModelRunFromList(loadtype)
 
 % selectModelRunFromList - allows you to load the saved variables from a
 % historical model run (either all the variables or just the prob
@@ -29,22 +29,22 @@ damianmodels = {
             'placeholder';
             'placeholder';
             
-            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_ob1_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
-            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_ob1_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_ob1_mm2_mo25_dw25_ex-27_obj17477.2629';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_ob1_mm2_mo25_dw25_ex-27_obj17419.4511';
             'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_ob1_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
-            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_ob1_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_ob1_mm2_mo25_dw25_ex-27_obj17477.2629';
             'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_ob1_mm2_mo25_dw25_ex-27_obj17384.2629';
             
-            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_ob1_mm3_mo25_dw25_ex-xx_objxxxx.xxxx';
-            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_ob1_mm3_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_ob1_mm3_mo25_dw25_ex-27_obj32115.4702';
+            'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_ob1_mm3_mo25_dw25_ex-27_obj32042.1136';
             'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_ob1_mm3_mo25_dw25_ex-xx_objxxxxx.xxxx';
-            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_ob1_mm3_mo25_dw25_ex-xx_objxxxx.xxxx';
-            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm5_ob1_mm3_mo25_dw25_ex-27_obj32115.4702';
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-27_obj32077.8214';
             
-            'SC_AMvEM_sig3_mu3_ca2_sm2_rm4_ob1_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
-            'SC_AMvEM_sig3_mu3_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-xx_objxxxx.xxxx';
-            'SC_AMv4c_sig3_mu3_ca2_sm1_rm2_ob1_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
-            'SC_AMv4c_sig3_mu3_ca2_sm1_rm2_ob1_mm3_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMvEM_sig3_mu3_ca2_sm2_rm4_ob1_mm2_mo25_dw25_ex-27_obj17402.3337';
+            'SC_AMvEM_sig3_mu3_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-27_obj32015.6861';
+            'SC_AMv4c_sig3_mu3_ca2_sm1_rm2_ob1_mm2_mo25_dw25_ex-27_obj17383.5845';
+            'SC_AMv4c_sig3_mu3_ca2_sm1_rm2_ob1_mm3_mo25_dw25_ex-27_obj32004.1787';
             'placeholder';
             
             'placeholder';
@@ -55,20 +55,20 @@ damianmodels = {
             
             'SC_AMv4c_sig4_mu3_ca2_sm1_rm1_ob1_mm2_mo25_dw25_ex-28_obj17836.3116';
             'SC_AMv4c_sig4_mu3_ca2_sm2_rm1_ob1_mm2_mo25_dw25_ex-28_obj17850.8576';
-            'SC_AMv4c_sig4_mu3_ca2_sm2_rm2_ob1_mm2_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMv4c_sig4_mu3_ca2_sm2_rm2_ob1_mm2_mo25_dw25_ex-28_obj17806.9471';
             'SC_AMvEM_sig4_mu3_ca2_sm1_rm5_ob1_mm2_mo25_dw25_ex-28_obj17836.3116';
             'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm2_mo25_dw25_ex-28_obj17797.4510';
             
             'SC_AMv4c_sig4_mu3_ca2_sm1_rm1_ob1_mm3_mo25_dw25_ex-28_obj32500.5703';
             'SC_AMv4c_sig4_mu3_ca2_sm2_rm1_ob1_mm3_mo25_dw25_ex-28_obj32461.0147';
-            'SC_AMv4c_sig4_mu3_ca2_sm2_rm2_ob1_mm3_mo25_dw25_ex-xx_objxxxxx.xxxx';
+            'SC_AMv4c_sig4_mu3_ca2_sm2_rm2_ob1_mm3_mo25_dw25_ex-28_obj32449.6955';
             'SC_AMvEM_sig4_mu3_ca2_sm1_rm5_ob1_mm3_mo25_dw25_ex-28_obj32500.5703';
             'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj32486.8715';
             
             'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm2_mo25_dw25_ex-28_obj17826.4088';
             'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj32464.4365';
             'SC_AMv4c_sig4_mu3_ca2_sm1_rm2_ob1_mm2_mo25_dw25_ex-28_obj17778.1399';
-            'SC_AMv4c_sig4_mu3_ca2_sm1_rm2_ob1_mm3_mo25_dw25_ex-xx_objxxxx.xxxx';
+            'SC_AMv4c_sig4_mu3_ca2_sm1_rm2_ob1_mm3_mo25_dw25_ex-27_obj31672.5924';
             'placeholder';
             
             'placeholder';
