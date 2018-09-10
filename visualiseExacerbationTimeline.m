@@ -214,7 +214,7 @@ for i = 1:size(abTreatments,1)
     % save plot
     imagefilename = sprintf('%s-ExacerbationTimeline_ID%d_%s_%11s.png', study, scid, hospital, datestr(eventstartdate, 29));
     saveas(f, fullfile(basedir, subfolder, imagefilename));
-    if scid==133
+    if (isequal(study,'SC') && scid == 133) || (isequal(study,'TM') && scid == 3) 
             imagefilename = sprintf('%s-ExacerbationTimeline_ID%d_%s_%11s.svg', study, scid, hospital, datestr(eventstartdate, 29));
             saveas(f, fullfile(basedir, subfolder, imagefilename));
     end

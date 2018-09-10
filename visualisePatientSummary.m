@@ -398,7 +398,7 @@ for i = 1:size(patientlist,1)
     for a = 1:size(figurearray,2)
         imagefilename = sprintf('%sPatientSummary_ID%d_%s_page%d.png', study, scid, hospital, a);
         saveas(figurearray(a),fullfile(basedir, subfolder, imagefilename));
-        if scid==133
+        if (isequal(study,'SC') && scid == 133) || (isequal(study,'TM') && scid == 3) 
             imagefilename = sprintf('%sPatientSummary_ID%d_%s_page%d.svg', study, scid, hospital, a);
             saveas(figurearray(a),fullfile(basedir, subfolder, imagefilename));
         end
