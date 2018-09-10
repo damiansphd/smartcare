@@ -5,7 +5,7 @@ function [sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amInt
 % amEMVisualiseAlignmentDetail - creates a plot of horizontal bars showing 
 % the alignment of the data window (including the best_offset) for all 
 %interventions. Also indicates missing data in each of the horizontal bars
-
+    
 datatable = table('Size',[1 3], ...
     'VariableTypes', {'double',       'double',     'double'}, ...
     'VariableNames', {'Intervention', 'ScaledDateNum', 'Count'});

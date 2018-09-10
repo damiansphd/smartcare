@@ -114,7 +114,7 @@ for i = 1:testsetsize
     yl2 = [0 0.25];
     ax2 = subplot(plotsdown, plotsacross, hpos(nmeasures + 1,:),'Parent',p); 
     [xl2, yl2] = plotProbDistribution(ax2, max_offset, overall_pdoffset(thisinter,:), xl2, yl2, 'o', 0.5, 2.0, 'blue', 'blue');                
-    [xl2, yl2] = plotVerticalLine(ax2, offset, xl2, yl2, 'green', '-', 0.5); % plot predicted offset
+    [xl2, yl2] = plotVerticalLine(ax2, offset, xl2, yl2, 'black', '-', 0.5); % plot predicted offset
     hold on;
     fill(ax2, [ testset.LowerBound(i) testset.UpperBound(i)    ...
                 testset.UpperBound(i) testset.LowerBound(i) ], ...
