@@ -10,7 +10,7 @@ amDatacube1           = amDatacube;
 amIntrDatacube1       = amIntrDatacube;
 amIntrNormcube1       = amIntrNormcube;
 amInterventions1      = amInterventions;
-meancurvedata1        = meancurvedata;
+meancurvesumsq1       = meancurvesumsq;
 meancurvesum1         = meancurvesum;
 meancurvecount1       = meancurvecount;
 meancurvemean1        = meancurvemean;
@@ -53,7 +53,7 @@ amDatacube2           = amDatacube;
 amIntrDatacube2       = amIntrDatacube;
 amIntrNormcube2       = amIntrNormcube;
 amInterventions2      = amInterventions;
-meancurvedata2        = meancurvedata;
+meancurvesumsq2       = meancurvesumsq;
 meancurvesum2         = meancurvesum;
 meancurvecount2       = meancurvecount;
 meancurvemean2        = meancurvemean;
@@ -100,7 +100,7 @@ plotsacross = 5;
 mpos = [ 1 2 6 7 ; 3 4 8 9 ; 11 12 16 17 ; 13 14 18 19 ; 21 22 26 27 ; 23 24 28 29 ; 31 32 36 37 ; 33 34 38 39];
 hpos = [ 5 ; 10 ; 15 ; 20 ; 25 ; 30 ; 35 ; 40 ; 45 ; 44 ; 43 ; 42 ; 41 ];
 days = [-1 * (max_offset1 + align_wind1 - 1): -1];
-anchor = 1; % latent curve is to be anchored on the plot (right side at min_offset)
+anchor = 0; % latent curve is to be shifted by offset on the plot
 
 % comparing offsets
 fprintf('Comparing offsets:\n\n');

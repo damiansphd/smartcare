@@ -146,8 +146,8 @@ while (pddiff > 0.00001 && iter < 100)
     end
      
     if ok == 1
-        [better_offset, better_dist, hstg, pdoffset, overall_hstg, overall_pdoffset] = amEMBestFit(meancurvemean, meancurvestd, amIntrCube, ...
-            measures.Mask, normstd, hstg, pdoffset, overall_hstg, overall_pdoffset, ...
+        [better_offset, hstg, pdoffset, overall_hstg, overall_pdoffset] = amEMBestFit(meancurvemean, meancurvestd, amIntrCube, ...
+            measures.Mask, measures.OverallRange, normstd, hstg, pdoffset, overall_hstg, overall_pdoffset, ...
             pnt, min_offset, max_offset, align_wind, nmeasures, sigmamethod, smoothingmethod, runmode);
     else
         better_offset = amInterventions.Offset(pnt);
@@ -191,7 +191,7 @@ while (pddiff > 0.00001 && iter < 100)
             [meancurvesumsq, meancurvesum, meancurvecount] = addAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
             [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
     
-            qual = qual + amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measures.Mask, normstd, ...
+            qual = qual + amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measures.Mask, measures.OverallRange, normstd, ...
                 hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
             
             %fprintf('Intervention %d, qual = %.4f\n', i, qual);
@@ -202,9 +202,9 @@ while (pddiff > 0.00001 && iter < 100)
             [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
         end
         if cnt == 0
-            fprintf('No changes on iteration %2d, obj fcn = %.4f, prob distrib diff = %.6f\n', iter, qual, pddiff);
+            fprintf('No changes on iteration %2d, obj fcn = %.7f, prob distrib diff = %.6f\n', iter, qual, pddiff);
         else
-            fprintf('Changed %2d offsets on iteration %2d, obj fcn = %.4f, prob distrib diff = %.4f\n', cnt, iter, qual, pddiff);
+            fprintf('Changed %2d offsets on iteration %2d, obj fcn = %.7f, prob distrib diff = %.4f\n', cnt, iter, qual, pddiff);
         end
         cnt = 0;
         prior_overall_pdoffset = overall_pdoffset;

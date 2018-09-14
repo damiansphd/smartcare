@@ -1,5 +1,5 @@
-function [better_offset, mini, hstg, pdoffset, overall_hstg, overall_pdoffset] = amEMBestFit(meancurvemean, meancurvestd, ...
-    amIntrCube, measuresmask, normstd, hstg, pdoffset, overall_hstg, overall_pdoffset, currinter, min_offset, max_offset, align_wind, ...
+function [better_offset, hstg, pdoffset, overall_hstg, overall_pdoffset] = amEMBestFit(meancurvemean, meancurvestd, ...
+    amIntrCube, measuresmask, measuresrange, normstd, hstg, pdoffset, overall_hstg, overall_pdoffset, currinter, min_offset, max_offset, align_wind, ...
     nmeasures, sigmamethod, smoothingmethod, runmode)
 
 % amEMBestFit - calculates the offset for an intervention by minimising the
@@ -10,14 +10,14 @@ update_histogram = 1;
 
 % initialise variables
 better_offset = 0;
-mini = 10000000000000000000;
+minidist = 1000000;
 
 for i = min_offset:max_offset - 1
-    [currdist, hstg] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measuresmask, ...
+    [currdist, hstg] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measuresmask, measuresrange, ...
         normstd, hstg, currinter, i, max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
-    if currdist < mini
+    if currdist < minidist
         better_offset = i;
-        mini = currdist;
+        minidist = currdist;
     end
 end
 

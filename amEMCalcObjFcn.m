@@ -1,10 +1,11 @@
-function [dist, hstg] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measuresmask, normstd, hstg, ...
+function [dist, hstg] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measuresmask, measuresrange, normstd, hstg, ...
     currinter, curroffset, max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod)
 
 % amEMCalcObjFcn - calculates residual sum of squares distance for points in
 % curve vs meancurve incorporating offset
 
 dist = 0;
+count = 0;
 tempmean = zeros(max_offset + align_wind - 1, nmeasures);
 tempstd  = zeros(max_offset + align_wind - 1, nmeasures);
 
@@ -32,6 +33,9 @@ for i = 1:align_wind
                                 - amIntrCube(currinter, max_offset + align_wind - i, m)) ^ 2 ) / (2 * ( tempstd(max_offset + align_wind - i - curroffset, m) ^ 2 ))) ...
                             + log(tempstd(max_offset + align_wind - i - curroffset, m)) ...
                             + log((2 * pi) ^ 0.5);
+                %if thisdist > log(measuresrange(m))
+                %    fprintf('I %2d M %2d D %2d O %2d: Outlier - would sample from uniform instead\n', currinter, m, i, curroffset); 
+                %end
             else
                 thisdist = (( (tempmean(max_offset + align_wind - i - curroffset, m) ...
                                 - amIntrCube(currinter, max_offset + align_wind - i, m)) ^ 2 ) / (2 * ( normstd(currinter, m) ^ 2 ))) ...
@@ -42,12 +46,21 @@ for i = 1:align_wind
             % optimisation
             if measuresmask(m) == 1
                 dist = dist + thisdist;
+                count = count + 1;
             end
             
             if (update_histogram == 1)
                 hstg(m, currinter, curroffset + 1) = hstg(m, currinter, curroffset + 1) + thisdist;
             end
         end
+    end
+end
+
+if count ~= 0
+    dist = dist / count;
+else
+    if dist ~= 0
+        fprintf('Zero count of measurements but non-zero dist (%.6f) for intervention %2d and offset %2d\n', dist, currinter, curroffset);
     end
 end
 

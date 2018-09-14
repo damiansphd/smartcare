@@ -69,7 +69,7 @@ if isequal(curveaveragingmethod,'')
     return;
 end
 
-fprintf('Methodology for smoothing method of curve averaging\n');
+fprintf('Methodology for smoothing method during curve alignment\n');
 fprintf('---------------------------------------------------\n');
 fprintf('1: Raw data\n');
 fprintf('2: Smoothed data (5 days)\n');
@@ -227,7 +227,8 @@ for i = 1:ninterventions
 end
 
 % calculate the overall & alignment window std for each measure and store in measures
-% table
+% table. Also the overall min, max and range values by measure (across all
+% patients and days)
 for m = 1:nmeasures
     tempdata = zeros(ninterventions * align_wind, 1);
     for i = 1:ninterventions
@@ -238,6 +239,8 @@ for m = 1:nmeasures
     measures.AlignWindStd(m) = std(tempdata(~isnan(tempdata)));
     tempdata = reshape(amDatacube(:, :, m), npatients * ndays, 1);
     measures.OverallStd(m) = std(tempdata(~isnan(tempdata)));
+    [measures.OverallMin(m), measures.OverallMax(m)] = getMeasureOverallMinMax(demographicstable, measures.Name{m});
+    measures.OverallRange(m) = measures.OverallMax(m) - measures.OverallMin(m);
 end
 
 % populate multiplicative normalisation (sigma) values based on methodology
