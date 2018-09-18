@@ -34,13 +34,14 @@ for midx = modelidx:size(models,1)
 
         diff_ex_start = testset_ex_start - ex_start;
 
-        matchidx = ((modeloffsets >= (testset.LowerBound + diff_ex_start)) & (modeloffsets <= (testset.UpperBound + diff_ex_start)));
+        matchidx = ((ex_start + modeloffsets >= (testset.LowerBound1)) & (ex_start + modeloffsets <= (testset.UpperBound1))) | ...
+                   ((ex_start + modeloffsets >= (testset.LowerBound2)) & (ex_start + modeloffsets <= (testset.UpperBound2)));
         if diff_ex_start < 0
-            matchidx2 = (modeloffsets >= max_offset + diff_ex_start) & (testset.UpperBound == max_offset - 1);
+            matchidx2 = (modeloffsets >= max_offset + diff_ex_start) & ((testset.UpperBound1 - testset_ex_start == max_offset - 1) | (testset.UpperBound2 - testset_ex_start == max_offset - 1)) ;
         elseif diff_ex_start > 0
-          matchidx2 = (modeloffsets <= min_offset + diff_ex_start) & (testset.LowerBound == min_offset);
+            matchidx2 = (modeloffsets <= min_offset + diff_ex_start) & ((testset.LowerBound1 - testset_ex_start == min_offset)     | (testset.LowerBound2 - testset_ex_start == min_offset)) ;
         else
-           matchidx2 = (modeloffsets == -10);
+            matchidx2 = (modeloffsets == -10);
         end
         matchidx = matchidx | matchidx2;
 

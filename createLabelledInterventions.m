@@ -2,7 +2,7 @@ function [amLabelledInterventions] = createLabelledInterventions(amIntrDatacube,
     pdoffset, overall_pdoffset, interfrom, interto, measures, normmean, max_offset, align_wind, ex_start, ...
     study, ninterventions, nmeasures)
 
-% createLanelledInterventions - plots measurement data and asks for lower
+% createLabelledInterventions - plots measurement data and asks for lower
 % and upper bounds for predicted exacerbation start in order to create a
 % test data set that can be compared to model results going forward
 
@@ -16,9 +16,7 @@ yl  = zeros(nmeasures + 1, 2);
 xl2 = zeros(nmeasures + 1, 2);
 yl2 = zeros(nmeasures + 1, 2);
 
-%for i=1:ninterventions
 i = interfrom;
-
 while i <= interto 
     scid = amLabelledInterventions.SmartCareID(i);
     actualpoints = 0;
@@ -94,33 +92,74 @@ while i <= interto
     set(gca,'fontsize',6);
     title(sprintf('%s', 'Overall'), 'BackgroundColor', 'green');
     
-    lower = input('Enter upperbound for exacerbation start ? ');
-    if isequal(lower,'')
+    lower1 = input(sprintf('Enter lowerbound1 for exacerbation start (%2d:%2d) ? ', ex_start, ex_start + max_offset - 1));
+    if isequal(lower1,'')
         fprintf('Invalid choice\n');
         return;
     end
-    if lower < ex_start || lower > -1
+    if lower1 < ex_start || lower1 > (ex_start + max_offset - 1)
         fprintf('Invalid choice\n');
         return;
     end
     
-    amLabelledInterventions.LowerBound(i) = lower - ex_start;
+    amLabelledInterventions.LowerBound1(i) = lower1;
         
-    upper = input('Enter upperbound for exacerbation start ? ');
-    if isequal(upper,'')
+    upper1 = input(sprintf('Enter upperbound1 for exacerbation start (%2d:%2d) ? ', lower1 + 1, ex_start + max_offset - 1));
+    if isequal(upper1,'')
         fprintf('Invalid choice\n');
         return;
     end
-    if upper < lower || upper > 0
+    if upper1 < lower1 || upper1 > (ex_start + max_offset - 1)
         fprintf('Invalid choice\n');
         return;
     end
     
-    if (upper - ex_start) > max_offset -1
-        amLabelledInterventions.UpperBound(i) = max_offset -1;
-    else
-        amLabelledInterventions.UpperBound(i) = upper - ex_start;
+    amLabelledInterventions.UpperBound1(i) = upper1;
+    
+    secondrange = input('Enter a second range for exacerbation (1=Y, 2=N) ? ');
+    if isequal(secondrange,'')
+        fprintf('Invalid choice\n');
+        return;
     end
+    if secondrange < 1 || secondrange > 2
+        fprintf('Invalid choice\n');
+        return;
+    end
+    
+    if secondrange == 1
+        lower2 = input(sprintf('Enter lowerbound2 for exacerbation start (%2d:%2d) ? ', upper1 + 1, ex_start + max_offset - 1));
+        if isequal(lower2,'')
+            fprintf('Invalid choice\n');
+            return;
+        end
+        if lower2 < upper1 || lower2 > (ex_start + max_offset - 1)
+            fprintf('Invalid choice\n');
+            return;
+        end
+    
+        amLabelledInterventions.LowerBound2(i) = lower2;
+        
+        upper2 = input(sprintf('Enter upperbound2 for exacerbation start (%2d:%2d) ? ', lower2 + 1, ex_start + max_offset - 1));
+        if isequal(upper2,'')
+            fprintf('Invalid choice\n');
+            return;
+        end
+        if upper2 < lower2 || upper2 > (ex_start + max_offset - 1)
+            fprintf('Invalid choice\n');
+            return;
+        end
+        
+        amLabelledInterventions.UpperBound2(i) = upper2;
+    else
+        amLabelledInterventions.LowerBound2(i) = 0;
+        amLabelledInterventions.UpperBound2(i) = 0;
+    end
+    
+    %if (upper1 - ex_start) > max_offset -1
+    %    amLabelledInterventions.UpperBound1(i) = max_offset -1;
+    %else
+    %    amLabelledInterventions.UpperBound1(i) = upper1;
+    %end
     
     for m = 1:nmeasures
         if all(isnan(amIntrDatacube(i, :, m)))
@@ -128,45 +167,76 @@ while i <= interto
         end
         subplot(ax(m));
         ax(m).XGrid = 'off';
-        [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.LowerBound(i), xl(m,:), yl(m,:),  'red', '-', 0.5);
-        [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.UpperBound(i), xl(m,:), yl(m,:),  'red', '-', 0.5);
+        [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.LowerBound1(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
+        [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.UpperBound1(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
+        if amLabelledInterventions.LowerBound2(i) ~= 0
+            [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.LowerBound2(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
+            [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.UpperBound2(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
+        end
         hold on;
-        fill(ax(m), [ (ex_start + amLabelledInterventions.LowerBound(i)) (ex_start + amLabelledInterventions.UpperBound(i))    ...
-                      (ex_start + amLabelledInterventions.UpperBound(i)) (ex_start + amLabelledInterventions.LowerBound(i)) ], ...
-                    [yl(m,1) yl(m,1) yl(m,2) yl(m,2)], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+        fill(ax(m), [ amLabelledInterventions.LowerBound1(i) amLabelledInterventions.UpperBound1(i)    ...
+                      amLabelledInterventions.UpperBound1(i) amLabelledInterventions.LowerBound1(i) ], ...
+                      [yl(m,1) yl(m,1) yl(m,2) yl(m,2)], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+        if amLabelledInterventions.LowerBound2(i) ~= 0        
+            fill(ax(m), [ amLabelledInterventions.LowerBound2(i) amLabelledInterventions.UpperBound2(i)    ...
+                          amLabelledInterventions.UpperBound2(i) amLabelledInterventions.LowerBound2(i) ], ...
+                          [yl(m,1) yl(m,1) yl(m,2) yl(m,2)], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+        end        
         hold off;
         
         subplot(ax2(m));
         ax2(m).XGrid = 'off';
-        [xl2(m,:) yl2(m,:)] = plotVerticalLine(ax2(m), amLabelledInterventions.LowerBound(i), xl2(m,:), yl2(m,:), 'red', '-', 0.5);
-        [xl2(m,:) yl2(m,:)] = plotVerticalLine(ax2(m), amLabelledInterventions.UpperBound(i), xl2(m,:), yl2(m,:), 'red', '-', 0.5);
+        [xl2(m,:) yl2(m,:)] = plotVerticalLine(ax2(m), amLabelledInterventions.LowerBound1(i) - ex_start, xl2(m,:), yl2(m,:), 'red', '-', 0.5);
+        [xl2(m,:) yl2(m,:)] = plotVerticalLine(ax2(m), amLabelledInterventions.UpperBound1(i) - ex_start, xl2(m,:), yl2(m,:), 'red', '-', 0.5);
+        if amLabelledInterventions.LowerBound2(i) ~= 0
+            [xl2(m,:) yl2(m,:)] = plotVerticalLine(ax2(m), amLabelledInterventions.LowerBound2(i) - ex_start, xl2(m,:), yl2(m,:), 'red', '-', 0.5);
+            [xl2(m,:) yl2(m,:)] = plotVerticalLine(ax2(m), amLabelledInterventions.UpperBound2(i) - ex_start, xl2(m,:), yl2(m,:), 'red', '-', 0.5); 
+        end
+        
         hold on;
-        fill(ax2(m), [ amLabelledInterventions.LowerBound(i) amLabelledInterventions.UpperBound(i)    ...
-                       amLabelledInterventions.UpperBound(i) amLabelledInterventions.LowerBound(i) ], ...
-                     [ yl2(m,1) yl2(m,1) yl2(m,2) yl2(m,2) ], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+        fill(ax2(m), [ (amLabelledInterventions.LowerBound1(i) - ex_start) (amLabelledInterventions.UpperBound1(i) - ex_start)    ...
+                       (amLabelledInterventions.UpperBound1(i) - ex_start) (amLabelledInterventions.LowerBound1(i) - ex_start) ], ...
+                       [ yl2(m,1) yl2(m,1) yl2(m,2) yl2(m,2) ], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+        if amLabelledInterventions.LowerBound2(i) ~= 0  
+            fill(ax2(m), [ (amLabelledInterventions.LowerBound2(i) - ex_start) (amLabelledInterventions.UpperBound2(i) - ex_start)    ...
+                           (amLabelledInterventions.UpperBound2(i) - ex_start) (amLabelledInterventions.LowerBound2(i) - ex_start) ], ...
+                           [ yl2(m,1) yl2(m,1) yl2(m,2) yl2(m,2) ], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+        end
         hold off
     end
     
     subplot(ax2(nmeasures+1));
     ax2(nmeasures+1).XGrid = 'off';    
     
-    [xl2(nmeasures+1,:), yl2(nmeasures+1,:)] = plotVerticalLine(ax2(nmeasures+1), amLabelledInterventions.LowerBound(i), ...
+    [xl2(nmeasures+1,:), yl2(nmeasures+1,:)] = plotVerticalLine(ax2(nmeasures+1), amLabelledInterventions.LowerBound1(i) - ex_start, ...
         xl2(nmeasures+1,:), yl2(nmeasures+1,:), 'red', '-', 0.5);
-    [xl2(nmeasures+1,:), yl2(nmeasures+1,:)] = plotVerticalLine(ax2(nmeasures+1), amLabelledInterventions.UpperBound(i), ...
+    [xl2(nmeasures+1,:), yl2(nmeasures+1,:)] = plotVerticalLine(ax2(nmeasures+1), amLabelledInterventions.UpperBound1(i) - ex_start, ...
         xl2(nmeasures+1,:), yl2(nmeasures+1,:), 'red', '-', 0.5);
+    if amLabelledInterventions.LowerBound2(i) ~= 0
+        [xl2(nmeasures+1,:), yl2(nmeasures+1,:)] = plotVerticalLine(ax2(nmeasures+1), amLabelledInterventions.LowerBound2(i) - ex_start, ...
+            xl2(nmeasures+1,:), yl2(nmeasures+1,:), 'red', '-', 0.5);
+        [xl2(nmeasures+1,:), yl2(nmeasures+1,:)] = plotVerticalLine(ax2(nmeasures+1), amLabelledInterventions.UpperBound2(i) - ex_start, ...
+            xl2(nmeasures+1,:), yl2(nmeasures+1,:), 'red', '-', 0.5);
+    end
     
     hold on;
-    fill(ax2(nmeasures+1), [ amLabelledInterventions.LowerBound(i) amLabelledInterventions.UpperBound(i)    ...
-                             amLabelledInterventions.UpperBound(i) amLabelledInterventions.LowerBound(i) ], ...
-                           [ yl2(nmeasures+1,1) yl2(nmeasures+1,1) yl2(nmeasures+1,2) yl2(nmeasures+1,2) ], ...
-                           'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+    fill(ax2(nmeasures+1), [ (amLabelledInterventions.LowerBound1(i) - ex_start) (amLabelledInterventions.UpperBound1(i) - ex_start)   ...
+                             (amLabelledInterventions.UpperBound1(i) - ex_start) (amLabelledInterventions.LowerBound1(i) - ex_start) ], ...
+                             [ yl2(nmeasures+1,1) yl2(nmeasures+1,1) yl2(nmeasures+1,2) yl2(nmeasures+1,2) ], ...
+                             'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+    if amLabelledInterventions.LowerBound2(i) ~= 0
+        fill(ax2(nmeasures+1), [ (amLabelledInterventions.LowerBound2(i) - ex_start) (amLabelledInterventions.UpperBound2(i) - ex_start)   ...
+                                 (amLabelledInterventions.UpperBound2(i) - ex_start) (amLabelledInterventions.LowerBound2(i) - ex_start) ], ...
+                                 [ yl2(nmeasures+1,1) yl2(nmeasures+1,1) yl2(nmeasures+1,2) yl2(nmeasures+1,2) ], ...
+                                 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+    end
     hold off
         
     set(gca,'fontsize',6);
     title(sprintf('%s', 'Overall'), 'BackgroundColor', 'green');
     
     if ((amLabelledInterventions.DataWindowCompleteness(i) >= 60) ...
-            && ((amLabelledInterventions.UpperBound(i) - amLabelledInterventions.LowerBound(i)) <= 8))
+            && (((amLabelledInterventions.UpperBound1(i) - amLabelledInterventions.LowerBound1(i)) + (amLabelledInterventions.UpperBound2(i) - amLabelledInterventions.LowerBound2(i))) <= 9))
         amLabelledInterventions.IncludeInTestSet(i) = 'Y';
     else
         amLabelledInterventions.IncludeInTestSet(i) = 'N';

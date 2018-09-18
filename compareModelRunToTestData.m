@@ -17,11 +17,12 @@ testset_ex_start = testset.ExStart(1);
 
 diff_ex_start = testset_ex_start - ex_start;
 
-matchidx = ((modeloffsets >= (testset.LowerBound + diff_ex_start)) & (modeloffsets <= (testset.UpperBound + diff_ex_start)));
+matchidx = ((ex_start + modeloffsets >= (testset.LowerBound1)) & (ex_start + modeloffsets <= (testset.UpperBound1))) | ...
+           ((ex_start + modeloffsets >= (testset.LowerBound2)) & (ex_start + modeloffsets <= (testset.UpperBound2)));
 if diff_ex_start < 0
-    matchidx2 = (modeloffsets >= max_offset + diff_ex_start) & (testset.UpperBound == max_offset - 1);
+    matchidx2 = (modeloffsets >= max_offset + diff_ex_start) & ((testset.UpperBound1 - testset_ex_start == max_offset - 1) | (testset.UpperBound2 - testset_ex_start == max_offset - 1)) ;
 elseif diff_ex_start > 0
-    matchidx2 = (modeloffsets <= min_offset + diff_ex_start) & (testset.LowerBound == min_offset);
+    matchidx2 = (modeloffsets <= min_offset + diff_ex_start) & ((testset.LowerBound1 - testset_ex_start == min_offset)     | (testset.LowerBound2 - testset_ex_start == min_offset)) ;
 else
     matchidx2 = (modeloffsets == -10);
 end
@@ -42,7 +43,6 @@ for i = 1:testsetsize
     scid = testset.SmartCareID(i);
     thisinter = testset.InterNbr(i);
     offset = modeloffsets(i);
-    %if ((modeloffsets(i) >= (testset.LowerBound(i) + diff_ex_start)) && (modeloffsets(i) <= (testset.UpperBound(i) + diff_ex_start)))
     if matchidx(i)
         result = 'MATCH';
     else
@@ -55,10 +55,14 @@ for i = 1:testsetsize
     end
     fprintf('Intervention %2d (ID %d Date %s%s):', testset.InterNbr(i), scid, datestr(testset.IVStartDate(i),29), seqstring);
     fprintf(' %8s :', result);
-    fprintf('Labelled Range: %2d - %2d, Model Pred: %2d\n', testset.LowerBound(i), testset.UpperBound(i), modeloffsets(i));
+    fprintf('Labelled Range: %2d:%2d ', testset.LowerBound1(i), testset.UpperBound1(i));
+    if testset.LowerBound2(i) ~= 0
+        fprintf('and %2d:%2d ', testset.LowerBound2(i), testset.UpperBound2(i));
+    end
+    fprintf('Model Pred: %2d\n', ex_start + offset);
     
-    name = sprintf('%s_AM%s m%d vs Labels - Ex %d (ID %d Date %s%s) Offset %2d vs %2d - %2d %s', study, version, modelidx, thisinter, scid, ...
-                    datestr(testset.IVStartDate(i),29), seqstring, offset, testset.LowerBound(i), testset.UpperBound(i), result);
+    name = sprintf('%s_AM%s m%d vs Labels - Ex %d (ID %d Date %s%s) Pred %2d %s', study, version, modelidx, thisinter, scid, ...
+                    datestr(testset.IVStartDate(i),29), seqstring, offset, result);
     
     [f, p] = createFigureAndPanel(name, 'portrait', 'a4');
 
@@ -83,9 +87,14 @@ for i = 1:testsetsize
         tempyl(2) = yl(1) + ((yl(2)-yl(1)) * 0.1);
         [xl] = plotVerticalLine(ax, testset_ex_start, xl, tempyl, 'red', '-', 0.5);
         hold on;
-        fill(ax, [ (testset_ex_start + testset.LowerBound(i)) (testset_ex_start + testset.UpperBound(i))    ...
-                      (testset_ex_start + testset.UpperBound(i)) (testset_ex_start + testset.LowerBound(i)) ], ...
-                    [yl(1) yl(1) yl(2) yl(2)], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+        fill(ax, [ testset.LowerBound1(i) testset.UpperBound1(i)    ...
+                   testset.UpperBound1(i) testset.LowerBound1(i) ], ...
+                   [yl(1) yl(1) yl(2) yl(2)], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+        if testset.LowerBound2(i) ~= 0
+            fill(ax, [ testset.LowerBound2(i) testset.UpperBound2(i)    ...
+                       testset.UpperBound2(i) testset.LowerBound2(i) ], ...
+                       [yl(1) yl(1) yl(2) yl(2)], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+        end    
         hold off;
         
         % plot prob distributions
@@ -95,9 +104,14 @@ for i = 1:testsetsize
         [xl2, yl2] = plotProbDistribution(ax2, max_offset, pdoffset(m, thisinter,:), xl2, yl2, 'o', 0.5, 2.0, 'blue', 'blue');
         [xl2, yl2] = plotVerticalLine(ax2, offset, xl2, yl2, 'black', '-', 0.5); % plot predicted offset
         hold on;
-        fill(ax2, [ testset.LowerBound(i) testset.UpperBound(i)    ...
-                       testset.UpperBound(i) testset.LowerBound(i) ], ...
-                     [ yl2(1) yl2(1) yl2(2) yl2(2) ], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+        fill(ax2, [ (testset.LowerBound1(i) - ex_start) (testset.UpperBound1(i) - ex_start)    ...
+                    (testset.UpperBound1(i) - ex_start) (testset.LowerBound1(i) - ex_start) ], ...
+                    [ yl2(1) yl2(1) yl2(2) yl2(2) ], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+        if testset.LowerBound2(i) ~= 0
+            fill(ax2, [ (testset.LowerBound2(i) - ex_start) (testset.UpperBound2(i) - ex_start)    ...
+                        (testset.UpperBound2(i) - ex_start) (testset.LowerBound2(i) - ex_start) ], ...
+                        [ yl2(1) yl2(1) yl2(2) yl2(2) ], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+        end    
         hold off
                     
         set(gca,'fontsize',6);
@@ -116,9 +130,14 @@ for i = 1:testsetsize
     [xl2, yl2] = plotProbDistribution(ax2, max_offset, overall_pdoffset(thisinter,:), xl2, yl2, 'o', 0.5, 2.0, 'blue', 'blue');                
     [xl2, yl2] = plotVerticalLine(ax2, offset, xl2, yl2, 'black', '-', 0.5); % plot predicted offset
     hold on;
-    fill(ax2, [ testset.LowerBound(i) testset.UpperBound(i)    ...
-                testset.UpperBound(i) testset.LowerBound(i) ], ...
-              [ yl2(1) yl2(1) yl2(2) yl2(2) ], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+    fill(ax2, [ (testset.LowerBound1(i) - ex_start) (testset.UpperBound1(i) - ex_start)    ...
+                (testset.UpperBound1(i) - ex_start) (testset.LowerBound1(i) - ex_start) ], ...
+                [ yl2(1) yl2(1) yl2(2) yl2(2) ], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+    if testset.LowerBound2(i) ~= 0
+        fill(ax2, [ (testset.LowerBound2(i) - ex_start) (testset.UpperBound2(i) - ex_start)    ...
+                    (testset.UpperBound2(i) - ex_start) (testset.LowerBound2(i) - ex_start) ], ...
+                    [ yl2(1) yl2(1) yl2(2) yl2(2) ], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+    end    
     hold off
     
     set(gca,'fontsize',6);

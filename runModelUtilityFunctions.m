@@ -111,8 +111,10 @@ elseif runfunction == 6
             amLabelledInterventions.SequentialIntervention(a) = 'N';
             amLabelledInterventions.IncludeInTestSet(a)       = 'N';
             amLabelledInterventions.ExStart(a)                = ex_start;
-            amLabelledInterventions.LowerBound(a)             = 0;
-            amLabelledInterventions.UpperBound(a)             = 0;
+            amLabelledInterventions.LowerBound1(a)            = 0;
+            amLabelledInterventions.UpperBound1(a)            = 0;
+            amLabelledInterventions.LowerBound2(a)            = 0;
+            amLabelledInterventions.UpperBound2(a)            = 0;
         end
         interfrom = 1;
         interto = ninterventions;
