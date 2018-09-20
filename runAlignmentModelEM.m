@@ -43,9 +43,10 @@ fprintf('-------------------------------------------\n');
 fprintf('1: Mean for 8 days prior to data window\n');
 fprintf('2: Upper Quartile Mean for 20 days prior to data window\n');
 fprintf('3: Exclude bottom quartile from Mean for 10 days prior to data window\n');
-mumethod = input('Choose methodology (1-2) ');
+fprintf('4: Exclude bottom quartile and highest value from Mean for 10 days prior to data window\n');
+mumethod = input('Choose methodology (1-4) ');
 fprintf('\n');
-if mumethod > 3
+if mumethod > 4
     fprintf('Invalid choice\n');
     return;
 end
@@ -292,15 +293,20 @@ for i = 1:ninterventions
             if mumethod == 1
                 % take mean of mean window (8 days prior to data window -
                 % as long as there are 3 or more data points in the window
-                normmean(i, m) = mean(meanwindowdata);
+                normmean(i, m) = mean(meanwindowdata(1:end));
             elseif mumethod == 2
                 % upper quartile mean of mean window method
                 percentile75 = round(size(meanwindowdata,2) * .75) + 1;
                 normmean(i, m) = mean(meanwindowdata(percentile75:end));
-            else
+            elseif mumethod == 3
                 % exclude bottom quartile from mean method
                 percentile25 = round(size(meanwindowdata,2) * .25) + 1;
                 normmean(i, m) = mean(meanwindowdata(percentile25:end));
+            else
+                % exclude bottom quartile from mean method
+                % and highest value (to avoid outliers)
+                percentile25 = round(size(meanwindowdata,2) * .25) + 1;
+                normmean(i, m) = mean(meanwindowdata(percentile25:end - 1));
             end
         else
             % if not enough data points in the mean window, use the

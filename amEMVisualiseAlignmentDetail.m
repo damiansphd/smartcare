@@ -110,7 +110,8 @@ for m = 1:nmeasures
     h.XLabel = 'Days Prior to Intervention';
     h.YLabel = 'Intervention';
     h.YDisplayData = sorted_interventions.Intervention;
-    h.XLimits = {-1 * (max_offset + align_wind - 1), -1};
+    %h.XLimits = {-1 * (max_offset + align_wind - 1), -1};
+    h.XLimits = {-1 * (max_offset + align_wind - 1), max(datatable.ScaledDateNum)};
     h.CellLabelColor = 'none';
     h.GridVisible = 'on';
     
