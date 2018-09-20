@@ -1,4 +1,4 @@
-function compareModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models)
+function compareMultipleModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models)
 
 % compareMultipleModelRunToTestData - compares the output of multiple model runs to
 % the labelled test data (but doesn't plot results)

@@ -42,9 +42,13 @@ end
 fprintf('Loading model run results data\n');
 load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun)));
 
+basedir = './';
+subfolder = 'ExcelFiles';
+outputfilename = 'TeleMedResults.xlsx';
 
-    
-outputdata = table('Size',[1 8], ...
+nonmeascols = 8;
+
+outputdata = table('Size',[1 nonmeascols], ...
     'VariableTypes', {'double', 'double',        'datetime',   'double', 'double', 'double' ,           'double',   'double'     }, ...
     'VariableNames', {'ID',     'ScaledDateNum', 'Date', 'OralAB', 'IVAB',   'InterventionStart', 'CRPLevel', 'ExStartProb'});
 
@@ -54,19 +58,21 @@ mcols = nan(1,mnum);
 mcols = array2table(mcols);
 outputdata = [outputdata mcols];
 for i = 1:mnum
-    outputdata.Properties.VariableNames{i+8} = sprintf('%s_Raw',tempmeasures.DisplayName{i});
+    outputdata.Properties.VariableNames{i + nonmeascols} = sprintf('%s_Raw',tempmeasures.DisplayName{i});
 end
 outputdata = [outputdata mcols];
 for i = 1:mnum
-    outputdata.Properties.VariableNames{i+8+mnum} = sprintf('%s_Smooth',tempmeasures.DisplayName{i});
+    outputdata.Properties.VariableNames{i + nonmeascols + mnum} = sprintf('%s_Smooth',tempmeasures.DisplayName{i});
 end
 
 rowtoadd = outputdata;
 
 patientoffsets = getPatientOffsets(physdata);
 
-%for i = 1:size(cdPatient,1)
-for i = 1:1   
+for i = 1:size(cdPatient,1)
+
+    fprintf('Patient %2d\n', cdPatient.ID(i));
+    fprintf('----------\n');
     outputdata(1:size(outputdata,1),:) = [];
     scid = cdPatient.ID(i);
     
@@ -75,24 +81,31 @@ for i = 1:1
     maxscdn = max(physdata.ScaledDateNum(physdata.SmartCareID == scid));
     maxscdt = max(physdata.Date_TimeRecorded(physdata.SmartCareID == scid));
     
+    rowtoadd.ID                = scid;
+    rowtoadd.OralAB            = nan;
+    rowtoadd.IVAB              = nan;
+    rowtoadd.InterventionStart = nan;
+    rowtoadd.CRPLevel          = nan;
+    rowtoadd.ExStartProb       = nan;
+    
     for a = minscdn:maxscdn
-        rowtoadd.ID            = scid;
-        rowtoadd.ScaledDateNum = a;
-        rowtoadd.CRPLevel = nan;
+        rowtoadd.ScaledDateNum     = a;
         outputdata = [outputdata; rowtoadd];
     end
+    
     outputdata.Date = [datetime(minscdt-seconds(1)):datetime(maxscdt-seconds(1))]';
      
     tmpInterventions = amInterventions(amInterventions.SmartCareID == scid,:);
     for a = 1:size(tmpInterventions,1)
         outputdata.InterventionStart(tmpInterventions.IVScaledDateNum(a)) = 1;
+        fprintf('Intervention Start: ScaledDataNum = %d, Date = %s\n', tmpInterventions.IVScaledDateNum(a), datestr(tmpInterventions.IVStartDate(a),1));
     end
     
     tmpCRP = cdCRP(cdCRP.ID == scid,:);
     for a = 1:size(tmpCRP,1)
         scdatenum = datenum(tmpCRP.CRPDate(a)) + 1 - offset - patientoffsets.PatientOffset(patientoffsets.SmartCareID==scid);
         outputdata.CRPLevel(outputdata.ScaledDateNum==scdatenum) = tmpCRP.NumericLevel(a);
-       fprintf('ScaledDataNum = %d, Date = %s, Level = %d\n', scdatenum, ...
+        fprintf('CRP Measure: ScaledDataNum = %d, Date = %s, Level = %d\n', scdatenum, ...
            datestr(tmpCRP.CRPDate(a),1), tmpCRP.NumericLevel(a));
     end
     
@@ -101,7 +114,7 @@ for i = 1:1
         startdn = datenum(tmpOralAB.StartDate(a)) + 1 - offset - patientoffsets.PatientOffset(patientoffsets.SmartCareID==scid);
         stopdn  = datenum(tmpOralAB.StopDate(a))  + 1 - offset - patientoffsets.PatientOffset(patientoffsets.SmartCareID==scid);
         outputdata.OralAB(outputdata.ScaledDateNum >= startdn & outputdata.ScaledDateNum <= stopdn) = 1;
-        fprintf('Oral AB ScaledDateNum %d:%d, Date = %s:%s\n', startdn, stopdn, ...
+        fprintf('Oral AB:     ScaledDateNum %d:%d, Date = %s:%s\n', startdn, stopdn, ...
            datestr(tmpOralAB.StartDate(a),1), datestr(tmpOralAB.StopDate(a),1)) ;
     end
     
@@ -110,11 +123,32 @@ for i = 1:1
         startdn = datenum(tmpIVAB.StartDate(a)) + 1 - offset - patientoffsets.PatientOffset(patientoffsets.SmartCareID==scid);
         stopdn  = datenum(tmpIVAB.StopDate(a))  + 1 - offset - patientoffsets.PatientOffset(patientoffsets.SmartCareID==scid);
         outputdata.IVAB(outputdata.ScaledDateNum >= startdn & outputdata.ScaledDateNum <= stopdn) = 1;
-        fprintf('IV AB ScaledDateNum %d:%d, Date = %s:%s\n', startdn, stopdn, ...
+        fprintf('IV AB:       ScaledDateNum %d:%d, Date = %s:%s\n', startdn, stopdn, ...
            datestr(tmpIVAB.StartDate(a),1), datestr(tmpIVAB.StopDate(a),1)) ;
     end
     
-        
+    for a = 1:nmeasures
+        if (measures.Mask(a) == 1)
+            measurements = reshape(amDatacube(scid, minscdn:maxscdn, a), [maxscdn - minscdn + 1, 1]);
+            column = sprintf('%s_Raw',measures.DisplayName{a});
+            outputdata(minscdn:maxscdn, {column}) = array2table(measurements);
+            column = sprintf('%s_Smooth',measures.DisplayName{a});
+            outputdata(minscdn:maxscdn, {column}) = array2table(smooth(measurements,5));
+        end
+    end
+    
+    for a = 1:ninterventions
+        if (amInterventions.SmartCareID(a) == scid)
+            interstartdn = amInterventions.IVScaledDateNum(a);
+            interpd = reshape(overall_pdoffset(a, :), [max_offset, 1]);
+            outputdata.ExStartProb(interstartdn - max_offset:interstartdn - 1) = interpd;
+        end
+    end
+    
+    patientsheet = sprintf('Patient %d', scid);
+    writetable(outputdata,  fullfile(basedir, subfolder,outputfilename), 'Sheet', patientsheet);
+    
+    fprintf('\n');
 end
 
 
