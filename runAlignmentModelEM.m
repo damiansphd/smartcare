@@ -12,10 +12,12 @@ if studynbr == 1
     study = 'SC';
     modelinputsmatfile = 'SCalignmentmodelinputs.mat';
     datademographicsfile = 'SCdatademographicsbypatient.mat';
+    dataoutliersfile = 'SCdataoutliers.mat';
 elseif studynbr == 2
     study = 'TM';
     modelinputsmatfile = 'TMalignmentmodelinputs.mat';
     datademographicsfile = 'TMdatademographicsbypatient.mat';
+    dataoutliersfile = 'TMdataoutliers.mat';
 else
     fprintf('Invalid choice\n');
     return;
@@ -43,7 +45,7 @@ fprintf('-------------------------------------------\n');
 fprintf('1: Mean for 8 days prior to data window\n');
 fprintf('2: Upper Quartile Mean for 20 days prior to data window\n');
 fprintf('3: Exclude bottom quartile from Mean for 10 days prior to data window\n');
-fprintf('4: Exclude bottom quartile and highest value from Mean for 10 days prior to data window\n');
+fprintf('4: Exclude bottom quartile and highest value from Mean for 10 days prior to data window (DO NOT USE)\n');
 mumethod = input('Choose methodology (1-4) ');
 fprintf('\n');
 if mumethod > 4
@@ -158,6 +160,8 @@ fprintf('Loading alignment model Inputs data\n');
 load(fullfile(basedir, subfolder, modelinputsmatfile));
 fprintf('Loading datademographics by patient\n');
 load(fullfile(basedir, subfolder, datademographicsfile));
+fprintf('Loading data outliers\n');
+load(fullfile(basedir, subfolder, dataoutliersfile));
 toc
 
 tic
@@ -198,6 +202,15 @@ else
     % shouldn't ever get here - but default to just cough if it ever
     % happens
     idx = ismember(measures.DisplayName, {'Cough'});
+end
+
+tmpdataoutliers = dataoutliers(dataoutliers.NStdDevOutlier==5,:);
+for i = 1:size(tmpdataoutliers,1)
+    outscid = tmpdataoutliers.SmartCareID(i);
+    outm    = tmpdataoutliers.MeasureID(i);
+    outday  = tmpdataoutliers.Day(i);
+    amDatacube(outscid, outday, outm) = nan;
+    fprintf('Removing data outlier: ID %d, measure %d, scaled day %d\n', outscid, outm, outday);
 end
 
 % create cube for data window data by intervention (for each measure)
@@ -305,6 +318,8 @@ for i = 1:ninterventions
             else
                 % exclude bottom quartile from mean method
                 % and highest value (to avoid outliers)
+                % doesn't seem to work as well as 3 - probably better to
+                % just exclude specifically identified outlier data points
                 percentile25 = round(size(meanwindowdata,2) * .25) + 1;
                 normmean(i, m) = mean(meanwindowdata(percentile25:end - 1));
             end
