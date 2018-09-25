@@ -4,7 +4,7 @@ function [modelrun, modelidx, models] = selectModelRunFromList(loadtype)
 % historical model run (either all the variables or just the prob
 % distributions/distance function arrays.
 
-damianmodels = {  
+damianmodelsold = {  
             'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4595.2626';
             'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-27_obj4602.0068';
             'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-27_obj4557.8883';
@@ -75,25 +75,35 @@ damianmodels = {
             'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm2_mo25_dw25_ex-28_obj318.6805';
             'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm1_mo25_dw25_ex-28_obj291.2961';
             'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm1_mo25_dw25_ex-28_obj291.1600';
-            'TM_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj9531.1669';
+            'placeholder';
+            %'TM_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj9531.1669';
             
-            'SC_AMvEM_sig4_mu4_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.9648';
-            'SC_AMvEM_sig4_mu4_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj294.0816';
-            'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj292.7661';
-            'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj292.9541';
+            'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.7499';
+            'SC_AMvEM_sig4_mu4_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.5482';
+            'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.8308';
+            'SC_AMvEM_sig4_mu4_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.6818';
          };
      
-dragomodels = {  
-            '<insert name of matlab saved variable file here>';
-            '<leave off the .mat from the name';
-            'etc';
+damianmodelsnew = {  
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_ob1_mm2_mo25_dw25_ex-28_obj310.5051';
+            'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm2_mo25_dw25_ex-28_obj317.8905';
+            'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm2_mo25_dw25_ex-28_obj318.6805';
+            'SC_AMvEM_sig4_mu4_ca2_sm1_rm4_ob1_mm2_mo25_dw25_ex-28_obj317.8905';
+            'SC_AMvEM_sig4_mu4_ca2_sm2_rm4_ob1_mm2_mo25_dw25_ex-28_obj318.6805';
+            
+            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj289.3767';
+            'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.7499';
+            'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.8308';
+            'SC_AMvEM_sig4_mu4_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.5482';
+            'SC_AMvEM_sig4_mu4_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.6818';
+            
             
          };
 
 fprintf('Pick Model set\n');
 fprintf('--------------\n');
-fprintf('1: Damian\n');
-fprintf('2: Drago\n');
+fprintf('1: Damian - Old\n');
+fprintf('2: Damian - New\n');
 
 modelset = input('Choose model set (1-2) ');
 
@@ -107,9 +117,9 @@ if isequal(modelset,'')
 end
 
 if modelset == 1
-    models = damianmodels;
+    models = damianmodelsold;
 else
-    models = dragomodels;
+    models = damianmodelsnew;
 end
 
 

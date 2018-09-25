@@ -28,8 +28,20 @@ else
 end
 matchidx = matchidx | matchidx2;
 
+dist = 0;
+for i = 1:size(testset,1)
+    if ~matchidx(i)
+        dist1 = min(abs(testset.LowerBound1(i) - (ex_start + modeloffsets(i))), abs(testset.LowerBound2(i) - (ex_start + modeloffsets(i))));
+        dist2 = min(abs(testset.UpperBound1(i) - (ex_start + modeloffsets(i))), abs(testset.UpperBound2(i) - (ex_start + modeloffsets(i))));
+        dist = dist + min(dist1, dist2);
+    end
+    %fprintf('For intervention %2d, Match = %d, Dist = %d\n', testset.InterNbr(i), matchidx(i), rowtoadd.Count);
+end
+
+
 fprintf('For model %d: %s:\n', modelidx, modelrun);
 fprintf('%2d of %2d results match labelled test data\n', sum(matchidx), testsetsize);
+fprintf('Quality Score is %d\n', dist);
 fprintf('\n');
 
 plotsdown = 9;

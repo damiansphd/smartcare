@@ -45,7 +45,7 @@ fprintf('-------------------------------------------\n');
 fprintf('1: Mean for 8 days prior to data window\n');
 fprintf('2: Upper Quartile Mean for 20 days prior to data window\n');
 fprintf('3: Exclude bottom quartile from Mean for 10 days prior to data window\n');
-fprintf('4: Exclude bottom quartile and highest value from Mean for 10 days prior to data window (DO NOT USE)\n');
+fprintf('4: Exclude bottom quartile and data outliers from Mean for 10 days prior to data window\n');
 mumethod = input('Choose methodology (1-4) ');
 fprintf('\n');
 if mumethod > 4
@@ -204,14 +204,14 @@ else
     idx = ismember(measures.DisplayName, {'Cough'});
 end
 
-tmpdataoutliers = dataoutliers(dataoutliers.NStdDevOutlier==5,:);
-for i = 1:size(tmpdataoutliers,1)
-    outscid = tmpdataoutliers.SmartCareID(i);
-    outm    = tmpdataoutliers.MeasureID(i);
-    outday  = tmpdataoutliers.Day(i);
-    amDatacube(outscid, outday, outm) = nan;
-    fprintf('Removing data outlier: ID %d, measure %d, scaled day %d\n', outscid, outm, outday);
-end
+%tmpdataoutliers = dataoutliers(dataoutliers.NStdDevOutlier==5,:);
+%for i = 1:size(tmpdataoutliers,1)
+%    outscid = tmpdataoutliers.SmartCareID(i);
+%    outm    = tmpdataoutliers.MeasureID(i);
+%    outday  = tmpdataoutliers.Day(i);
+%    amDatacube(outscid, outday, outm) = nan;
+%    fprintf('Removing data outlier: ID %d, measure %d, scaled day %d\n', outscid, outm, outday);
+%end
 
 % create cube for data window data by intervention (for each measure)
 amIntrDatacube = NaN(ninterventions, max_offset + align_wind - 1, nmeasures);
@@ -301,6 +301,15 @@ for i = 1:ninterventions
     end
     for m = 1:nmeasures
         meanwindowdata = amDatacube(scid, (start - align_wind - meanwindow): (start - 1 - align_wind), m);
+        if mumethod == 4
+            tmpdataoutliers = dataoutliers(dataoutliers.NStdDevOutlier==5 & dataoutliers.SmartCareID == scid & dataoutliers.MeasureID == m,:);
+            for d = 1:size(tmpdataoutliers,1)
+                if (start - align_wind - meanwindow) <= tmpdataoutliers.Day(d) & (start - 1 - align_wind) >= tmpdataoutliers.Day(d)
+                    fprintf('For Invervention %d, excluding Data outlier (ID %d, Measure %d, Day %d) from meanwindow\n', i, scid, m, tmpdataoutliers.Day(d));
+                    meanwindowdata(tmpdataoutliers.Day(d) - (start - align_wind - meanwindow) + 1) = [];
+                end
+            end
+        end
         meanwindowdata = sort(meanwindowdata(~isnan(meanwindowdata)), 'ascend');
         if size(meanwindowdata,2) >= 3
             if mumethod == 1
@@ -317,11 +326,9 @@ for i = 1:ninterventions
                 normmean(i, m) = mean(meanwindowdata(percentile25:end));
             else
                 % exclude bottom quartile from mean method
-                % and highest value (to avoid outliers)
-                % doesn't seem to work as well as 3 - probably better to
-                % just exclude specifically identified outlier data points
+                % and data outliers
                 percentile25 = round(size(meanwindowdata,2) * .25) + 1;
-                normmean(i, m) = mean(meanwindowdata(percentile25:end - 1));
+                normmean(i, m) = mean(meanwindowdata(percentile25:end));
             end
         else
             % if not enough data points in the mean window, use the
