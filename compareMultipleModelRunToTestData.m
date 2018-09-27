@@ -86,7 +86,7 @@ qualityscore(1) = [];
 ylabels(1) = [];
 
 labelsandquality = [array2table(modelrunlist), array2table(ylabels), array2table(qualityscore)];
-labelsandquality = sortrows(labelsandquality, {'qualityscore', 'modelrunlist'}, {'ascend', 'ascend'});
+%labelsandquality = sortrows(labelsandquality, {'qualityscore', 'modelrunlist'}, {'ascend', 'ascend'});
 
 plotsacross = 1;
 plotsdown = 1;
