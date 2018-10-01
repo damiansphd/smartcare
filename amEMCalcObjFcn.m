@@ -1,10 +1,9 @@
-function [dist, hstg] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, measuresmask, measuresrange, normstd, hstg, ...
+function [dist, hstg, isOutlier] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, isOutlier, outprior, measuresmask, measuresrange, normstd, hstg, ...
     currinter, curroffset, max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod)
 
 % amEMCalcObjFcn - calculates residual sum of squares distance for points in
 % curve vs meancurve incorporating offset
 
-weight = 0.95;
 dist = 0;
 count = 0;
 tempmean = zeros(max_offset + align_wind - 1, nmeasures);
@@ -28,21 +27,28 @@ end
 
 for i = 1:align_wind
     for m = 1:nmeasures
+        outdist = -log(outprior) + log(measuresrange(m));
         if ~isnan(amIntrCube(currinter, max_offset + align_wind - i, m))
             if sigmamethod == 4
-                thisdist =  (( (tempmean(max_offset + align_wind - i - curroffset, m) ...
+                regdist =  (( (tempmean(max_offset + align_wind - i - curroffset, m) ...
                                 - amIntrCube(currinter, max_offset + align_wind - i, m)) ^ 2 ) / (2 * ( tempstd(max_offset + align_wind - i - curroffset, m) ^ 2 ))) ...
                             + log(tempstd(max_offset + align_wind - i - curroffset, m)) ...
-                            + log((2 * pi) ^ 0.5);
-                            %- log(weight)...
-                            %- log(1 - weight) - log(measuresrange(m));         
+                            + log((2 * pi) ^ 0.5) ...
+                            - log(1 - outprior);        
             else
-                thisdist = (( (tempmean(max_offset + align_wind - i - curroffset, m) ...
+                regdist = (( (tempmean(max_offset + align_wind - i - curroffset, m) ...
                                 - amIntrCube(currinter, max_offset + align_wind - i, m)) ^ 2 ) / (2 * ( normstd(currinter, m) ^ 2 ))) ...
                             + log(normstd(currinter, m)) ...
-                            + log((2 * pi) ^ 0.5);
-                            %- log(weight)...
-                            %- log(1 - weight) - log(measauresrange(m));
+                            + log((2 * pi) ^ 0.5) ...
+                            - log(1 - outprior);
+            end
+            if regdist <= outdist
+                thisdist = regdist;
+                isOutlier(currinter, align_wind + 1 - i, m, curroffset + 1) = 0;
+            else
+                thisdist = outdist;
+                isOutlier(currinter, align_wind + 1 - i, m, curroffset + 1) = 1;
+                %fprintf('Outlier Point - Intr %d, measure %d, day %d, offset %d\n', currinter, m, i, curroffset); 
             end
             % only include desired measures in overall alignment
             % optimisation

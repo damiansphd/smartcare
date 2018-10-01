@@ -103,6 +103,11 @@ damianmodelsnew = {
             'SC_AMvEM_sig4_mu4_ca2_sm1_rm4_ob1_mm1_mo25_dw25_ex-28_obj290.9940';
             'SC_AMvEM_sig4_mu4_ca2_sm2_rm4_ob1_mm1_mo25_dw25_ex-28_obj291.1567';
             
+            'placeholder';
+            'SC_AMvEM2_sig4_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj295.4349';
+            'SC_AMvEM2_sig4_mu3_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj296.0669';
+            'SC_AMvEM2_sig4_mu4_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj295.6658';
+            'SC_AMvEM2_sig4_mu4_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj295.9340';
          };
 
 fprintf('Pick Model set\n');

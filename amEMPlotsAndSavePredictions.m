@@ -1,6 +1,6 @@
 function amEMPlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, ...
     overall_pdoffset_all, overall_pdoffset_xAL, hstg, overall_hist, overall_hist_all, overall_hist_xAL, offsets, ...
-    meancurvemean, normmean, ex_start, thisinter, nmeasures, max_offset, align_wind, study, version)
+    meancurvemean, normmean, isOutlier, ex_start, thisinter, nmeasures, max_offset, align_wind, study, version)
 
 % amEMPlotsAndSavePredictions - plots measures prior to
 % treatment with alignment model predictions and overlaid with the mean
@@ -13,10 +13,12 @@ mpos = [ 1 2 6 7 ; 3 4 8 9 ; 11 12 16 17 ; 13 14 18 19 ; 21 22 26 27 ; 23 24 28 
 hpos = [ 5 ; 10 ; 15 ; 20 ; 25 ; 30 ; 35 ; 40 ; 45 ; 44 ; 43 ; 42 ; 41 ];
 days = [-1 * (max_offset + align_wind - 1): -1];
 anchor = 0; % latent curve is to be shifted by offset on the plot
-
+noutliers = sum(sum(isOutlier(thisinter, :, :, offsets(thisinter) + 1)));
 scid = amInterventions.SmartCareID(thisinter);
-name = sprintf('%s_AM%s Exacerbation %d - ID %d Date %s, Offset %d', study, version, thisinter, scid, datestr(amInterventions.IVStartDate(thisinter),29), offsets(thisinter));
-fprintf('%s - Best Offset = %d\n', name, offsets(thisinter));
+name = sprintf('%s_AM%s Exacerbation %d - ID %d Date %s, Offset %d (%d Outliers)', study, version, thisinter, ...
+    scid, datestr(amInterventions.IVStartDate(thisinter),29), offsets(thisinter), noutliers);
+fprintf('%s - Best Offset = %d, (%d Outliers)\n', name, offsets(thisinter), noutliers);
+
 
 [f, p] = createFigureAndPanel(name, 'portrait', 'a4');
 
@@ -37,7 +39,9 @@ for m = 1:nmeasures
     [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, offsets(thisinter), smooth(meancurvemean(:, m) + normmean(thisinter, m),5), xl, yl, 'red', '-', 1.0, anchor);
     [xl, yl] = plotExStart(ax, ex_start, offsets(thisinter), xl, yl,  'green', '-', 0.5);            
     [xl, yl] = plotVerticalLine(ax, 0, xl, yl, 'cyan', '-', 0.5); % plot treatment start
-                    
+    plotOutlierDataPoints(ax, days, amIntrDatacube(thisinter, :, m), isOutlier(thisinter, :, m, offsets(thisinter) + 1), ...
+        max_offset, align_wind, [0, 0.65, 1], 'none', 1.0, 'o', 4.0, 'red', 'yellow');
+        
     xl2 = [0 max_offset-1];
     yl2 = [0 0.25];            
     ax2 = subplot(plotsdown, plotsacross, hpos(m,:),'Parent',p);           

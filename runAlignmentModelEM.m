@@ -1,6 +1,6 @@
 clear; close all; clc;
 
-version = 'vEM';
+version = 'vEM2';
 
 fprintf('Running Alignment Model %s\n', version);
 fprintf('\n');
@@ -170,6 +170,8 @@ fprintf('Preparing input data\n');
 detaillog = true;
 max_offset = 25; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
 align_wind = 25;
+% define prior probability of a data point being an outlier
+outprior = 0.05;
 baseplotname = sprintf('%s_AM%s_sig%d_mu%d_ca%d_sm%d_rm%d_ob%d_mm%d_mo%d_dw%d', study, version, sigmamethod, mumethod, curveaveragingmethod, ...
     smoothingmethod, runmode, offsetblockingmethod, measuresmask, max_offset, align_wind);
 
@@ -364,7 +366,8 @@ else
     run_type = 'Uniform Start';
 end
 [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, ...
-    offsets, animatedoffsets, hstg, pdoffset, overall_hist, overall_pdoffset, animated_overall_pdoffset, ppts, qual, min_offset] = amEMAlignCurves(amIntrNormcube, amInterventions, measures, ...
+    offsets, animatedoffsets, hstg, pdoffset, overall_hist, overall_pdoffset, animated_overall_pdoffset, ...
+    isOutlier, ppts, qual, min_offset] = amEMAlignCurves(amIntrNormcube, amInterventions, outprior, measures, ...
     normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod, offsetblockingmethod, runmode, fnmodelrun);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
 
@@ -416,12 +419,13 @@ end
 for j=1:ninterventions
     overall_pdoffset_all(j, min_offset+1:max_offset)  = convertFromLogSpaceAndNormalise(overall_hist_all(j, min_offset+1:max_offset));
     overall_pdoffset_xAL(j, min_offset+1:max_offset)  = convertFromLogSpaceAndNormalise(overall_hist_xAL(j, min_offset+1:max_offset));
-    
-    %overall_pdoffset_all(j,min_offset+1:max_offset)     = exp(-1 * (overall_hist_all(j,min_offset+1:max_offset) - min(overall_hist_all(j, min_offset+1:max_offset))));
-    %overall_pdoffset_all(j,min_offset+1:max_offset)     = overall_pdoffset_all(j,min_offset+1:max_offset) / sum(overall_pdoffset_all(j,min_offset+1:max_offset));
-    
-    %overall_pdoffset_xAL(j,min_offset+1:max_offset)     = exp(-1 * (overall_hist_xAL(j,min_offset+1:max_offset) - min(overall_hist_xAL(j, min_offset+1:max_offset))));
-    %overall_pdoffset_xAL(j,min_offset+1:max_offset)     = overall_pdoffset_xAL(j,min_offset+1:max_offset) / sum(overall_pdoffset_xAL(j,min_offset+1:max_offset));
+end
+
+totaloutliers = 0;
+totalpoints = 0;
+for i = 1:ninterventions
+       totaloutliers = totaloutliers + sum(sum(isOutlier(i, :, :, offsets(i) + 1)));
+       totalpoints   = totalpoints + sum(sum(~isnan(amIntrDatacube(i, max_offset:max_offset + align_wind -1, :))));
 end
 
 toc
@@ -436,7 +440,7 @@ fprintf('\n');
 save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube', 'amIntrNormcube', 'amInterventions', ...
     'meancurvesumsq', 'meancurvesum', 'meancurvecount', 'meancurvemean', 'meancurvestd', 'animatedmeancurvemean', ...
     'initial_offsets', 'offsets', 'animatedoffsets', 'qual', 'unaligned_profile', 'hstg', 'pdoffset', ...
-    'overall_hist', 'overall_hist_all', 'overall_hist_xAL', 'ppts', ...
+    'overall_hist', 'overall_hist_all', 'overall_hist_xAL', 'ppts', 'isOutlier', 'outprior', 'totaloutliers', 'totalpoints', ...
     'overall_pdoffset', 'overall_pdoffset_all', 'overall_pdoffset_xAL', 'animated_overall_pdoffset', ...
     'sorted_interventions', 'normmean', 'normstd', 'measures', 'study', 'version', ...
     'min_offset', 'max_offset', 'align_wind', 'ex_start', ...
@@ -450,9 +454,15 @@ if printpredictions == 1
     fprintf('Plotting prediction results\n');
     for i=1:ninterventions
         amEMPlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
-            hstg, overall_hist, overall_hist_all, overall_hist_xAL, offsets, meancurvemean, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
+            hstg, overall_hist, overall_hist_all, overall_hist_xAL, offsets, meancurvemean, normmean, isOutlier, ex_start, i, nmeasures, max_offset, align_wind, study, version);
     end
     toc
     fprintf('\n');
 end
+
+totaloutliers = 0;
+for i = 1:ninterventions
+       totaloutliers = totaloutliers + sum(sum(isOutlier(i, :, :, offsets(i) + 1)));
+end
+
 

@@ -1,7 +1,5 @@
 clear; close all; clc;
 
-[modelrun, modelidx, models] = selectModelRunFromList('');
-
 % other models to potentially add
 % sig4 version (although zero offset start is infinity
 % vEM with bet random start from 3 or 4
@@ -32,13 +30,19 @@ if isequal(runfunction,'')
     return;
 end
 
+[modelrun, modelidx, models] = selectModelRunFromList('');
+
 basedir = './';
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading output from model run\n');
 load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun)));
 
+% default some variables for backward compatibility with prior versions
 if exist('animated_overall_pdoffset', 'var') == 0
     animated_overall_pdoffset = 0;
+end
+if exist('isOutlier', 'var') == 0
+    isOutlier = zeros(ninterventions, align_wind, nmeasures, max_offset);
 end
     
 if runfunction == 1
@@ -48,7 +52,7 @@ if runfunction == 1
     for i=1:ninterventions
         amEMPlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, ...
             overall_pdoffset_all, overall_pdoffset_xAL, hstg, overall_hist, overall_hist_all, overall_hist_xAL, ...
-            offsets, meancurvemean, normmean, ex_start, i, nmeasures, max_offset, align_wind, study, version);
+            offsets, meancurvemean, normmean, isOutlier, ex_start, i, nmeasures, max_offset, align_wind, study, version);
     end
     toc
     fprintf('\n');
