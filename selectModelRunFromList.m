@@ -85,19 +85,19 @@ damianmodelsold = {
          };
      
 damianmodelsnew = {  
-            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_ob1_mm2_mo25_dw25_ex-28_obj310.5051';
+            'placeholder';
             'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm2_mo25_dw25_ex-28_obj317.8905';
             'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm2_mo25_dw25_ex-28_obj318.6805';
             'SC_AMvEM_sig4_mu4_ca2_sm1_rm4_ob1_mm2_mo25_dw25_ex-28_obj317.8905';
             'SC_AMvEM_sig4_mu4_ca2_sm2_rm4_ob1_mm2_mo25_dw25_ex-28_obj318.6805';
             
-            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj289.3767';
+            'placeholder';
             'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.7499';
             'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.8308';
             'SC_AMvEM_sig4_mu4_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.5482';
             'SC_AMvEM_sig4_mu4_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.6818';
             
-            'SC_AMvEM_sig3_mu3_ca2_sm1_rm4_ob1_mm1_mo25_dw25_ex-28_obj286.1946';
+            'placeholder';
             'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm1_mo25_dw25_ex-28_obj291.1600';
             'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm1_mo25_dw25_ex-28_obj291.2961';
             'SC_AMvEM_sig4_mu4_ca2_sm1_rm4_ob1_mm1_mo25_dw25_ex-28_obj290.9940';
@@ -108,6 +108,12 @@ damianmodelsnew = {
             'SC_AMvEM2_sig4_mu3_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj296.0669';
             'SC_AMvEM2_sig4_mu4_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj295.6658';
             'SC_AMvEM2_sig4_mu4_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj295.9340';
+            
+            'placeholder';
+            'SC_AMvEM2_sig4_mu3_ca2_sm1_rm4_ob1_mm1_mo25_dw25_ex-28_obj292.6813';
+            'SC_AMvEM2_sig4_mu3_ca2_sm2_rm4_ob1_mm1_mo25_dw25_ex-28_obj293.2933';
+            'SC_AMvEM2_sig4_mu4_ca2_sm1_rm4_ob1_mm1_mo25_dw25_ex-28_obj292.6343';
+            'SC_AMvEM2_sig4_mu4_ca2_sm2_rm4_ob1_mm1_mo25_dw25_ex-28_obj292.9482';
          };
 
 fprintf('Pick Model set\n');

@@ -69,7 +69,7 @@ pddiff = 100;
 prior_overall_pdoffset = overall_pdoffset;
 miniiter = 0;
 
-while (pddiff > 0.00001 && iter < 100)
+while (pddiff > 0.00001 && iter < 200)
     ok = 1;
     block_offset = 0;
     
