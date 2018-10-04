@@ -21,8 +21,13 @@ for i = 1:size(patientlist,1)
     
     % store min and max for patient (and handle case where there are no
     % clinical measures
-    minpmfev = min(pmeasures.FEV1_);
-    maxpmfev = max(pmeasures.FEV1_);
+    if size(pmeasures, 1) > 0
+        minpmfev = min(pmeasures.FEV1_);
+        maxpmfev = max(pmeasures.FEV1_);
+    else
+        minpmfev = 50;
+        maxpmfev = 50;
+    end
     if size(pclinical,1) > 0
         minpcfev = min(pclinical.FEV1_);
         maxpcfev = max(pclinical.FEV1_);

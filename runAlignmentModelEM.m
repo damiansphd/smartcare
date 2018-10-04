@@ -141,6 +141,21 @@ else
     modelrun = '';
 end
 
+fprintf('Run imputation ?\n');
+fprintf('----------------------------\n');
+fprintf('1: No\n');
+fprintf('2: Yes - with 1% of data points held back\n');
+imputationmode = input('Choose run mode(1-2) ');
+fprintf('\n');
+if imputationmode > 2
+    fprintf('Invalid choice\n');
+    return;
+end
+if isequal(imputationmode,'')
+    fprintf('Invalid choice\n');
+    return;
+end
+
 fprintf('\n');
 printpredictions = input('Print predictions (1=Yes, 2=No) ? ');
 if printpredictions > 2
@@ -172,8 +187,8 @@ max_offset = 25; % should not be greater than ex_start (set lower down) as this 
 align_wind = 25;
 % define prior probability of a data point being an outlier
 outprior = 0.05;
-baseplotname = sprintf('%s_AM%s_sig%d_mu%d_ca%d_sm%d_rm%d_ob%d_mm%d_mo%d_dw%d', study, version, sigmamethod, mumethod, curveaveragingmethod, ...
-    smoothingmethod, runmode, offsetblockingmethod, measuresmask, max_offset, align_wind);
+baseplotname = sprintf('%s_AM%s_sig%d_mu%d_ca%d_sm%d_rm%d_ob%d_im%d_mm%d_mo%d_dw%d', study, version, sigmamethod, mumethod, curveaveragingmethod, ...
+    smoothingmethod, runmode, offsetblockingmethod, imputationmode, measuresmask, max_offset, align_wind);
 
 
 % remove any interventions where the start is less than the alignment
@@ -205,15 +220,6 @@ else
     % happens
     idx = ismember(measures.DisplayName, {'Cough'});
 end
-
-%tmpdataoutliers = dataoutliers(dataoutliers.NStdDevOutlier==5,:);
-%for i = 1:size(tmpdataoutliers,1)
-%    outscid = tmpdataoutliers.SmartCareID(i);
-%    outm    = tmpdataoutliers.MeasureID(i);
-%    outday  = tmpdataoutliers.Day(i);
-%    amDatacube(outscid, outday, outm) = nan;
-%    fprintf('Removing data outlier: ID %d, measure %d, scaled day %d\n', outscid, outm, outday);
-%end
 
 % create cube for data window data by intervention (for each measure)
 amIntrDatacube = NaN(ninterventions, max_offset + align_wind - 1, nmeasures);
@@ -348,6 +354,24 @@ for i = 1:ninterventions
         amIntrNormcube(i, 1:(max_offset + align_wind -1), m) = amIntrDatacube(i, 1:(max_offset + align_wind -1), m) - normmean(i,m);
     end
 end
+
+amHeldBackcube = zeros(ninterventions, max_offset + align_wind - 1, nmeasures);
+if imputationmode ==2
+    heldbackpct = 0.01;
+    for i = 1:ninterventions
+        for d = max_offset:max_offset + align_wind -1
+            for m = 1:nmeasures
+                if ~isnan(amIntrDatacube(i, d, m))
+                    holdback = rand;
+                    if holdback <= heldbackpct
+                        amHeldBackcube(i, d, m) = 1;
+                    end
+                end
+            end
+        end
+    end
+end
+
 toc
 fprintf('\n');
 
@@ -367,7 +391,7 @@ else
 end
 [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, ...
     offsets, animatedoffsets, hstg, pdoffset, overall_hist, overall_pdoffset, animated_overall_pdoffset, ...
-    isOutlier, ppts, qual, min_offset] = amEMAlignCurves(amIntrNormcube, amInterventions, outprior, measures, ...
+    isOutlier, ppts, qual, min_offset] = amEMAlignCurves(amIntrNormcube, amHeldBackcube, amInterventions, outprior, measures, ...
     normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod, offsetblockingmethod, runmode, fnmodelrun);
 fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
 
@@ -396,7 +420,7 @@ amInterventions.Offset = offsets;
 
 plotname = sprintf('%s_ex%d_obj%.4f', baseplotname, ex_start, qual);
 
-[sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amIntrNormcube, amInterventions, meancurvemean, ...
+[sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amIntrNormcube, amHeldBackcube, amInterventions, meancurvemean, ...
     meancurvecount, meancurvestd, overall_pdoffset, offsets, measures, min_offset, max_offset, align_wind, nmeasures, run_type, ...
     study, ex_start, version, curveaveragingmethod);
 
@@ -428,6 +452,12 @@ for i = 1:ninterventions
        totalpoints   = totalpoints + sum(sum(~isnan(amIntrDatacube(i, max_offset:max_offset + align_wind -1, :))));
 end
 
+totalpoints = totalpoints - sum(sum(sum(amHeldBackcube)));
+
+[amImputedCube] = calcImputedProbabilities(amIntrNormcube, amHeldBackcube, ...
+    meancurvemean, meancurvestd, normstd, overall_pdoffset, max_offset, align_wind, ...
+    nmeasures, ninterventions,sigmamethod, smoothingmethod, imputationmode);
+
 toc
 fprintf('\n');
 
@@ -437,7 +467,8 @@ subfolder = 'MatlabSavedVariables';
 outputfilename = sprintf('%s_ex%d_obj%.4f.mat', baseplotname, ex_start, qual);
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');
-save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube', 'amIntrNormcube', 'amInterventions', ...
+save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube', 'amIntrNormcube', 'amHeldBackcube', ...
+    'amImputedCube', 'amInterventions', ...
     'meancurvesumsq', 'meancurvesum', 'meancurvecount', 'meancurvemean', 'meancurvestd', 'animatedmeancurvemean', ...
     'initial_offsets', 'offsets', 'animatedoffsets', 'qual', 'unaligned_profile', 'hstg', 'pdoffset', ...
     'overall_hist', 'overall_hist_all', 'overall_hist_xAL', 'ppts', 'isOutlier', 'outprior', 'totaloutliers', 'totalpoints', ...
@@ -453,16 +484,13 @@ if printpredictions == 1
     tic
     fprintf('Plotting prediction results\n');
     for i=1:ninterventions
-        amEMPlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
+        amEMPlotsAndSavePredictions(amInterventions, amIntrDatacube, amHeldBackcube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
             hstg, overall_hist, overall_hist_all, overall_hist_xAL, offsets, meancurvemean, normmean, isOutlier, ex_start, i, nmeasures, max_offset, align_wind, study, version);
     end
     toc
     fprintf('\n');
 end
 
-totaloutliers = 0;
-for i = 1:ninterventions
-       totaloutliers = totaloutliers + sum(sum(isOutlier(i, :, :, offsets(i) + 1)));
-end
+
 
 

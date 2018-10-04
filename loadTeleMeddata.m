@@ -65,7 +65,7 @@ tmPatientInfo.FEV1SetAs = round(tmPatientInfo.PredFEV1,1);
 
 ntmpatients = size(tmPatientInfo,1);
 tmPatient.ID(1:ntmpatients) = tmPatientInfo.ID;
-tmPatient.Hospital(1:ntmpatients) = {'PAP'}
+tmPatient.Hospital(1:ntmpatients) = {'PAP'};
 %for i = 1:size(tmPatient,1)
 %    tmPatient.Hospital{i} = 'PAP';
 %end
@@ -102,7 +102,7 @@ for i = 1:ntmpatients
     fprintf('Loading data for Patient K%d\n', i);
     tmData = readtable(fullfile(basedir, subfolder, tmdatafile));
     tmData(:,{'PEANg_ml', 'IVAminophylline', 'POTheophylline', 'Steroids', 'WCC', 'Fat', 'Bone', 'Muscle', 'Visceral', 'peakFlow', 'Calories', 'Distance', 'Duration'}) = []; 
-    if i ~= 11 & i ~= 15
+    if i ~= 11 && i ~= 15
         tmData.Date = datetime(tmData.Date, 'InputFormat', 'dd.MM.yy');
     end
     [tmPatient, tmClinicVisits, tmAdmissions, tmAntibiotics, tmCRP, tmPFT, tmphysdata] = ...,
@@ -141,6 +141,32 @@ tmphysdata.MinPatientDateNum = [];
 
 % remove invalid HR and O2 measures from patient K14
 tmphysdata(isnan(tmphysdata.DateNum),:) = [];
+
+%remove 0 measurements for LungFunction, O2 Saturation, Pulse
+counter = 1;
+idloc = zeros(1,2);
+for i=1:size(tmphysdata,1)
+    if isequal(tmphysdata.RecordingType(i),cellstr('LungFunctionRecording'))
+        if tmphysdata.FEV1_(i) == 0
+            idloc(counter) = i;
+            counter = counter+1;
+        end
+    elseif isequal(tmphysdata.RecordingType(i),cellstr('O2SaturationRecording'))
+        if tmphysdata.O2Saturation(i) == 0
+            idloc(counter) = i;
+            counter = counter+1;
+        end
+    elseif isequal(tmphysdata.RecordingType(i),cellstr('PulseRateRecording'))
+        if tmphysdata.Pulse_BPM_(i) == 0
+            idloc(counter) = i;
+            counter = counter+1;
+        end
+    else
+    end
+end
+
+tmphysdata(idloc,:) = [];
+fprintf('Removed %d measurement rows with zero values\n', counter - 1);
 
 toc
 fprintf('\n');    
