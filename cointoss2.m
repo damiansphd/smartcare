@@ -52,7 +52,7 @@ for scen = 1:1
     line(x, y, 'LineStyle', '--', 'Color', 'green', 'LineWidth', 2);
     y = betapdf(x, a - 1 + ntosses/2, b - 1 + ntosses/2);
     line(x, y, 'LineStyle', '-', 'Color', 'blue', 'LineWidth', 2);
-    name = sprintf('Beta Distribution (a=%d, b=%d)', a - 1 + ntosses/2, b - 1 + ntosses/2);
+    name = sprintf('Beta Distribution (a=%d, b=%d)', a + ntosses/2, b + ntosses/2);
     title(ax2(scen), name);
     
 end      
@@ -103,9 +103,9 @@ for scen = 2:2
     line(x, y, 'LineStyle', ':', 'Color', 'red', 'LineWidth', 2);
     y = betapdf(x, 14, (ntosses-14));
     line(x, y, 'LineStyle', '--', 'Color', 'green', 'LineWidth', 2);
-    y = betapdf(x, a - 1 + 14, b - 1 + (ntosses-14));
+    y = betapdf(x, a + 14, b + (ntosses-14));
     line(x, y, 'LineStyle', '-', 'Color', 'blue', 'LineWidth', 2);
-    name = sprintf('Beta Distribution (a=%d, b=%d)', a - 1 + 14, b - 1 + (ntosses-14));
+    name = sprintf('Beta Distribution (a=%d, b=%d)', a + 14, b + (ntosses-14));
     title(ax2(scen), name);
     ax2(scen).YLim = [0,10];
     

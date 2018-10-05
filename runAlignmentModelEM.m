@@ -274,7 +274,7 @@ for i = 1:ninterventions
             normstd(i,m) = measures.AlignWindStd(m);
         elseif sigmamethod == 2
             normstd(i,m) = measures.OverallStd(m);
-        elseif sigmamethod == 3
+        elseif (sigmamethod == 3) || (sigmamethod == 4)
             scid = amInterventions.SmartCareID(i);
             column = getColumnForMeasure(measures.Name{m});
             ddcolumn = sprintf('Fun_%s',column);
@@ -285,13 +285,19 @@ for i = 1:ninterventions
                 normstd(i,m) = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}),{ddcolumn}}(2);
             end
         else 
-            % for methodology 4, need to calculate dynamically during
-            % the alignment process 0 - so leave normstd as zeros for now
+            %shouldn't get here...
+            fprintf('Should never get to this branch of code\n');
         end
     end
 end
 
-% adjust by additive normalisation (mu) based on methodology
+% calculate additive normalisation (mu) based on methodology
+% and then create normalised data cube.
+% for sigma methods 1, 2, & 3 just normalise by mu (as the sigma is
+% constant for a given intervention/measure and is incorporated in the
+% model objective function
+% for sigma methos 4, need to normalise by mu and sigma here as the model
+% is using a by day/measure sigma.
 normmean = zeros(ninterventions, nmeasures);
 amIntrNormcube = amIntrDatacube;
 for i = 1:ninterventions
@@ -351,7 +357,13 @@ for i = 1:ninterventions
                 normmean(i,m) = 0;
             end
         end
-        amIntrNormcube(i, 1:(max_offset + align_wind -1), m) = amIntrDatacube(i, 1:(max_offset + align_wind -1), m) - normmean(i,m);
+        if sigmamethod == 4
+            amIntrNormcube(i, 1:(max_offset + align_wind -1), m) = ...
+                (amIntrDatacube(i, 1:(max_offset + align_wind -1), m) - normmean(i, m)) / normstd(i, m);
+        else 
+            amIntrNormcube(i, 1:(max_offset + align_wind -1), m) = ...
+                (amIntrDatacube(i, 1:(max_offset + align_wind -1), m) - normmean(i, m));
+        end
     end
 end
 
@@ -476,7 +488,7 @@ save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube
     'sorted_interventions', 'normmean', 'normstd', 'measures', 'study', 'version', ...
     'min_offset', 'max_offset', 'align_wind', 'ex_start', ...
     'sigmamethod', 'mumethod', 'curveaveragingmethod', 'smoothingmethod', 'offsetblockingmethod', ...
-    'measuresmask', 'runmode', 'printpredictions', 'nmeasures', 'ninterventions');
+    'measuresmask', 'runmode', 'imputationmode', 'printpredictions', 'nmeasures', 'ninterventions');
 toc
 fprintf('\n');
 
@@ -484,8 +496,9 @@ if printpredictions == 1
     tic
     fprintf('Plotting prediction results\n');
     for i=1:ninterventions
-        amEMPlotsAndSavePredictions(amInterventions, amIntrDatacube, amHeldBackcube, measures, pdoffset, overall_pdoffset, overall_pdoffset_all, overall_pdoffset_xAL, ...
-            hstg, overall_hist, overall_hist_all, overall_hist_xAL, offsets, meancurvemean, normmean, isOutlier, ex_start, i, nmeasures, max_offset, align_wind, study, version);
+        amEMPlotsAndSavePredictions(amInterventions, amIntrDatacube, amHeldBackcube, measures, pdoffset, overall_pdoffset, ...
+            overall_pdoffset_all, overall_pdoffset_xAL, hstg, overall_hist, overall_hist_all, overall_hist_xAL, offsets, ...
+            meancurvemean, normmean, normstd, isOutlier, ex_start, i, nmeasures, max_offset, align_wind, study, version);
     end
     toc
     fprintf('\n');

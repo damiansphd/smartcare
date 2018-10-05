@@ -114,6 +114,18 @@ damianmodelsnew = {
             'SC_AMvEM2_sig4_mu3_ca2_sm2_rm4_ob1_mm1_mo25_dw25_ex-28_obj293.2933';
             'SC_AMvEM2_sig4_mu4_ca2_sm1_rm4_ob1_mm1_mo25_dw25_ex-28_obj292.6343';
             'SC_AMvEM2_sig4_mu4_ca2_sm2_rm4_ob1_mm1_mo25_dw25_ex-28_obj292.9482';
+            
+            'placeholder';
+            'SC_AMvEM2_sig4_mu3_ca2_sm1_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj135.6674';
+            'SC_AMvEM2_sig4_mu3_ca2_sm2_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj135.5826';
+            'SC_AMvEM2_sig4_mu4_ca2_sm1_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj135.3840';
+            'placeholder';
+            
+            'placeholder';
+            'SC_AMvEM2_sig4_mu3_ca2_sm2_rm4_ob1_im1_mm1_mo25_dw25_ex-28_obj135.4247';
+            'placeholder';
+            'placeholder';
+            'SC_AMvEM2_sig4_mu4_ca2_sm2_rm4_ob1_im1_mm1_mo25_dw25_ex-28_obj135.3157';
          };
 
 fprintf('Pick Model set\n');

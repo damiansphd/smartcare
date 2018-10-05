@@ -1,6 +1,6 @@
 function amEMPlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, ...
     overall_pdoffset_all, overall_pdoffset_xAL, hstg, overall_hist, overall_hist_all, overall_hist_xAL, offsets, ...
-    meancurvemean, normmean, isOutlier, ex_start, thisinter, nmeasures, max_offset, align_wind, study, version)
+    meancurvemean, normmean, normstd, isOutlier, ex_start, thisinter, nmeasures, max_offset, align_wind, study, version)
 
 % amEMPlotsAndSavePredictions - plots measures prior to
 % treatment with alignment model predictions and overlaid with the mean
@@ -26,17 +26,25 @@ for m = 1:nmeasures
     if all(isnan(amIntrDatacube(thisinter, :, m)))
         continue;
     end
+    
+    adjmeancurvemean = (meancurvemean(:,m) * normstd(thisinter, m)) + normmean(thisinter, m);
+    
     % initialise plot areas
     xl = [0 0];
-    yl = [min((meancurvemean(1:max_offset + align_wind - 1 - offsets(thisinter), m) + normmean(thisinter, m)) * .99) ...
-          max((meancurvemean(1:max_offset + align_wind - 1 - offsets(thisinter), m) + normmean(thisinter, m)) * 1.01)];
+    %yl = [min((meancurvemean(1:max_offset + align_wind - 1 - offsets(thisinter), m) + normmean(thisinter, m)) * .99) ...
+    %      max((meancurvemean(1:max_offset + align_wind - 1 - offsets(thisinter), m) + normmean(thisinter, m)) * 1.01)];
+    yl = [min(adjmeancurvemean(1:max_offset + align_wind - 1 - offsets(thisinter)) * .99) ...
+          max(adjmeancurvemean(1:max_offset + align_wind - 1 - offsets(thisinter)) * 1.01)];
     
     % create subplot and plot required data arrays
     ax = subplot(plotsdown, plotsacross, mpos(m,:), 'Parent',p);               
     [xl, yl] = plotMeasurementData(ax, days, amIntrDatacube(thisinter, :, m), xl, yl, measures(m,:), [0, 0.65, 1], '-', 1.0, 'o', 2.0, 'blue', 'green');
     [xl, yl] = plotHorizontalLine(ax, normmean(thisinter, m), xl, yl, 'blue', '--', 0.5); % plot mean
-    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, offsets(thisinter), (meancurvemean(:, m) + normmean(thisinter, m)), xl, yl, 'red', ':', 1.0, anchor);
-    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, offsets(thisinter), smooth(meancurvemean(:, m) + normmean(thisinter, m),5), xl, yl, 'red', '-', 1.0, anchor);
+    %[xl, yl] = plotLatentCurve(ax, max_offset, align_wind, offsets(thisinter), (meancurvemean(:, m) + normmean(thisinter, m)), xl, yl, 'red', ':', 1.0, anchor);
+    %[xl, yl] = plotLatentCurve(ax, max_offset, align_wind, offsets(thisinter), smooth(meancurvemean(:, m) + normmean(thisinter, m),5), xl, yl, 'red', '-', 1.0, anchor);
+    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, offsets(thisinter), adjmeancurvemean, xl, yl, 'red', ':', 1.0, anchor);
+    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, offsets(thisinter), smooth(adjmeancurvemean,5), xl, yl, 'red', '-', 1.0, anchor);
+
     [xl, yl] = plotExStart(ax, ex_start, offsets(thisinter), xl, yl,  'green', '-', 0.5);            
     [xl, yl] = plotVerticalLine(ax, 0, xl, yl, 'cyan', '-', 0.5); % plot treatment start
     plotOutlierDataPoints(ax, days, amIntrDatacube(thisinter, :, m), isOutlier(thisinter, :, m, offsets(thisinter) + 1), ...

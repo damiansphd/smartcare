@@ -52,7 +52,7 @@ if runfunction == 1
     for i=1:ninterventions
         amEMPlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, ...
             overall_pdoffset_all, overall_pdoffset_xAL, hstg, overall_hist, overall_hist_all, overall_hist_xAL, ...
-            offsets, meancurvemean, normmean, isOutlier, ex_start, i, nmeasures, max_offset, align_wind, study, version);
+            offsets, meancurvemean, normmean, normstd, isOutlier, ex_start, i, nmeasures, max_offset, align_wind, study, version);
     end
     toc
     fprintf('\n');
@@ -175,7 +175,7 @@ elseif runfunction == 8
     testdatafilename = sprintf('%s_LabelledInterventions.mat', study);
     load(fullfile(basedir, subfolder, testdatafilename));
     compareModelRunToTestData(amLabelledInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, hstg, overall_hist, ...
-        offsets, meancurvemean, normmean, ex_start, nmeasures, ninterventions, min_offset, max_offset, align_wind, study, version, modelrun, modelidx);
+        offsets, meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, min_offset, max_offset, align_wind, study, version, modelrun, modelidx);
 elseif runfunction == 9
     fprintf('<placeholder for Dragos new option>\n');
 else

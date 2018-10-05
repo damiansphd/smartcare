@@ -1,5 +1,5 @@
 function compareModelRunToTestData(amLabelledInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, ...
-    hstg, overall_hist, offsets, meancurvemean, normmean, ex_start, nmeasures, ninterventions, min_offset, max_offset, ...
+    hstg, overall_hist, offsets, meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, min_offset, max_offset, ...
     align_wind, study, version, modelrun, modelidx)
 
 % compareModelRunToTestData - compares the output of a chosen model run to
@@ -82,17 +82,25 @@ for i = 1:testsetsize
         if all(isnan(amIntrDatacube(thisinter, :, m)))
             continue;
         end
+        
+        adjmeancurvemean = (meancurvemean(:,m) * normstd(thisinter, m)) + normmean(thisinter, m);
+        
         % initialise plot areas
         xl = [0 0];
-        yl = [min((meancurvemean(1:max_offset + align_wind - 1 - offset, m) + normmean(thisinter, m)) * .99) ...
-              max((meancurvemean(1:max_offset + align_wind - 1 - offset, m) + normmean(thisinter, m)) * 1.01)];
-    
+        %yl = [min((meancurvemean(1:max_offset + align_wind - 1 - offset, m) + normmean(thisinter, m)) * .99) ...
+        %      max((meancurvemean(1:max_offset + align_wind - 1 - offset, m) + normmean(thisinter, m)) * 1.01)];
+        yl = [min(adjmeancurvemean(1:max_offset + align_wind - 1 - offset) * .99) ...
+              max(adjmeancurvemean(1:max_offset + align_wind - 1 - offset) * 1.01)];
+      
         % create subplot and plot required data arrays
         ax = subplot(plotsdown, plotsacross, mpos(m,:), 'Parent',p);               
         [xl, yl] = plotMeasurementData(ax, days, amIntrDatacube(thisinter, :, m), xl, yl, measures(m,:), [0, 0.65, 1], '-', 1.0, 'o', 2.0, 'blue', 'green');
         [xl, yl] = plotHorizontalLine(ax, normmean(thisinter, m), xl, yl, 'blue', '--', 0.5); % plot mean
-        [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, offset, (meancurvemean(:, m) + normmean(thisinter, m)), xl, yl, 'red', ':', 1.0, anchor);
-        [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, offset, smooth(meancurvemean(:, m) + normmean(thisinter, m),5), xl, yl, 'red', '-', 1.0, anchor);
+        %[xl, yl] = plotLatentCurve(ax, max_offset, align_wind, offset, (meancurvemean(:, m) + normmean(thisinter, m)), xl, yl, 'red', ':', 1.0, anchor);
+        %[xl, yl] = plotLatentCurve(ax, max_offset, align_wind, offset, smooth(meancurvemean(:, m) + normmean(thisinter, m),5), xl, yl, 'red', '-', 1.0, anchor);
+        [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, offset, adjmeancurvemean, xl, yl, 'red', ':', 1.0, anchor);
+        [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, offset, smooth(adjmeancurvemean,5), xl, yl, 'red', '-', 1.0, anchor);
+    
         [xl, yl] = plotExStart(ax, ex_start, offset, xl, yl,  'black', '-', 0.5);
         [xl, yl] = plotVerticalLine(ax, 0, xl, yl, 'cyan', '-', 0.5); % plot treatment start
         tempyl = yl;
