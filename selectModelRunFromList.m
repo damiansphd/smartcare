@@ -4,7 +4,7 @@ function [modelrun, modelidx, models] = selectModelRunFromList(loadtype)
 % historical model run (either all the variables or just the prob
 % distributions/distance function arrays.
 
-damianmodelsold = {  
+SCmodelsold = {  
             'SC_AMv4c_sig3_mu3_ca2_sm1_rm1_mm2_mo25_dw25_ex-26_obj4595.2626';
             'SC_AMv4c_sig3_mu3_ca2_sm2_rm1_mm2_mo25_dw25_ex-27_obj4602.0068';
             'SC_AMv4c_sig3_mu3_ca2_sm2_rm2_mm2_mo25_dw25_ex-27_obj4557.8883';
@@ -84,7 +84,7 @@ damianmodelsold = {
             'SC_AMvEM_sig4_mu4_ca2_sm2_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.6818';
          };
      
-damianmodelsnew = {  
+SCmodelsnew = {  
             'placeholder';
             'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm2_mo25_dw25_ex-28_obj317.8905';
             'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm2_mo25_dw25_ex-28_obj318.6805';
@@ -126,16 +126,36 @@ damianmodelsnew = {
             'placeholder';
             'placeholder';
             'SC_AMvEM2_sig4_mu4_ca2_sm2_rm4_ob1_im1_mm1_mo25_dw25_ex-28_obj135.3157';
+            
+            
          };
 
+TMmodelsnew = {  
+            'TM_AMvEM2_sig4_mu3_ca2_sm2_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj38.1535';
+            'TM_AMvEM2_sig4_mu4_ca2_sm2_rm4_ob1_im1_mm1_mo25_dw25_ex-28_obj38.4991';
+            'TM_AMvEM2_sig4_mu4_ca2_sm2_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj38.1535';
+            'TM_AMvEM2_sig4_mu5_ca2_sm1_rm4_ob1_im1_mm1_mo25_dw25_ex-28_obj38.2212';
+            'TM_AMvEM2_sig4_mu5_ca2_sm2_rm4_ob1_im1_mm1_mo25_dw25_ex-28_obj37.7257';
+            'TM_AMvEM2_sig4_mu5_ca2_sm2_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj37.4667';
+            'TM_AMvEM2_sig4_mu5_ca2_sm2_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj37.0931';
+            'TM_AMvEM2_sig4_mu5_ca2_sm2_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj38.2047'; % 28 interventions
+            'TM_AMvEM2_sig4_mu5_ca2_sm2_rm4_ob1_im1_mm1_mo25_dw25_ex-28_obj38.4291'; % 28 interventions
+            'TM_AMvEM2_sig4_mu5_ca2_sm2_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj37.1701'; % 28 interventions and outlier prior = 1%
+            'TM_AMvEM2_sig4_mu5_ca2_sm2_rm4_ob1_im1_mm1_mo25_dw25_ex-28_obj37.3985'; % 28 interventions and outlier prior = 1%
+            
+            };
+            
+     
+     
 fprintf('Pick Model set\n');
 fprintf('--------------\n');
-fprintf('1: Damian - Old\n');
-fprintf('2: Damian - New\n');
+fprintf('1: Damian SC - Old\n');
+fprintf('2: Damian SC - New\n');
+fprintf('3: Damian TM - New\n');
 
-modelset = input('Choose model set (1-2) ');
+modelset = input('Choose model set (1-3) ');
 
-if modelset > 2
+if modelset > 3
     fprintf('Invalid choice\n');
     return;
 end
@@ -145,9 +165,11 @@ if isequal(modelset,'')
 end
 
 if modelset == 1
-    models = damianmodelsold;
+    models = SCmodelsold;
+elseif modelset == 2
+    models = SCmodelsnew;
 else
-    models = damianmodelsnew;
+    models = TMmodelsnew;
 end
 
 

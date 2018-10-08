@@ -9,6 +9,7 @@ patientoffsets = getPatientOffsets(physdata);
 interventions = ivandmeasurestable(ivandmeasurestable.DaysWithMeasures >= 15 & ivandmeasurestable.AvgMeasuresPerDay >= 2, ...
     {'SmartCareID', 'Hospital', 'IVStartDate', 'IVDateNum', 'DaysWithMeasures', 'AvgMeasuresPerDay'});
 
+
 % do inner join to reduce to only patients with enough data
 interventions = innerjoin(patientoffsets, interventions);
 interventions.IVScaledDateNum = datenum(interventions.IVStartDate) - offset + 1 - interventions.PatientOffset;

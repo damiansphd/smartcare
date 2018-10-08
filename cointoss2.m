@@ -19,7 +19,7 @@ for scen = 1:1
         nheads = 0;
         ntails = 0;
         pd = makedist('Binomial', 'n', 1, 'p', p);
-        for a = 1:ntosses
+        for n = 1:ntosses
             result = random(pd);
             if result == 1
                 nheads = nheads + 1;
@@ -50,7 +50,7 @@ for scen = 1:1
     line(x, y, 'LineStyle', ':', 'Color', 'red', 'LineWidth', 2);
     y = betapdf(x, ntosses/2, ntosses/2);
     line(x, y, 'LineStyle', '--', 'Color', 'green', 'LineWidth', 2);
-    y = betapdf(x, a - 1 + ntosses/2, b - 1 + ntosses/2);
+    y = betapdf(x, a + ntosses/2, b + ntosses/2);
     line(x, y, 'LineStyle', '-', 'Color', 'blue', 'LineWidth', 2);
     name = sprintf('Beta Distribution (a=%d, b=%d)', a + ntosses/2, b + ntosses/2);
     title(ax2(scen), name);
@@ -72,7 +72,7 @@ for scen = 2:2
         nheads = 0;
         ntails = 0;
         pd = makedist('Binomial', 'n', 1, 'p', p);
-        for a = 1:ntosses
+        for n = 1:ntosses
             result = random(pd);
             if result == 1
                 nheads = nheads + 1;
@@ -112,6 +112,8 @@ for scen = 2:2
     
 end      
 savePlot(fig, plottitle);
+close(fig);
+
 
 
         

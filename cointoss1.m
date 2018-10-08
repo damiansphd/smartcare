@@ -15,7 +15,7 @@ for scen = 1:3
         nheads = 0;
         ntails = 0;
         pd = makedist('Binomial', 'n', 1, 'p', p);
-        for a = 1:ntosses
+        for n = 1:ntosses
             result = random(pd);
             if result == 1
                 nheads = nheads + 1;

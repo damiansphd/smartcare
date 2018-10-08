@@ -46,9 +46,10 @@ fprintf('1: Mean for 8 days prior to data window\n');
 fprintf('2: Upper Quartile Mean for 20 days prior to data window\n');
 fprintf('3: Exclude bottom quartile from Mean for 10 days prior to data window\n');
 fprintf('4: Exclude bottom quartile and data outliers from Mean for 10 days prior to data window\n');
-mumethod = input('Choose methodology (1-4) ');
+fprintf('5: same as 4) but for sequential interventions and not enough data points in mean window, use upper 50%% mean over all patient data\n');
+mumethod = input('Choose methodology (1-5) ');
 fprintf('\n');
-if mumethod > 4
+if mumethod > 5
     fprintf('Invalid choice\n');
     return;
 end
@@ -144,7 +145,7 @@ end
 fprintf('Run imputation ?\n');
 fprintf('----------------------------\n');
 fprintf('1: No\n');
-fprintf('2: Yes - with 1% of data points held back\n');
+fprintf('2: Yes - with 1%% of data points held back\n');
 imputationmode = input('Choose run mode(1-2) ');
 fprintf('\n');
 if imputationmode > 2
@@ -186,23 +187,9 @@ detaillog = true;
 max_offset = 25; % should not be greater than ex_start (set lower down) as this implies intervention before exacerbation !
 align_wind = 25;
 % define prior probability of a data point being an outlier
-outprior = 0.05;
+outprior = 0.01;
 baseplotname = sprintf('%s_AM%s_sig%d_mu%d_ca%d_sm%d_rm%d_ob%d_im%d_mm%d_mo%d_dw%d', study, version, sigmamethod, mumethod, curveaveragingmethod, ...
     smoothingmethod, runmode, offsetblockingmethod, imputationmode, measuresmask, max_offset, align_wind);
-
-
-% remove any interventions where the start is less than the alignment
-% window
-amInterventions(amInterventions.IVScaledDateNum <= align_wind,:) = [];
-ninterventions = size(amInterventions,1);
-
-% remove temperature readings as insufficient datapoints for a number of
-% the interventions
-idx = ismember(measures.DisplayName, {'Temperature'});
-amDatacube(:,:,measures.Index(idx)) = [];
-measures(idx,:) = [];
-nmeasures = size(measures,1);
-measures.Index = [1:nmeasures]';
 
 % set the measures mask depending on option chosen
 if measuresmask == 1
@@ -248,16 +235,60 @@ for i = 1:ninterventions
     end
 end
 
+% add columns for Data Window Completeness and Flag for Sequential
+% Intervention to amInterventions table
+for i = 1:ninterventions
+    scid = amInterventions.SmartCareID(i);
+    actualpoints = 0;
+    maxpoints = 0;
+    for m = 1:nmeasures
+        if (measures.Mask(m) == 1)
+            actualpoints = actualpoints + sum(~isnan(amIntrDatacube(i, max_offset:max_offset+align_wind-1, m)));
+            maxpoints = maxpoints + align_wind;
+        end
+    end
+    amInterventions.DataWindowCompleteness(i) = 100 * actualpoints/maxpoints;
+    if i >= 2
+        if (amInterventions.SmartCareID(i) == amInterventions.SmartCareID(i-1) ...
+                && amInterventions.IVDateNum(i) - amInterventions.IVDateNum(i-1) < 50)
+            amInterventions.SequentialIntervention(i) = 'Y';
+        end
+    end
+end
+
+% remove any interventions where the start is less than the alignment
+% window
+%idx = find(amInterventions.IVScaledDateNum <= align_wind);
+%amInterventions(idx,:) = [];
+%amIntrDatacube(idx,:,:) = [];
+%ninterventions = size(amInterventions,1);
+
+% remove temperature readings as insufficient datapoints for a number of
+% the interventions
+idx = ismember(measures.DisplayName, {'Temperature'});
+amDatacube(:,:,measures.Index(idx)) = [];
+measures(idx,:) = [];
+nmeasures = size(measures,1);
+measures.Index = [1:nmeasures]';
+
 % calculate the overall & alignment window std for each measure and store in measures
 % table. Also the overall min, max and range values by measure (across all
 % patients and days)
 for m = 1:nmeasures
-    tempdata = zeros(ninterventions * align_wind, 1);
+    %tempdata = zeros(ninterventions * align_wind, 1);
+    tempdata = 0;
     for i = 1:ninterventions
         scid   = amInterventions.SmartCareID(i);
         start = amInterventions.IVScaledDateNum(i);
-        tempdata( ((i-1) * align_wind) + 1 : (i * align_wind) ) = reshape(amDatacube(scid, (start - align_wind):(start - 1), m), align_wind, 1);
+        periodstart = start - align_wind;
+        if periodstart < 1
+            periodstart = 1;
+        end
+        tempdata = [tempdata; reshape(amDatacube(scid, periodstart:(start - 1), m), start - periodstart, 1)];  
+        %tempdata( ((i-1) * align_wind) + 1 : (i * align_wind) ) = reshape(amDatacube(scid, (start - align_wind):(start - 1), m), align_wind, 1);
     end
+    tempdata(1) = [];
+    
     measures.AlignWindStd(m) = std(tempdata(~isnan(tempdata)));
     tempdata = reshape(amDatacube(:, :, m), npatients * ndays, 1);
     measures.OverallStd(m) = std(tempdata(~isnan(tempdata)));
@@ -267,96 +298,23 @@ end
 
 % populate multiplicative normalisation (sigma) values based on methodology
 % selected
-normstd = zeros(ninterventions, nmeasures);
-for i = 1:ninterventions
-    for m = 1:nmeasures
-        if sigmamethod == 1
-            normstd(i,m) = measures.AlignWindStd(m);
-        elseif sigmamethod == 2
-            normstd(i,m) = measures.OverallStd(m);
-        elseif (sigmamethod == 3) || (sigmamethod == 4)
-            scid = amInterventions.SmartCareID(i);
-            column = getColumnForMeasure(measures.Name{m});
-            ddcolumn = sprintf('Fun_%s',column);
-            if size(find(demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m})),1) == 0
-                fprintf('Could not find std for patient %d and measure %d so using overall std for measure instead\n', scid, m);
-                normstd(i,m) = measures.OverallStd(m);
-            else
-                normstd(i,m) = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}),{ddcolumn}}(2);
-            end
-        else 
-            %shouldn't get here...
-            fprintf('Should never get to this branch of code\n');
-        end
-    end
-end
+normstd = calculateSigmaNormalisation(amInterventions, measures, demographicstable, ninterventions, nmeasures, sigmamethod);
 
 % calculate additive normalisation (mu) based on methodology
 % and then create normalised data cube.
+
+normmean = calculateMuNormalisation(amDatacube, amInterventions, measures, demographicstable, ...
+    dataoutliers, align_wind, ninterventions, nmeasures, mumethod);
+
+% populate normalised data cube by intervention
 % for sigma methods 1, 2, & 3 just normalise by mu (as the sigma is
 % constant for a given intervention/measure and is incorporated in the
 % model objective function
 % for sigma methos 4, need to normalise by mu and sigma here as the model
 % is using a by day/measure sigma.
-normmean = zeros(ninterventions, nmeasures);
 amIntrNormcube = amIntrDatacube;
 for i = 1:ninterventions
-    if mumethod == 1
-        meanwindow = 8;
-    elseif mumethod == 2
-        meanwindow = 20;        
-    else
-        meanwindow = 10;
-    end
-    scid   = amInterventions.SmartCareID(i);
-    start = amInterventions.IVScaledDateNum(i);
-    if (start - align_wind - meanwindow) <= 0
-        meanwindow = start - align_wind - 1;
-    end
     for m = 1:nmeasures
-        meanwindowdata = amDatacube(scid, (start - align_wind - meanwindow): (start - 1 - align_wind), m);
-        if mumethod == 4
-            tmpdataoutliers = dataoutliers(dataoutliers.NStdDevOutlier==5 & dataoutliers.SmartCareID == scid & dataoutliers.MeasureID == m,:);
-            for d = 1:size(tmpdataoutliers,1)
-                if (start - align_wind - meanwindow) <= tmpdataoutliers.Day(d) & (start - 1 - align_wind) >= tmpdataoutliers.Day(d)
-                    fprintf('For Invervention %d, excluding Data outlier (ID %d, Measure %d, Day %d) from meanwindow\n', i, scid, m, tmpdataoutliers.Day(d));
-                    meanwindowdata(tmpdataoutliers.Day(d) - (start - align_wind - meanwindow) + 1) = [];
-                end
-            end
-        end
-        meanwindowdata = sort(meanwindowdata(~isnan(meanwindowdata)), 'ascend');
-        if size(meanwindowdata,2) >= 3
-            if mumethod == 1
-                % take mean of mean window (8 days prior to data window -
-                % as long as there are 3 or more data points in the window
-                normmean(i, m) = mean(meanwindowdata(1:end));
-            elseif mumethod == 2
-                % upper quartile mean of mean window method
-                percentile75 = round(size(meanwindowdata,2) * .75) + 1;
-                normmean(i, m) = mean(meanwindowdata(percentile75:end));
-            elseif mumethod == 3
-                % exclude bottom quartile from mean method
-                percentile25 = round(size(meanwindowdata,2) * .25) + 1;
-                normmean(i, m) = mean(meanwindowdata(percentile25:end));
-            else
-                % exclude bottom quartile from mean method
-                % and data outliers
-                percentile25 = round(size(meanwindowdata,2) * .25) + 1;
-                normmean(i, m) = mean(meanwindowdata(percentile25:end));
-            end
-        else
-            % if not enough data points in the mean window, use the
-            % patients inter-quartile mean
-            if size(find(demographicstable.SmartCareID(demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}))),1) > 0
-                fprintf('Using inter-quartile mean for intervention %d, measure %d\n', i, m);
-                column = getColumnForMeasure(measures.Name{m});
-                ddcolumn = sprintf('Fun_%s',column);
-                normmean(i, m) = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}),{ddcolumn}}(5);
-            else
-                fprintf('No measures for intervention %d, measure %d\n', i, m);
-                normmean(i,m) = 0;
-            end
-        end
         if sigmamethod == 4
             amIntrNormcube(i, 1:(max_offset + align_wind -1), m) = ...
                 (amIntrDatacube(i, 1:(max_offset + align_wind -1), m) - normmean(i, m)) / normstd(i, m);
