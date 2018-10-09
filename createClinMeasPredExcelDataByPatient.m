@@ -140,8 +140,15 @@ for i = 1:size(cdPatient,1)
     for a = 1:ninterventions
         if (amInterventions.SmartCareID(a) == scid)
             interstartdn = amInterventions.IVScaledDateNum(a);
-            interpd = reshape(overall_pdoffset(a, :), [max_offset, 1]);
-            outputdata.ExStartProb(interstartdn - max_offset:interstartdn - 1) = interpd;
+            periodstart = interstartdn + ex_start;
+            periodend = periodstart + (max_offset - 1);
+            pdstart = 1;
+            if periodstart < 1
+                periodstart = 1;
+                pdstart = (max_offset - 1) - (periodend - periodstart - 1);
+            end
+            interpd = overall_pdoffset(a, pdstart:max_offset);
+            outputdata.ExStartProb(periodstart:periodend) = interpd;
         end
     end
     
