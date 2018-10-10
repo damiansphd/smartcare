@@ -1,6 +1,6 @@
 function [amLabelledInterventions] = createLabelledInterventions(amIntrDatacube, amLabelledInterventions, ...
     pdoffset, overall_pdoffset, interfrom, interto, measures, normmean, max_offset, align_wind, ex_start, ...
-    study, ninterventions, nmeasures)
+    study, nmeasures)
 
 % createLabelledInterventions - plots measurement data and asks for lower
 % and upper bounds for predicted exacerbation start in order to create a
@@ -19,22 +19,6 @@ yl2 = zeros(nmeasures + 1, 2);
 i = interfrom;
 while i <= interto 
     scid = amLabelledInterventions.SmartCareID(i);
-    actualpoints = 0;
-    maxpoints = 0;
-    for m = 1:nmeasures
-        if (measures.Mask(m) == 1)
-            actualpoints = actualpoints + sum(~isnan(amIntrDatacube(i, max_offset:max_offset+align_wind-1, m)));
-            maxpoints = maxpoints + align_wind;
-        end
-    end
-    amLabelledInterventions.DataWindowCompleteness(i) = 100 * actualpoints/maxpoints;
-    if i >= 2
-        if (amLabelledInterventions.SmartCareID(i) == amLabelledInterventions.SmartCareID(i-1) ...
-                && amLabelledInterventions.IVDateNum(i) - amLabelledInterventions.IVDateNum(i-1) < 50)
-            amLabelledInterventions.SequentialIntervention(i) = 'Y';
-        end
-    end
-  
     fprintf('Intervention %2d: ID %3d, Date %s, Data Window Completeness = %.2f%%\n', i, scid, ...
         datestr(amLabelledInterventions.IVStartDate(i),29), amLabelledInterventions.DataWindowCompleteness(i));
     name = sprintf('%s_AM Labelling Data - Ex %d (ID %d Date %s)', study, i, scid, ...

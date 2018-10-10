@@ -111,8 +111,6 @@ elseif runfunction == 6
         fprintf('Creating new labelled test data file\n');
         amLabelledInterventions = amInterventions;
         for a = 1:ninterventions
-            amLabelledInterventions.DataWindowCompleteness(a) = 0;
-            amLabelledInterventions.SequentialIntervention(a) = 'N';
             amLabelledInterventions.IncludeInTestSet(a)       = 'N';
             amLabelledInterventions.ExStart(a)                = ex_start;
             amLabelledInterventions.LowerBound1(a)            = 0;
@@ -153,7 +151,7 @@ elseif runfunction == 6
     end
 
     [amLabelledInterventions] = createLabelledInterventions(amIntrDatacube, amLabelledInterventions, pdoffset, overall_pdoffset, ...
-        interfrom, interto, measures, normmean, max_offset, align_wind, ex_start, study, ninterventions, nmeasures);
+        interfrom, interto, measures, normmean, max_offset, align_wind, ex_start, study, nmeasures);
     
     fprintf('Saving labelled interventions to a separate matlab file\n');
     subfolder = 'MatlabSavedVariables';
