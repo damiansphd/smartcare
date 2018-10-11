@@ -194,7 +194,7 @@ while (pddiff > 0.00001 && iter < 200)
             [meancurvesumsq, meancurvesum, meancurvecount] = addAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
             [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
     
-            [iqual, icount] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, isOutlier, outprior, measures.Mask, measures.OverallRange, normstd, ...
+            [iqual, icount] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, amHeldBackcube, isOutlier, outprior, measures.Mask, measures.OverallRange, normstd, ...
                 hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
             
             qual = qual + iqual;

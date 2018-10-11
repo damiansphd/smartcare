@@ -13,8 +13,8 @@ better_offset = 0;
 minidist = 1000000;
 
 for i = min_offset:max_offset - 1
-    [currdist, dummy, hstg, isOutlier] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, isOutlier, outprior, measuresmask, measuresrange, ...
-        normstd, hstg, currinter, i, max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
+    [currdist, dummy, hstg, isOutlier] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, amHeldBackcube, isOutlier, outprior, ...
+        measuresmask, measuresrange, normstd, hstg, currinter, i, max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
     if currdist < minidist
         better_offset = i;
         minidist = currdist;

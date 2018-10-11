@@ -1,6 +1,6 @@
 function [dist, count, hstg, isOutlier] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, ...
-    isOutlier, outprior, measuresmask, measuresrange, normstd, hstg, currinter, curroffset, ...
-    max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod)
+    amHeldBackcube, isOutlier, outprior, measuresmask, measuresrange, normstd, hstg, currinter, ...
+    curroffset, max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod)
 
 % amEMCalcObjFcn - calculates residual sum of squares distance for points in
 % curve vs meancurve incorporating offset
@@ -30,7 +30,7 @@ for i = 1:align_wind
     for m = 1:nmeasures
         % distance calculation for an outlier point
         outdist = -log(outprior) + log(measuresrange(m));
-        if ~isnan(amIntrCube(currinter, max_offset + align_wind - i, m))
+        if (~isnan(amIntrCube(currinter, max_offset + align_wind - i, m)) && amHeldBackcube(currinter, max_offset + align_wind - i, m) == 0)
             % distance calculation for a regular point
             regdist = calcRegDist(tempmean(max_offset + align_wind - i - curroffset, m), ...
                                   tempstd(max_offset + align_wind - i - curroffset, m), ...

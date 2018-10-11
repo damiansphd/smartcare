@@ -162,6 +162,39 @@ SCmodelsVEM3 = {
             'placeholder';
             'placeholder';
          };
+     
+SCmodelsVEM3Imputed = {
+            'SC_AMvEM3_sig4_mu3_ca2_sm1_rm4_ob1_im1_mm3_mo25_dw25_ex-28_objxxx';
+            'SC_AMvEM3_sig4_mu3_ca2_sm2_rm4_ob1_im1_mm3_mo25_dw25_ex-28_objxxx';
+            'SC_AMvEM3_sig4_mu4_ca2_sm1_rm4_ob1_im2_mm3_mo25_dw25_ex-28_obj1.40698151'; % didn't fully converge - no offsets changing, but pd didn't fully converge
+            'SC_AMvEM3_sig4_mu4_ca2_sm2_rm4_ob1_im2_mm3_mo25_dw25_ex-28_obj1.40639724';
+            'SC_AMvEM3_sig4_mu5_ca2_sm1_rm4_ob1_im2_mm3_mo25_dw25_ex-28_obj1.40030747'; % didn't fully converge - #9:0-5, #51:21-19
+            'SC_AMvEM3_sig4_mu5_ca2_sm2_rm4_ob1_im2_mm3_mo25_dw25_ex-28_obj1.40048419'; % didn't fully converge - #6:3-4, #14:1-0, #63:24-23, #84:24-15
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'SC_AMvEM3_sig4_mu3_ca2_sm1_rm4_ob1_im1_mm1_mo25_dw25_ex-28_objxxx'; 
+            'SC_AMvEM3_sig4_mu3_ca2_sm2_rm4_ob1_im1_mm1_mo25_dw25_ex-28_objxxx';
+            'SC_AMvEM3_sig4_mu4_ca2_sm1_rm4_ob1_im1_mm1_mo25_dw25_ex-28_objxxx';
+            'SC_AMvEM3_sig4_mu4_ca2_sm2_rm4_ob1_im2_mm1_mo25_dw25_ex-28_obj1.40961064'; % didn't fully converge - no offsets changing, but pd didn't fully converge
+            'SC_AMvEM3_sig4_mu5_ca2_sm1_rm4_ob1_im1_mm1_mo25_dw25_ex-28_objxxx';
+            'SC_AMvEM3_sig4_mu5_ca2_sm2_rm4_ob1_im2_mm1_mo25_dw25_ex-28_obj1.40280077'; % didn't fully converge - no offsets changing, but pd didn't fully converge
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'SC_AMvEM3_sig4_mu3_ca2_sm1_rm4_ob1_im1_mm2_mo25_dw25_ex-28_objxxx'; 
+            'SC_AMvEM3_sig4_mu3_ca2_sm2_rm4_ob1_im1_mm2_mo25_dw25_ex-28_objxxx';
+            'SC_AMvEM3_sig4_mu4_ca2_sm1_rm4_ob1_im1_mm2_mo25_dw25_ex-28_objxxx'; 
+            'SC_AMvEM3_sig4_mu4_ca2_sm2_rm4_ob1_im2_mm2_mo25_dw25_ex-28_obj1.31988928';
+            'SC_AMvEM3_sig4_mu5_ca2_sm1_rm4_ob1_im2_mm2_mo25_dw25_ex-28_obj1.28811071';
+            'SC_AMvEM3_sig4_mu5_ca2_sm2_rm4_ob1_im2_mm2_mo25_dw25_ex-28_obj1.30081945';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+         };
             
 TMmodelsVEM2 = {  
             'TM_AMvEM2_sig4_mu3_ca2_sm2_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj38.1535';

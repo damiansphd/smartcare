@@ -1,8 +1,8 @@
-function [amImputedCube] = calcImputedProbabilities(amIntrCube, amHeldBackcube, ...
+function [amImputedCube, imputedscore] = calcImputedProbabilities(amIntrCube, amHeldBackcube, ...
         meancurvemean, meancurvestd, normstd, overall_pdoffset, max_offset, align_wind, nmeasures, ...
         ninterventions,sigmamethod, smoothingmethod, imputationmode);
 
-, 
+
 % getImputedProbabilities - gets the probabilities for the set of held back
 % points and also returns the cumulative normalised distance from the
 % objective function for these points
@@ -21,6 +21,8 @@ for m = 1:nmeasures
     end
 end
 
+imputedscore = 0;
+
 if imputationmode == 2
     for n = 1:ninterventions
         for i = 1:align_wind
@@ -35,15 +37,22 @@ if imputationmode == 2
                         amImputedCube(n, max_offset + align_wind - i, m) = ...
                             amImputedCube(n, max_offset + align_wind - i, m) + (exp(-thisdist) * overall_pdoffset(n, offset + 1));
                     end
-                end 
+                end
                 if amHeldBackcube(n, max_offset + align_wind - i, m) == 1
-                    fprintf('Intervention %2d, day%2d, measure %d, imputed probability is %.2f%%\n', n, ...
-                        max_offset + align_wind - i, m, 100 * amImputedCube(n, max_offset + align_wind - i, m)); 
+                    imputedscore = imputedscore + log(amImputedCube(n, max_offset + align_wind - i, m));
+                    fprintf('Intervention %2d, day %2d, measure %d, score is %.2f\n', n, ...
+                        max_offset + align_wind - i, m, log(amImputedCube(n, max_offset + align_wind - i, m))); 
                 end
             end
         end
     end
 end
+
+fprintf('\n');
+fprintf('Total held back points: %.6f\n', sum(sum(sum(amHeldBackcube))));
+fprintf('Total imputed score   : %.6f\n', imputedscore);
+fprintf('Scaled imputed score  : %.6f\n', imputedscore/sum(sum(sum(amHeldBackcube))));
+fprintf('\n');
 
 end
 
