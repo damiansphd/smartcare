@@ -1,4 +1,4 @@
-function [dist, hstg, isOutlier] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, ...
+function [dist, count, hstg, isOutlier] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, ...
     isOutlier, outprior, measuresmask, measuresrange, normstd, hstg, currinter, curroffset, ...
     max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod)
 
@@ -28,22 +28,10 @@ end
 
 for i = 1:align_wind
     for m = 1:nmeasures
+        % distance calculation for an outlier point
         outdist = -log(outprior) + log(measuresrange(m));
-        if ~isnan(amIntrCube(currinter, max_offset + align_wind - i, m)) 
-            %if sigmamethod == 4
-            %    regdist =  (( (tempmean(max_offset + align_wind - i - curroffset, m) ...
-            %                    - amIntrCube(currinter, max_offset + align_wind - i, m)) ^ 2 ) / (2 * ( tempstd(max_offset + align_wind - i - curroffset, m) ^ 2 ))) ...
-            %                + log(tempstd(max_offset + align_wind - i - curroffset, m)) ...
-            %                + log((2 * pi) ^ 0.5) ...
-            %                - log(1 - outprior);        
-            %else
-            %    regdist = (( (tempmean(max_offset + align_wind - i - curroffset, m) ...
-            %                    - amIntrCube(currinter, max_offset + align_wind - i, m)) ^ 2 ) / (2 * ( normstd(currinter, m) ^ 2 ))) ...
-            %                + log(normstd(currinter, m)) ...
-            %                + log((2 * pi) ^ 0.5) ...
-            %                - log(1 - outprior);
-            %end
-            
+        if ~isnan(amIntrCube(currinter, max_offset + align_wind - i, m))
+            % distance calculation for a regular point
             regdist = calcRegDist(tempmean(max_offset + align_wind - i - curroffset, m), ...
                                   tempstd(max_offset + align_wind - i - curroffset, m), ...
                                   normstd(currinter, m), ...
@@ -58,6 +46,7 @@ for i = 1:align_wind
                 thisdist = outdist;
                 isOutlier(currinter, align_wind + 1 - i, m, curroffset + 1) = 1;
             end
+            
             % only include desired measures in overall alignment
             % optimisation
             if measuresmask(m) == 1
@@ -68,14 +57,6 @@ for i = 1:align_wind
                 hstg(m, currinter, curroffset + 1) = hstg(m, currinter, curroffset + 1) + thisdist;
             end
         end
-    end
-end
-
-if count ~= 0
-    dist = dist / count;
-else
-    if dist ~= 0
-        fprintf('Zero count of measurements but non-zero dist (%.6f) for intervention %2d and offset %2d\n', dist, currinter, curroffset);
     end
 end
 

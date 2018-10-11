@@ -29,10 +29,16 @@ for midx = modelidx:size(models,1)
         brightness = .9;
         colors(1,:) = temp(20,:) .* brightness;
         
-        for i = 2:12
-            colors(i,:)  = temp(13 - (i-1),:)  .* brightness;
+        %for i = 2:12
+        %    colors(i,:)  = temp(13 - (i-1),:)  .* brightness;
+        %end
+        %for i = 13:max_offset - 1
+        %    colors(i,:)  = temp(1,:)  .* brightness;
+        %end
+        for i = 2:15
+            colors(i,:)  = temp(16 - (i-1),:)  .* brightness;
         end
-        for i = 13:max_offset - 1
+        for i = 16:max_offset - 1
             colors(i,:)  = temp(1,:)  .* brightness;
         end
         
@@ -76,7 +82,7 @@ for midx = modelidx:size(models,1)
         fprintf('\n');
         modelrunlist = [modelrunlist; midx];
         qualityscore = [qualityscore; sum(datatable.Count(datatable.ModelRun==midx))];
-        ylabels = [ylabels; sprintf('%2d (%3d)', midx, sum(datatable.Count(datatable.ModelRun==midx)))];
+        ylabels = [ylabels; sprintf('%2d (%2d:%3d)', midx, sum(matchidx), sum(datatable.Count(datatable.ModelRun==midx)))];
     end
 end
 

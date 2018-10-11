@@ -131,7 +131,35 @@ SCmodelsVEM2 = {
          };
 
 SCmodelsVEM3 = {
-            'SC_AMvEM2_sig4_mu5_ca2_sm2_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj127.7793';
+            'SC_AMvEM3_sig4_mu3_ca2_sm1_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj1.41351385';
+            'SC_AMvEM3_sig4_mu3_ca2_sm2_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj1.40838638';
+            'SC_AMvEM3_sig4_mu4_ca2_sm1_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj1.41130446';
+            'SC_AMvEM3_sig4_mu4_ca2_sm2_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj1.40679241';
+            'SC_AMvEM3_sig4_mu5_ca2_sm1_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj1.40255040'; % didn't fully converge - #4:18-20, #9:0-1, #22:21-20, #36:7-8, #52:20-21
+            'SC_AMvEM3_sig4_mu5_ca2_sm2_rm4_ob1_im1_mm3_mo25_dw25_ex-28_obj1.40246666';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'SC_AMvEM3_sig4_mu3_ca2_sm1_rm4_ob1_im1_mm1_mo25_dw25_ex-28_obj1.41329103'; % didn't fully converge - no offsets changing, but pd didn't fully converge
+            'SC_AMvEM3_sig4_mu3_ca2_sm2_rm4_ob1_im1_mm1_mo25_dw25_ex-28_obj1.40994122';
+            'SC_AMvEM3_sig4_mu4_ca2_sm1_rm4_ob1_im1_mm1_mo25_dw25_ex-28_obj1.41574385';
+            'SC_AMvEM3_sig4_mu4_ca2_sm2_rm4_ob1_im1_mm1_mo25_dw25_ex-28_obj1.40902340'; % didn't fully converge - #3:2-1, #12:24-23
+            'SC_AMvEM3_sig4_mu5_ca2_sm1_rm4_ob1_im1_mm1_mo25_dw25_ex-28_obj1.40500764';
+            'SC_AMvEM3_sig4_mu5_ca2_sm2_rm4_ob1_im1_mm1_mo25_dw25_ex-28_obj1.40425671'; % didn't fully converge - no offsets changing, but pd didn't fully converge
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'SC_AMvEM3_sig4_mu3_ca2_sm1_rm4_ob1_im1_mm2_mo25_dw25_ex-28_obj1.30894768'; % didn't fully converge - intervention 12 flipping between offset 19 & 22
+            'SC_AMvEM3_sig4_mu3_ca2_sm2_rm4_ob1_im1_mm2_mo25_dw25_ex-28_obj1.31930876';
+            'SC_AMvEM3_sig4_mu4_ca2_sm1_rm4_ob1_im1_mm2_mo25_dw25_ex-28_obj1.30894768'; % didn't fully converge - intervention 12 flipping between offset 19 & 22
+            'SC_AMvEM3_sig4_mu4_ca2_sm2_rm4_ob1_im1_mm2_mo25_dw25_ex-28_obj1.31930876';
+            'SC_AMvEM3_sig4_mu5_ca2_sm1_rm4_ob1_im1_mm2_mo25_dw25_ex-28_obj1.29222264';
+            'SC_AMvEM3_sig4_mu5_ca2_sm2_rm4_ob1_im1_mm2_mo25_dw25_ex-28_obj1.30011632';
+            'placeholder';
+            'placeholder';
+            'placeholder';
             'placeholder';
          };
             

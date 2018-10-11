@@ -170,11 +170,11 @@ while i <= interto
         
         subplot(ax2(m));
         ax2(m).XGrid = 'off';
-        [xl2(m,:) yl2(m,:)] = plotVerticalLine(ax2(m), amLabelledInterventions.LowerBound1(i) - ex_start, xl2(m,:), yl2(m,:), 'red', '-', 0.5);
-        [xl2(m,:) yl2(m,:)] = plotVerticalLine(ax2(m), amLabelledInterventions.UpperBound1(i) - ex_start, xl2(m,:), yl2(m,:), 'red', '-', 0.5);
+        [xl2(m,:), yl2(m,:)] = plotVerticalLine(ax2(m), amLabelledInterventions.LowerBound1(i) - ex_start, xl2(m,:), yl2(m,:), 'red', '-', 0.5);
+        [xl2(m,:), yl2(m,:)] = plotVerticalLine(ax2(m), amLabelledInterventions.UpperBound1(i) - ex_start, xl2(m,:), yl2(m,:), 'red', '-', 0.5);
         if amLabelledInterventions.LowerBound2(i) ~= 0
-            [xl2(m,:) yl2(m,:)] = plotVerticalLine(ax2(m), amLabelledInterventions.LowerBound2(i) - ex_start, xl2(m,:), yl2(m,:), 'red', '-', 0.5);
-            [xl2(m,:) yl2(m,:)] = plotVerticalLine(ax2(m), amLabelledInterventions.UpperBound2(i) - ex_start, xl2(m,:), yl2(m,:), 'red', '-', 0.5); 
+            [xl2(m,:), yl2(m,:)] = plotVerticalLine(ax2(m), amLabelledInterventions.LowerBound2(i) - ex_start, xl2(m,:), yl2(m,:), 'red', '-', 0.5);
+            [xl2(m,:), yl2(m,:)] = plotVerticalLine(ax2(m), amLabelledInterventions.UpperBound2(i) - ex_start, xl2(m,:), yl2(m,:), 'red', '-', 0.5); 
         end
         
         hold on;

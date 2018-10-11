@@ -1,5 +1,5 @@
 function [amInterventions, amIntrDatacube, ninterventions] = amEMPreprocessInterventions(amInterventions, ...
-    amIntrDatacube, measures, max_offset, align_wind, ninterventions, nmeasures)
+    amIntrDatacube, max_offset, align_wind, ninterventions, nmeasures)
 
 % amEMPreprocessInterventions - preprocess intervention data and associated
 % measurement data
@@ -11,10 +11,8 @@ for i = 1:ninterventions
     actualpoints = 0;
     maxpoints = 0;
     for m = 1:nmeasures
-        if (measures.Mask(m) == 1)
-            actualpoints = actualpoints + sum(~isnan(amIntrDatacube(i, max_offset:max_offset+align_wind-1, m)));
-            maxpoints = maxpoints + align_wind;
-        end
+        actualpoints = actualpoints + sum(~isnan(amIntrDatacube(i, max_offset:max_offset+align_wind-1, m)));
+        maxpoints = maxpoints + align_wind;
     end
     amInterventions.DataWindowCompleteness(i) = 100 * actualpoints/maxpoints;
     if i >= 2

@@ -187,26 +187,33 @@ while (pddiff > 0.00001 && iter < 200)
         % offset day **
         update_histogram = 0;
         qual = 0;
+        qualcount = 0;
         for i=1:ninterventions
             [meancurvesumsq, meancurvesum, meancurvecount] = amEMRemoveFromMean(meancurvesumsq, meancurvesum, meancurvecount, ...
                 overall_pdoffset, amIntrCube, amHeldBackcube, i, min_offset, max_offset, align_wind, nmeasures);
             [meancurvesumsq, meancurvesum, meancurvecount] = addAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
             [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
     
-            qual = qual + amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, isOutlier, outprior, measures.Mask, measures.OverallRange, normstd, ...
+            [iqual, icount] = amEMCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, isOutlier, outprior, measures.Mask, measures.OverallRange, normstd, ...
                 hstg, i, amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod);
             
-            %fprintf('Intervention %d, qual = %.4f\n', i, qual);
+            qual = qual + iqual;
+            qualcount = qualcount + icount;
+            
+            %fprintf('Intervention %d, qual = %.4f\n', i, qual/qualcount);
     
             [meancurvesumsq, meancurvesum, meancurvecount] = removeAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
             [meancurvesumsq, meancurvesum, meancurvecount] = amEMAddToMean(meancurvesumsq, meancurvesum, meancurvecount, ...
                 overall_pdoffset, amIntrCube, amHeldBackcube, i, min_offset, max_offset, align_wind, nmeasures);
             [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
         end
+        
+        qual = qual / qualcount;
+        
         if cnt == 0
-            fprintf('No changes on iteration %2d, obj fcn = %.7f, prob distrib diff = %.6f\n', iter, qual, pddiff);
+            fprintf('No changes on iteration %2d, obj fcn = %.8f, prob distrib diff = %.6f\n', iter, qual, pddiff);
         else
-            fprintf('Changed %2d offsets on iteration %2d, obj fcn = %.7f, prob distrib diff = %.4f\n', cnt, iter, qual, pddiff);
+            fprintf('Changed %2d offsets on iteration %2d, obj fcn = %.8f, prob distrib diff = %.6f\n', cnt, iter, qual, pddiff);
         end
         cnt = 0;
         prior_overall_pdoffset = overall_pdoffset;
@@ -217,7 +224,6 @@ end
 
 [meancurvesumsq, meancurvesum, meancurvecount] = addAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, ppts);
 [meancurvemean, meancurvestd] = calcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
-   
 
 for i=1:ninterventions 
     offsets(i) = amInterventions.Offset(i);

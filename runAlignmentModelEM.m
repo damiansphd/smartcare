@@ -45,7 +45,7 @@ detaillog = true;
 
 % pre-process intervention table and associated measurement data
 [amInterventions, amIntrDatacube, ninterventions] = amEMPreprocessInterventions(amInterventions, ...
-    amIntrDatacube, measures, max_offset, align_wind, ninterventions, nmeasures);
+    amIntrDatacube, max_offset, align_wind, ninterventions, nmeasures);
 
 % populate multiplicative normalisation (sigma) values based on methodology
 % selected
@@ -85,13 +85,13 @@ end
     offsets, animatedoffsets, hstg, pdoffset, overall_hist, overall_pdoffset, animated_overall_pdoffset, ...
     isOutlier, ppts, qual, min_offset] = amEMAlignCurves(amIntrNormcube, amHeldBackcube, amInterventions, outprior, measures, ...
     normstd, max_offset, align_wind, nmeasures, ninterventions, detaillog, sigmamethod, smoothingmethod, offsetblockingmethod, runmode, fnmodelrun);
-fprintf('%s - ErrFcn = %7.4f\n', run_type, qual);
+fprintf('%s - ErrFcn = %.8f\n', run_type, qual);
 
 % save the zero offset pre-profile to unaligned_profile so all plots show a
 % consistent unaligned curve as the pre-profile.
 unaligned_profile = profile_pre;
 
-plotname = sprintf('%s_obj%.4f', baseplotname, qual);
+plotname = sprintf('%s_obj%.8f', baseplotname, qual);
 
 % plot and save aligned curves (pre and post)
 amEMPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, ...
@@ -110,7 +110,7 @@ run_type = 'Best Alignment';
 
 amInterventions.Offset = offsets;
 
-plotname = sprintf('%s_ex%d_obj%.4f', baseplotname, ex_start, qual);
+plotname = sprintf('%s_ex%d_obj%.8f', baseplotname, ex_start, qual);
 
 [sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amIntrNormcube, amHeldBackcube, amInterventions, meancurvemean, ...
     meancurvecount, meancurvestd, overall_pdoffset, offsets, measures, min_offset, max_offset, align_wind, nmeasures, run_type, ...
@@ -156,7 +156,7 @@ fprintf('\n');
 tic
 basedir = './';
 subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('%s_ex%d_obj%.4f.mat', baseplotname, ex_start, qual);
+outputfilename = sprintf('%s_ex%d_obj%.8f.mat', baseplotname, ex_start, qual);
 fprintf('Saving alignment model results to file %s\n', outputfilename);
 fprintf('\n');
 save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube', 'amIntrNormcube', 'amHeldBackcube', ...
