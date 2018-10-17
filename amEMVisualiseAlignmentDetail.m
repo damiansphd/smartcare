@@ -1,6 +1,6 @@
 function [sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amIntrCube, amHeldBackcube, amInterventions, ...
-    meancurvemean, meancurvecount, meancurvestd, overall_pdoffset, offsets, measures, min_offset, max_offset, align_wind, ...
-    nmeasures, run_type, study, ex_start, version, curveaveragingmethod)
+    meancurvemean, meancurvecount, meancurvestd, overall_pdoffset, measures, min_offset, max_offset, align_wind, ...
+    nmeasures, ninterventions, run_type, ex_start, curveaveragingmethod, plotname, plotsubfolder)
 
 % amEMVisualiseAlignmentDetail - creates a plot of horizontal bars showing 
 % the alignment of the data window (including the best_offset) for all 
@@ -12,20 +12,18 @@ datatable = table('Size',[1 3], ...
 
 rowtoadd = datatable;
 max_points = zeros(1, max_offset + align_wind - 1);
-ninterventions = size(amInterventions,1);
-sorted_interventions = array2table(offsets);
-sorted_interventions.Intervention = [1:ninterventions]';
-sorted_interventions = sortrows(sorted_interventions, {'offsets', 'Intervention'}, {'descend', 'ascend'});
+sorted_interventions = amInterventions(:, {'IntrNbr','Offset'});
+sorted_interventions = sortrows(sorted_interventions, {'Offset', 'IntrNbr'}, {'descend', 'ascend'});
 
 for i = 1:max_offset + align_wind - 1
     if curveaveragingmethod == 1
-        max_points(1, i) = size(sorted_interventions.offsets(sorted_interventions.offsets <= (max_offset + align_wind - i) ...
-            & sorted_interventions.offsets > (align_wind - i)),1);
+        max_points(1, i) = size(sorted_interventions.Offset(sorted_interventions.Offset <= (max_offset + align_wind - i) ...
+            & sorted_interventions.Offset > (align_wind - i)),1);
     else
         if (i - align_wind) <= 0
             max_points(1, i) = ninterventions;
         else
-            max_points(1,i) = size(sorted_interventions.offsets(sorted_interventions.offsets <= (max_offset + align_wind - i)),1);
+            max_points(1,i) = size(sorted_interventions.Offset(sorted_interventions.Offset <= (max_offset + align_wind - i)),1);
         end
     end
 end
@@ -35,7 +33,7 @@ for m = 1:nmeasures
     for i = 1:ninterventions
         scid = amInterventions.SmartCareID(i);
         start = amInterventions.IVScaledDateNum(i);
-        offset = offsets(i);
+        offset = amInterventions.Offset(i);
 
         %fprintf('Intervention %2d, patient %3d, start %3d, best_offset %2d\n', i, scid, start, offset);
         rowtoadd.Intervention = i;
@@ -64,7 +62,7 @@ for m = 1:nmeasures
 
     plotsacross = 2;
     plotsdown = 8;
-    plottitle = sprintf('%s_AM%s %s - %s', study, version, run_type, measures.DisplayName{m});
+    plottitle = sprintf('%s_%s', plotname, measures.DisplayName{m});
     anchor = 1; % latent curve is to be anchored on the plot (right side at min_offset)
     
     [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
@@ -109,13 +107,13 @@ for m = 1:nmeasures
     h.Title = ' ';
     h.XLabel = 'Days Prior to Intervention';
     h.YLabel = 'Intervention';
-    h.YDisplayData = sorted_interventions.Intervention;
+    h.YDisplayData = sorted_interventions.IntrNbr;
     %h.XLimits = {-1 * (max_offset + align_wind - 1), -1};
     h.XLimits = {-1 * (max_offset + align_wind - 1), max(datatable.ScaledDateNum)};
     h.CellLabelColor = 'none';
     h.GridVisible = 'on';
     
-    savePlot(f, plottitle);
+    savePlotInDir(f, plottitle, plotsubfolder);
     close(f);
     
     if measures.Mask(m) == 1
@@ -123,7 +121,7 @@ for m = 1:nmeasures
         nbuckets = 5;
         plotsacross = 2;
         plotsdown = round(nbuckets/plotsacross);
-        plottitle = sprintf('%s_AM%s - Alignment By Quintile - %s', study, version, measures.DisplayName{m});
+        plottitle = sprintf('%s_%s_Quintile', plotname, measures.DisplayName{m});
         
         [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
         
@@ -139,17 +137,17 @@ for m = 1:nmeasures
             temp_meancurvemean     = zeros(max_offset + align_wind - 1, nmeasures);
             temp_meancurvestd      = zeros(max_offset + align_wind - 1, nmeasures);
             
-            temp_interventions = amInterventions(sorted_interventions.Intervention(qlower:qupper),:);
+            temp_interventions = amInterventions(sorted_interventions.IntrNbr(qlower:qupper),:);
             
             for i = 1:qnbr
                 [temp_meancurvesumsq, temp_meancurvesum, temp_meancurvecount] = amEMAddToMean(temp_meancurvesumsq, temp_meancurvesum, temp_meancurvecount, ...
-                    overall_pdoffset(sorted_interventions.Intervention(qlower:qupper), :), amIntrCube(sorted_interventions.Intervention(qlower:qupper), :, :), ...
-                    amHeldBackcube(sorted_interventions.Intervention(qlower:qupper), :, :), i, ...
+                    overall_pdoffset(sorted_interventions.IntrNbr(qlower:qupper), :), amIntrCube(sorted_interventions.IntrNbr(qlower:qupper), :, :), ...
+                    amHeldBackcube(sorted_interventions.IntrNbr(qlower:qupper), :, :), i, ...
                     min_offset, max_offset, align_wind, nmeasures);
                 [temp_meancurvemean, temp_meancurvestd] = calcMeanAndStd(temp_meancurvesumsq, temp_meancurvesum, temp_meancurvecount, min_offset, max_offset, align_wind);
             end
             
-            qintrminoffset = min(amInterventions.Offset(sorted_interventions.Intervention(qlower:qupper)));
+            qintrminoffset = min(amInterventions.Offset(sorted_interventions.IntrNbr(qlower:qupper)));
             qdataminoffset = max_offset + align_wind - max(find(max(temp_meancurvecount, [], 2)~=0)) + 1;
             qto = max(qintrminoffset, qdataminoffset);
             
@@ -158,7 +156,7 @@ for m = 1:nmeasures
             %qfrom = max(qintrmaxoffset, qdatamaxoffset);
             
             if curveaveragingmethod == 1
-                qintrmaxoffset = max(amInterventions.Offset(sorted_interventions.Intervention(qlower:qupper))) + align_wind;
+                qintrmaxoffset = max(amInterventions.Offset(sorted_interventions.IntrNbr(qlower:qupper))) + align_wind;
                 qdatamaxoffset = max_offset + align_wind - min(find(min(temp_meancurvecount, [], 2)~=0));
                 qfrom = max(qintrmaxoffset, qdatamaxoffset);
             else
@@ -200,7 +198,7 @@ for m = 1:nmeasures
         end
         
         % save plot
-        savePlot(f, plottitle);
+        savePlotInDir(f, plottitle, plotsubfolder);
         close(f);
     end
 end

@@ -1,14 +1,17 @@
-clear; close all; clc;
+function runAlignmentModelEMFcn(amRunParameters)
 
-mversion = 'vEM4';
+% function to run the alignment model (EM version) given a set of run
+% parameters
+
+% set the various model run parameters
+[mversion, study, modelinputsmatfile, datademographicsfile, dataoutliersfile, ...
+    sigmamethod, mumethod, curveaveragingmethod, smoothingmethod, offsetblockingmethod, ...
+    measuresmask, runmode, modelrun, imputationmode, confidencemode, printpredictions, ...
+    max_offset, align_wind, ex_start, outprior, heldbackpct, confidencethreshold] ...
+    = amEMSetModelRunParametersFromTable(amRunParameters);
 
 fprintf('Running Alignment Model %s\n', mversion);
 fprintf('\n');
-
-% set the various model run parameters
-[study, modelinputsmatfile, datademographicsfile, dataoutliersfile, sigmamethod, mumethod, curveaveragingmethod, ...
-    smoothingmethod, offsetblockingmethod, measuresmask, runmode, modelrun, imputationmode, confidencemode, ...
-    printpredictions] = amEMSetModelRunParameters;
 
 % load the required input data
 tic
@@ -27,12 +30,12 @@ tic
 fprintf('Preparing input data\n');
 
 % set remaining more static model parameters
-max_offset = 25; % should not be greater than ex_start (set lower down) as this would imply intervention before exacerbation !
-align_wind = 25;
+%max_offset = 25; % should not be greater than ex_start (set lower down) as this would imply intervention before exacerbation !
+%align_wind = 25;
 % define prior probability of a data point being an outlier
-outprior = 0.01;
-heldbackpct = 0.01;
-confidencethreshold = 0.9;
+%outprior = 0.01;
+%heldbackpct = 0.01;
+%confidencethreshold = 0.9;
 baseplotname = sprintf('%s%s_sig%d_mu%d_ca%d_sm%d_rm%d_ob%d_im%d_cm%d_mm%d_mo%d_dw%d', study, mversion, sigmamethod, mumethod, curveaveragingmethod, ...
     smoothingmethod, runmode, offsetblockingmethod, imputationmode, confidencemode, measuresmask, max_offset, align_wind);
 detaillog = true;
@@ -102,10 +105,10 @@ amEMPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, m
 toc
 fprintf('\n');
 
-%return;
-
-ex_start = input('Look at best start and enter exacerbation start: ');
-fprintf('\n');
+if ex_start == 0
+    ex_start = input('Look at best start and enter exacerbation start: ');
+    fprintf('\n');
+end
 
 tic
 run_type = 'Best Alignment';
@@ -166,6 +169,8 @@ if printpredictions == 1
     end
     toc
     fprintf('\n');
+end
+
 end
 
 

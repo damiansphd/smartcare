@@ -1,5 +1,5 @@
 function amEMPlotAndSaveAlignedCurves(profile_pre, meancurvemean, meancurvecount, meancurvestd, offsets, ...
-    measures, max_points, min_offset, max_offset, align_wind, nmeasures, run_type, plotname, ex_start, sigmamethod)
+    measures, max_points, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, sigmamethod, plotname, plotsubfolder)
 
 % amEMPlotAndSaveAlignedCurves - plots the curves pre and post alignment for
 % each measure, and the histogram of offsets
@@ -70,7 +70,7 @@ ylim([0 50]);
 title('Histogram of Alignment Offsets')
 
 % save plot
-savePlot(f, plottitle);
+savePlotInDir(f, plottitle, plotsubfolder);
 close(f);
 
 end

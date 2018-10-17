@@ -1,6 +1,6 @@
-function compareModelRunToTestData(amLabelledInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, ...
-    hstg, overall_hist, offsets, meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, min_offset, max_offset, ...
-    align_wind, study, version, modelrun, modelidx)
+function compareModelRunToTestData(amLabelledInterventions, amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, ...
+    hstg, overall_hist, meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, min_offset, max_offset, ...
+    align_wind, study, mversion, modelrun, modelidx)
 
 % compareModelRunToTestData - compares the output of a chosen model run to
 % the labelled test data
@@ -10,7 +10,7 @@ amLabelledInterventions.Properties.VariableNames{'Var1'} = 'InterNbr';
 
 testidx = amLabelledInterventions.IncludeInTestSet=='Y';
 
-modeloffsets = offsets(testidx);
+modeloffsets = amInterventions.Offset(testidx);
 testset = amLabelledInterventions(testidx,:);
 testsetsize = size(testset,1);
 testset_ex_start = testset.ExStart(1);
@@ -44,6 +44,9 @@ fprintf('%2d of %2d results match labelled test data\n', sum(matchidx), testsets
 fprintf('Quality Score is %d\n', dist);
 fprintf('\n');
 
+plotsubfolder = strcat('./Plots/', sprintf('%s%sm%d vs Labels', study, mversion, modelidx));
+mkdir(plotsubfolder);
+
 plotsdown = 9;
 plotsacross = 5;
 mpos = [ 1 2 6 7 ; 3 4 8 9 ; 11 12 16 17 ; 13 14 18 19 ; 21 22 26 27 ; 23 24 28 29 ; 31 32 36 37 ; 33 34 38 39];
@@ -73,7 +76,7 @@ for i = 1:testsetsize
     end
     fprintf('Model Pred: %2d\n', ex_start + offset);
     
-    name = sprintf('%s_AM%s m%d vs Labels - Ex %d (ID %d Date %s%s) Pred %2d %s', study, version, modelidx, thisinter, scid, ...
+    name = sprintf('%s%sm%d vs Labels - Ex %d (ID %d Date %s%s) Pred %2d %s', study, mversion, modelidx, thisinter, scid, ...
                     datestr(testset.IVStartDate(i),29), seqstring, offset, result);
     
     [f, p] = createFigureAndPanel(name, 'portrait', 'a4');
@@ -164,7 +167,7 @@ for i = 1:testsetsize
     title(sprintf('Overall (%.1f)', overall_hist(thisinter, offset + 1)), 'BackgroundColor', 'g');
 
     % save plot
-    savePlot(f, name);
+    savePlotInDir(f, name, plotsubfolder);
     close(f);
 end
     

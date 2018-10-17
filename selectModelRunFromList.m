@@ -76,7 +76,6 @@ SCmodelsVEM = {
             'SC_AMvEM_sig4_mu3_ca2_sm2_rm4_ob1_mm1_mo25_dw25_ex-28_obj291.2961';
             'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm1_mo25_dw25_ex-28_obj291.1600';
             'placeholder';
-            %'TM_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj9531.1669';
             
             'SC_AMvEM_sig4_mu3_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.7499';
             'SC_AMvEM_sig4_mu4_ca2_sm1_rm4_ob1_mm3_mo25_dw25_ex-28_obj293.5482';
@@ -163,6 +162,40 @@ SCmodelsVEM3 = {
             'placeholder';
          };
      
+SCmodelsVEM4 = {
+            'SC_AMvEM3_sig4_mu3_ca2_sm1_rm4_ob1_im1_mm3_mo25_dw25_ex-28_objxxx';
+            'SC_AMvEM3_sig4_mu3_ca2_sm2_rm4_ob1_im1_mm3_mo25_dw25_ex-28_objxxx';
+            'SCvEM4_sig4_mu4_ca2_sm1_rm4_ob1_im1_cm2_mm3_mo25_dw25_ex-28_obj1.41130446';
+            'SCvEM4_sig4_mu4_ca2_sm2_rm4_ob1_im1_cm2_mm3_mo25_dw25_ex-28_obj1.40679241';
+            'SC_AMvEM3_sig4_mu5_ca2_sm1_rm4_ob1_im1_mm3_mo25_dw25_ex-28_objxxx'; 
+            'SCvEM4_sig4_mu5_ca2_sm2_rm4_ob1_im1_cm2_mm3_mo25_dw25_ex-28_obj1.40246666';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'SC_AMvEM3_sig4_mu3_ca2_sm1_rm4_ob1_im1_mm1_mo25_dw25_ex-28_objxxx'; 
+            'SC_AMvEM3_sig4_mu3_ca2_sm2_rm4_ob1_im1_mm1_mo25_dw25_ex-28_objxxx';
+            'SC_AMvEM3_sig4_mu4_ca2_sm1_rm4_ob1_im1_mm1_mo25_dw25_ex-28_objxxx';
+            'SC_AMvEM3_sig4_mu4_ca2_sm2_rm4_ob1_im1_mm1_mo25_dw25_ex-28_objxxx'; 
+            'SC_AMvEM3_sig4_mu5_ca2_sm1_rm4_ob1_im1_mm1_mo25_dw25_ex-28_objxxx';
+            'SC_AMvEM3_sig4_mu5_ca2_sm2_rm4_ob1_im1_mm1_mo25_dw25_ex-28_objxxx'; 
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'SC_AMvEM3_sig4_mu3_ca2_sm1_rm4_ob1_im1_mm2_mo25_dw25_ex-28_objxxx'; 
+            'SC_AMvEM3_sig4_mu3_ca2_sm2_rm4_ob1_im1_mm2_mo25_dw25_ex-28_objxxx';
+            'SC_AMvEM3_sig4_mu4_ca2_sm1_rm4_ob1_im1_mm2_mo25_dw25_ex-28_objxxx'; 
+            'SC_AMvEM3_sig4_mu4_ca2_sm2_rm4_ob1_im1_mm2_mo25_dw25_ex-28_objxxx';
+            'SC_AMvEM3_sig4_mu5_ca2_sm1_rm4_ob1_im1_mm2_mo25_dw25_ex-28_objxxx';
+            'SC_AMvEM3_sig4_mu5_ca2_sm2_rm4_ob1_im1_mm2_mo25_dw25_ex-28_objxxx';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+         };     
+
+     
 SCmodelsVEM3Imputed = {
             'SC_AMvEM3_sig4_mu3_ca2_sm1_rm4_ob1_im2_mm3_mo25_dw25_ex-28_obj1.41193292';
             'SC_AMvEM3_sig4_mu3_ca2_sm2_rm4_ob1_im2_mm3_mo25_dw25_ex-28_obj1.40747059';
@@ -224,12 +257,14 @@ fprintf('--------------\n');
 fprintf('1: Damian SC - vEM\n');
 fprintf('2: Damian SC - vEM2\n');
 fprintf('3: Damian SC - vEM3\n');
-fprintf('4: Damian TM - vEM2\n');
-fprintf('5: Damian TM - vEM3\n');
+fprintf('4: Damian SC - vEM4\n');
+fprintf('5: Damian SC - vEM3 with imputation\n');
+fprintf('6: Damian TM - vEM2\n');
+fprintf('7: Damian TM - vEM3\n');
 
-modelset = input('Choose model set (1-5) ');
+modelset = input('Choose model set (1-7) ');
 
-if modelset > 5
+if modelset > 7
     fprintf('Invalid choice\n');
     return;
 end
@@ -245,6 +280,10 @@ elseif modelset == 2
 elseif modelset == 3
     models = SCmodelsVEM3;
 elseif modelset == 4
+    models = SCmodelsVEM4;
+elseif modelset == 5
+    models = SCmodelsVEM3Imputed;
+elseif modelset == 6
     models = TMmodelsVEM2;
 else
     models = TMmodelsVEM3;

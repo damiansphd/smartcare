@@ -1,6 +1,6 @@
 function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, animatedmeancurvemean, profile_pre, ...
     offsets, animatedoffsets, hstg, pdoffset, overall_hstg, overall_pdoffset, animated_overall_pdoffset, ...
-    isOutlier, ppts, qual, min_offset] = ...
+    isOutlier, ppts, qual, min_offset, iter] = ...
     amEMAlignCurves(amIntrCube, amHeldBackcube, amInterventions, outprior, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, ...
     detaillog, sigmamethod, smoothingmethod, offsetblockingmethod, runmode, fnmodelrun)
 
@@ -179,7 +179,15 @@ while (pddiff > 0.00001 && iter < 200)
     if pnt > ninterventions
         iter = iter + 1;
         pnt = pnt - ninterventions;
-        %animatedmeancurvemean(:, :, iter) = meancurvemean;
+        miniiter = miniiter+1;
+        if miniiter < aniterations
+            animatedmeancurvemean(:, :, miniiter) = meancurvemean;
+            animatedoffsets(:,miniiter) = amInterventions.Offset;
+            animated_overall_pdoffset(:, :, miniiter+1) = overall_pdoffset;
+        else
+            fprintf('Exceeded storage for animated iterations\n');
+        end
+        
         pddiff = calcDiffOverallPD(overall_pdoffset, prior_overall_pdoffset);
         % compute the overall objective function each time we've iterated
         % through the full set of interventions

@@ -51,8 +51,8 @@ if runfunction == 1
     fprintf('Plotting prediction results\n');
     for i=1:ninterventions
         amEMPlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, ...
-            overall_pdoffset_all, overall_pdoffset_xAL, hstg, overall_hist, overall_hist_all, overall_hist_xAL, ...
-            offsets, meancurvemean, normmean, normstd, isOutlier, ex_start, i, nmeasures, max_offset, align_wind, study, version);
+            hstg, overall_hist, meancurvemean, normmean, normstd, isOutlier, ex_start, i, nmeasures, ...
+            max_offset, align_wind, plotname, sigmamethod);
     end
     toc
     fprintf('\n');
@@ -110,14 +110,13 @@ elseif runfunction == 6
     if labelmode == 1
         fprintf('Creating new labelled test data file\n');
         amLabelledInterventions = amInterventions;
-        for a = 1:ninterventions
-            amLabelledInterventions.IncludeInTestSet(a)       = 'N';
-            amLabelledInterventions.ExStart(a)                = ex_start;
-            amLabelledInterventions.LowerBound1(a)            = 0;
-            amLabelledInterventions.UpperBound1(a)            = 0;
-            amLabelledInterventions.LowerBound2(a)            = 0;
-            amLabelledInterventions.UpperBound2(a)            = 0;
-        end
+        amLabelledInterventions.Offset(:)            = 0;
+        amLabelledInterventions.IncludeInTestSet(:)  = 'N';
+        amLabelledInterventions.ExStart(:)           = ex_start;
+        amLabelledInterventions.LowerBound1(:)       = 0;
+        amLabelledInterventions.UpperBound1(:)       = 0;
+        amLabelledInterventions.LowerBound2(:)       = 0;
+        amLabelledInterventions.UpperBound2(:)       = 0;
         interfrom = 1;
         interto = ninterventions;
     elseif labelmode == 2
@@ -172,8 +171,8 @@ elseif runfunction == 8
     subfolder = 'MatlabSavedVariables';
     testdatafilename = sprintf('%s_LabelledInterventions.mat', study);
     load(fullfile(basedir, subfolder, testdatafilename));
-    compareModelRunToTestData(amLabelledInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, hstg, overall_hist, ...
-        offsets, meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, min_offset, max_offset, align_wind, study, version, modelrun, modelidx);
+    compareModelRunToTestData(amLabelledInterventions, amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, hstg, overall_hist, ...
+        meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, min_offset, max_offset, align_wind, study, mversion, modelrun, modelidx);
 elseif runfunction == 9
     fprintf('<placeholder for Dragos new option>\n');
 else

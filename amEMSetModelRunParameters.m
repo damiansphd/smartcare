@@ -1,5 +1,5 @@
 function [study, modelinputsmatfile, datademographicsfile, dataoutliersfile, sigmamethod, mumethod, curveaveragingmethod, ...
-    smoothingmethod, offsetblockingmethod, measuresmask, runmode, modelrun, imputationmode, printpredictions] = amEMSetModelRunParameters
+    smoothingmethod, offsetblockingmethod, measuresmask, runmode, modelrun, imputationmode, confidencemode, printpredictions] = amEMSetModelRunParameters
 
 % amEMSetModelRunParameters - sets the various run parameters for the model
 
@@ -141,7 +141,7 @@ else
 end
 
 fprintf('Run imputation ?\n');
-fprintf('----------------------------\n');
+fprintf('----------------\n');
 fprintf('1: No\n');
 fprintf('2: Yes - with 1%% of data points held back\n');
 imputationmode = input('Choose run mode(1-2) ');
@@ -151,6 +151,21 @@ if imputationmode > 2
     return;
 end
 if isequal(imputationmode,'')
+    fprintf('Invalid choice\n');
+    return;
+end
+
+fprintf('Confidence Bounds mode\n');
+fprintf('----------------------\n');
+fprintf('1: Contiguous bounds\n');
+fprintf('2: Max probability bounds\n');
+confidencemode = input('Choose confidence bounds mode(1-2) ');
+fprintf('\n');
+if confidencemode > 2
+    fprintf('Invalid choice\n');
+    return;
+end
+if isequal(confidencemode,'')
     fprintf('Invalid choice\n');
     return;
 end

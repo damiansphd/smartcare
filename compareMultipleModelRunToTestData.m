@@ -42,7 +42,7 @@ for midx = modelidx:size(models,1)
             colors(i,:)  = temp(1,:)  .* brightness;
         end
         
-        modeloffsets = offsets(testidx);
+        modeloffsets = amInterventions.Offset(testidx);
         testset = amLabelledInterventions(testidx,:);
         testsetsize = size(testset,1);
         testset_ex_start = testset.ExStart(1);
@@ -60,7 +60,7 @@ for midx = modelidx:size(models,1)
         end
         matchidx = matchidx | matchidx2;
 
-        fprintf('For model %d: %s:\n', midx, models{midx});
+        fprintf('For model %s%d: %s:\n', mversion, midx, models{midx});
         fprintf('%2d of %2d results match labelled test data, ', sum(matchidx), testsetsize); 
         rowtoadd.ModelRun = midx;
         
@@ -96,7 +96,7 @@ labelsandquality = [array2table(modelrunlist), array2table(ylabels), array2table
 
 plotsacross = 1;
 plotsdown = 1;
-plottitle = sprintf('Model Run Results (%d-%d) vs Labelled Test Data', modelidx, size(models,1));
+plottitle = sprintf('Model Run Results %s(%d-%d) vs Labelled Test Data', mversion, modelidx, size(models,1));
 
 [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 

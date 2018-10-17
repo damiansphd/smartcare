@@ -8,7 +8,7 @@ set(gcf, 'Units', 'normalized', 'OuterPosition', [0.65, 0, 0.35, 0.92], 'PaperOr
 p = uipanel('Parent',f,'BorderType','none');
 p.Title = name;
 p.TitlePosition = 'centertop';
-p.FontSize = 12;
+p.FontSize = 8;
 p.FontWeight = 'bold'; 
 
 end
