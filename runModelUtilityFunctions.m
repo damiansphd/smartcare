@@ -16,12 +16,13 @@ fprintf(' 7: Compare results to another model run\n');
 fprintf(' 8: Compare results to labelled test data and plot results\n');
 fprintf(' 9: <placeholder for Dragos new option\n');
 fprintf('10: Compare results for multiple model runs to labelled test data\n');
+fprintf('11: Compare results for multiple model runs\n');
 fprintf('\n');
-runfunction = input('Choose function (1-10) ');
+runfunction = input('Choose function (1-11) ');
 
 fprintf('\n');
 
-if runfunction > 10
+if runfunction > 11
     fprintf('Invalid choice\n');
     return;
 end
@@ -175,13 +176,19 @@ elseif runfunction == 8
         meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, min_offset, max_offset, align_wind, study, mversion, modelrun, modelidx);
 elseif runfunction == 9
     fprintf('<placeholder for Dragos new option>\n');
-else
+elseif runfunction == 10
     fprintf('Comparing results of multiple model runs to the labelled test data\n');
     fprintf('\n');
     subfolder = 'MatlabSavedVariables';
     testdatafilename = sprintf('%s_LabelledInterventions.mat', study);
     load(fullfile(basedir, subfolder, testdatafilename));
     compareMultipleModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models);
+elseif runfunction == 11
+    fprintf('Comparing results of multiple model runs\n');
+    fprintf('\n');
+    compareMultipleModelRunResults(modelrun, modelidx, models, basedir, subfolder);
+else
+    fprintf('Should not get here....\n');
 end
     
 

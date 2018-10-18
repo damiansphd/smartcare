@@ -3,6 +3,8 @@ clear; close all; clc;
 RunParameterFiles = {  
             'SCRunParametersSingle.xlsx';
             'SCRunParametersMultiple.xlsx';
+            'TMRunParametersSingle.xlsx';
+            'TMRunParametersMultiple.xlsx';
             };
 
 
