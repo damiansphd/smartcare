@@ -1,4 +1,4 @@
-function compareMultipleModelRunResults(modelrun, modelidx, models, basedir, subfolder)
+function [modeliterations, modeloffsets] = compareMultipleModelRunResults(modelrun, modelidx, models, basedir, subfolder)
 
 % compareMultipleModelRunResults - compares the results of multiple model 
 % runs (iterations to converge, offsets, prob distributions etc

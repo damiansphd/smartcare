@@ -186,7 +186,7 @@ elseif runfunction == 10
 elseif runfunction == 11
     fprintf('Comparing results of multiple model runs\n');
     fprintf('\n');
-    compareMultipleModelRunResults(modelrun, modelidx, models, basedir, subfolder);
+    [modeliterations, modeloffsets] = compareMultipleModelRunResults(modelrun, modelidx, models, basedir, subfolder);
 else
     fprintf('Should not get here....\n');
 end

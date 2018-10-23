@@ -52,7 +52,8 @@ outputdata = table('Size',[1 nonmeascols], ...
     'VariableTypes', {'double', 'double',        'datetime',   'double', 'double', 'double' ,           'double',   'double'     }, ...
     'VariableNames', {'ID',     'ScaledDateNum', 'Date', 'OralAB', 'IVAB',   'InterventionStart', 'CRPLevel', 'ExStartProb'});
 
-tempmeasures = measures(measures.Mask==1,:);
+%tempmeasures = measures(measures.Mask==1,:);
+tempmeasures = measures;
 mnum = size(tempmeasures,1);
 mcols = nan(1,mnum);
 mcols = array2table(mcols);
@@ -128,13 +129,13 @@ for i = 1:size(cdPatient,1)
     end
     
     for a = 1:nmeasures
-        if (measures.Mask(a) == 1)
+        %if (measures.Mask(a) == 1)
             measurements = reshape(amDatacube(scid, minscdn:maxscdn, a), [maxscdn - minscdn + 1, 1]);
             column = sprintf('%s_Raw',measures.DisplayName{a});
             outputdata(minscdn:maxscdn, {column}) = array2table(measurements);
             column = sprintf('%s_Smooth',measures.DisplayName{a});
             outputdata(minscdn:maxscdn, {column}) = array2table(smooth(measurements,5));
-        end
+        %end
     end
     
     for a = 1:ninterventions
