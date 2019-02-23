@@ -22,7 +22,7 @@ end
 tmoffset = 0;
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading clinical data\n');
 load(fullfile(basedir, subfolder, clinicalmatfile));
@@ -176,7 +176,7 @@ toc
 fprintf('\n');
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 outputfilename = sprintf('%sivandmeasures.mat', study);
 
@@ -189,7 +189,7 @@ measuresdetailtable.DateNum = [];
 
 fprintf('Saving results to excel\n');
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'ExcelFiles';
 outputfilename = sprintf('%sMeasuresPriorToIVTreatments.xlsx', study);
 summarysheet = 'SummaryByIVTreatment';

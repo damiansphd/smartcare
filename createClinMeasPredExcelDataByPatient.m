@@ -16,7 +16,7 @@ else
 end
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading clinical data\n');
 load(fullfile(basedir, subfolder, clinicalmatfile));
@@ -42,7 +42,7 @@ end
 fprintf('Loading model run results data\n');
 load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun)));
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'ExcelFiles';
 outputfilename = 'TeleMedResults.xlsx';
 

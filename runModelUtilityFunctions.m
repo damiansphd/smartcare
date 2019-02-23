@@ -33,7 +33,7 @@ end
 
 [modelrun, modelidx, models] = selectModelRunFromList('');
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading output from model run\n');
 load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun)));

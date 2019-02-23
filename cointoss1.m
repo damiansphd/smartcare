@@ -49,7 +49,8 @@ for scen = 1:3
     
 end      
 
-savePlot(fig, plottitle);
+plotsubfolder = 'Plots';
+savePlotInDir(fig, plottitle, plotsubfolder);
 
 
         

@@ -11,7 +11,7 @@ fprintf('\n');
 [modelrun2, modelidx2] = selectModelRunFromList('');
 
 fprintf('\n');
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading output from first model run\n');
 load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun1)));
@@ -261,7 +261,8 @@ for i = 0:max_offset-1
                 %title('Overall - xAL');
                 title(sprintf('Overall - xAL %.1f %.1f', overall_hist_xAL1(idx(a), offsets1(idx(a)) + 1), overall_hist_xAL2(idx(a), offsets2(idx(a)) + 1)));
                 
-                savePlot(f, name);
+                plotsubfolder = 'Plots';
+                savePlotInDir(f, name, plotsubfolder);
                 close(f);
             end
             fprintf('\n');

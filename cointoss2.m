@@ -110,8 +110,10 @@ for scen = 2:2
     ax2(scen).YLim = [0,10];
     
     
-end      
-savePlot(fig, plottitle);
+end
+
+plotsubfolder = 'Plots';
+savePlotInDir(fig, plottitle, plotsubfolder);
 close(fig);
 
 

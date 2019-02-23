@@ -15,7 +15,7 @@ fprintf('\n');
 
 % load the required input data
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 fnmodelrun = fullfile(basedir, subfolder, sprintf('%s.mat',modelrun));
 fprintf('Loading alignment model Inputs data\n');
@@ -100,7 +100,7 @@ plotname = sprintf('%s_obj%.8f', baseplotname, qual);
 
 % plot and save aligned curves (pre and post)
 amEMPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, offsets, ...
-    measures, 0, min_offset, max_offset, align_wind, nmeasures, run_type, 0, sigmamethod, plotname, './Plots');
+    measures, 0, min_offset, max_offset, align_wind, nmeasures, run_type, 0, sigmamethod, plotname, 'Plots');
 
 toc
 fprintf('\n');
@@ -115,8 +115,8 @@ run_type = 'Best Alignment';
 
 plotname = sprintf('%s_ex%d_obj%.8f', baseplotname, ex_start, qual);
 
-plotsubfolder = strcat('./Plots/', plotname);
-mkdir(plotsubfolder);
+plotsubfolder = strcat('Plots', '/', plotname);
+mkdir(strcat(basedir, plotsubfolder));
 
 [amInterventions] = calcConfidenceBounds(overall_pdoffset, amInterventions, offsets, min_offset, max_offset, ninterventions, confidencethreshold, confidencemode);
 
@@ -140,7 +140,7 @@ toc
 fprintf('\n');
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 outputfilename = sprintf('%s.mat', plotname);
 fprintf('Saving alignment model results to file %s\n', outputfilename);

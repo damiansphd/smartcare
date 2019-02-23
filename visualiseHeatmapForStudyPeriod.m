@@ -17,7 +17,7 @@ end
 
 tic
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading clinical data\n');
 load(fullfile(basedir, subfolder, clinicalmatfile));
@@ -53,13 +53,12 @@ colors(9,:)  = temp(18,:);
 %f1 = createMeasuresHeatmapWithStudyPeriod(physdata, offset, cdPatient);
 f2 = createHeatmapOfPatientsAndMeasures(physdata(physdata.ScaledDateNum<184,{'SmartCareID','ScaledDateNum'}), colors, strcat(study, '-Heatmap of Patient Measures during Study Period'), 1, 1, 'a3');
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'Plots';
 filenameappend = 'ForStudyPeriod';
-fullfilename = strcat(study, '-HeatmapAllPatients', filenameappend, '.png');
-saveas(f2,fullfile(basedir, subfolder, fullfilename));
-fullfilename = strcat(study, '-HeatmapAllPatients', filenameappend, '.svg');
-saveas(f2,fullfile(basedir, subfolder, fullfilename));
+fullfilename = strcat(study, '-HeatmapAllPatients', filenameappend);
+savePlotInDir(f2, fullfilename, subfolder);
+close(f2);
 
 toc
 fprintf('\n');

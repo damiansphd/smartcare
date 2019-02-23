@@ -8,7 +8,7 @@ amLabelledInterventions.Properties.VariableNames{'Var1'} = 'InterNbr';
 
 testidx = amLabelledInterventions.IncludeInTestSet=='Y';
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 
 datatable = table('Size',[1 3], ...
@@ -112,8 +112,9 @@ h.YDisplayData = labelsandquality.modelrunlist;
 h.YDisplayLabels = labelsandquality.ylabels;
 h.CellLabelColor = 'none';
 h.GridVisible = 'on';
-    
-savePlot(f, plottitle);
+
+plotsubfolder = 'Plots';
+savePlotInDir(f, plottitle, plotsubfolder);
 close(f);
 end
 

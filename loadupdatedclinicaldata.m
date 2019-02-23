@@ -1,6 +1,6 @@
 clear; clc; close all;
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'DataFiles';
 clinicaldatafile = 'clinicaldata_updated.xlsx';
 cdpatientsheet = 'Patients';
@@ -70,7 +70,7 @@ cdCRP = fixCDCRPData(cdCRP);
 tic
 fprintf('\n');
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 outputfilename = 'clinicaldata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);

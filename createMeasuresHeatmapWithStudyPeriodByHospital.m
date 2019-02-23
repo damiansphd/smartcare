@@ -3,7 +3,7 @@ function createMeasuresHeatmapWithStudyPeriodByHospital(physdata, offset, cdPati
 % createMeasuresHeatmapWithStudyPeriod - creates the Patient/Measures
 % heatmap, and overlays study period start and end
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'Plots';
 
 temp = hsv;
@@ -119,6 +119,7 @@ end
 % save results
 fprintf('Saving files\n');
 for a = 1:size(figurearray,2)
-    imagefilename = sprintf('%s-%s.png', filenameprefix, hospitals{a});
-    saveas(figurearray(a),fullfile(basedir, subfolder, imagefilename));
+    imagefilename = sprintf('%s-%s', filenameprefix, hospitals{a});
+    savePlotInDir(figurearray(a), imagefilename, subfolder);
+    close(figurearray(a));
 end

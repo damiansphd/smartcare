@@ -7,7 +7,7 @@ fprintf('Creating Heatmap of Measures with Study Period\n');
 fprintf('----------------------------------------------\n');
 tic
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'Plots';
 
 temp = hsv;
@@ -92,8 +92,9 @@ h.GridVisible = 'off';
 %[C,x] = sortx(h);
 
 % save results
-filename = 'HeatmapAllPatientsWithStudyPeriod.png';
-saveas(f, fullfile(basedir, subfolder, filename));
+filename = 'HeatmapAllPatientsWithStudyPeriod';
+savePlotInDir(f, filename, subfolder);
+close(f);
 
 toc
 fprintf('\n');

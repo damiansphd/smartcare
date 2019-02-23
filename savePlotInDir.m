@@ -4,11 +4,13 @@ function savePlotInDir(f, name, subfolder)
 % subfolder
 
 % save plot
-basedir = './';
+basedir = setBaseDir();
 filename = [name '.png'];
 saveas(f,fullfile(basedir, subfolder, filename));
-filename = [name '.svg'];
-saveas(f,fullfile(basedir, subfolder, filename));
+
+% only add in when necessary to save space
+%filename = [name '.svg'];
+%saveas(f,fullfile(basedir, subfolder, filename));
 
 end
 

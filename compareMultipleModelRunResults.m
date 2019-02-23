@@ -94,7 +94,8 @@ if ninterventions > pagebreak1
 
 end
 
-savePlot(f, name);
+plotsubfolder = 'Plots';
+savePlotInDir(f, name, plotsubfolder);
 close(f);
 
 end

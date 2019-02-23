@@ -237,7 +237,8 @@ while i <= interto
     end
     
     if temp == 1
-        savePlot(f, name);
+        plotsubfolder = 'Plots';
+        savePlotInDir(f, name, plotsubfolder);
         close(f);
         i = i + 1;
     else

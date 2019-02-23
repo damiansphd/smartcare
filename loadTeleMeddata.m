@@ -3,7 +3,7 @@ clear; clc; close all;
 tic
 fprintf('Creating TeleMed data structures\n');
 fprintf('---------------------------------\n');
-basedir = './';
+basedir =setBaseDir();
 subfolder = 'MatlabSavedVariables';
 clinicalmatfile = 'clinicaldata.mat';
 scmatfile = 'smartcaredata.mat';
@@ -51,7 +51,7 @@ toc
 fprintf('\n');
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'DataFiles/TeleMed';
 clinicalfile = 'FEVdata-complete.xlsx';
 
@@ -172,7 +172,7 @@ toc
 fprintf('\n');    
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 tmclinicalmatfile = 'telemedclinicaldata.mat';
 tmmatfile = 'telemeddata.mat';

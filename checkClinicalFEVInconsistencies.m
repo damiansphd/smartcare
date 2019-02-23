@@ -1,7 +1,7 @@
 clc; clear; close all;
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 clinicalmatfile = 'clinicaldata.mat';
 scmatfile = 'smartcaredata.mat';

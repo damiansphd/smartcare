@@ -4,7 +4,7 @@ clear; clc; close all;
 tic
 fprintf('Loading Clinical Data\n');
 fprintf('---------------------\n');
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 clinicalmatfile = 'clinicaldata.mat';
 fprintf('Loading Clinical data\n');
@@ -15,7 +15,7 @@ fprintf('\n');
 
 study = 'SC';
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'DataFiles';
 scdatafile = 'mydata.csv';
 patientidfile = 'patientid.xlsx';
@@ -77,7 +77,7 @@ createMeasuresHeatmapWithStudyPeriod(physdata, offset, cdPatient);
 printDataDemographics(physdata,0);
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 outputfilename = 'smartcaredata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);

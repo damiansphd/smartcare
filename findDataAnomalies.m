@@ -17,7 +17,7 @@ else
 end
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading alignment model Inputs data\n');
 load(fullfile(basedir, subfolder, modelinputsmatfile));
@@ -78,7 +78,7 @@ for a = 1:npatients
 end
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 outputfilename = sprintf('%sdataoutliers.mat', study);
 fprintf('Saving data outliers to file %s\n', outputfilename);

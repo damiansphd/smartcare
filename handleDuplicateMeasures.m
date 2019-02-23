@@ -10,9 +10,9 @@ function [physdataout] = handleDuplicateMeasures(physdata, doupdates, detaillog)
 fprintf('Handling Duplicates\n');
 fprintf('-------------------\n');
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-demographicsmatfile = 'datademographicsbypatient.mat';
+demographicsmatfile = 'SCdatademographicsbypatient.mat';
 fprintf('Loading demographic data by patient\n');
 load(fullfile(basedir, subfolder, demographicsmatfile));
 toc

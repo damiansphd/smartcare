@@ -12,7 +12,7 @@ fprintf('\n');
 
 % load the required input data
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 fnmodelrun = fullfile(basedir, subfolder, sprintf('%s.mat',modelrun));
 fprintf('Loading alignment model Inputs data\n');
@@ -137,7 +137,7 @@ toc
 fprintf('\n');
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 outputfilename = sprintf('%s.mat', plotname);
 fprintf('Saving alignment model results to file %s\n', outputfilename);

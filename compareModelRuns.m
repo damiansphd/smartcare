@@ -1,7 +1,7 @@
 function compareModelRuns(modelrun1, modelidx1, modelrun2, modelidx2)
 
 fprintf('\n');
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading output from first model run\n');
 load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun1)));

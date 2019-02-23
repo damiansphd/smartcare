@@ -1,7 +1,7 @@
 clc; clear; close all;
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 clinicalmatfile = 'clinicaldata.mat';
 scmatfile = 'smartcaredata.mat';
@@ -12,7 +12,7 @@ fprintf('Loading SmartCare measurement data\n');
 load(fullfile(basedir, subfolder, scmatfile));
 toc
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'ExcelFiles';
 outputfilename = 'TreatmentsOutsideStudyPeriodNotionalEnd.xlsx';
 

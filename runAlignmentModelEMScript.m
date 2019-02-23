@@ -27,7 +27,7 @@ if isequal(fileidx,'')
 end
 fprintf('\n');
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'DataFiles';
 runparameterfile = RunParameterFiles{fileidx};
 

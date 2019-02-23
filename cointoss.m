@@ -33,8 +33,8 @@ for b = 1:3
     end
     name = sprintf('Coin Toss Example - %d Tosses', b * 10);
     h = histogram(parray,20);
-    savePlot(h, name);
-    
+    plotsubfolder = 'Plots';
+    savePlotInDir(h, name, plotsubfolder);
 end            
         
         

@@ -19,7 +19,7 @@ end
 
 tic
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading clinical data\n');
 load(fullfile(basedir, subfolder, clinicalmatfile));
@@ -42,7 +42,7 @@ if studynbr == 2
     offset = tmoffset;
 end
     
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'Plots';
 figurearray = [];
 
@@ -396,12 +396,8 @@ for i = 1:size(patientlist,1)
     
     tic
     for a = 1:size(figurearray,2)
-        imagefilename = sprintf('%sPatientSummary_ID%d_%s_page%d.png', study, scid, hospital, a);
-        saveas(figurearray(a),fullfile(basedir, subfolder, imagefilename));
-        if (isequal(study,'SC') && scid == 133) || (isequal(study,'TM') && scid == 3) 
-            imagefilename = sprintf('%sPatientSummary_ID%d_%s_page%d.svg', study, scid, hospital, a);
-            saveas(figurearray(a),fullfile(basedir, subfolder, imagefilename));
-        end
+        imagefilename = sprintf('%sPatientSummary_ID%d_%s_page%d', study, scid, hospital, a);
+        savePlotInDir(figurearray(a), imagefilename, subfolder);
         close(figurearray(a));
     end
     toc

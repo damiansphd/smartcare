@@ -20,7 +20,7 @@ else
 end
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading clinical data\n');
 load(fullfile(basedir, subfolder, clinicalmatfile));
@@ -70,7 +70,7 @@ abTreatments = innerjoin(patientoffsets, abTreatments);
 plotsacross = 2;
 plotsdown = 5;
 plotsperpage = plotsacross * plotsdown;
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'Plots';
 
 % treat all antibiotic treatments within a -7/+25 day window as being part of
@@ -212,12 +212,8 @@ for i = 1:size(abTreatments,1)
         end
     end
     % save plot
-    imagefilename = sprintf('%s-ExacerbationTimeline_ID%d_%s_%11s.png', study, scid, hospital, datestr(eventstartdate, 29));
-    saveas(f, fullfile(basedir, subfolder, imagefilename));
-    if (isequal(study,'SC') && scid == 133) || (isequal(study,'TM') && scid == 3) 
-            imagefilename = sprintf('%s-ExacerbationTimeline_ID%d_%s_%11s.svg', study, scid, hospital, datestr(eventstartdate, 29));
-            saveas(f, fullfile(basedir, subfolder, imagefilename));
-    end
+    imagefilename = sprintf('%s-ExacerbationTimeline_ID%d_%s_%11s', study, scid, hospital, datestr(eventstartdate, 29));
+    savePlotInDir(f, imagefilename, subfolder);
     close(f);
 end
     

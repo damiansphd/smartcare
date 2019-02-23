@@ -11,7 +11,7 @@ function [physdataout] = analyseAndHandleDateOutliers(physdata, doupdates)
 
 tic
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'Plots';
 
 fprintf('Analysing and Handling Date Outliers in the Measurement data\n');
@@ -33,12 +33,13 @@ colors(8,:)  = temp(16,:);
 colors(9,:)  = temp(18,:);
 
 filenameappend = 'PreDateOutlierHandling';
-fullfilename = strcat('HeatmapAllPatients', filenameappend, '.png');
+fullfilename = strcat('HeatmapAllPatients', filenameappend);
 
 % create heatmap for all patients and measures
 fprintf('Creating heatmap for all patients\n');
 f1 = createHeatmapOfPatientsAndMeasures(physdata(:,{'SmartCareID','ScaledDateNum'}), colors, 'Heatmap of Patient Measures', 1, 1, 'a3');
-saveas(f1,fullfile(basedir, subfolder, fullfilename));
+savePlotInDir(f1, fullfilename, subfolder);
+close(f1);
 
 toc
 fprintf('\n');
@@ -116,13 +117,15 @@ tic
 physdata = scaleDaysByPatient(physdata, doupdates);
 
 filenameappend = 'PostOutlierDateHandling';
-fullfilename = strcat('HeatmapAllPatients', filenameappend, '.png');
-shortfilename = strcat('HeatmapShortDurationPatients', filenameappend, '.png');
+fullfilename = strcat('HeatmapAllPatients', filenameappend);
+shortfilename = strcat('HeatmapShortDurationPatients', filenameappend);
 
 % re-create heatmap for all patients and measures
 fprintf('Re-creating heatmap for all patients\n');
 f2 = createHeatmapOfPatientsAndMeasures(physdata(:,{'SmartCareID','ScaledDateNum'}), colors, 'Heatmap of Patient Measures - Post Date Outliers', 1, 1, 'a3');
-saveas(f2,fullfile(basedir, subfolder, fullfilename));
+savePlotInDir(f2, fullfilename, subfolder);
+close(f2);
+
 
 toc
 fprintf('\n');
@@ -147,7 +150,8 @@ pcountdtable = innerjoin(pcountdtable,pcountdtable2m);
 fewdayspatients = pcountdtable.SmartCareID(find(pcountdtable.MultipleMeasuresDayCount <= 35));
 sdpidx = find(ismember(physdata.SmartCareID, unique([shortdurationpatients ; fewdayspatients])));
 f3 = createHeatmapOfPatientsAndMeasures(physdata(sdpidx,{'SmartCareID','ScaledDateNum'}), colors, 'Heatmap of Short Duration Patients', 1.0, 0.5, 'a4');
-saveas(f3,fullfile(basedir, subfolder, shortfilename));
+savePlotInDir(f3, shortfilename, subfolder);
+close(f3);
 
 if doupdates
     % remove all measures for patients with < 40 days duration or <= 35 total days of more than 1 measurement
@@ -161,12 +165,14 @@ fprintf('\n');
 
 tic
 filenameappend = 'PostShortDurationHandling';
-fullfilename = strcat('HeatmapAllPatients', filenameappend, '.png');
+fullfilename = strcat('HeatmapAllPatients', filenameappend);
 
 % re-create heatmap for all patients and measures
 fprintf('Re-creating heatmap for all patients\n');
 f4 = createHeatmapOfPatientsAndMeasures(physdata(:,{'SmartCareID','ScaledDateNum'}), colors, 'Heatmap of Patient Measures Post Short Duration', 1, 1, 'a3');
-saveas(f4,fullfile(basedir, subfolder, fullfilename));
+savePlotInDir(f4, fullfilename, subfolder);
+close(f4);
+
 
 toc
 fprintf('\n');
@@ -204,12 +210,14 @@ fprintf('\n');
 
 tic
 filenameappend = 'PostSparsePatientHandling';
-fullfilename = strcat('HeatmapAllPatients', filenameappend, '.png');
+fullfilename = strcat('HeatmapAllPatients', filenameappend);
 
 % re-create heatmap for all patients and measures
 fprintf('Re-creating heatmap for all patients\n');
 f5 = createHeatmapOfPatientsAndMeasures(physdata(:,{'SmartCareID','ScaledDateNum'}), colors, 'Heatmap of Patient Measures - Final', 1, 1, 'a3');
-saveas(f5,fullfile(basedir, subfolder, fullfilename));
+savePlotInDir(f5, fullfilename, subfolder);
+close(f5);
+
 
 toc
 fprintf('\n');

@@ -62,7 +62,7 @@ end
 
 for i = 1:size(figurearray,2)
     imagefilename = sprintf('%s - page %2d.png', filenameprefix, i);
-    saveas(figurearray(i),fullfile(basedir, subfolder, imagefilename));
+    savePlotInDir(figurearray(i), imagefilename, subfolder);
     close(figurearray(i));
 end
 

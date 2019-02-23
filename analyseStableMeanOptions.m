@@ -23,7 +23,7 @@ else
 end
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading alignment model Inputs data\n');
 load(fullfile(basedir, subfolder, modelinputsmatfile));

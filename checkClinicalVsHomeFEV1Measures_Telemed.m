@@ -1,7 +1,7 @@
 clc; clear; close all;
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 clinicalmatfile = 'telemedclinicaldata.mat';
 scmatfile = 'telemeddata.mat';
@@ -52,7 +52,7 @@ maxdays = max([pmeasuresfev.ScaledDateNum ; pstudydate.ScaledDateNum + 183]);
 plotsacross = 2;
 plotsdown = 4;
 plotsperpage = plotsacross * plotsdown;
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'Plots';
 toc
 

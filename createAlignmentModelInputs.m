@@ -20,7 +20,7 @@ else
 end
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading clinical data\n');
 load(fullfile(basedir, subfolder, clinicalmatfile));
@@ -75,7 +75,7 @@ fprintf('Creating 3D data array\n');
 toc
 
 tic
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 outputfilename = sprintf('%salignmentmodelinputs.mat', study);
 fprintf('Saving output variables to file %s\n', outputfilename);
