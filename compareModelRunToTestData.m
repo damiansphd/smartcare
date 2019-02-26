@@ -5,6 +5,7 @@ function compareModelRunToTestData(amLabelledInterventions, amInterventions, amI
 % compareModelRunToTestData - compares the output of a chosen model run to
 % the labelled test data
 
+amLabelledInterventions = amLabelledInterventions(ismember(amLabelledInterventions.SmartCareID,amInterventions.SmartCareID),:);
 amLabelledInterventions = [array2table([1:ninterventions]'), amLabelledInterventions];
 amLabelledInterventions.Properties.VariableNames{'Var1'} = 'InterNbr';
 
@@ -44,8 +45,9 @@ fprintf('%2d of %2d results match labelled test data\n', sum(matchidx), testsets
 fprintf('Quality Score is %d\n', dist);
 fprintf('\n');
 
-plotsubfolder = strcat('./Plots/', sprintf('%s%sm%d vs Labels', study, mversion, modelidx));
-mkdir(plotsubfolder);
+basedir = setBaseDir();
+plotsubfolder = strcat('Plots/', sprintf('%s%sm%d vs Labels', study, mversion, modelidx));
+mkdir(strcat(basedir, plotsubfolder));
 
 plotsdown = 9;
 plotsacross = 5;

@@ -268,7 +268,13 @@ TMmodelsVEM4 = {
             'TMvEM4_sig4_mu4_ca2_sm2_rm4_ob1_im1_cm2_mm3_mo25_dw25_ex-28_obj1.36069992';
             'TMvEM4_sig4_mu5_ca2_sm2_rm4_ob1_im1_cm2_mm3_mo25_dw25_ex-28_obj1.31989860';
             };
-            
+
+SCmodelsFEV1Split = {
+            'SCFEV1Split1_sig4_mu4_ca2_sm2_rm4_ob1_im1_cm2_mm1_mo25_dw25_ex-28_obj1.38927877';
+            'SCFEV1Split2_sig4_mu4_ca2_sm2_rm4_ob1_im1_cm2_mm1_mo25_dw25_ex-28_obj1.42343683';
+            'SCFEV1Split1_sig4_mu4_ca2_sm2_rm4_ob1_im1_cm2_mm3_mo25_dw25_ex-28_obj1.38653038';
+            'SCFEV1Split2_sig4_mu4_ca2_sm2_rm4_ob1_im1_cm2_mm3_mo25_dw25_ex-28_obj1.41807577';
+            };
      
      
 fprintf('Pick Model set\n');
@@ -281,10 +287,11 @@ fprintf('5: Damian SC - vEM3 with imputation\n');
 fprintf('6: Damian TM - vEM2\n');
 fprintf('7: Damian TM - vEM3\n');
 fprintf('8: Damian TM - vEM4\n');
+fprintf('9: Damian SC - vFEV1Split\n');
 
-modelset = input('Choose model set (1-8) ');
+modelset = input('Choose model set (1-9) ');
 
-if modelset > 8
+if modelset > 9
     fprintf('Invalid choice\n');
     return;
 end
@@ -309,6 +316,8 @@ elseif modelset == 7
     models = TMmodelsVEM3;
 elseif modelset == 8
     models = TMmodelsVEM4;
+elseif modelset == 9
+    models = SCmodelsFEV1Split;
 else
     fprintf('Should not get here\n');
 end
