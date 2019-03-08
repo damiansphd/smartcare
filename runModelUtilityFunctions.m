@@ -17,12 +17,13 @@ fprintf(' 8: Compare results to labelled test data and plot results\n');
 fprintf(' 9: <placeholder for Dragos new option\n');
 fprintf('10: Compare results for multiple model runs to labelled test data\n');
 fprintf('11: Compare results for multiple model runs\n');
+fprintf('12: Plot simplified aligned curves\n');
 fprintf('\n');
 runfunction = input('Choose function (1-11) ');
 
 fprintf('\n');
 
-if runfunction > 11
+if runfunction > 12
     fprintf('Invalid choice\n');
     return;
 end
@@ -187,6 +188,12 @@ elseif runfunction == 11
     fprintf('Comparing results of multiple model runs\n');
     fprintf('\n');
     [modeliterations, modeloffsets] = compareMultipleModelRunResults(modelrun, modelidx, models, basedir, subfolder);
+elseif runfunction == 12
+    fprintf('Plotting simplified aligned curves\n');
+    fprintf('\n');
+    run_type = 'Best Alignment';
+    amEMPlotAndSaveAlignedCurvesBasic(unaligned_profile, meancurvemean, offsets, ...
+    measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder);
 else
     fprintf('Should not get here....\n');
 end
