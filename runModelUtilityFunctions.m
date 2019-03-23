@@ -18,12 +18,14 @@ fprintf(' 9: <placeholder for Dragos new option\n');
 fprintf('10: Compare results for multiple model runs to labelled test data\n');
 fprintf('11: Compare results for multiple model runs\n');
 fprintf('12: Plot simplified aligned curves\n');
+fprintf('13: Plot Test Labels\n');
+fprintf('14: Calc Ex Start from Test Labels\n');
 fprintf('\n');
-runfunction = input('Choose function (1-11) ');
+runfunction = input('Choose function (1-14) ');
 
 fprintf('\n');
 
-if runfunction > 12
+if runfunction > 14
     fprintf('Invalid choice\n');
     return;
 end
@@ -194,6 +196,23 @@ elseif runfunction == 12
     run_type = 'Best Alignment';
     amEMPlotAndSaveAlignedCurvesBasic(unaligned_profile, meancurvemean, offsets, ...
     measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder);
+elseif runfunction == 13
+    fprintf('Loading latest labelled test data file\n');
+    inputfilename = sprintf('%s_LabelledInterventions.mat', study);
+    load(fullfile(basedir, subfolder, inputfilename));
+    fprintf('Plotting labelled test data\n');
+    fprintf('\n');
+    plotLabelledInterventions(amIntrDatacube, amInterventions, amLabelledInterventions, ...
+    pdoffset, overall_pdoffset, measures, normmean, max_offset, align_wind, ex_start, ...
+    study, nmeasures)  
+elseif runfunction == 14
+    fprintf('Loading latest labelled test data file\n');
+    inputfilename = sprintf('%s_LabelledInterventions.mat', study);
+    load(fullfile(basedir, subfolder, inputfilename));
+    fprintf('Calculating Ex_Start from Test Labels and Offsets\n');
+    fprintf('\n');
+    derived_ex_start = calcExStartFromTestLabels(amLabelledInterventions, amInterventions, ...
+        align_wind, max_offset, modelrun);
 else
     fprintf('Should not get here....\n');
 end
