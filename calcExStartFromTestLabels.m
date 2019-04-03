@@ -5,37 +5,59 @@ function ex_start = calcExStartFromTestLabels(amLabelledInterventions, amInterve
 % alignment model run from the test labels.
 
 plotsacross = 1;
-plotsdown = 4;
+plotsdown = 6;
 
 name1 = sprintf('%s - Ex_Start from TestLabels', modelrun);
 [f1, p1] = createFigureAndPanel(name1, 'Portrait', 'A4');
-ax1 = gobjects(plotsacross * plotsdown,1);
+%ax1 = gobjects(plotsacross * plotsdown,1);
 
-days = (-1 * (align_wind + max_offset - 1):-1);
-votesarray = calcVotesArray(amLabelledInterventions, amInterventions, ...
+
+[truevotes, falsevotes] = calcVotesArray(amLabelledInterventions, amInterventions, ...
                                 align_wind, max_offset);
+days = (-1 * (size(truevotes,2)):-1);
 thisplot = 1;
 ax1(thisplot) = subplot(plotsdown, plotsacross, thisplot, 'Parent',p1);
-b = bar(ax1(thisplot), days, sum(votesarray), 0.75, 'FaceColor', 'blue', 'EdgeColor', 'black');
-title(sprintf('ExStart votes by day - All %d Examples', size(amInterventions, 1)));
+b = bar(ax1(thisplot), days, sum(truevotes), 0.75, 'FaceColor', 'green', 'EdgeColor', 'black');
+title(sprintf('ExStart true votes by day - All %d Examples', size(amInterventions, 1)));
 
 thisplot = thisplot + 1;
-idx = amLabelledInterventions.IncludeInTestSet == 'Y';
-votesarray = calcVotesArray(amLabelledInterventions(idx, :), amInterventions(idx, :), ...
-                                align_wind, max_offset);
 ax1(thisplot) = subplot(plotsdown, plotsacross, thisplot, 'Parent',p1);
-b = bar(ax1(thisplot), days, sum(votesarray), 0.75, 'FaceColor', 'blue', 'EdgeColor', 'black');
-title(sprintf('ExStart votes by day (%d Test Set examples)', size(amInterventions(idx,:),1)));                            
+b = bar(ax1(thisplot), days, sum(falsevotes), 0.75, 'FaceColor', 'green', 'EdgeColor', 'black');
+title(sprintf('ExStart false votes by day - All %d Examples', size(amInterventions, 1)));
+
+thisplot = thisplot + 1;
+ax1(thisplot) = subplot(plotsdown, plotsacross, thisplot, 'Parent',p1);
+b = bar(ax1(thisplot), days, sum(truevotes) ./ (sum(truevotes) + sum(falsevotes)), 0.75, 'FaceColor', 'blue', 'EdgeColor', 'black');
+title(sprintf('ExStart true proportion votes by day - All %d Examples', size(amInterventions, 1)));
+
+
+idx = amLabelledInterventions.IncludeInTestSet == 'Y';
+[truevotes, falsevotes] = calcVotesArray(amLabelledInterventions(idx, :), amInterventions(idx, :), ...
+                                align_wind, max_offset);
+days = (-1 * (size(truevotes,2)):-1);
+thisplot = thisplot + 1;
+ax1(thisplot) = subplot(plotsdown, plotsacross, thisplot, 'Parent',p1);
+b = bar(ax1(thisplot), days, sum(truevotes), 0.75, 'FaceColor', 'green', 'EdgeColor', 'black');
+title(sprintf('ExStart true votes by day (%d Test Set examples)', size(amInterventions(idx,:),1)));                            
+
+thisplot = thisplot + 1;
+ax1(thisplot) = subplot(plotsdown, plotsacross, thisplot, 'Parent',p1);
+b = bar(ax1(thisplot), days, sum(falsevotes), 0.75, 'FaceColor', 'green', 'EdgeColor', 'black');
+title(sprintf('ExStart false votes by day (%d Test Set examples)', size(amInterventions(idx,:),1)));     
+
+thisplot = thisplot + 1;
+ax1(thisplot) = subplot(plotsdown, plotsacross, thisplot, 'Parent',p1);
+b = bar(ax1(thisplot), days, sum(truevotes) ./ (sum(truevotes) + sum(falsevotes)), 0.75, 'FaceColor', 'blue', 'EdgeColor', 'black');
+title(sprintf('ExStart true proportion votes by day (%d Test Set examples)', size(amInterventions(idx,:),1)));     
 
 basedir = setBaseDir();
 plotsubfolder = sprintf('Plots/%s',modelrun);
 savePlotInDir(f1, name1, plotsubfolder);
 close(f1);
     
-[~, maxpt] = max(sum(votesarray));
+[~, maxpt] = max(sum(truevotes) ./ (sum(truevotes) + sum(falsevotes)));
 
-ex_start = maxpt - 49 - 1;
-
+ex_start = -1 * (size(truevotes,2)) - 1 + maxpt;
 
 end
 
