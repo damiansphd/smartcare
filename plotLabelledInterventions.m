@@ -44,11 +44,17 @@ for i = 1:size(amInterventions,1)
         [xl(m,:), yl(m,:)] = plotHorizontalLine(ax(m), normmean(i, m), xl(m,:), yl(m,:), 'blue', '--', 0.5); % plot mean
         xlim(ax(m), xl(m, :));
         
-        [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.LowerBound1(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
-        [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.UpperBound1(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
+        %[xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.LowerBound1(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
+        %[xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.UpperBound1(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
+        %if amLabelledInterventions.LowerBound2(i) ~= 0
+        %    [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.LowerBound2(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
+        %    [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.UpperBound2(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
+        %end
+        [xl(m,:), yl(m,:)] = plotVerticalLine(ax(m), amLabelledInterventions.LowerBound1(i), xl(m,:), yl(m,:),  'red', '-', 0.5);
+        [xl(m,:), yl(m,:)] = plotVerticalLine(ax(m), amLabelledInterventions.UpperBound1(i), xl(m,:), yl(m,:),  'red', '-', 0.5);
         if amLabelledInterventions.LowerBound2(i) ~= 0
-            [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.LowerBound2(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
-            [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.UpperBound2(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
+            [xl(m,:), yl(m,:)] = plotVerticalLine(ax(m), amLabelledInterventions.LowerBound2(i), xl(m,:), yl(m,:),  'red', '-', 0.5);
+            [xl(m,:), yl(m,:)] = plotVerticalLine(ax(m), amLabelledInterventions.UpperBound2(i), xl(m,:), yl(m,:),  'red', '-', 0.5);
         end
         hold on;
         fill(ax(m), [ amLabelledInterventions.LowerBound1(i) amLabelledInterventions.UpperBound1(i)    ...

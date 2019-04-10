@@ -76,24 +76,24 @@ while i <= interto
     set(gca,'fontsize',6);
     title(sprintf('%s', 'Overall'), 'BackgroundColor', 'green');
     
-    lower1 = input(sprintf('Enter lowerbound1 for exacerbation start (%2d:%2d) ? ', ex_start, ex_start + max_offset - 1));
+    lower1 = input('Enter lowerbound1 for exacerbation start (<= -1) ? ');
     if isequal(lower1,'')
         fprintf('Invalid choice\n');
         return;
     end
-    if lower1 < ex_start || lower1 > (ex_start + max_offset - 1)
+    if lower1 >= 0
         fprintf('Invalid choice\n');
         return;
     end
     
     amLabelledInterventions.LowerBound1(i) = lower1;
         
-    upper1 = input(sprintf('Enter upperbound1 for exacerbation start (%2d:%2d) ? ', lower1 + 1, ex_start + max_offset - 1));
+    upper1 = input(sprintf('Enter upperbound1 for exacerbation start (%2d:-1) ? ', lower1 + 1));
     if isequal(upper1,'')
         fprintf('Invalid choice\n');
         return;
     end
-    if upper1 < lower1 || upper1 > (ex_start + max_offset - 1)
+    if upper1 <= lower1 || upper1 >= 0
         fprintf('Invalid choice\n');
         return;
     end
@@ -111,24 +111,24 @@ while i <= interto
     end
     
     if secondrange == 1
-        lower2 = input(sprintf('Enter lowerbound2 for exacerbation start (%2d:%2d) ? ', upper1 + 1, ex_start + max_offset - 1));
+        lower2 = input(sprintf('Enter lowerbound2 for exacerbation start (%2d:-1) ? ', upper1 + 1));
         if isequal(lower2,'')
             fprintf('Invalid choice\n');
             return;
         end
-        if lower2 < upper1 || lower2 > (ex_start + max_offset - 1)
+        if lower2 <= upper1 || lower2 >= 0
             fprintf('Invalid choice\n');
             return;
         end
     
         amLabelledInterventions.LowerBound2(i) = lower2;
         
-        upper2 = input(sprintf('Enter upperbound2 for exacerbation start (%2d:%2d) ? ', lower2 + 1, ex_start + max_offset - 1));
+        upper2 = input(sprintf('Enter upperbound2 for exacerbation start (%2d:-1) ? ', lower2 + 1));
         if isequal(upper2,'')
             fprintf('Invalid choice\n');
             return;
         end
-        if upper2 < lower2 || upper2 > (ex_start + max_offset - 1)
+        if upper2 <= lower2 || upper2 >= 0
             fprintf('Invalid choice\n');
             return;
         end
@@ -139,23 +139,17 @@ while i <= interto
         amLabelledInterventions.UpperBound2(i) = 0;
     end
     
-    %if (upper1 - ex_start) > max_offset -1
-    %    amLabelledInterventions.UpperBound1(i) = max_offset -1;
-    %else
-    %    amLabelledInterventions.UpperBound1(i) = upper1;
-    %end
-    
     for m = 1:nmeasures
         if all(isnan(amIntrDatacube(i, :, m)))
             continue;
         end
         subplot(ax(m));
         ax(m).XGrid = 'off';
-        [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.LowerBound1(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
-        [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.UpperBound1(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
+        [xl(m,:), yl(m,:)] = plotVerticalLine(ax(m), amLabelledInterventions.LowerBound1(i), xl(m,:), yl(m,:),  'red', '-', 0.5);
+        [xl(m,:), yl(m,:)] = plotVerticalLine(ax(m), amLabelledInterventions.UpperBound1(i), xl(m,:), yl(m,:),  'red', '-', 0.5);
         if amLabelledInterventions.LowerBound2(i) ~= 0
-            [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.LowerBound2(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
-            [xl(m,:), yl(m,:)] = plotExStart(ax(m), ex_start, amLabelledInterventions.UpperBound2(i) - ex_start, xl(m,:), yl(m,:),  'red', '-', 0.5);
+            [xl(m,:), yl(m,:)] = plotVerticalLine(ax(m), amLabelledInterventions.LowerBound2(i), xl(m,:), yl(m,:),  'red', '-', 0.5);
+            [xl(m,:), yl(m,:)] = plotVerticalLine(ax(m), amLabelledInterventions.UpperBound2(i), xl(m,:), yl(m,:),  'red', '-', 0.5);
         end
         hold on;
         fill(ax(m), [ amLabelledInterventions.LowerBound1(i) amLabelledInterventions.UpperBound1(i)    ...
@@ -219,8 +213,23 @@ while i <= interto
     set(gca,'fontsize',6);
     title(sprintf('%s', 'Overall'), 'BackgroundColor', 'green');
     
+    ub1 = min(amLabelledInterventions.UpperBound1(i), (ex_start + max_offset - 1));
+    if amLabelledInterventions.UpperBound2(i) < 0
+        ub2 = min(amLabelledInterventions.UpperBound2(i), (ex_start + max_offset - 1));
+    else
+        ub2 = amLabelledInterventions.UpperBound2(i);
+    end
+    lb1 = max(amLabelledInterventions.LowerBound1(i), ex_start);
+    if amLabelledInterventions.LowerBound2(i) < 0
+        lb2 = max(amLabelledInterventions.LowerBound2(i), ex_start);
+    else
+        lb2 = amLabelledInterventions.LowerBound2(i);
+    end
+    
+    %if ((amLabelledInterventions.DataWindowCompleteness(i) >= 60) ...
+    %        && (((amLabelledInterventions.UpperBound1(i) - amLabelledInterventions.LowerBound1(i)) + (amLabelledInterventions.UpperBound2(i) - amLabelledInterventions.LowerBound2(i))) <= 9))
     if ((amLabelledInterventions.DataWindowCompleteness(i) >= 60) ...
-            && (((amLabelledInterventions.UpperBound1(i) - amLabelledInterventions.LowerBound1(i)) + (amLabelledInterventions.UpperBound2(i) - amLabelledInterventions.LowerBound2(i))) <= 9))
+            && (((ub1 - lb1) + (ub2 - lb2)) <= 9))
         amLabelledInterventions.IncludeInTestSet(i) = 'Y';
     else
         amLabelledInterventions.IncludeInTestSet(i) = 'N';
