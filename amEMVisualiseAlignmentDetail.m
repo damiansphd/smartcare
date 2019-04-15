@@ -36,7 +36,7 @@ for m = 1:nmeasures
         offset = amInterventions.Offset(i);
 
         %fprintf('Intervention %2d, patient %3d, start %3d, best_offset %2d\n', i, scid, start, offset);
-        rowtoadd.Intervention = i;
+        rowtoadd.Intervention = amInterventions.IntrNbr(i);
         rowtoadd.Count = 2;
         for d = 1:align_wind
             if ~isnan(amIntrCube(i, max_offset + align_wind - d, m))
@@ -70,7 +70,7 @@ for m = 1:nmeasures
     xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
     yl = [min(meancurvemean(:, m)) max(meancurvemean(:, m))];
     
-    ax = subplot(plotsdown,plotsacross,[1:6],'Parent',p);
+    ax = subplot(plotsdown,plotsacross, 1:6,'Parent',p);
     yyaxis left;
     
     [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, (meancurvemean(:, m)), xl, yl, 'blue', ':', 0.5, anchor);
@@ -101,7 +101,7 @@ for m = 1:nmeasures
         ylim([0 max(meancurvecount(:, m) * 4)]);
     end
     
-    subplot(plotsdown,plotsacross,[7:16],'Parent',p);
+    subplot(plotsdown,plotsacross, 7:16,'Parent',p);
     h = heatmap(p, datatable, 'ScaledDateNum', 'Intervention', 'Colormap', colors, 'MissingDataColor', 'white', ...
         'ColorVariable','Count','ColorMethod','max', 'MissingDataLabel', 'No data', 'ColorBarVisible', 'off', 'FontSize', 8);
     h.Title = ' ';
@@ -137,17 +137,18 @@ for m = 1:nmeasures
             temp_meancurvemean     = zeros(max_offset + align_wind - 1, nmeasures);
             temp_meancurvestd      = zeros(max_offset + align_wind - 1, nmeasures);
             
-            temp_interventions = amInterventions(sorted_interventions.IntrNbr(qlower:qupper),:);
+            %problem here
+            temp_interventions = amInterventions(ismember(amInterventions.IntrNbr, sorted_interventions.IntrNbr(qlower:qupper)),:);
             
             for i = 1:qnbr
                 [temp_meancurvesumsq, temp_meancurvesum, temp_meancurvecount] = amEMAddToMean(temp_meancurvesumsq, temp_meancurvesum, temp_meancurvecount, ...
-                    overall_pdoffset(sorted_interventions.IntrNbr(qlower:qupper), :), amIntrCube(sorted_interventions.IntrNbr(qlower:qupper), :, :), ...
-                    amHeldBackcube(sorted_interventions.IntrNbr(qlower:qupper), :, :), i, ...
+                    overall_pdoffset(ismember(amInterventions.IntrNbr, sorted_interventions.IntrNbr(qlower:qupper)), :), amIntrCube(ismember(amInterventions.IntrNbr, sorted_interventions.IntrNbr(qlower:qupper)), :, :), ...
+                    amHeldBackcube(ismember(amInterventions.IntrNbr, sorted_interventions.IntrNbr(qlower:qupper)), :, :), i, ...
                     min_offset, max_offset, align_wind, nmeasures);
                 [temp_meancurvemean, temp_meancurvestd] = calcMeanAndStd(temp_meancurvesumsq, temp_meancurvesum, temp_meancurvecount, min_offset, max_offset, align_wind);
             end
             
-            qintrminoffset = min(amInterventions.Offset(sorted_interventions.IntrNbr(qlower:qupper)));
+            qintrminoffset = min(amInterventions.Offset(ismember(amInterventions.IntrNbr, sorted_interventions.IntrNbr(qlower:qupper))));
             qdataminoffset = max_offset + align_wind - max(find(max(temp_meancurvecount, [], 2)~=0)) + 1;
             qto = max(qintrminoffset, qdataminoffset);
             
@@ -156,7 +157,7 @@ for m = 1:nmeasures
             %qfrom = max(qintrmaxoffset, qdatamaxoffset);
             
             if curveaveragingmethod == 1
-                qintrmaxoffset = max(amInterventions.Offset(sorted_interventions.IntrNbr(qlower:qupper))) + align_wind;
+                qintrmaxoffset = max(amInterventions.Offset(ismember(amInterventions.IntrNbr, sorted_interventions.IntrNbr(qlower:qupper)))) + align_wind;
                 qdatamaxoffset = max_offset + align_wind - min(find(min(temp_meancurvecount, [], 2)~=0));
                 qfrom = max(qintrmaxoffset, qdatamaxoffset);
             else

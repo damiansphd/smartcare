@@ -13,7 +13,8 @@ interventions = ivandmeasurestable(ivandmeasurestable.DaysWithMeasures >= 15 & i
 % do inner join to reduce to only patients with enough data
 interventions = innerjoin(patientoffsets, interventions);
 interventions.IVScaledDateNum = datenum(interventions.IVStartDate) - offset + 1 - interventions.PatientOffset;
-interventions.Offset = interventions.SmartCareID * 0;
+interventions.Offset(:) = 0;
+interventions.LatentCurve(:) = 0;
 
 end
 

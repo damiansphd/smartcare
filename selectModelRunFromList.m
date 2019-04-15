@@ -193,6 +193,39 @@ SCmodelsVEM4 = {
             'placeholder';
             'placeholder';
             'placeholder';
+         };
+     
+SCmodelsVEM5 = {
+            'SCvEM5_sig4_mu3_ca2_sm1_rm4_ob1_im1_cm2_mm3_mo25_dw25_ex-28_obj1.39965424';
+            'SCvEM5_sig4_mu3_ca2_sm2_rm4_ob1_im1_cm2_mm3_mo25_dw25_ex-28_obj1.39575620';
+            'SCvEM5_sig4_mu4_ca2_sm1_rm4_ob1_im1_cm2_mm3_mo25_dw25_ex-28_obj1.39533401';
+            'SCvEM5_sig4_mu4_ca2_sm2_rm4_ob1_im1_cm2_mm3_mo25_dw25_ex-28_obj1.39416912';
+            'SCvEM5_sig4_mu5_ca2_sm1_rm4_ob1_im1_cm2_mm3_mo25_dw25_ex-28_obj1.39024821';
+            'SCvEM5_sig4_mu5_ca2_sm2_rm4_ob1_im1_cm2_mm3_mo25_dw25_ex-28_obj1.38940962';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'SCvEM5_sig4_mu3_ca2_sm1_rm4_ob1_im1_cm2_mm1_mo25_dw25_ex-28_obj1.39600674';
+            'SCvEM5_sig4_mu3_ca2_sm2_rm4_ob1_im1_cm2_mm1_mo25_dw25_ex-28_obj1.39504919';
+            'SCvEM5_sig4_mu4_ca2_sm1_rm4_ob1_im1_cm2_mm1_mo25_dw25_ex-28_obj1.39487324';
+            'SCvEM5_sig4_mu4_ca2_sm2_rm4_ob1_im1_cm2_mm1_mo25_dw25_ex-28_obj1.39401364';
+            'SCvEM5_sig4_mu5_ca2_sm1_rm4_ob1_im1_cm2_mm1_mo25_dw25_ex-28_obj1.38980249';
+            'SCvEM5_sig4_mu5_ca2_sm2_rm4_ob1_im1_cm2_mm1_mo25_dw25_ex-28_obj1.38900888';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'SCvEM5_sig4_mu3_ca2_sm1_rm4_ob1_im1_cm2_mm2_mo25_dw25_ex-28_obj1.28374272';
+            'SCvEM5_sig4_mu3_ca2_sm2_rm4_ob1_im1_cm2_mm2_mo25_dw25_ex-28_obj1.29211356';
+            'SCvEM5_sig4_mu4_ca2_sm1_rm4_ob1_im1_cm2_mm2_mo25_dw25_ex-28_obj1.28374272';
+            'SCvEM5_sig4_mu4_ca2_sm2_rm4_ob1_im1_cm2_mm2_mo25_dw25_ex-28_obj1.29211356';
+            'SCvEM5_sig4_mu5_ca2_sm1_rm4_ob1_im1_cm2_mm2_mo25_dw25_ex-28_obj1.26469079';
+            'SCvEM5_sig4_mu5_ca2_sm2_rm4_ob1_im1_cm2_mm2_mo25_dw25_ex-28_obj1.27156118';
+            'placeholder';
+            'placeholder';
+            'placeholder';
+            'placeholder';
          };     
 
      
@@ -279,19 +312,20 @@ SCmodelsFEV1Split = {
      
 fprintf('Pick Model set\n');
 fprintf('--------------\n');
-fprintf('1: Damian SC - vEM\n');
-fprintf('2: Damian SC - vEM2\n');
-fprintf('3: Damian SC - vEM3\n');
-fprintf('4: Damian SC - vEM4\n');
-fprintf('5: Damian SC - vEM3 with imputation\n');
-fprintf('6: Damian TM - vEM2\n');
-fprintf('7: Damian TM - vEM3\n');
-fprintf('8: Damian TM - vEM4\n');
-fprintf('9: Damian SC - vFEV1Split\n');
+fprintf(' 1: Damian SC - vEM\n');
+fprintf(' 2: Damian SC - vEM2\n');
+fprintf(' 3: Damian SC - vEM3\n');
+fprintf(' 4: Damian SC - vEM4\n');
+fprintf(' 5: Damian SC - vEM3 with imputation\n');
+fprintf(' 6: Damian TM - vEM2\n');
+fprintf(' 7: Damian TM - vEM3\n');
+fprintf(' 8: Damian TM - vEM4\n');
+fprintf(' 9: Damian SC - vFEV1Split\n');
+fprintf('10: Damian SC - vEM5\n');
 
-modelset = input('Choose model set (1-9) ');
+modelset = input('Choose model set (1-10) ');
 
-if modelset > 9
+if modelset > 10
     fprintf('Invalid choice\n');
     return;
 end
@@ -318,6 +352,8 @@ elseif modelset == 8
     models = TMmodelsVEM4;
 elseif modelset == 9
     models = SCmodelsFEV1Split;
+elseif modelset == 10
+    models = SCmodelsVEM5;
 else
     fprintf('Should not get here\n');
 end

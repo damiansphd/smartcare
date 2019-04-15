@@ -1,0 +1,25 @@
+function [meancurvesumsq, meancurvesum, meancurvecount] = amEMMCAddToMean(meancurvesumsq, meancurvesum, meancurvecount, ...
+    overall_pdoffset, amIntrCube, amHeldBackcube, currinter, min_offset, max_offset, align_wind, nmeasures, nlatentcurves)
+
+% amEMMCAddToMean - add an underlying curve to each set of mean curves (sumsq, sum and count)
+% to all possible offsets, weighted by the overall probability of each
+% offset/meancurve
+
+for n = 1:nlatentcurves
+    for offset = min_offset:max_offset-1
+        % place the current intervention curve into every possible offset
+        % position, weighted by the probability each offset position is the
+        % right one
+        for m = 1:nmeasures
+            for i = 1:(max_offset + align_wind - 1 - offset)
+                if (~isnan(amIntrCube(currinter, max_offset + align_wind - i, m)) && amHeldBackcube(currinter, max_offset + align_wind - i, m)==0)
+                    meancurvesumsq(n, max_offset + align_wind - offset - i, m) = meancurvesumsq(n, max_offset + align_wind - offset - i, m) + ((amIntrCube(currinter, max_offset + align_wind - i, m) ^ 2) * overall_pdoffset(n, currinter, offset + 1));
+                    meancurvesum(n, max_offset + align_wind - offset - i, m)   = meancurvesum(n, max_offset + align_wind - offset - i, m)   + (amIntrCube(currinter, max_offset + align_wind - i, m) * overall_pdoffset(n, currinter, offset + 1));
+                    meancurvecount(n, max_offset + align_wind - offset - i, m) = meancurvecount(n, max_offset + align_wind - offset - i, m) + overall_pdoffset(n, currinter, offset + 1);
+                end
+            end
+        end
+    end
+end
+
+end
