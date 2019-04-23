@@ -1,4 +1,4 @@
-function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, amInterventions, initial_offsets, ...
+function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, amInterventions, initial_offsets, initial_latentcurve, ...
     animatedmeancurvemean, profile_pre, animatedoffsets, hstg, pdoffset, overall_hstg, overall_pdoffset, animated_overall_pdoffset, ...
     isOutlier, pptsstruct, qual, min_offset, iter, run_type] = ...
     amEMMCAlignCurves(amIntrCube, amHeldBackcube, amInterventions, outprior, measures, normstd, max_offset, align_wind, ...
@@ -44,28 +44,53 @@ if runmode == 6
     tempamintr.Offset = amInterventions.Offset;
     tempamintr.LatentCurve = amInterventions.LatentCurve;
     amInterventions = tempamintr;
-else    
+elseif runmode == 7
+    run_type = 'O-Uniform LC-FEV1Split';
+    fprintf('Creating Upper and Lower 50%% splits for FEV1\n');
+    fprintf('Loading Predictive Model Patient Measures Stats\n');
+    basedir = setBaseDir();
+    subfolder = 'MatlabSavedVariables';
+    load(fullfile(basedir, subfolder, 'SCpredictivemodelinputs.mat'), 'pmPatientMeasStats');
+    npmpatients = size(unique(pmPatientMeasStats.PatientNbr),1);
+    mfev1idx  = measures.Index(ismember(measures.DisplayName, 'LungFunction'));
+    fev1max  = pmPatientMeasStats(pmPatientMeasStats.MeasureIndex == mfev1idx, {'PatientNbr', 'Study', 'ID', 'RobustMax'});
+    fev1max = sortrows(fev1max, {'RobustMax'}, 'ascend');
+    fev1max.NTile(:) = 0;
+    for i = 1:npmpatients
+        fev1max.NTile(i) = ceil((i * nlatentcurves)/ npmpatients);
+    end
+    fev1max = sortrows(fev1max, {'Study', 'ID'}, 'ascend');
+    lc = innerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'LeftVariables', {'SmartCareID'}, 'RightVariables', 'NTile');
+    amInterventions.Offset(:) = 0;
+    amInterventions.LatentCurve = lc.NTile;
+elseif runmode == 4 || runmode == 5    
     % populate pdoffset & overall_pdoffset with uniform prior distribution
     
     % *** need to initialise amInterventions.LatentCurve and also change how ***
     % *** the pdoffset and overall pdoffset are initialised to include extra ***
     % *** dimension ***
-    run_type = 'Uniform Start';
+    run_type = 'O-Uniform LC-Random';
     amInterventions.Offset(:) = 0;
     amInterventions.LatentCurve(:) = randi([1, nlatentcurves], [ninterventions, 1]);
-    for i = 1:ninterventions
-        for m = 1:nmeasures
-            pdoffset(amInterventions.LatentCurve(i), m, i, :) = amEMMCConvertFromLogSpaceAndNormalise(zeros(1, max_offset));
-        end
-        if runmode == 4
-            overall_pdoffset(amInterventions.LatentCurve(i), i,:) = amEMMCConvertFromLogSpaceAndNormalise(zeros(1, max_offset));
-        else
-            overall_pdoffset(:, i, :) = 0;
-            overall_pdoffset(amInterventions.LatentCurve, i, 1) = 1;
-        end
+else
+    fprintf('Unsupported runmode for this version of the alignment model\n');
+    return;
+end
+
+for i = 1:ninterventions
+    for m = 1:nmeasures
+        pdoffset(amInterventions.LatentCurve(i), m, i, :) = amEMMCConvertFromLogSpaceAndNormalise(zeros(1, max_offset));
+    end
+    if runmode == 5
+        overall_pdoffset(:, i, :) = 0;
+        overall_pdoffset(amInterventions.LatentCurve(i), i, 1) = 1;
+    else
+        overall_pdoffset(amInterventions.LatentCurve(i), i,:) = amEMMCConvertFromLogSpaceAndNormalise(zeros(1, max_offset));
     end
 end
+
 initial_offsets = amInterventions.Offset;
+initial_latentcurve = amInterventions.LatentCurve;
 
 animated_overall_pdoffset(:, :, :, 1) = overall_pdoffset;
 

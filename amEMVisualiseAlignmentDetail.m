@@ -94,7 +94,9 @@ for m = 1:nmeasures
     if isequal(run_type,'Best Alignment')
         bar([-1 * (max_offset + align_wind - 1): -1], max_points, 0.5, 'FaceColor', 'white', 'FaceAlpha', 0.1);
     end
+    hold on;
     bar([-1 * (max_offset + align_wind - 1): -1], meancurvecount(:, m), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.25, 'LineWidth', 0.2);
+    hold off;
     if isequal(run_type,'Best Alignment')
         ylim([0 max(max_points) * 4]);
     else

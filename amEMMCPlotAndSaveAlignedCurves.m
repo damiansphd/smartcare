@@ -14,7 +14,7 @@ for n = 1:nlatentcurves
     tmp_plotname = sprintf('%s C%d', plotname, n);
     
     amEMPlotAndSaveAlignedCurves(tmp_profile_pre, tmp_meancurvemean, tmp_meancurvecount, tmp_meancurvestd, ...
-            tmp_offsets, measures, max_points, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, sigmamethod, tmp_plotname, plotsubfolder);
+            tmp_offsets, measures, max_points(n, :), min_offset, max_offset, align_wind, nmeasures, run_type, ex_start(n), sigmamethod, tmp_plotname, plotsubfolder);
 end
 
 end

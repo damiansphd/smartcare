@@ -3,6 +3,7 @@ clear; close all; clc;
 RunParameterFiles = {  
             'SCRunParametersSingleMC1.xlsx';
             'SCRunParametersSingleMC2.xlsx';
+            'SCRunParametersSingleMC2 rm7.xlsx';
             'SCRunParametersMultipleMC.xlsx';
             };
 

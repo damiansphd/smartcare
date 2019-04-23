@@ -5,6 +5,9 @@ function [sorted_interventions, max_points] = amEMMCVisualiseAlignmentDetail(amI
 % amEMMCVisualiseAlignmentDetail - wrapper around the
 % amEMVisualiseAlignmentDetail to plot for each set of latent curves
 
+max_points = zeros(nlatentcurves, max_offset + align_wind - 1);
+sorted_interventions = struct('Curve', []);
+
 for n = 1:nlatentcurves
     tmp_meancurvemean    = reshape(meancurvemean(n, :, :),    [max_offset + align_wind - 1, nmeasures]);
     tmp_meancurvecount   = reshape(meancurvecount(n, :, :),   [max_offset + align_wind - 1, nmeasures]);
@@ -15,11 +18,14 @@ for n = 1:nlatentcurves
     
     tmp_plotname = sprintf('%s C%d', plotname, n);
     
-    [sorted_interventions, max_points] = amEMVisualiseAlignmentDetail(amIntrNormcube(tmp_idx, :, :), ... 
+    [tmp_sorted_interventions, max_points(n, :)] = amEMVisualiseAlignmentDetail(amIntrNormcube(tmp_idx, :, :), ... 
         amHeldBackcube(tmp_idx, :, :), amInterventions(tmp_idx, :), ...
-        tmp_meancurvemean, tmp_meancurvecount, tmp_meancurvestd, tmp_overall_pdoffset, ...
+        tmp_meancurvemean, tmp_meancurvecount, tmp_meancurvestd, tmp_overall_pdoffset(tmp_idx,:), ...
         measures, min_offset, max_offset, align_wind, nmeasures, tmp_ninterventions, ...
-        run_type, ex_start, curveaveragingmethod, tmp_plotname, plotsubfolder);
+        run_type, ex_start(n), curveaveragingmethod, tmp_plotname, plotsubfolder);
+    
+    sorted_interventions(n).Curve = table2array(tmp_sorted_interventions);
+    
 end
 
 end

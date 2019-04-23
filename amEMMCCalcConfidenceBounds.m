@@ -15,8 +15,6 @@ amInterventions.LowerBound2(:) = -1;
 amInterventions.UpperBound2(:) = -1;
 amInterventions.ConfidenceProb(:) = 0;
 
-
-
 for i = 1:ninterventions
     
     adjconfthreshold = confidencethreshold * sum(overall_pdoffset(amInterventions.LatentCurve(i), i, (min_offset + 1):max_offset));

@@ -1,5 +1,5 @@
 function ex_start = calcExStartFromTestLabels(amLabelledInterventions, amInterventions, ...
-    align_wind, max_offset, modelrun)
+    overall_pdoffset, max_offset, plotsubfolder, modelrun)
 
 % calcExStartFromTestLabels - derives the ex_start date for a given
 % alignment model run from the test labels.
@@ -13,7 +13,7 @@ name1 = sprintf('%s - Ex_Start from TestLabels', modelrun);
 
 
 [truevotes, falsevotes] = calcVotesArray(amLabelledInterventions, amInterventions, ...
-                                align_wind, max_offset);
+                                overall_pdoffset, max_offset);
 days = (-1 * (size(truevotes,2)):-1);
 thisplot = 1;
 ax1(thisplot) = subplot(plotsdown, plotsacross, thisplot, 'Parent',p1);
@@ -33,7 +33,7 @@ title(sprintf('ExStart true proportion votes by day - All %d Examples', size(amI
 
 idx = amLabelledInterventions.IncludeInTestSet == 'Y';
 [truevotes, falsevotes] = calcVotesArray(amLabelledInterventions(idx, :), amInterventions(idx, :), ...
-                                align_wind, max_offset);
+                                overall_pdoffset(idx, :), max_offset);
 days = (-1 * (size(truevotes,2)):-1);
 thisplot = thisplot + 1;
 ax1(thisplot) = subplot(plotsdown, plotsacross, thisplot, 'Parent',p1);
@@ -51,7 +51,7 @@ b = bar(ax1(thisplot), days, sum(truevotes) ./ (sum(truevotes) + sum(falsevotes)
 title(sprintf('ExStart true proportion votes by day (%d Test Set examples)', size(amInterventions(idx,:),1)));     
 
 basedir = setBaseDir();
-plotsubfolder = sprintf('Plots/%s',modelrun);
+%plotsubfolder = sprintf('Plots/%s', subfolder);
 savePlotInDir(f1, name1, plotsubfolder);
 close(f1);
     

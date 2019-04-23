@@ -21,13 +21,17 @@ fprintf('10: (*) Compare results for multiple model runs to labelled test data\n
 fprintf('11: (*) Compare results for multiple model runs\n');
 fprintf('12: (*) Plot simplified aligned curves\n');
 fprintf('13: (*) Plot Test Labels\n');
-fprintf('14: (*) Calc Ex Start from Test Labels\n');
+fprintf('14: Calc Ex Start from Test Labels\n');
+fprintf('15: Plot aligned curves\n');
+fprintf('16: Plot alignment detail\n');
+fprintf('17: Plot alignment surves side-by-side\n');
+fprintf('18: Plot robust FEV1 max vs latent curve allocation\n');
 fprintf('\n');
-runfunction = input('Choose function (1-14) ');
+runfunction = input('Choose function (1-18) ');
 
 fprintf('\n');
 
-if runfunction > 14
+if runfunction > 18
     fprintf('Invalid choice\n');
     return;
 end
@@ -213,8 +217,36 @@ elseif runfunction == 14
     load(fullfile(basedir, subfolder, inputfilename));
     fprintf('Calculating Ex_Start from Test Labels and Offsets\n');
     fprintf('\n');
-    derived_ex_start = calcExStartFromTestLabels(amLabelledInterventions, amInterventions, ...
-        align_wind, max_offset, modelrun);
+    derived_ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions, amInterventions, ...
+        overall_pdoffset, max_offset, sprintf('Plots/%s', modelrun), modelrun, ninterventions, nlatentcurves);
+elseif runfunction == 15
+    run_type = 'Best Alignment';
+    subfolder = 'Plots';
+    fprintf('Plotting aligned curves \n');
+    amEMMCPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, ...
+        amInterventions.Offset, amInterventions.LatentCurve, ...
+        measures, max_points, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, sigmamethod, plotname, plotsubfolder, nlatentcurves);
+elseif runfunction == 16
+    run_type = 'Best Alignment';
+    subfolder = 'Plots';
+    fprintf('Plotting alignment detail\n');
+    [sorted_interventions, max_points] = amEMMCVisualiseAlignmentDetail(amIntrNormcube, amHeldBackcube, amInterventions, meancurvemean, ...
+        meancurvecount, meancurvestd, overall_pdoffset, measures, min_offset, max_offset, align_wind, nmeasures, ninterventions, ...
+        run_type, ex_start, curveaveragingmethod, plotname, plotsubfolder, nlatentcurves);
+elseif runfunction == 17
+    run_type = 'Best Alignment';
+    subfolder = 'Plots';
+    fprintf('Plotting alignment curves side-by-side\n');
+    amEMMCPlotAlignedCurvesSideBySide(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, amInterventions.Offset, amInterventions.LatentCurve, ...
+        measures, max_points, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, sigmamethod, plotname, plotsubfolder, nlatentcurves);
+elseif runfunction == 18
+    fprintf('Loading Predictive Model Patient Measures Stats\n');
+    basedir = setBaseDir();
+    subfolder = 'MatlabSavedVariables';
+    load(fullfile(basedir, subfolder, 'SCpredictivemodelinputs.mat'), 'pmPatientMeasStats');
+    fprintf('Plotting robust FEV1 max vs latent curve allocation\n');
+    amEMMCPlotFEV1VsLatentCurveSet(amInterventions, initial_latentcurve, pmPatientMeasStats, ...
+        measures, plotname, plotsubfolder, nlatentcurves);
 else
     fprintf('Should not get here....\n');
 end

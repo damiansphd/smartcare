@@ -1,6 +1,6 @@
 function amEMMCPlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, ...
     overall_pdoffset, hstg, overall_hist, meancurvemean, normmean, normstd, isOutlier, ...
-    ex_start, thisinter, nmeasures, max_offset, align_wind, sigmamethod, plotname, plotsubfolder)
+    ex_start_array, thisinter, nmeasures, max_offset, align_wind, sigmamethod, plotname, plotsubfolder)
 
 % amEMMCPlotsAndSavePredictions - plots measures prior to
 % treatment with alignment model predictions and overlaid with the mean
@@ -17,6 +17,7 @@ anchor = 0; % latent curve is to be shifted by offset on the plot
 
 scid = amInterventions.SmartCareID(thisinter);
 lc = amInterventions.LatentCurve(thisinter);
+ex_start = ex_start_array(lc);
 noutliers = sum(sum(isOutlier(lc, thisinter, :, :, amInterventions.Offset(thisinter) + 1)));
 name = sprintf('%s-%d_ID_%d_Dt_%s_Off_%d_C%d_Out_%d', plotname, thisinter, ...
     scid, datestr(amInterventions.IVStartDate(thisinter),29), amInterventions.Offset(thisinter), amInterventions.LatentCurve(thisinter), noutliers);

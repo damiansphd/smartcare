@@ -5,10 +5,10 @@ function runAlignmentModelEMMCFcn(amRunParameters)
 % curves
 
 % set the various model run parameters
-[mversion, study, modelinputsmatfile, datademographicsfile, dataoutliersfile, ...
+[mversion, study, modelinputsmatfile, datademographicsfile, dataoutliersfile, labelledinterventionsfile, ...
     sigmamethod, mumethod, curveaveragingmethod, smoothingmethod, ...
     measuresmask, runmode, modelrun, imputationmode, confidencemode, printpredictions, ...
-    max_offset, align_wind, ex_start, outprior, heldbackpct, confidencethreshold, nlatentcurves] ...
+    max_offset, align_wind, outprior, heldbackpct, confidencethreshold, nlatentcurves] ...
     = amEMMCSetModelRunParametersFromTable(amRunParameters);
 
 fprintf('Running Alignment Model %s\n', mversion);
@@ -25,6 +25,8 @@ fprintf('Loading datademographics by patient\n');
 load(fullfile(basedir, subfolder, datademographicsfile));
 fprintf('Loading data outliers\n');
 load(fullfile(basedir, subfolder, dataoutliersfile));
+fprintf('Loading latest labelled test data file\n');
+load(fullfile(basedir, subfolder, labelledinterventionsfile));
 toc
 
 tic
@@ -69,8 +71,8 @@ fprintf('\n');
 tic
 fprintf('Running alignment\n');
 
-[meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, amInterventions, initial_offsets, animatedmeancurvemean, profile_pre, ...
-    animatedoffsets, hstg, pdoffset, overall_hist, overall_pdoffset, animated_overall_pdoffset, ...
+[meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, amInterventions, initial_offsets, initial_latentcurve, ...
+    animatedmeancurvemean, profile_pre, animatedoffsets, hstg, pdoffset, overall_hist, overall_pdoffset, animated_overall_pdoffset, ...
     isOutlier, pptsstruct, qual, min_offset, niterations, run_type] = amEMMCAlignCurves(amIntrNormcube, amHeldBackcube, amInterventions, ...
     outprior, measures, normstd, max_offset, align_wind, nmeasures, ninterventions, nlatentcurves, ...
     detaillog, sigmamethod, smoothingmethod, runmode, fnmodelrun);
@@ -81,25 +83,32 @@ fprintf('%s - ErrFcn = %.8f\n', run_type, qual);
 unaligned_profile = profile_pre;
 
 plotname = sprintf('%s_obj%.8f', baseplotname, qual);
+temp_max_points = zeros(nlatentcurves, 1);
+temp_ex_start   = zeros(1, nlatentcurves);
 
 % plot and save aligned curves (pre and post)
 amEMMCPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, ...
     amInterventions.Offset, amInterventions.LatentCurve, ...
-    measures, 0, min_offset, max_offset, align_wind, nmeasures, run_type, 0, sigmamethod, plotname, 'Plots', nlatentcurves);
+    measures, temp_max_points, min_offset, max_offset, align_wind, nmeasures, run_type, temp_ex_start, sigmamethod, plotname, 'Plots', nlatentcurves);
 
 toc
 fprintf('\n');
 
-if ex_start == 0
-    ex_start = input('Look at best start and enter exacerbation start: ');
-    fprintf('\n');
-end
+%if ex_start == 0
+%    ex_start = input('Look at best start and enter exacerbation start: ');
+%    fprintf('\n');
+%end
+
+ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions, amInterventions, ...
+        overall_pdoffset, max_offset, 'Plots', plotname, ninterventions, nlatentcurves);
 
 tic
 run_type = 'Best Alignment';
-plotname = sprintf('%s_ex%d_obj%.8f', baseplotname, ex_start, qual);
+ex_text = sprintf('%d', ex_start);
+plotname = sprintf('%s_ex%s_obj%.8f', baseplotname, ex_text, qual);
 plotsubfolder = strcat('Plots', '/', plotname);
 mkdir(strcat(basedir, plotsubfolder));
+%strcat(measures.ShortName{logical(measures.RawMeas)})
 
 [amInterventions] = amEMMCCalcConfidenceBounds(overall_pdoffset, amInterventions, min_offset, max_offset, ninterventions, confidencethreshold, confidencemode);
 
@@ -133,14 +142,14 @@ fprintf('\n');
 save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube', 'amIntrNormcube', ...
     'amHeldBackcube', 'amImputedCube', 'imputedscore', 'amInterventions', ...
     'meancurvesumsq', 'meancurvesum', 'meancurvecount', 'meancurvemean', 'meancurvestd', 'animatedmeancurvemean', ...
-    'initial_offsets', 'animatedoffsets', 'qual', 'unaligned_profile', ...
+    'initial_offsets', 'initial_latentcurve', 'animatedoffsets', 'qual', 'unaligned_profile', ...
     'hstg', 'pdoffset', 'overall_hist', 'overall_pdoffset', 'animated_overall_pdoffset', ...
     'pptsstruct', 'isOutlier', 'outprior', 'totaloutliers', 'totalpoints', ...
-    'sorted_interventions', 'normmean', 'normstd', 'measures', 'baseplotname', 'plotname', 'plotsubfolder', ...
+    'sorted_interventions', 'max_points', 'normmean', 'normstd', 'measures', 'baseplotname', 'plotname', 'plotsubfolder', ...
     'study', 'mversion', 'min_offset', 'max_offset', 'align_wind', 'ex_start', 'confidencethreshold', ...
     'sigmamethod', 'mumethod', 'curveaveragingmethod', 'smoothingmethod', ...
     'measuresmask', 'runmode', 'imputationmode', 'confidencemode', 'printpredictions', ...
-    'nmeasures', 'ninterventions', 'niterations');
+    'nmeasures', 'ninterventions', 'niterations', 'nlatentcurves');
 toc
 fprintf('\n');
 

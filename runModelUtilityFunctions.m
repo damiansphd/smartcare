@@ -212,7 +212,7 @@ elseif runfunction == 14
     fprintf('Calculating Ex_Start from Test Labels and Offsets\n');
     fprintf('\n');
     derived_ex_start = calcExStartFromTestLabels(amLabelledInterventions, amInterventions, ...
-        align_wind, max_offset, modelrun);
+        overall_pdoffset, max_offset, modelrun, modelrun);
 else
     fprintf('Should not get here....\n');
 end
