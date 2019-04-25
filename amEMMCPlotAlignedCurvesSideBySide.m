@@ -28,11 +28,24 @@ end
 
 
 for m = 1:nmeasures
+    yl = [min(min(meancurvemean(:, :, m) - meancurvestd(:, :, m))), max(max(meancurvemean(:, :, m) + meancurvestd(:, :, m)))];
+    if yl(1) < 0
+        yl(1) = yl(1) * 1.01;
+    else
+        yl(1) = yl(1) * .99;
+    end
+    if yl(2) > 0
+        yl(2) = yl(2) * 1.01;
+    else
+        yl(2) = yl(2) * .99;
+    end
     for n = 1:nlatentcurves
         subplottitle = sprintf('%s: C%d', measures.DisplayName{m}, n);
         ax = subplot(plotsdown,plotsacross,thisplot,'Parent',p);
         amEMPlotAlignedCurve(ax, profile_pre(n, :, m), meancurvemean(n, :, m), meancurvecount(n, :, m), meancurvestd(n, :, m), ...
-            measures(m, :), max_points(n, :), min_offset, max_offset, align_wind, run_type, ex_start, sigmamethod, anchor, subplottitle);
+            measures(m, :), max_points(n, :), min_offset, max_offset, align_wind, run_type, ex_start(n), sigmamethod, anchor, subplottitle);
+        yyaxis left;
+        ylim(ax, yl);
         thisplot = thisplot + 1;
         if thisplot > (plotsacross * plotsdown)
             thispage = thispage + 1;

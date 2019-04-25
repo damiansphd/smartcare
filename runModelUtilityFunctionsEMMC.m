@@ -9,15 +9,15 @@ fprintf('\n');
 fprintf('Choose function to run\n');
 fprintf('----------------------\n');
 fprintf(' 1: Run prediction plots\n');
-fprintf(' 2: (*) Run alignment animation (concurrent)\n');
+fprintf(' 2: Run alignment animation (concurrent)\n');
 fprintf(' 3: (*) Run alignment animation (sequential)\n');
-fprintf(' 4: (*) Run prod dist animation (concurrent)\n');
+fprintf(' 4: Run prod dist animation (concurrent)\n');
 fprintf(' 5: (*) Extract and save prob distributions\n');
 fprintf(' 6: (*) Label exacerbation plots for test data\n');
 fprintf(' 7: (*) Compare results to another model run\n');
 fprintf(' 8: (*) Compare results to labelled test data and plot results\n');
 fprintf(' 9: (*) <placeholder for Dragos new option\n');
-fprintf('10: (*) Compare results for multiple model runs to labelled test data\n');
+fprintf('10: Compare results for multiple model runs to labelled test data\n');
 fprintf('11: (*) Compare results for multiple model runs\n');
 fprintf('12: (*) Plot simplified aligned curves\n');
 fprintf('13: (*) Plot Test Labels\n');
@@ -26,12 +26,13 @@ fprintf('15: Plot aligned curves\n');
 fprintf('16: Plot alignment detail\n');
 fprintf('17: Plot alignment surves side-by-side\n');
 fprintf('18: Plot robust FEV1 max vs latent curve allocation\n');
+fprintf('19: Plot interventions over time by latent curve set\n');
 fprintf('\n');
-runfunction = input('Choose function (1-18) ');
+runfunction = input('Choose function (1-19) ');
 
 fprintf('\n');
 
-if runfunction > 18
+if runfunction > 19
     fprintf('Invalid choice\n');
     return;
 end
@@ -71,8 +72,9 @@ elseif runfunction == 2
     subfolder = 'AnimatedPlots';
     fprintf('Running concurrent alignment animation\n');
     moviefilename = sprintf('%s-ConcurrentAlignment', modelrun);
-    [f, p, niterations] = animatedAlignmentConcurrent(animatedmeancurvemean, animatedoffsets, animated_overall_pdoffset, ...
-        unaligned_profile, measures, max_offset, align_wind, nmeasures, ninterventions, runmode, fullfile(basedir, subfolder, moviefilename));
+    animatedlc = 0; % just until i rerun the model to save this variable
+    [f, p, niterations] = amEMMCAnimatedAlignmentConcurrent(animatedmeancurvemean, animatedoffsets, animatedlc, animated_overall_pdoffset, ...
+        unaligned_profile, measures, max_offset, align_wind, nmeasures, ninterventions, nlatentcurves, runmode, fullfile(basedir, subfolder, moviefilename));
     toc
     fprintf('\n');
 elseif runfunction == 3
@@ -89,8 +91,8 @@ elseif runfunction == 4
     fprintf('Running concurrent prod distribution animation\n');
     subfolder = 'AnimatedPlots';
     moviefilename = sprintf('%s-ProbDistribution', modelrun);
-    [f, p, niterations] = animatedProbDistConcurrent(animated_overall_pdoffset, max_offset, ninterventions, ...
-        fullfile(basedir, subfolder, moviefilename));
+    [f, p, niterations] = amEMMCAnimatedProbDistConcurrent(animated_overall_pdoffset, max_offset, ninterventions, ...
+        nlatentcurves, fullfile(basedir, subfolder, moviefilename));
     toc
     fprintf('\n');
 elseif runfunction == 5
@@ -181,8 +183,8 @@ elseif runfunction == 8
     subfolder = 'MatlabSavedVariables';
     testdatafilename = sprintf('%s_LabelledInterventions.mat', study);
     load(fullfile(basedir, subfolder, testdatafilename));
-    compareModelRunToTestData(amLabelledInterventions, amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, hstg, overall_hist, ...
-        meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, min_offset, max_offset, align_wind, study, mversion, modelrun, modelidx);
+    amEMMCCompareModelRunToTestData(amLabelledInterventions, amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, hstg, overall_hist, ...
+        meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, nlatentcurves, max_offset, align_wind, study, mversion, modelrun, modelidx);
 elseif runfunction == 9
     fprintf('<placeholder for Dragos new option>\n');
 elseif runfunction == 10
@@ -191,7 +193,7 @@ elseif runfunction == 10
     subfolder = 'MatlabSavedVariables';
     testdatafilename = sprintf('%s_LabelledInterventions.mat', study);
     load(fullfile(basedir, subfolder, testdatafilename));
-    compareMultipleModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models);
+    amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models);
 elseif runfunction == 11
     fprintf('Comparing results of multiple model runs\n');
     fprintf('\n');
@@ -247,6 +249,13 @@ elseif runfunction == 18
     fprintf('Plotting robust FEV1 max vs latent curve allocation\n');
     amEMMCPlotFEV1VsLatentCurveSet(amInterventions, initial_latentcurve, pmPatientMeasStats, ...
         measures, plotname, plotsubfolder, nlatentcurves);
+elseif runfunction == 19
+    fprintf('Loading Predictive Model Patient Measures Stats\n');
+    basedir = setBaseDir();
+    subfolder = 'MatlabSavedVariables';
+    load(fullfile(basedir, subfolder, 'SCpredictivemodelinputs.mat'), 'pmPatients', 'pmAntibiotics', 'pmAMPred', 'pmPatientMeasStats', 'npatients', 'maxdays');
+    fprintf('Plotting interventions over time by latent curve set\n');
+    amEMMCPlotInterventionsByLatentCurveSet(pmPatients, pmAntibiotics, amInterventions, npatients, maxdays, plotname, plotsubfolder);
 else
     fprintf('Should not get here....\n');
 end

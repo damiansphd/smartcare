@@ -23,14 +23,18 @@ lc = innerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys
 thisplot    = 1;
 ax = subplot(plotsdown,plotsacross,thisplot,'Parent',p);
 scatter(ax, lc.InitialLC, lc.RobustMax, pointsize, lc.InitialLC, 'MarkerFaceAlpha', 0.3);
-title(ax, 'Initial Latent Curve', 'FontSize', 8);
+title(ax, 'Initial State', 'FontSize', 8);
 xlim(ax, [0 nlatentcurves + 1]);
+xlabel(ax, 'Latent Curve Set');
+ylabel(ax, 'Patient FEV1 Robust Max');
 
 thisplot = thisplot + 1; 
 ax = subplot(plotsdown,plotsacross,thisplot,'Parent',p);
 scatter(ax, lc.LatentCurve, lc.RobustMax, pointsize, lc.LatentCurve, 'MarkerFaceAlpha', 0.3);
-title(ax, 'Final Latent Curve', 'FontSize', 8);
+title(ax, 'Final State', 'FontSize', 8);
 xlim(ax, [0 nlatentcurves + 1]);
+xlabel(ax, 'Latent Curve Set');
+ylabel(ax, 'Patient FEV1 Robust Max');
 
 % save plot
 savePlotInDir(f, plottitle, plotsubfolder);
