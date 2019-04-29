@@ -1,4 +1,4 @@
-function amEMMCPlotInterventionsByLatentCurveSet(pmPatients, pmAntibiotics, amInterventions, npatients, maxdays, plotname, plotsubfolder)
+function amEMMCPlotInterventionsByLatentCurveSet(pmPatients, pmAntibiotics, amInterventions, npatients, maxdays, plotname, plotsubfolder, nlatentcurves)
 
 % amEMMCPlotInterventionsByLatentCurveSet - plots interventions and
 % treatments over time for all patients, and colour codes the treatments by
@@ -23,19 +23,25 @@ for p = 1:npatients
         if size(ampredidx,1)~=0 && ...
                 (d >= ampredrows.Pred(ampredidx) && ...
                  d < ampredrows.IVScaledDateNum(ampredidx))
-            intrarray(p, d) = 2 + ampredrows.LatentCurve(ampredidx);
+            intrarray(p, d) = 3 + ampredrows.LatentCurve(ampredidx);
         end
         if d == prellastmday + 1
-            intrarray(p, d) = 5;
+            intrarray(p, d) = 3;
         end
+        
     end
 end
 
-colors(1,:) = [1    1    1];
-colors(2,:) = [0.85 0.85 0.85];   
-colors(3,:) = [0    1    0];
-colors(4,:) = [0    0    1];
-colors(5,:) = [0    0    0];
+colors(1,:) = [1    1    1];      % white = background
+colors(2,:) = [0.85 0.85 0.85];   % grey  = treatments 
+colors(3,:) = [0    0    0];      % black = end of patient measurement period
+colors(4,:) = [0    1    0];      % green = latent curve set 1
+if nlatentcurves > 1
+    colors(5,:) = [0    0    1];  % blue  = latent curve set 2
+end
+if nlatentcurves > 2
+    colors(6,:) = [1    0    0];  % red   = latent curve set 3
+end
 
 plottitle = sprintf('%s - Intr vs LatentCurveSet', plotname);
 [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');

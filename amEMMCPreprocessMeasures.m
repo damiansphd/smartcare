@@ -22,6 +22,9 @@ elseif measuresmask == 2
 elseif measuresmask == 3
     idx = ~ismember(measures.DisplayName, {'Activity', 'LungFunction'});
     measures.Mask(idx) = 1;
+elseif measuresmask == 4
+    idx = ~ismember(measures.DisplayName, {'Activity', 'Weight'});
+    measures.Mask(idx) = 1;
 else
     % shouldn't ever get here - but default to just cough if it ever
     % happens

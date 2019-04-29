@@ -1,18 +1,18 @@
 clear; close all; clc;
 
-RunParameterFiles = {  
-            'SCRunParametersSingleMC1.xlsx';
-            'SCRunParametersSingleMC2.xlsx';
-            'SCRunParametersSingleMC2 rm7.xlsx';
-            'SCRunParametersMultipleMC.xlsx';
-            };
-
+basedir = setBaseDir();
+subfolder = 'DataFiles';
+runparamlisting = dir(fullfile(basedir, subfolder, sprintf('*RunParameters*.xlsx')));
+RunParameterFiles = cell(size(runparamlisting,1),1);
+for a = 1:size(RunParameterFiles,1)
+    RunParameterFiles{a} = runparamlisting(a).name;
+end
 
 nfiles = size(RunParameterFiles,1);
 fprintf('Run parameter files available\n');
 fprintf('-----------------------------\n');
 for i = 1:nfiles
-    fprintf('%d: %s\n', i, RunParameterFiles{i});
+    fprintf('%2d: %s\n', i, RunParameterFiles{i});
 end
 fprintf('\n');
 

@@ -7,7 +7,13 @@ function amEMMCPlotFEV1VsLatentCurveSet(amInterventions, initial_latentcurve, pm
 plotsacross = 1;
 plotsdown   = 2;
 pointsize = 36;
-cmap = [0, 0, 1 ; 1, 0 , 0 ; 0, 1, 0 ; 1, 0, 1 ; 0 , 0, 0];
+if nlatentcurves == 2
+    cmap = [0, 1, 0 ; 0, 0, 1 ];
+elseif nlatentcurves == 3
+    cmap = [0, 1, 0 ; 0, 0, 1 ; 1, 0, 0 ];
+else
+    fprintf('Add more colours to the palette\n');
+end
 
 plottitle = sprintf('%s - FEV1 vs Latent Curve Set', plotname);
 [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');

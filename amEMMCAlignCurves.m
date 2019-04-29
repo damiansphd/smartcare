@@ -33,19 +33,25 @@ if runmode == 6
     % *** need to initialise amInterventions.LatentCurve and also change how ***
     % *** the pdoffset and overall pdoffset are initialised to include extra ***
     % *** dimension ***
-    run_type = 'Pre-selected Start';
+    %run_type = 'Pre-selected Start';
     % save off amInterventions so it doesn't get overwritten
-    tempamintr = amInterventions;
-    load(fnmodelrun, 'overall_hist', 'amInterventions');
-    overall_hstg = overall_hist;
-    for i = 1:ninterventions
-        overall_pdoffset(i,:) = convertFromLogSpaceAndNormalise(overall_hstg(i,:));
+    %tempamintr = amInterventions;
+    %load(fnmodelrun, 'overall_hist', 'amInterventions');
+    %overall_hstg = overall_hist;
+    %for i = 1:ninterventions
+    %    overall_pdoffset(i,:) = convertFromLogSpaceAndNormalise(overall_hstg(i,:));
+    %end
+    %tempamintr.Offset = amInterventions.Offset;
+    %tempamintr.LatentCurve = amInterventions.LatentCurve;
+    %amInterventions = tempamintr;
+elseif runmode == 7 || 8
+    if runmode == 7 
+        run_type = 'O-Uniform LC-FEV1Split';
+        ntiles = nlatentcurves;
+    else
+        run_type = 'O-Uniform LC-Elec_ FEV1Split';
+        ntiles = nlatentcurves - 1;
     end
-    tempamintr.Offset = amInterventions.Offset;
-    tempamintr.LatentCurve = amInterventions.LatentCurve;
-    amInterventions = tempamintr;
-elseif runmode == 7
-    run_type = 'O-Uniform LC-FEV1Split';
     fprintf('Creating Upper and Lower 50%% splits for FEV1\n');
     fprintf('Loading Predictive Model Patient Measures Stats\n');
     basedir = setBaseDir();
@@ -57,12 +63,20 @@ elseif runmode == 7
     fev1max = sortrows(fev1max, {'RobustMax'}, 'ascend');
     fev1max.NTile(:) = 0;
     for i = 1:npmpatients
-        fev1max.NTile(i) = ceil((i * nlatentcurves)/ npmpatients);
+        fev1max.NTile(i) = ceil((i * ntiles)/ npmpatients);
     end
     fev1max = sortrows(fev1max, {'Study', 'ID'}, 'ascend');
     lc = innerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'LeftVariables', {'SmartCareID'}, 'RightVariables', 'NTile');
     amInterventions.Offset(:) = 0;
     amInterventions.LatentCurve = lc.NTile;
+    if runmode == 8
+        fprintf('Loading Elective Treatment file\n');
+        basedir = setBaseDir();
+        pmElectiveTreatments = readtable(fullfile(basedir, 'DataFiles', 'SCelectivetreatments.xlsx'));
+        pmElectiveTreatments.ElectiveTreatment(:) = 'Y';
+        amInterventions = outerjoin(amInterventions, pmElectiveTreatments, 'LeftKeys', {'SmartCareID', 'Hospital', 'IVScaledDateNum'}, 'RightKeys', {'ID', 'Hospital', 'IVScaledDateNum'}, 'RightVariables', {'ElectiveTreatment'});
+        amInterventions.LatentCurve(amInterventions.ElectiveTreatment == 'Y') = ntiles + 1;   
+    end    
 elseif runmode == 4 || runmode == 5    
     % populate pdoffset & overall_pdoffset with uniform prior distribution
     
@@ -109,13 +123,13 @@ profile_pre = meancurvemean;
 pnt = 1;
 cnt = 0;
 iter = 0;
-pddiff = 100;
+smmpddiff = 100;
 pddiffthreshold = 0.00001;
 maxiterations = 200;
 prior_overall_pdoffset = overall_pdoffset;
 miniiter = 0;
 
-while (pddiff > pddiffthreshold && iter < maxiterations)
+while (smmpddiff > pddiffthreshold && iter < maxiterations)
     ok = 1;
     
     % remove current curve from the sum, sumsq, count average curve arrays 
@@ -183,7 +197,7 @@ while (pddiff > pddiffthreshold && iter < maxiterations)
             fprintf('Exceeded storage for animated iterations\n');
         end
         
-        pddiff = amEMMCCalcDiffOverallPD(overall_pdoffset, prior_overall_pdoffset);
+        [smmpddiff, ssspddiff] = amEMMCCalcDiffOverallPD(overall_pdoffset, prior_overall_pdoffset);
         % compute the overall objective function each time we've iterated
         % through the full set of interventions
         % ** don't update the histogram here to avoid double counting on the best
@@ -216,9 +230,9 @@ while (pddiff > pddiffthreshold && iter < maxiterations)
         qual = qual / qualcount;
         
         if cnt == 0
-            fprintf('No changes on iteration %2d, obj fcn = %.8f, prob distrib diff = %.6f\n', iter, qual, pddiff);
+            fprintf('No changes on iteration %2d, obj fcn = %.8f, prob distrib diff: smm = %.6f sss = %.6f\n', iter, qual, smmpddiff, ssspddiff);
         else
-            fprintf('Changed %2d offsets on iteration %2d, obj fcn = %.8f, prob distrib diff = %.6f\n', cnt, iter, qual, pddiff);
+            fprintf('Changed %2d offsets on iteration %2d, obj fcn = %.8f, prob distrib diff: smm = %.6f sss = %.6f\n', cnt, iter, qual, smmpddiff, ssspddiff);
         end
         cnt = 0;
         prior_overall_pdoffset = overall_pdoffset;

@@ -1,6 +1,6 @@
 function amEMMCCompareModelRunToTestData(amLabelledInterventions, amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, ...
     hstg, overall_hist, meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, nlatentcurves, max_offset, ...
-    align_wind, study, mversion, modelrun, modelidx)
+    align_wind, sigmamethod, study, mversion, modelrun, modelidx)
 
 % amEMMCCompareModelRunToTestData - compares the output of a chosen model run to
 % the labelled test data (able to handle multiple sets of latent curves
@@ -84,7 +84,12 @@ for i = 1:testsetsize
             continue;
         end
         
-        adjmeancurvemean = (meancurvemean(lc, :,m) * normstd(thisinter, m)) + normmean(thisinter, m);
+        if sigmamethod == 4
+            adjmeancurvemean = (meancurvemean(lc, :, m) * normstd(thisinter, m)) + normmean(thisinter, m);
+        else
+            adjmeancurvemean =  meancurvemean(lc, :, m) + normmean1(thisinter, m);
+        end
+        %adjmeancurvemean = (meancurvemean(lc, :, m) * normstd(thisinter, m)) + normmean(thisinter, m);
         
         % initialise plot areas
         xl = [0 0];

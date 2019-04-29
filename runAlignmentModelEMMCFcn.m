@@ -80,7 +80,26 @@ fprintf('%s - ErrFcn = %.8f\n', run_type, qual);
 
 % save the zero offset pre-profile to unaligned_profile so all plots show a
 % consistent unaligned curve as the pre-profile.
-unaligned_profile = profile_pre;
+% *** updated to use final curve set assignment with initial uniform offset
+% distribution for this ***
+% unaligned_profile = profile_pre;
+tmp_meancurvesum      = zeros(nlatentcurves, max_offset + align_wind - 1, nmeasures);
+tmp_meancurvesumsq    = zeros(nlatentcurves, max_offset + align_wind - 1, nmeasures);
+tmp_meancurvecount    = zeros(nlatentcurves, max_offset + align_wind - 1, nmeasures);
+tmp_overall_pdoffset  = zeros(nlatentcurves, ninterventions, max_offset);
+for i = 1:ninterventions
+    if runmode == 5
+        tmp_overall_pdoffset(:, i, :) = 0;
+        tmp_overall_pdoffset(amInterventions.LatentCurve(i), i, 1) = 1;
+    else
+        tmp_overall_pdoffset(amInterventions.LatentCurve(i), i,:) = amEMMCConvertFromLogSpaceAndNormalise(zeros(1, max_offset));
+    end
+end
+for i = 1:ninterventions
+    [tmp_meancurvesumsq, tmp_meancurvesum, tmp_meancurvecount] = amEMMCAddToMean(tmp_meancurvesumsq, tmp_meancurvesum, tmp_meancurvecount, ...
+        tmp_overall_pdoffset, amIntrNormcube, amHeldBackcube, i, min_offset, max_offset, align_wind, nmeasures, nlatentcurves);
+end
+[unaligned_profile, ~] = amEMMCCalcMeanAndStd(tmp_meancurvesumsq, tmp_meancurvesum, tmp_meancurvecount, min_offset, max_offset, align_wind);
 
 plotname = sprintf('%s_obj%.8f', baseplotname, qual);
 temp_max_points = zeros(nlatentcurves, 1);

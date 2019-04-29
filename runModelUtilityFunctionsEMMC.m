@@ -14,8 +14,8 @@ fprintf(' 3: (*) Run alignment animation (sequential)\n');
 fprintf(' 4: Run prod dist animation (concurrent)\n');
 fprintf(' 5: (*) Extract and save prob distributions\n');
 fprintf(' 6: (*) Label exacerbation plots for test data\n');
-fprintf(' 7: (*) Compare results to another model run\n');
-fprintf(' 8: (*) Compare results to labelled test data and plot results\n');
+fprintf(' 7: Compare results to another model run\n');
+fprintf(' 8: Compare results to labelled test data and plot results\n');
 fprintf(' 9: (*) <placeholder for Dragos new option\n');
 fprintf('10: Compare results for multiple model runs to labelled test data\n');
 fprintf('11: (*) Compare results for multiple model runs\n');
@@ -175,8 +175,8 @@ elseif runfunction == 7
     fprintf('\n');
     fprintf('Select second model to compare\n');
     fprintf('\n');
-    [modelrun2, modelidx2] = selectModelRunFromList('');
-    compareModelRuns(modelrun, modelidx, modelrun2, modelidx2);
+    [modelrun2, modelidx2] = amEMMCSelectModelRunFromList('');
+    amEMMCCompareModelRuns(modelrun, modelidx, modelrun2, modelidx2);
 elseif runfunction == 8
     fprintf('Comparing results to the labelled test data\n');
     fprintf('\n');
@@ -184,7 +184,7 @@ elseif runfunction == 8
     testdatafilename = sprintf('%s_LabelledInterventions.mat', study);
     load(fullfile(basedir, subfolder, testdatafilename));
     amEMMCCompareModelRunToTestData(amLabelledInterventions, amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, hstg, overall_hist, ...
-        meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, nlatentcurves, max_offset, align_wind, study, mversion, modelrun, modelidx);
+        meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, nlatentcurves, max_offset, align_wind, sigmamethod, study, mversion, modelrun, modelidx);
 elseif runfunction == 9
     fprintf('<placeholder for Dragos new option>\n');
 elseif runfunction == 10
@@ -255,7 +255,7 @@ elseif runfunction == 19
     subfolder = 'MatlabSavedVariables';
     load(fullfile(basedir, subfolder, 'SCpredictivemodelinputs.mat'), 'pmPatients', 'pmAntibiotics', 'pmAMPred', 'pmPatientMeasStats', 'npatients', 'maxdays');
     fprintf('Plotting interventions over time by latent curve set\n');
-    amEMMCPlotInterventionsByLatentCurveSet(pmPatients, pmAntibiotics, amInterventions, npatients, maxdays, plotname, plotsubfolder);
+    amEMMCPlotInterventionsByLatentCurveSet(pmPatients, pmAntibiotics, amInterventions, npatients, maxdays, plotname, plotsubfolder, nlatentcurves);
 else
     fprintf('Should not get here....\n');
 end
