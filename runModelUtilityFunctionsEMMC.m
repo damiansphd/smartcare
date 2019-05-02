@@ -25,14 +25,15 @@ fprintf('14: Calc Ex Start from Test Labels\n');
 fprintf('15: Plot aligned curves\n');
 fprintf('16: Plot alignment detail\n');
 fprintf('17: Plot alignment surves side-by-side\n');
-fprintf('18: Plot robust FEV1 max vs latent curve allocation\n');
+fprintf('18: Plot variables vs latent curve assignment\n');
 fprintf('19: Plot interventions over time by latent curve set\n');
+fprintf('20: Load variables for a given model run\n');
 fprintf('\n');
-runfunction = input('Choose function (1-19) ');
+runfunction = input('Choose function (1-20): ');
 
 fprintf('\n');
 
-if runfunction > 19
+if runfunction > 20
     fprintf('Invalid choice\n');
     return;
 end
@@ -41,7 +42,7 @@ if isequal(runfunction,'')
     return;
 end
 
-[modelrun, modelidx, models] = amEMMCSelectModelRunFromList('');
+[modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('');
 
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
@@ -245,10 +246,25 @@ elseif runfunction == 18
     fprintf('Loading Predictive Model Patient Measures Stats\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
-    load(fullfile(basedir, subfolder, 'SCpredictivemodelinputs.mat'), 'pmPatientMeasStats');
-    fprintf('Plotting robust FEV1 max vs latent curve allocation\n');
-    amEMMCPlotFEV1VsLatentCurveSet(amInterventions, initial_latentcurve, pmPatientMeasStats, ...
-        measures, plotname, plotsubfolder, nlatentcurves);
+    load(fullfile(basedir, subfolder, 'SCpredictivemodelinputs.mat'), 'pmPatients', 'pmPatientMeasStats');
+    if ismember(study, 'SC')
+        clinicalmatfile   = 'clinicaldata.mat';
+        microbiologytable = 'cdMicrobiology';
+    elseif ismember(study, 'TM');
+        clinicalmatfile   = 'telemedclinicaldata.mat';
+        microbiologytable = 'tmMicrobiology';
+    else
+        fprintf('Invalid study\n');
+        return;
+    end
+    fprintf('Loading clinical microbiology data\n');
+    load(fullfile(basedir, subfolder, clinicalmatfile), microbiologytable);
+    if ismember(study, 'TM')
+        cdMicrobiology = tmMicrobiology;
+    end
+    fprintf('Plotting Variables vs latent curve allocation\n');
+    amEMMCPlotVariablesVsLatentCurveSet(amInterventions, initial_latentcurve, pmPatients, pmPatientMeasStats, ...
+        cdMicrobiology, measures, plotname, plotsubfolder, ninterventions, nlatentcurves);
 elseif runfunction == 19
     fprintf('Loading Predictive Model Patient Measures Stats\n');
     basedir = setBaseDir();
@@ -256,6 +272,8 @@ elseif runfunction == 19
     load(fullfile(basedir, subfolder, 'SCpredictivemodelinputs.mat'), 'pmPatients', 'pmAntibiotics', 'pmAMPred', 'pmPatientMeasStats', 'npatients', 'maxdays');
     fprintf('Plotting interventions over time by latent curve set\n');
     amEMMCPlotInterventionsByLatentCurveSet(pmPatients, pmAntibiotics, amInterventions, npatients, maxdays, plotname, plotsubfolder, nlatentcurves);
+elseif runfunction == 20
+    fprintf('Done\n');
 else
     fprintf('Should not get here....\n');
 end

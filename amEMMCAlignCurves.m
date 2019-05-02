@@ -44,7 +44,7 @@ if runmode == 6
     %tempamintr.Offset = amInterventions.Offset;
     %tempamintr.LatentCurve = amInterventions.LatentCurve;
     %amInterventions = tempamintr;
-elseif runmode == 7 || 8
+elseif runmode == 7 || runmode == 8
     if runmode == 7 
         run_type = 'O-Uniform LC-FEV1Split';
         ntiles = nlatentcurves;

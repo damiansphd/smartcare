@@ -6,7 +6,7 @@ function amEMMCCompareModelRunToTestData(amLabelledInterventions, amIntervention
 % the labelled test data (able to handle multiple sets of latent curves
 
 amLabelledInterventions = amLabelledInterventions(ismember(amLabelledInterventions.SmartCareID,amInterventions.SmartCareID),:);
-amLabelledInterventions = [array2table([1:ninterventions]'), amLabelledInterventions];
+amLabelledInterventions = [array2table((1:ninterventions)'), amLabelledInterventions];
 amLabelledInterventions.Properties.VariableNames{'Var1'} = 'InterNbr';
 
 testidx = amLabelledInterventions.IncludeInTestSet=='Y';
@@ -38,14 +38,25 @@ plotsubfolder = strcat('Plots/', sprintf('%s%sm%d vs Labels', study, mversion, m
 mkdir(strcat(basedir, plotsubfolder));
 
 plotsdown = 9;
-%plotsacross = 5;
-%mpos = [ 1 2 6 7 ; 3 4 8 9 ; 11 12 16 17 ; 13 14 18 19 ; 21 22 26 27 ; 23 24 28 29 ; 31 32 36 37 ; 33 34 38 39];
-%hpos = [ 5 ; 10 ; 15 ; 20 ; 25 ; 30 ; 35 ; 40 ; 45 ; 44 ; 43 ; 42 ; 41 ];
-plotsacross = 6;
-mpos  = [ 1 2 7 8 ; 3 4 9 10 ; 13 14 19 20 ; 15 16 21 22 ; 25 26 31 32 ; 27 28 33 34 ; 37 38 43 44 ; 39 40 45 46 ];
-hpos  = [ 5       ; 11       ; 17          ; 23          ; 29          ; 35          ; 41          ; 47          ; 53 ];
-hpos2 = [ 6       ; 12       ; 18          ; 24          ; 30          ; 36          ; 42          ; 48          ; 54 ];
-   
+if nlatentcurves == 1
+    plotsacross = 5;
+    mpos = [ 1 2 6 7 ; 3 4 8 9 ; 11 12 16 17 ; 13 14 18 19 ; 21 22 26 27 ; 23 24 28 29 ; 31 32 36 37 ; 33 34 38 39];
+    hpos(1, :) = [ 5 ; 10 ; 15 ; 20 ; 25 ; 30 ; 35 ; 40 ; 45 ; 44 ; 43 ; 42 ; 41 ];
+elseif nlatentcurves == 2
+    plotsacross = 6;
+    mpos       = [ 1 2 7 8 ; 3 4 9 10 ; 13 14 19 20 ; 15 16 21 22 ; 25 26 31 32 ; 27 28 33 34 ; 37 38 43 44 ; 39 40 45 46 ];
+    hpos(1, :) = [ 5       ; 11       ; 17          ; 23          ; 29          ; 35          ; 41          ; 47          ; 53 ];
+    hpos(2, :) = [ 6       ; 12       ; 18          ; 24          ; 30          ; 36          ; 42          ; 48          ; 54 ];
+elseif nlatentcurves == 3
+    plotsacross = 7;
+    mpos       = [ 1 2 8 9 ; 3 4 10 11 ; 15 16 22 23 ; 17 18 24 25 ; 29 30 36 37 ; 31 32 38 39 ; 43 44 50 51 ; 45 46 52 53 ];
+    hpos(1, :) = [ 5       ; 12        ; 19          ; 26          ; 33          ; 40          ; 47          ; 54          ; 61 ];
+    hpos(2, :) = [ 6       ; 13        ; 20          ; 27          ; 34          ; 41          ; 48          ; 55          ; 62 ];
+    hpos(3, :) = [ 7       ; 14        ; 21          ; 28          ; 35          ; 42          ; 49          ; 56          ; 63 ];    
+else
+    fprintf('Only supports up to 3 sets of latent curves\n');
+end
+
 days = -1 * (max_offset + align_wind - 1): -1;
 anchor = 0; % latent curve is to be shifted by offset on the plot
 
@@ -119,23 +130,19 @@ for i = 1:testsetsize
         hold off;
         
         % plot prob distributions
-        for l = 1:nlatentcurves
+        for lc = 1:nlatentcurves
             xl2 = [0 max_offset-1];
             yl2 = [0 0.25];
-            if l == 1
-                ax2 = subplot(plotsdown, plotsacross, hpos(m,:),'Parent',p);
-            else
-                ax2 = subplot(plotsdown, plotsacross, hpos2(m,:),'Parent',p);
-            end
-            [xl2, yl2] = plotProbDistribution(ax2, max_offset, reshape(pdoffset(l, m, thisinter,:), [1 max_offset]), xl2, yl2, 'o', 0.5, 2.0, 'blue', 'blue');
+            ax2 = subplot(plotsdown, plotsacross, hpos(lc, m),'Parent',p);
+            [xl2, yl2] = plotProbDistribution(ax2, max_offset, reshape(pdoffset(lc, m, thisinter,:), [1 max_offset]), xl2, yl2, 'o', 0.5, 2.0, 'blue', 'blue');
             [xl2, yl2] = plotVerticalLine(ax2, offset, xl2, yl2, 'black', '-', 0.5); % plot predicted offset
             hold on;
-            fill(ax2, [ (testset.LowerBound1(i) - ex_start(l)) (testset.UpperBound1(i) - ex_start(l))    ...
-                        (testset.UpperBound1(i) - ex_start(l)) (testset.LowerBound1(i) - ex_start(l)) ], ...
+            fill(ax2, [ (testset.LowerBound1(i) - ex_start(lc)) (testset.UpperBound1(i) - ex_start(lc))    ...
+                        (testset.UpperBound1(i) - ex_start(lc)) (testset.LowerBound1(i) - ex_start(lc)) ], ...
                         [ yl2(1) yl2(1) yl2(2) yl2(2) ], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
             if testset.LowerBound2(i) ~= 0
-                fill(ax2, [ (testset.LowerBound2(i) - ex_start(l)) (testset.UpperBound2(i) - ex_start(l))    ...
-                            (testset.UpperBound2(i) - ex_start(l)) (testset.LowerBound2(i) - ex_start(l)) ], ...
+                fill(ax2, [ (testset.LowerBound2(i) - ex_start(lc)) (testset.UpperBound2(i) - ex_start(lc))    ...
+                            (testset.UpperBound2(i) - ex_start(lc)) (testset.LowerBound2(i) - ex_start(lc)) ], ...
                             [ yl2(1) yl2(1) yl2(2) yl2(2) ], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
             end    
             hold off
@@ -151,23 +158,20 @@ for i = 1:testsetsize
     end
 
     % plot the overall posterior distribution
-    for l = 1:nlatentcurves
+    for lc = 1:nlatentcurves
         xl2 = [0 max_offset-1];
         yl2 = [0 0.25];
-        if l == 1
-            ax2 = subplot(plotsdown, plotsacross, hpos(nmeasures + 1, :),'Parent',p);
-        else
-            ax2 = subplot(plotsdown, plotsacross, hpos2(nmeasures + 1, :),'Parent',p);
-        end
-        [xl2, yl2] = plotProbDistribution(ax2, max_offset, reshape(overall_pdoffset(l, thisinter, :), [1 max_offset]), xl2, yl2, 'o', 0.5, 2.0, 'blue', 'blue');                
+        ax2 = subplot(plotsdown, plotsacross, hpos(lc, nmeasures + 1),'Parent',p);
+        
+        [xl2, yl2] = plotProbDistribution(ax2, max_offset, reshape(overall_pdoffset(lc, thisinter, :), [1 max_offset]), xl2, yl2, 'o', 0.5, 2.0, 'blue', 'blue');                
         [xl2, yl2] = plotVerticalLine(ax2, offset, xl2, yl2, 'black', '-', 0.5); % plot predicted offset
         hold on;
-        fill(ax2, [ (testset.LowerBound1(i) - ex_start(l)) (testset.UpperBound1(i) - ex_start(l))    ...
-                    (testset.UpperBound1(i) - ex_start(l)) (testset.LowerBound1(i) - ex_start(l)) ], ...
+        fill(ax2, [ (testset.LowerBound1(i) - ex_start(lc)) (testset.UpperBound1(i) - ex_start(lc))    ...
+                    (testset.UpperBound1(i) - ex_start(lc)) (testset.LowerBound1(i) - ex_start(lc)) ], ...
                     [ yl2(1) yl2(1) yl2(2) yl2(2) ], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
         if testset.LowerBound2(i) ~= 0
-            fill(ax2, [ (testset.LowerBound2(i) - ex_start(l)) (testset.UpperBound2(i) - ex_start(l))    ...
-                        (testset.UpperBound2(i) - ex_start(l)) (testset.LowerBound2(i) - ex_start(l)) ], ...
+            fill(ax2, [ (testset.LowerBound2(i) - ex_start(lc)) (testset.UpperBound2(i) - ex_start(lc))    ...
+                        (testset.UpperBound2(i) - ex_start(lc)) (testset.LowerBound2(i) - ex_start(lc)) ], ...
                         [ yl2(1) yl2(1) yl2(2) yl2(2) ], 'red', 'FaceAlpha', '0.1', 'EdgeColor', 'none');
         end    
         hold off
