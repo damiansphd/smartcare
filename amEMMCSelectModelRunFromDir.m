@@ -1,4 +1,4 @@
-function [modelrun, modelidx, modelresultlisting] = amEMMCSelectModelRunFromDir(loadtype)
+function [modelrun, modelidx, ModelResultFiles] = amEMMCSelectModelRunFromDir(loadtype)
 
 % amEMMCSelectModelRunFromDir- allows you to load the saved variables from a
 % historical model run. 

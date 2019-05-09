@@ -3,7 +3,7 @@ function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurve
     isOutlier, pptsstruct, qual, min_offset, iter, run_type] = ...
     amEMMCAlignCurves(amIntrCube, amHeldBackcube, amInterventions, outprior, measures, normstd, max_offset, align_wind, ...
     nmeasures, ninterventions, nlatentcurves, detaillog, sigmamethod, smoothingmethod, ...
-    runmode, fnmodelrun)
+    runmode, randomseed, fnmodelrun)
 
 % amEMMCAlignCurves - function to align measurement curves prior to
 % intervention (allowing for multiple versions of the latent curves)
@@ -83,6 +83,8 @@ elseif runmode == 4 || runmode == 5
     % *** need to initialise amInterventions.LatentCurve and also change how ***
     % *** the pdoffset and overall pdoffset are initialised to include extra ***
     % *** dimension ***
+    rng(randomseed);
+    fprintf('Setting random seed to %d\n', randomseed);
     run_type = 'O-Uniform LC-Random';
     amInterventions.Offset(:) = 0;
     amInterventions.LatentCurve(:) = randi([1, nlatentcurves], [ninterventions, 1]);

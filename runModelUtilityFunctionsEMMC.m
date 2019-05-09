@@ -28,12 +28,14 @@ fprintf('17: Plot alignment surves side-by-side\n');
 fprintf('18: Plot variables vs latent curve assignment\n');
 fprintf('19: Plot interventions over time by latent curve set\n');
 fprintf('20: Load variables for a given model run\n');
+fprintf('21: Plot a measure for a set of examples\n');
+fprintf('22: Compare latent curve set populations for 2 model runs\n');
 fprintf('\n');
-runfunction = input('Choose function (1-20): ');
+runfunction = input('Choose function (1-22): ');
 
 fprintf('\n');
 
-if runfunction > 20
+if runfunction > 22
     fprintf('Invalid choice\n');
     return;
 end
@@ -176,7 +178,7 @@ elseif runfunction == 7
     fprintf('\n');
     fprintf('Select second model to compare\n');
     fprintf('\n');
-    [modelrun2, modelidx2] = amEMMCSelectModelRunFromList('');
+    [modelrun2, modelidx2] = amEMMCSelectModelRunFromDir('');
     amEMMCCompareModelRuns(modelrun, modelidx, modelrun2, modelidx2);
 elseif runfunction == 8
     fprintf('Comparing results to the labelled test data\n');
@@ -274,6 +276,17 @@ elseif runfunction == 19
     amEMMCPlotInterventionsByLatentCurveSet(pmPatients, pmAntibiotics, amInterventions, npatients, maxdays, plotname, plotsubfolder, nlatentcurves);
 elseif runfunction == 20
     fprintf('Done\n');
+elseif runfunction == 21
+    measure = amEMMCSelectMeasure(measures, nmeasures);
+    amEMMCPlotSingleMeasureByLCSet(amInterventions, amIntrDatacube, normmean, measure, measures, ...
+            ex_start, max_offset, align_wind, plotname, plotsubfolder, nlatentcurves);
+elseif runfunction == 22
+    fprintf('Comparing latent curve set population to another model run\n');
+    fprintf('\n');
+    fprintf('Select second model to compare\n');
+    fprintf('\n');
+    [modelrun2, modelidx2] = amEMMCSelectModelRunFromDir('');
+    amEMMCCompareModelRunsByLCSets(modelrun, modelidx, modelrun2, modelidx2);
 else
     fprintf('Should not get here....\n');
 end

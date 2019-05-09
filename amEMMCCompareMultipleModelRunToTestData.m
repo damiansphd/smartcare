@@ -25,8 +25,16 @@ qualityscore = 0;
 
 for midx = modelidx:size(models,1)
     if (~isequal(models{midx}, 'placeholder') && ~contains(models{midx}, 'xxx'))
+        clear randomseed;
+        clear datasmoothmethod;
         load(fullfile(basedir, subfolder, sprintf('%s.mat', models{midx})));
-        
+        % for backward compatibility
+        if (~exist('randomseed','var'))
+            randomseed = 0;
+        end
+        if (~exist('datasmoothmethod','var'))
+            datasmoothmethod = 1;
+        end
         temp = hsv;
         brightness = .9;
         colors(1,:) = temp(20,:) .* brightness;
@@ -61,6 +69,9 @@ for midx = modelidx:size(models,1)
                 dist1 = min(abs(testset.IVScaledDateNum(i) + testset.LowerBound1(i) - modelpreds(i)), abs(testset.IVScaledDateNum(i) + testset.LowerBound2(i) - modelpreds(i)));
                 dist2 = min(abs(testset.IVScaledDateNum(i) + testset.UpperBound1(i) - modelpreds(i)), abs(testset.IVScaledDateNum(i) + testset.UpperBound2(i) - modelpreds(i)));
                 dist = min(dist1, dist2);
+                if dist > (max_offset - 1)
+                    dist = max_offset - 1;
+                end
                 rowtoadd.Count = dist;
             end
             %fprintf('For intervention %2d, Match = %d, Dist = %d\n', testset.InterNbr(i), matchidx(i), rowtoadd.Count);
@@ -71,7 +82,12 @@ for midx = modelidx:size(models,1)
         fprintf('\n');
         modelrunlist = [modelrunlist; midx];
         qualityscore = [qualityscore; sum(datatable.Count(datatable.ModelRun==midx))];
-        ylabels = [ylabels; sprintf('%2d (%2d:%3d)', midx, sum(matchidx), sum(datatable.Count(datatable.ModelRun==midx)))];
+        if niterations == 200
+            convergeflag = '*';
+        else
+            convergeflag = ' ';
+        end
+        ylabels = [ylabels; sprintf('rm%dmm%dmo%dnl%drs%dds%d%s\n(%2d:%2d)', runmode, measuresmask, max_offset, nlatentcurves, randomseed, datasmoothmethod, convergeflag, sum(matchidx), sum(datatable.Count(datatable.ModelRun==midx)))];
     end
 end
 

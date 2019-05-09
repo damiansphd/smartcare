@@ -1,6 +1,6 @@
 function [mversion, study, modelinputsmatfile, datademographicsfile, dataoutliersfile, labelledinterventionsfile, ...
-    sigmamethod, mumethod, curveaveragingmethod, smoothingmethod, ...
-    measuresmask, runmode, modelrun, imputationmode, confidencemode, printpredictions, ...
+    sigmamethod, mumethod, curveaveragingmethod, smoothingmethod, datasmoothmethod, ...
+    measuresmask, runmode, randomseed, modelrun, imputationmode, confidencemode, printpredictions, ...
     max_offset, align_wind, outprior, heldbackpct, confidencethreshold, nlatentcurves] ...
     = amEMMCSetModelRunParametersFromTable(amRunParameters)
 
@@ -17,8 +17,14 @@ sigmamethod               = amRunParameters.sigmamethod;
 mumethod                  = amRunParameters.mumethod;
 curveaveragingmethod      = amRunParameters.curveaveragingmethod;
 smoothingmethod           = amRunParameters.smoothingmethod;
+datasmoothmethod          = amRunParameters.datasmoothmethod;
 measuresmask              = amRunParameters.measuresmask;
 runmode                   = amRunParameters.runmode;
+if runmode == 4 || runmode == 5
+    randomseed            = amRunParameters.randomseed;
+else
+    randomseed            = 0;
+end
 modelrun                  = amRunParameters.modelrun;
 imputationmode            = amRunParameters.imputationmode;
 confidencemode            = amRunParameters.confidencemode;
