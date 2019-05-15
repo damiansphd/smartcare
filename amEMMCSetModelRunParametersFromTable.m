@@ -1,7 +1,7 @@
 function [mversion, study, modelinputsmatfile, datademographicsfile, dataoutliersfile, labelledinterventionsfile, ...
     sigmamethod, mumethod, curveaveragingmethod, smoothingmethod, datasmoothmethod, ...
     measuresmask, runmode, randomseed, modelrun, imputationmode, confidencemode, printpredictions, ...
-    max_offset, align_wind, outprior, heldbackpct, confidencethreshold, nlatentcurves] ...
+    max_offset, align_wind, outprior, heldbackpct, confidencethreshold, nlatentcurves, countthreshold] ...
     = amEMMCSetModelRunParametersFromTable(amRunParameters)
 
 % amEMMCSetModelRunParameters - sets the various run parameters for the model
@@ -20,7 +20,7 @@ smoothingmethod           = amRunParameters.smoothingmethod;
 datasmoothmethod          = amRunParameters.datasmoothmethod;
 measuresmask              = amRunParameters.measuresmask;
 runmode                   = amRunParameters.runmode;
-if runmode == 4 || runmode == 5
+if runmode == 4 || runmode == 5 || runmode == 9
     randomseed            = amRunParameters.randomseed;
 else
     randomseed            = 0;
@@ -35,5 +35,6 @@ outprior                  = amRunParameters.outprior;
 heldbackpct               = amRunParameters.heldbackpct;
 confidencethreshold       = amRunParameters.confidencethreshold;
 nlatentcurves             = amRunParameters.nlatentcurves;
+countthreshold            = amRunParameters.countthreshold;
 
 end

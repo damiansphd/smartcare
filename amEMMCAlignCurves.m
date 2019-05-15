@@ -3,7 +3,7 @@ function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurve
     isOutlier, pptsstruct, qual, min_offset, iter, run_type] = ...
     amEMMCAlignCurves(amIntrCube, amHeldBackcube, amInterventions, outprior, measures, normstd, max_offset, align_wind, ...
     nmeasures, ninterventions, nlatentcurves, detaillog, sigmamethod, smoothingmethod, ...
-    runmode, randomseed, fnmodelrun)
+    runmode, randomseed, countthreshold, fnmodelrun)
 
 % amEMMCAlignCurves - function to align measurement curves prior to
 % intervention (allowing for multiple versions of the latent curves)
@@ -27,7 +27,8 @@ animatedlc                 = zeros(ninterventions, aniterations);
 isOutlier         = zeros(nlatentcurves, ninterventions, align_wind, nmeasures, max_offset);
 
 min_offset     = 0; % start at zero and no longer changes as offset blocking was removed.
-countthreshold = 5; % minimum number of undelying curves that must contribute to a point in the average curve
+%countthreshold = 5; % minimum number of undelying curves that must contribute 
+% to a point in the average curve - NOW A MODEL PARAMETER
 
 if runmode == 6
     % *** need to initialise amInterventions.LatentCurve and also change how ***
@@ -44,12 +45,18 @@ if runmode == 6
     %tempamintr.Offset = amInterventions.Offset;
     %tempamintr.LatentCurve = amInterventions.LatentCurve;
     %amInterventions = tempamintr;
-elseif runmode == 7 || runmode == 8
-    if runmode == 7 
-        run_type = 'O-Uniform LC-FEV1Split';
+elseif runmode == 7 || runmode == 8 || runmode == 10 || runmode == 11
+    if runmode == 7
+        run_type = 'O-Uniform LC-FEV1Split PM';
         ntiles = nlatentcurves;
-    else
-        run_type = 'O-Uniform LC-Elec_ FEV1Split';
+    elseif runmode == 8
+        run_type = 'O-Uniform LC-Elec_ FEV1Split PM';
+        ntiles = nlatentcurves - 1;
+    elseif runmode == 10
+        run_type = 'O-Uniform LC-FEV1Split SP';
+        ntiles = nlatentcurves; 
+    elseif runmode == 11
+        run_type = 'O-Uniform LC-Elec_ FEV1Split SP';
         ntiles = nlatentcurves - 1;
     end
     fprintf('Creating Upper and Lower 50%% splits for FEV1\n');
@@ -69,7 +76,7 @@ elseif runmode == 7 || runmode == 8
     lc = innerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'LeftVariables', {'SmartCareID'}, 'RightVariables', 'NTile');
     amInterventions.Offset(:) = 0;
     amInterventions.LatentCurve = lc.NTile;
-    if runmode == 8
+    if runmode == 8 || runmode == 11
         fprintf('Loading Elective Treatment file\n');
         basedir = setBaseDir();
         pmElectiveTreatments = readtable(fullfile(basedir, 'DataFiles', 'SCelectivetreatments.xlsx'));
@@ -77,7 +84,7 @@ elseif runmode == 7 || runmode == 8
         amInterventions = outerjoin(amInterventions, pmElectiveTreatments, 'LeftKeys', {'SmartCareID', 'Hospital', 'IVScaledDateNum'}, 'RightKeys', {'ID', 'Hospital', 'IVScaledDateNum'}, 'RightVariables', {'ElectiveTreatment'});
         amInterventions.LatentCurve(amInterventions.ElectiveTreatment == 'Y') = ntiles + 1;   
     end    
-elseif runmode == 4 || runmode == 5    
+elseif runmode == 4 || runmode == 5 || runmode == 9   
     % populate pdoffset & overall_pdoffset with uniform prior distribution
     
     % *** need to initialise amInterventions.LatentCurve and also change how ***
@@ -94,14 +101,28 @@ else
 end
 
 for i = 1:ninterventions
-    for m = 1:nmeasures
-        pdoffset(amInterventions.LatentCurve(i), m, i, :) = amEMMCConvertFromLogSpaceAndNormalise(zeros(1, max_offset));
-    end
-    if runmode == 5
-        overall_pdoffset(:, i, :) = 0;
-        overall_pdoffset(amInterventions.LatentCurve(i), i, 1) = 1;
+    if runmode == 9 || runmode == 10 || runmode == 11
+        upd = amEMMCConvertFromLogSpaceAndNormalise(zeros(1, max_offset)) / (nlatentcurves + 2);
+        for m = 1:nmeasures
+            for lc = 1:nlatentcurves
+                pdoffset(lc, m, i, :) = upd;
+            end
+            pdoffset(amInterventions.LatentCurve(i), m, i, :) = upd * 3;   
+        end
+        for lc = 1:nlatentcurves
+            overall_pdoffset(lc, i,:) = upd;
+        end
+        overall_pdoffset(amInterventions.LatentCurve(i), i, :) = upd * 3;
     else
-        overall_pdoffset(amInterventions.LatentCurve(i), i,:) = amEMMCConvertFromLogSpaceAndNormalise(zeros(1, max_offset));
+        for m = 1:nmeasures
+            pdoffset(amInterventions.LatentCurve(i), m, i, :) = amEMMCConvertFromLogSpaceAndNormalise(zeros(1, max_offset));
+        end
+        if runmode == 5
+            overall_pdoffset(:, i, :) = 0;
+            overall_pdoffset(amInterventions.LatentCurve(i), i, 1) = 1;
+        else
+            overall_pdoffset(amInterventions.LatentCurve(i), i, :) = amEMMCConvertFromLogSpaceAndNormalise(zeros(1, max_offset));
+        end
     end
 end
 
@@ -122,9 +143,10 @@ end
 profile_pre = meancurvemean;
 
 % iterate to convergence
-pnt = 1;
-cnt = 0;
-iter = 0;
+pnt       = 1;
+offsetcnt = 0;
+lccnt     = 0;
+iter      = 0;
 smmpddiff = 100;
 pddiffthreshold = 0.00001;
 maxiterations = 200;
@@ -159,17 +181,27 @@ while (smmpddiff > pddiffthreshold && iter < maxiterations)
     end
     
     if better_offset ~= amInterventions.Offset(pnt) || better_curve ~= amInterventions.LatentCurve(pnt)
-        if detaillog
-            if better_offset ~= amInterventions.Offset(pnt)
-                fprintf('amIntervention.Offset(%2d):      Updated from %2d to %2d\n', pnt, amInterventions.Offset(pnt), better_offset);
-            end
-            if better_curve ~= amInterventions.LatentCurve(pnt)
-                fprintf('amIntervention.LatentCurve(%2d): Updated from %2d to %2d\n', pnt, amInterventions.LatentCurve(pnt), better_curve);
-            end
+        offsetchg = false;
+        lcchg = false;
+        if better_offset ~= amInterventions.Offset(pnt)
+            offsettext = sprintf('Offset: %2d to %2d', amInterventions.Offset(pnt), better_offset);
+            offsetchg = true;
+            offsetcnt = offsetcnt + 1;
+            amInterventions.Offset(pnt) = better_offset;
+        else
+            offsettext = '                ';
         end
-        amInterventions.Offset(pnt)      = better_offset;
-        amInterventions.LatentCurve(pnt) = better_curve;
-        cnt = cnt + 1;
+        if better_curve ~= amInterventions.LatentCurve(pnt)
+            lctext = sprintf('Latent Curve: %d to %d', amInterventions.LatentCurve(pnt), better_curve);
+            lcchg = true;
+            lccnt = lccnt + 1;
+            amInterventions.LatentCurve(pnt) = better_curve;
+        else
+            lctext = '                    ';
+        end
+        if offsetchg || lcchg
+            fprintf('%3d: %s : %s\n', pnt, lctext, offsettext);
+        end
         miniiter = miniiter+1;
         if miniiter < aniterations
             animatedmeancurvemean(:, :, :, miniiter)         = meancurvemean;
@@ -210,7 +242,7 @@ while (smmpddiff > pddiffthreshold && iter < maxiterations)
         for i=1:ninterventions
             [meancurvesumsq, meancurvesum, meancurvecount] = amEMMCRemoveFromMean(meancurvesumsq, meancurvesum, meancurvecount, ...
                 overall_pdoffset, amIntrCube, amHeldBackcube, i, min_offset, max_offset, align_wind, nmeasures, nlatentcurves);
-            [meancurvesumsq, meancurvesum, meancurvecount] = amEMMCAddAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, pptsstruct, nlatentcurves);
+            %[meancurvesumsq, meancurvesum, meancurvecount] = amEMMCAddAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, pptsstruct, nlatentcurves);
             [meancurvemean, meancurvestd] = amEMMCCalcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
             
             lc = amInterventions.LatentCurve(i);
@@ -223,7 +255,7 @@ while (smmpddiff > pddiffthreshold && iter < maxiterations)
             
             %fprintf('Intervention %d, qual = %.4f\n', i, qual/qualcount);
     
-            [meancurvesumsq, meancurvesum, meancurvecount] = amEMMCRemoveAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, pptsstruct, nlatentcurves);
+            %[meancurvesumsq, meancurvesum, meancurvecount] = amEMMCRemoveAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, pptsstruct, nlatentcurves);
             [meancurvesumsq, meancurvesum, meancurvecount] = amEMMCAddToMean(meancurvesumsq, meancurvesum, meancurvecount, ...
                 overall_pdoffset, amIntrCube, amHeldBackcube, i, min_offset, max_offset, align_wind, nmeasures, nlatentcurves);
             [meancurvemean, meancurvestd] = amEMMCCalcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
@@ -231,19 +263,20 @@ while (smmpddiff > pddiffthreshold && iter < maxiterations)
         
         qual = qual / qualcount;
         
-        if cnt == 0
-            fprintf('No changes on iteration %2d, obj fcn = %.8f, prob distrib diff: smm = %.6f sss = %.6f\n', iter, qual, smmpddiff, ssspddiff);
+        if offsetcnt == 0 && lccnt == 0
+            fprintf('Iteration %d: No changes, obj fcn = %.8f, prob distrib diff: smm = %.6f sss = %.6f\n', iter, qual, smmpddiff, ssspddiff);
         else
-            fprintf('Changed %2d offsets on iteration %2d, obj fcn = %.8f, prob distrib diff: smm = %.6f sss = %.6f\n', cnt, iter, qual, smmpddiff, ssspddiff);
+            fprintf('Iteration %d: Changed %d latent curve sets and %d offsets, obj fcn = %.8f, prob distrib diff: smm = %.6f sss = %.6f\n', iter, lccnt, offsetcnt, qual, smmpddiff, ssspddiff);
         end
-        cnt = 0;
+        offsetcnt = 0;
+        lccnt = 0;
         prior_overall_pdoffset = overall_pdoffset;
         
         %temp = input('Continue ? ');
     end
 end
 
-[meancurvesumsq, meancurvesum, meancurvecount] = amEMMCAddAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, pptsstruct, nlatentcurves);
+%[meancurvesumsq, meancurvesum, meancurvecount] = amEMMCAddAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, pptsstruct, nlatentcurves);
 [meancurvemean, meancurvestd] = amEMMCCalcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
 
 end

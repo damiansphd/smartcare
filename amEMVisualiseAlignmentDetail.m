@@ -30,6 +30,15 @@ end
 
 for m = 1:nmeasures
     datatable(1:size(datatable,1),:) = [];
+    
+    % add a dummy rows to ensure all days from -49 to -1 show on the heatmap
+    rowtoadd.Intervention = 0;
+    rowtoadd.Count = 2;
+    for d = (-1 * (max_offset + align_wind - 1)): -1
+        rowtoadd.ScaledDateNum = d;
+        datatable = [datatable ; rowtoadd];
+    end
+    
     for i = 1:ninterventions
         scid = amInterventions.SmartCareID(i);
         start = amInterventions.IVScaledDateNum(i);
@@ -110,7 +119,6 @@ for m = 1:nmeasures
     h.XLabel = 'Days Prior to Intervention';
     h.YLabel = 'Intervention';
     h.YDisplayData = sorted_interventions.IntrNbr;
-    %h.XLimits = {-1 * (max_offset + align_wind - 1), -1};
     h.XLimits = {-1 * (max_offset + align_wind - 1), max(datatable.ScaledDateNum)};
     h.CellLabelColor = 'none';
     h.GridVisible = 'on';
