@@ -11,15 +11,19 @@ yl = [min((mmeancurvemean * .99)) ...
 yyaxis left;
 
 [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, (mprofile_pre), xl, yl, 'red', ':', 0.5, anchor);
-[xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(mprofile_pre, 5), xl, yl, 'red', '-', 0.5, anchor);
+%[xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(mprofile_pre, 5), xl, yl, 'red', '-', 0.5, anchor);
+[xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, movmean(mprofile_pre, 3, 'omitnan'), xl, yl, 'red', '-', 0.5, anchor);
 [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, (mmeancurvemean), xl, yl, 'blue', ':', 0.5, anchor);
-[xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(mmeancurvemean, 5), xl, yl, 'blue', '-', 0.5, anchor);
+%[xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(mmeancurvemean, 5), xl, yl, 'blue', '-', 0.5, anchor);
+[xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, movmean(mmeancurvemean, 3, 'omitnan'), xl, yl, 'blue', '-', 0.5, anchor);
 
 if sigmamethod == 4
     [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, (mmeancurvemean + mmeancurvestd), xl, yl, 'blue', ':', 0.5, anchor);
-    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(mmeancurvemean + mmeancurvestd, 5), xl, yl, 'blue', '--', 0.5, anchor);
+%   [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(mmeancurvemean + mmeancurvestd, 5), xl, yl, 'blue', '--', 0.5, anchor);
+    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, movmean(mmeancurvemean + mmeancurvestd, 3, 'omitnan'), xl, yl, 'blue', '--', 0.5, anchor);
     [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, (mmeancurvemean - mmeancurvestd), xl, yl, 'blue', ':', 0.5, anchor);
-    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(mmeancurvemean - mmeancurvestd, 5), xl, yl, 'blue', '--', 0.5, anchor);
+%   [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(mmeancurvemean - mmeancurvestd, 5), xl, yl, 'blue', '--', 0.5, anchor);
+    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, movmean(mmeancurvemean - mmeancurvestd, 3, 'omitnan'), xl, yl, 'blue', '--', 0.5, anchor);
 end
 
 ax.XAxis.FontSize = 6;

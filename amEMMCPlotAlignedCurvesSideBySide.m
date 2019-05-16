@@ -6,8 +6,12 @@ function amEMMCPlotAlignedCurvesSideBySide(profile_pre, meancurvemean, meancurve
 
 anchor = 1; % latent curve is to be anchored on the plot (right side at min_offset)
 
-if nlatentcurves > 3
+if nlatentcurves > 4
     fprintf('Up to 3 sets of latent curves supported with this plot\n');
+    return;
+elseif nlatentcurves == 4
+    plotsacross = 4;
+    plotsdown   = 3;
 elseif nlatentcurves == 3
     plotsacross = 3;
     plotsdown   = 3;

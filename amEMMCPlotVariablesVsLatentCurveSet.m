@@ -64,8 +64,11 @@ elseif nlatentcurves == 2
     cmap = [0, 1, 0 ; 0, 0, 1 ];
 elseif nlatentcurves == 3
     cmap = [0, 1, 0 ; 0, 0, 1 ; 1, 0, 0 ];
+elseif nlatentcurves == 4
+    cmap = [0, 1, 0 ; 0, 0, 1 ; 1, 0, 0 ; 1 0 1];
 else
     fprintf('Add more colours to the palette\n');
+    return;
 end
 
 plottitle = sprintf('%s - Variables vs Latent Curve Set', plotname);

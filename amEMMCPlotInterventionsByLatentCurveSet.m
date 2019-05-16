@@ -42,6 +42,9 @@ end
 if nlatentcurves > 2
     colors(6,:) = [1    0    0];  % red   = latent curve set 3
 end
+if nlatentcurves > 3
+    colors(7,:) = [1    0    1];  % magenta = latent curve set 4
+end
 
 plottitle = sprintf('%s - Intr vs LatentCurveSet', plotname);
 [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');

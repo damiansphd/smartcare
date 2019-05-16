@@ -279,5 +279,13 @@ end
 %[meancurvesumsq, meancurvesum, meancurvecount] = amEMMCAddAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, pptsstruct, nlatentcurves);
 [meancurvemean, meancurvestd] = amEMMCCalcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
 
+% remove points from latent curves that don't have enough underlying data
+% points contributing
+meancurvemean(meancurvecount  < countthreshold) = nan;
+meancurvestd(meancurvecount   < countthreshold) = nan;
+meancurvesumsq(meancurvecount < countthreshold) = nan;
+meancurvesum(meancurvecount   < countthreshold) = nan;
+meancurvecount(meancurvecount < countthreshold) = nan;
+
 end
 
