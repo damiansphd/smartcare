@@ -19,6 +19,9 @@ datatable = table('Size',[1 3], ...
 
 rowtoadd = datatable;
 datatable(1:size(datatable,1),:) = [];
+
+resulttable = [];
+
 ylabels = {'Dummy'};
 modelrunlist = 0;
 qualityscore = 0;
@@ -34,6 +37,9 @@ for midx = modelidx:size(models,1)
         end
         if (~exist('datasmoothmethod','var'))
             datasmoothmethod = 1;
+        end
+        if (~exist('heldbackpct','var'))
+            heldbackpct = 0;
         end
         temp = hsv;
         brightness = .9;
@@ -87,7 +93,14 @@ for midx = modelidx:size(models,1)
         else
             convergeflag = ' ';
         end
-        ylabels = [ylabels; sprintf('rm%dmm%dmo%dnl%drs%dds%d%s\n(%2d:%2d)', runmode, measuresmask, max_offset, nlatentcurves, randomseed, datasmoothmethod, convergeflag, sum(matchidx), sum(datatable.Count(datatable.ModelRun==midx)))];
+        ylabels = [ylabels; sprintf('nl%dmm%dmo%dds%drm%drs%d%s\n(%2d:%2d)', nlatentcurves, measuresmask, max_offset, datasmoothmethod, runmode, randomseed,convergeflag, sum(matchidx), sum(datatable.Count(datatable.ModelRun==midx)))];
+
+        [resultrow] = setResultTableDisplayRow(mversion, study, sigmamethod, mumethod, ...
+                        curveaveragingmethod, smoothingmethod, datasmoothmethod, measuresmask, runmode, randomseed, ...
+                        imputationmode, confidencemode, max_offset, align_wind, ...
+                        outprior, heldbackpct, confidencethreshold, nlatentcurves, niterations, ex_start, qual, ...
+                        sum(matchidx), testsetsize, sum(datatable.Count(datatable.ModelRun==midx)), measures, nmeasures);
+        resulttable = [resulttable; resultrow];
     end
 end
 
@@ -97,7 +110,8 @@ qualityscore(1) = [];
 ylabels(1) = [];
 
 labelsandquality = [array2table(modelrunlist), array2table(ylabels), array2table(qualityscore)];
-%labelsandquality = sortrows(labelsandquality, {'qualityscore', 'modelrunlist'}, {'ascend', 'ascend'});
+labelsandquality = sortrows(labelsandquality, {'ylabels'}, {'ascend'});
+resulttable = sortrows(resulttable, {'NumLCSets', 'Measures', 'MaxOffset', 'DataSmooth', 'RunMode', 'RandomSeed'});
 
 plotsacross = 1;
 plotsdown = 1;
@@ -121,5 +135,8 @@ h.GridVisible = 'on';
 plotsubfolder = 'Plots';
 savePlotInDir(f, plottitle, plotsubfolder);
 close(f);
+
+writetable(resulttable, fullfile(basedir, 'ExcelFiles', sprintf('%s.xlsx', plottitle)));
+
 end
 

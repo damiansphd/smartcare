@@ -4,10 +4,8 @@ function amEMPlotOffsetHistogram(ax, offsets, max_offset)
 % alignment model run
 
 nsamples = size(offsets, 1);
-if nsamples <= 25
-    ymax = 15;
-elseif nsamples <= 100
-    ymax = 50;
+if nsamples <= 100
+    ymax = 25;
 else
     ymax = 100;
 end

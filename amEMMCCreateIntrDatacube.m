@@ -30,7 +30,9 @@ for i = 1:ninterventions
         % for datasmoothmethod 2, smooth FEV1 measures with a 3 day max
         % window, else just use raw data
         if (datasmoothmethod == 2 && m == midx)
-            amIntrDatacube(i, (icperiodstart:icperiodend), m) = movmax(amDatacube(scid, dcperiodstart:dcperiodend, m), 3, 'omitnan');
+            amIntrDatacube(i, (icperiodstart:icperiodend), m) = movmax(amDatacube(scid, dcperiodstart:dcperiodend, m), 2, 'omitnan');
+        elseif (datasmoothmethod == 3 && m == midx)
+            amIntrDatacube(i, (icperiodstart:icperiodend), m) = movmax(amDatacube(scid, dcperiodstart:dcperiodend, m), 3, 'omitnan');    
         else
             amIntrDatacube(i, (icperiodstart:icperiodend), m) = amDatacube(scid, dcperiodstart:dcperiodend, m);
         end

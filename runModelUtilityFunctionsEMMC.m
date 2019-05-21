@@ -25,17 +25,18 @@ fprintf('14: Calc Ex Start from Test Labels\n');
 fprintf('15: Plot aligned curves\n');
 fprintf('16: Plot alignment detail\n');
 fprintf('17: Plot alignment surves side-by-side\n');
-fprintf('18: Plot variables vs latent curve assignment\n');
-fprintf('19: Plot interventions over time by latent curve set\n');
-fprintf('20: Load variables for a given model run\n');
-fprintf('21: Plot a measure for a set of examples\n');
-fprintf('22: Compare latent curve set populations for 2 model runs\n');
+fprintf('18: Plot alignment surves side-by-side with centering\n');
+fprintf('19: Plot variables vs latent curve assignment\n');
+fprintf('20: Plot interventions over time by latent curve set\n');
+fprintf('21: Load variables for a given model run\n');
+fprintf('22: Plot a measure for a set of examples\n');
+fprintf('23: Compare latent curve set populations for 2 model runs\n');
 fprintf('\n');
-runfunction = input('Choose function (1-22): ');
+runfunction = input('Choose function (1-23): ');
 
 fprintf('\n');
 
-if runfunction > 22
+if runfunction > 23
     fprintf('Invalid choice\n');
     return;
 end
@@ -242,9 +243,17 @@ elseif runfunction == 17
     run_type = 'Best Alignment';
     subfolder = 'Plots';
     fprintf('Plotting alignment curves side-by-side\n');
+    centerplots = false;
     amEMMCPlotAlignedCurvesSideBySide(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, amInterventions.Offset, amInterventions.LatentCurve, ...
-        measures, max_points, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, sigmamethod, plotname, plotsubfolder, nlatentcurves);
+        measures, max_points, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, sigmamethod, plotname, plotsubfolder, nlatentcurves, centerplots);
 elseif runfunction == 18
+    run_type = 'Best Alignment';
+    subfolder = 'Plots';
+    fprintf('Plotting alignment curves side-by-side with centering\n');
+    centerplots = true;
+    amEMMCPlotAlignedCurvesSideBySide(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, amInterventions.Offset, amInterventions.LatentCurve, ...
+        measures, max_points, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, sigmamethod, plotname, plotsubfolder, nlatentcurves, centerplots);
+elseif runfunction == 19
     fprintf('Loading Predictive Model Patient Measures Stats\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
@@ -252,35 +261,44 @@ elseif runfunction == 18
     if ismember(study, 'SC')
         clinicalmatfile   = 'clinicaldata.mat';
         microbiologytable = 'cdMicrobiology';
+        abtable           = 'cdAntibiotics';
+        admtable          = 'cdAdmissions';
+        crptable          = 'cdCRP';
     elseif ismember(study, 'TM');
         clinicalmatfile   = 'telemedclinicaldata.mat';
         microbiologytable = 'tmMicrobiology';
+        abtable           = 'tmAntibiotics';
+        admtable          = 'tmAdmissions';
+        crptable          = 'tmCRP';
     else
         fprintf('Invalid study\n');
         return;
     end
-    fprintf('Loading clinical microbiology data\n');
-    load(fullfile(basedir, subfolder, clinicalmatfile), microbiologytable);
+    fprintf('Loading clinical microbiology and CRP data\n');
+    load(fullfile(basedir, subfolder, clinicalmatfile), microbiologytable, abtable, admtable, crptable);
     if ismember(study, 'TM')
         cdMicrobiology = tmMicrobiology;
+        cdAntibiotics  = tmAntibiotics;
+        cdAdmissions   = tmAdmissions;
+        cdCRP          = tmCRP;
     end
     fprintf('Plotting Variables vs latent curve allocation\n');
     amEMMCPlotVariablesVsLatentCurveSet(amInterventions, initial_latentcurve, pmPatients, pmPatientMeasStats, ...
-        cdMicrobiology, measures, plotname, plotsubfolder, ninterventions, nlatentcurves);
-elseif runfunction == 19
+        cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves);
+elseif runfunction == 20
     fprintf('Loading Predictive Model Patient Measures Stats\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
     load(fullfile(basedir, subfolder, 'SCpredictivemodelinputs.mat'), 'pmPatients', 'pmAntibiotics', 'pmAMPred', 'pmPatientMeasStats', 'npatients', 'maxdays');
     fprintf('Plotting interventions over time by latent curve set\n');
     amEMMCPlotInterventionsByLatentCurveSet(pmPatients, pmAntibiotics, amInterventions, npatients, maxdays, plotname, plotsubfolder, nlatentcurves);
-elseif runfunction == 20
-    fprintf('Done\n');
 elseif runfunction == 21
+    fprintf('Done\n');
+elseif runfunction == 22
     measure = amEMMCSelectMeasure(measures, nmeasures);
     amEMMCPlotSingleMeasureByLCSet(amInterventions, amIntrDatacube, normmean, measure, measures, ...
             ex_start, max_offset, align_wind, plotname, plotsubfolder, nlatentcurves);
-elseif runfunction == 22
+elseif runfunction == 23
     fprintf('Comparing latent curve set population to another model run\n');
     fprintf('\n');
     fprintf('Select second model to compare\n');

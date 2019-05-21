@@ -1,5 +1,5 @@
 function amEMMCPlotVariablesVsLatentCurveSet(amInterventions, initial_latentcurve, pmPatients, pmPatientMeasStats, ...
-        cdMicrobiology, measures, plotname, plotsubfolder, ninterventions, nlatentcurves)
+        cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves)
     
 % amEMMCPlotVariablesVsLatentCurveSet - compact plots of various variables
 % against latent curve set assigned to try and observe correlations
@@ -8,7 +8,9 @@ scattervartext = {'Stable FEV1'; ...
                 'BMI';  ...
                 'Age';  ...
                 'Duration of exacerbation'; ...
-                'Day of Year'};
+                'Day of Year'; ...
+                'CRP Adm'; ...
+                'CRP Stable'};
 
 polarvartext = {'Day of Year'};
 
@@ -52,11 +54,27 @@ scattervardata(:, 4) = lc.Duration;
 lc.DayOfYear = day(lc.IVStartDate, 'dayofyear');
 lc.DaysInYear = day(datetime(year(lc.IVStartDate), 12, 31), 'dayofyear');
 lc.PolarDays = (lc.DayOfYear ./ lc.DaysInYear) * 360;
-scattervardata(:,5) = lc.DayOfYear;
-polarvardata(:,1) = lc.PolarDays;
+scattervardata(:, 5) = lc.DayOfYear;
+polarvardata(:, 1) = lc.PolarDays;
 
-plotsacross = 4;
-plotsdown   = ceil((nscattervars + nbarvars + npolarvars)/plotsacross);
+% 6 & 7) CRP on admission & Stable CRP (average on hospital discharge for each patient over study period)
+for i = 1:size(lc, 1)
+    crpadmidx = find(cdCRP.ID == lc.SmartCareID(i) & cdCRP.CRPDate >= (lc.IVStartDate(i) - days(2)) & cdCRP.CRPDate <= (lc.IVStartDate(i) + days(20)));
+    if size(crpadmidx, 1) ~= 0
+        scattervardata(i, 6) = max(cdCRP.NumericLevel(crpadmidx));
+    end
+    admidx = cdAdmissions.ID == lc.SmartCareID(i) & cdAdmissions.Admitted >= (lc.IVStartDate(i) - days(2)) & cdAdmissions.Admitted <= (lc.IVStartDate(i) + days(20));
+    if sum(admidx, 1) ~= 0
+        dischargedate = max(cdAdmissions.Discharge(admidx));
+        crpstabarray = cdCRP.NumericLevel(cdCRP.ID == lc.SmartCareID(i) & cdCRP.CRPDate >= (dischargedate - days(5)) & cdCRP.CRPDate <= (dischargedate + days(5)));
+        if size(crpstabarray, 1) ~= 0
+            scattervardata(i, 7) = mean(crpstabarray);
+        end
+    end
+end
+
+plotsdown   = 3; 
+plotsacross = ceil((nscattervars + nbarvars + npolarvars)/plotsdown);
 pointsize = 36;
 if nlatentcurves == 1
     cmap = [0, 1, 0];

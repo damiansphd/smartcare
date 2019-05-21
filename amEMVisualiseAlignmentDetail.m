@@ -83,7 +83,8 @@ for m = 1:nmeasures
     yyaxis left;
     
     [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, (meancurvemean(:, m)), xl, yl, 'blue', ':', 0.5, anchor);
-    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(meancurvemean(:, m), 5), xl, yl, 'blue', '-', 0.5, anchor);
+    %[xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(meancurvemean(:, m), 5), xl, yl, 'blue', '-', 0.5, anchor);
+    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, movmean(meancurvemean(:, m), 3, 'omitnan'), xl, yl, 'blue', '-', 0.5, anchor);
     
     ax.XAxis.FontSize = 8;
     xlabel('Days prior to Intervention');
@@ -185,7 +186,9 @@ for m = 1:nmeasures
             
             % plot latent curve and vertical line for ex_start (if chosen at this point)
             [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, (meancurvemean(:, m)), xl, yl, 'blue', ':', 0.5, anchor);
-            [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(meancurvemean(:, m), 5), xl, yl, 'blue', '-', 0.5, anchor);
+            %[xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(meancurvemean(:, m), 5), xl, yl, 'blue', '-', 0.5, anchor);
+            [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, movmean(meancurvemean(:, m), 3, 'omitnan'), xl, yl, 'blue', '-', 0.5, anchor);
+            
             if ex_start ~= 0
                 [xl, yl] = plotVerticalLine(ax, ex_start, xl, yl, 'blue', '--', 0.5); % plot ex_start
             end
