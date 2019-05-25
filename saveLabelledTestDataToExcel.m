@@ -12,7 +12,7 @@ else
     return;
 end
 
-basedir = './';
+basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 
 fprintf('\n');

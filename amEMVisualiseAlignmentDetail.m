@@ -79,6 +79,13 @@ for m = 1:nmeasures
     xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
     yl = [min(meancurvemean(:, m)) max(meancurvemean(:, m))];
     
+    if isnan(yl(1))
+        yl(1) = 0;
+    end
+    if isnan(yl(2))
+        yl(2) = 1;
+    end
+    
     ax = subplot(plotsdown,plotsacross, 1:6,'Parent',p);
     yyaxis left;
     
@@ -108,10 +115,14 @@ for m = 1:nmeasures
     bar([-1 * (max_offset + align_wind - 1): -1], meancurvecount(:, m), 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.25, 'LineWidth', 0.2);
     hold off;
     if isequal(run_type,'Best Alignment')
-        ylim([0 max(max_points) * 4]);
+        ylbar = [0 max(max_points) * 4];
     else
-        ylim([0 max(meancurvecount(:, m) * 4)]);
+        ylbar = [0 max(meancurvecount(:, m) * 4)];
     end
+    if isnan(ylbar(2))
+        ylbar(2) = 100;
+    end
+    ylim(ylbar);
     
     subplot(plotsdown,plotsacross, 7:16,'Parent',p);
     h = heatmap(p, datatable, 'ScaledDateNum', 'Intervention', 'Colormap', colors, 'MissingDataColor', 'white', ...
@@ -177,6 +188,13 @@ for m = 1:nmeasures
             
             xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
             yl = [min(min(temp_meancurvemean(:, m)), min(meancurvemean(:, m))) max(max(temp_meancurvemean(:, m)), max(meancurvemean(:, m)))];
+            
+            if isnan(yl(1))
+                yl(1) = 0;
+            end
+            if isnan(yl(2))
+                yl(2) = 1;
+            end
     
             ax = subplot(plotsdown, plotsacross, q, 'Parent', p);
             ax.Title.FontSize = 8;

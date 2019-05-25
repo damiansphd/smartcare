@@ -14,40 +14,49 @@ name1 = sprintf('%s - Ex_Start from TestLabels', modelrun);
 
 [truevotes, falsevotes] = calcVotesArray(amLabelledInterventions, amInterventions, ...
                                 overall_pdoffset, max_offset);
+                            
+sumtrue = sum(truevotes);
+sumfalse = sum(falsevotes);
+sumtrue((sumtrue + sumfalse) < 1) = 0;
+
 days = (-1 * (size(truevotes,2)):-1);
 thisplot = 1;
 ax1(thisplot) = subplot(plotsdown, plotsacross, thisplot, 'Parent',p1);
-b = bar(ax1(thisplot), days, sum(truevotes), 0.75, 'FaceColor', 'green', 'EdgeColor', 'black');
+b = bar(ax1(thisplot), days, sumtrue, 0.75, 'FaceColor', 'green', 'EdgeColor', 'black');
 title(sprintf('ExStart true votes by day - All %d Examples', size(amInterventions, 1)));
 
 thisplot = thisplot + 1;
 ax1(thisplot) = subplot(plotsdown, plotsacross, thisplot, 'Parent',p1);
-b = bar(ax1(thisplot), days, sum(falsevotes), 0.75, 'FaceColor', 'green', 'EdgeColor', 'black');
+b = bar(ax1(thisplot), days, sumfalse, 0.75, 'FaceColor', 'green', 'EdgeColor', 'black');
 title(sprintf('ExStart false votes by day - All %d Examples', size(amInterventions, 1)));
 
 thisplot = thisplot + 1;
 ax1(thisplot) = subplot(plotsdown, plotsacross, thisplot, 'Parent',p1);
-b = bar(ax1(thisplot), days, sum(truevotes) ./ (sum(truevotes) + sum(falsevotes)), 0.75, 'FaceColor', 'blue', 'EdgeColor', 'black');
+b = bar(ax1(thisplot), days, sumtrue ./ (sumtrue + sumfalse), 0.75, 'FaceColor', 'blue', 'EdgeColor', 'black');
 title(sprintf('ExStart true proportion votes by day - All %d Examples', size(amInterventions, 1)));
 
 
 idx = amLabelledInterventions.IncludeInTestSet == 'Y';
 [truevotes, falsevotes] = calcVotesArray(amLabelledInterventions(idx, :), amInterventions(idx, :), ...
                                 overall_pdoffset(idx, :), max_offset);
+sumtrue = sum(truevotes);
+sumfalse = sum(falsevotes);
+sumtrue((sumtrue + sumfalse) < 1) = 0;
+                            
 days = (-1 * (size(truevotes,2)):-1);
 thisplot = thisplot + 1;
 ax1(thisplot) = subplot(plotsdown, plotsacross, thisplot, 'Parent',p1);
-b = bar(ax1(thisplot), days, sum(truevotes), 0.75, 'FaceColor', 'green', 'EdgeColor', 'black');
+b = bar(ax1(thisplot), days, sumtrue, 0.75, 'FaceColor', 'green', 'EdgeColor', 'black');
 title(sprintf('ExStart true votes by day (%d Test Set examples)', size(amInterventions(idx,:),1)));                            
 
 thisplot = thisplot + 1;
 ax1(thisplot) = subplot(plotsdown, plotsacross, thisplot, 'Parent',p1);
-b = bar(ax1(thisplot), days, sum(falsevotes), 0.75, 'FaceColor', 'green', 'EdgeColor', 'black');
+b = bar(ax1(thisplot), days, sumfalse, 0.75, 'FaceColor', 'green', 'EdgeColor', 'black');
 title(sprintf('ExStart false votes by day (%d Test Set examples)', size(amInterventions(idx,:),1)));     
 
 thisplot = thisplot + 1;
 ax1(thisplot) = subplot(plotsdown, plotsacross, thisplot, 'Parent',p1);
-b = bar(ax1(thisplot), days, sum(truevotes) ./ (sum(truevotes) + sum(falsevotes)), 0.75, 'FaceColor', 'blue', 'EdgeColor', 'black');
+b = bar(ax1(thisplot), days, sumtrue ./ (sumtrue + sumfalse), 0.75, 'FaceColor', 'blue', 'EdgeColor', 'black');
 title(sprintf('ExStart true proportion votes by day (%d Test Set examples)', size(amInterventions(idx,:),1)));     
 
 basedir = setBaseDir();
@@ -55,7 +64,7 @@ basedir = setBaseDir();
 savePlotInDir(f1, name1, plotsubfolder);
 close(f1);
     
-[~, maxpt] = max(sum(truevotes) ./ (sum(truevotes) + sum(falsevotes)));
+[~, maxpt] = max(sumtrue ./ (sumtrue + sumfalse));
 
 ex_start = -1 * (size(truevotes,2)) - 1 + maxpt;
 

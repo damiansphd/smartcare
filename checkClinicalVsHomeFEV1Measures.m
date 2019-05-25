@@ -59,7 +59,7 @@ toc
 tic
 % create plots for patients with differences home vs clinical
 fprintf('FEV Plots for diff values home vs clinical\n');
-patientlist = [54 ; 82 ; 141 ; 153 ; 175 ; 196 ; 197 ; 201 ; 212 ; 213 ; 214 ; 215 ; 216 ; 223 ; 227 ; 229];
+patientlist = [54 ; 82 ; 141 ; 153 ; 175 ; 194 ; 195 ; 200 ; 212 ; 213 ; 214 ; 215 ; 216 ; 223 ; 227 ; 229];
 filenameprefix = 'ClinicalVsHomeFEV1 - Different Values';
 figurearray = createAndSaveFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pstudydate, ...
     mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);

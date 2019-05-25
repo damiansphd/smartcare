@@ -10,6 +10,10 @@ adjcountpt = 0;
 
 while (meancurvecountrow(thispoint) + adjcountpt) < countthreshold
     range = range + 1;
+    if range > max_offset + align_wind - 1
+        %fprintf('***** Measure %d Day %d, CurveCount %f AdjCount %f, Range %d: Not enough data points to borrow *****\n', thismeasure, thispoint, meancurvecountrow(thispoint), adjcountpt, range);
+        break
+    end
     if (thispoint + range) <= max_offset + align_wind - 1
         adjsumsqpt = adjsumsqpt + meancurvesumsqrow(thispoint + range);
         adjsumpt   = adjsumpt   + meancurvesumrow(thispoint   + range);

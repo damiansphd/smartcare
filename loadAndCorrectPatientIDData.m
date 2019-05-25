@@ -19,11 +19,13 @@ fprintf('Updating incorrect Patient IDs - %d rows\n', size(idx,1));
 for i = 1:size(idx,1)
     patientid.Patient_ID{idx(i)} = badids.Correct_ID{i};
 end
+
 % hard code this one as it had a trailing ' at the end of the id causing
-% mismatches
-fprintf('Updating incorrect Patient ID: h503el8mUI5hP-fwcnonk6 \n');
-patientid.Patient_ID{23} = 'h503el8mUI5hP-fwcnonk6';
-toc
+% mismatches - no longer needed, fixed in input s/s
+%fprintf('Updating incorrect Patient ID: h503el8mUI5hP-fwcnonk6 \n');
+%patientid.Patient_ID{23} = 'h503el8mUI5hP-fwcnonk6';
+%toc
+
 fprintf('\n');
 
 end

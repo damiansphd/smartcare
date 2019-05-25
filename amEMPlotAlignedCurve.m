@@ -7,6 +7,13 @@ function amEMPlotAlignedCurve(ax, mprofile_pre, mmeancurvemean, mmeancurvecount,
 xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
 yl = [min((mmeancurvemean * .99)) ...
       max((mmeancurvemean * 1.01))];
+  
+if isnan(yl(1))
+    yl(1) = 0;
+end
+if isnan(yl(2))
+    yl(2) = 1;
+end
 
 yyaxis left;
 
@@ -46,11 +53,18 @@ end
 hold on;
 bar((-1 * (max_offset + align_wind - 1): -1), mmeancurvecount, 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.25, 'LineWidth', 0.2);
 hold off;
+
 if isequal(run_type,'Best Alignment')
-    ylim([0 max(max_points) * 4]);
+    ylbar = [0 max(max_points) * 4];
 else
-    ylim([0 max(mmeancurvecount * 4)]);
+    ylbar = [0 max(mmeancurvecount * 4)];
 end
+
+if isnan(ylbar(2)) | ylbar(2) == 0
+    ylbar(2) = 100;
+end
+ylim(ylbar);
+
 if measure.Mask == 1
     title(subplottitle, 'FontSize', 6, 'BackgroundColor', 'g');
 else

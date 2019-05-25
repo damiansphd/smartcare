@@ -18,7 +18,7 @@ study = 'SC';
 basedir = setBaseDir();
 subfolder = 'DataFiles';
 scdatafile = 'mydata.csv';
-patientidfile = 'patientid.xlsx';
+patientidfile = 'patientidnew.xlsx';
 detaillog = false;
 doupdates = true;
 

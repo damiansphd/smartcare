@@ -52,7 +52,7 @@ toc
 tic
 fprintf('Weight Plots for anomalous clinical weight measures\n');
 filenameprefix = 'ClinicalVsHomeWeight - Clinical Anomalies';
-figurearray = createAndSaveWeightPlots(pmeasuresweight, pstudydateweight(ismember(pstudydateweight.SmartCareID, [61,178,193,195,196,197,198,199,201]),:), ...
+figurearray = createAndSaveWeightPlots(pmeasuresweight, pstudydateweight(ismember(pstudydateweight.SmartCareID, [61,178,191,193,194,195,196,197,200]),:), ...
     mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
 close all;
 toc

@@ -15,13 +15,13 @@ for n = 1:nlatentcurves
     % data points contributing to them
     % create space for a max of 1000 problem points which should be plenty -
     % delete those unused prior to returning from function
-    ppts = zeros(1000, 5);
+    ppts = zeros(1000, 6);
     currppt = 1;
     for a=max_offset + align_wind - 1 - min_offset:-1:1
         for m=1:nmeasures
             if (measuresmask(m) == 1) && (meancurvecount(n, a,m) < countthreshold)
-                [adjsumsqpt, adjsumpt, adjcountpt] = getAdjacentDataPoints(meancurvesumsq(n, :, m), meancurvesum(n, :, m), meancurvecount(n, :, m), a, m, countthreshold, max_offset, align_wind);
-                ppts(currppt, :) = [a, m, adjsumsqpt, adjsumpt, adjcountpt];
+                [adjsumsqpt, adjsumpt, adjcountpt, range] = getAdjacentDataPoints(meancurvesumsq(n, :, m), meancurvesum(n, :, m), meancurvecount(n, :, m), a, m, countthreshold, max_offset, align_wind);
+                ppts(currppt, :) = [a, m, adjsumsqpt, adjsumpt, adjcountpt, range];
                 currppt = currppt + 1;
                 if currppt > 1000
                     fprintf('***** WARNING - Number of problem points exceeded size of storage array *****\n');

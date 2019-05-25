@@ -113,13 +113,11 @@ amEMMCPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount,
 toc
 fprintf('\n');
 
-%if ex_start == 0
-%    ex_start = input('Look at best start and enter exacerbation start: ');
-%    fprintf('\n');
-%end
+%ex_start = input('Look at best start and enter exacerbation start: ');
+%fprintf('\n');
 
 ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions, amInterventions, ...
-        overall_pdoffset, max_offset, 'Plots', plotname, ninterventions, nlatentcurves);
+             overall_pdoffset, max_offset, 'Plots', plotname, ninterventions, nlatentcurves);
 
 tic
 run_type = 'Best Alignment';
