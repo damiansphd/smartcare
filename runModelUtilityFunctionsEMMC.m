@@ -13,14 +13,14 @@ fprintf(' 2: Run alignment animation (concurrent)\n');
 fprintf(' 3: (*) Run alignment animation (sequential)\n');
 fprintf(' 4: Run prod dist animation (concurrent)\n');
 fprintf(' 5: (*) Extract and save prob distributions\n');
-fprintf(' 6: (*) Label exacerbation plots for test data\n');
+fprintf(' 6: Label exacerbation plots for test data\n');
 fprintf(' 7: Compare results to another model run\n');
 fprintf(' 8: Compare results to labelled test data and plot results\n');
 fprintf(' 9: (*) <placeholder for Dragos new option\n');
 fprintf('10: Compare results for multiple model runs to labelled test data\n');
 fprintf('11: (*) Compare results for multiple model runs\n');
 fprintf('12: (*) Plot simplified aligned curves\n');
-fprintf('13: (*) Plot Test Labels\n');
+fprintf('13: Plot Test Labels\n');
 fprintf('14: Calc Ex Start from Test Labels\n');
 fprintf('15: Plot aligned curves\n');
 fprintf('16: Plot alignment detail\n');
@@ -126,6 +126,18 @@ elseif runfunction == 6
     if labelmode == 1
         fprintf('Creating new labelled test data file\n');
         amLabelledInterventions = amInterventions;
+        amLabelledInterventions.LowerBound1 = [];
+        amLabelledInterventions.UpperBound1 = [];
+        amLabelledInterventions.LowerBound2 = [];
+        amLabelledInterventions.UpperBound2 = [];
+        amLabelledInterventions.ConfidenceProb = [];
+        amLabelledInterventions.Ex_Start    = [];
+        amLabelledInterventions.Pred        = [];
+        amLabelledInterventions.RelLB1      = [];
+        amLabelledInterventions.RelUB1      = [];
+        amLabelledInterventions.RelLB2      = [];
+        amLabelledInterventions.RelUB2      = [];
+        
         amLabelledInterventions.Offset(:)            = 0;
         amLabelledInterventions.IncludeInTestSet(:)  = 'N';
         amLabelledInterventions.ExStart(:)           = ex_start;
@@ -165,7 +177,7 @@ elseif runfunction == 6
         interto = interfrom;
     end
 
-    [amLabelledInterventions] = createLabelledInterventions(amIntrDatacube, amLabelledInterventions, pdoffset, overall_pdoffset, ...
+    [amLabelledInterventions] = amEMMCCreateLabelledInterventions(amIntrDatacube, amLabelledInterventions, pdoffset, overall_pdoffset, ...
         interfrom, interto, measures, normmean, max_offset, align_wind, ex_start, study, nmeasures);
     
     fprintf('Saving labelled interventions to a separate matlab file\n');
@@ -214,7 +226,7 @@ elseif runfunction == 13
     load(fullfile(basedir, subfolder, inputfilename));
     fprintf('Plotting labelled test data\n');
     fprintf('\n');
-    plotLabelledInterventions(amIntrDatacube, amInterventions, amLabelledInterventions, ...
+    amEMMCPlotLabelledInterventions(amIntrDatacube, amInterventions, amLabelledInterventions, ...
     pdoffset, overall_pdoffset, measures, normmean, max_offset, align_wind, ex_start, ...
     study, nmeasures)  
 elseif runfunction == 14
@@ -264,7 +276,7 @@ elseif runfunction == 19
         abtable           = 'cdAntibiotics';
         admtable          = 'cdAdmissions';
         crptable          = 'cdCRP';
-    elseif ismember(study, 'TM');
+    elseif ismember(study, 'TM')
         clinicalmatfile   = 'telemedclinicaldata.mat';
         microbiologytable = 'tmMicrobiology';
         abtable           = 'tmAntibiotics';
