@@ -31,12 +31,13 @@ fprintf('20: Plot interventions over time by latent curve set\n');
 fprintf('21: Load variables for a given model run\n');
 fprintf('22: Plot a measure for a set of examples\n');
 fprintf('23: Compare latent curve set populations for 2 model runs\n');
+fprintf('24: Plot superimposed alignment surves\n');
 fprintf('\n');
-runfunction = input('Choose function (1-23): ');
+runfunction = input('Choose function (1-24): ');
 
 fprintf('\n');
 
-if runfunction > 23
+if runfunction > 24
     fprintf('Invalid choice\n');
     return;
 end
@@ -270,6 +271,10 @@ elseif runfunction == 19
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
     load(fullfile(basedir, subfolder, 'SCpredictivemodelinputs.mat'), 'pmPatients', 'pmPatientMeasStats');
+    fprintf('Loading Treatment and Measures Prior info\n');
+    basedir = setBaseDir();
+    subfolder = 'MatlabSavedVariables';
+    load(fullfile(basedir, subfolder, 'SCivandmeasures.mat'), 'ivandmeasurestable');
     if ismember(study, 'SC')
         clinicalmatfile   = 'clinicaldata.mat';
         microbiologytable = 'cdMicrobiology';
@@ -295,7 +300,7 @@ elseif runfunction == 19
         cdCRP          = tmCRP;
     end
     fprintf('Plotting Variables vs latent curve allocation\n');
-    amEMMCPlotVariablesVsLatentCurveSet(amInterventions, initial_latentcurve, pmPatients, pmPatientMeasStats, ...
+    amEMMCPlotVariablesVsLatentCurveSet(amInterventions, initial_latentcurve, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
         cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves);
 elseif runfunction == 20
     fprintf('Loading Predictive Model Patient Measures Stats\n');
@@ -317,6 +322,14 @@ elseif runfunction == 23
     fprintf('\n');
     [modelrun2, modelidx2] = amEMMCSelectModelRunFromDir('');
     amEMMCCompareModelRunsByLCSets(modelrun, modelidx, modelrun2, modelidx2);
+elseif runfunction == 24
+    run_type = 'Best Alignment';
+    subfolder = 'Plots';
+    fprintf('Plotting superimposed alignment curves\n');
+    centerplots = false;
+    amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, ...
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves);
+
 else
     fprintf('Should not get here....\n');
 end

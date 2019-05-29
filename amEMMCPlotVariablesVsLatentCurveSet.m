@@ -1,4 +1,4 @@
-function amEMMCPlotVariablesVsLatentCurveSet(amInterventions, initial_latentcurve, pmPatients, pmPatientMeasStats, ...
+function amEMMCPlotVariablesVsLatentCurveSet(amInterventions, initial_latentcurve, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
         cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves)
     
 % amEMMCPlotVariablesVsLatentCurveSet - compact plots of various variables
@@ -16,6 +16,8 @@ polarvartext = {'Day of Year'};
 
 barvartext = {%'Gender'; ...
               'Pct Gender'; ...
+              'Pct Nbr of IV Treatments'; ...
+              'Pct Nbr of AB Treatments'; ...
               %'Nbr of Interventions'; ...
               'Pct Nbr of Interventions'; ...
               'Pct Pseudomonas'; ...
@@ -104,22 +106,6 @@ for v = 1:nscattervars
     thisplot = thisplot + 1;    
 end
 
-for v = 1:npolarvars
-    ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
-    pax = polaraxes(p, 'Units', ax.Units,'Position', ax.Position);
-    delete(ax);
-    polarscatter(pax, polarvardata(:, v), (lc.LatentCurve / 5) + 1, pointsize, lc.LatentCurve, 'filled', 'MarkerFaceAlpha', 0.3);
-    pax.ThetaZeroLocation = 'top';
-    pax.ThetaDir          = 'clockwise';
-    pax.ThetaGrid         = 'off';
-    pax.RGrid             = 'off';
-    pax.RTickLabel        = {};
-    pax.FontSize          = 6;
-    pax.ThetaTick         = [0 90 180 270];
-    title(pax, polarvartext{v}, 'FontSize', 8);
-    thisplot = thisplot + 1;    
-end
-
 for v = 1:nbarvars
     if ismember(barvartext(v), {'Gender', 'Pct Gender'})
         nbarsplits = 2;
@@ -169,11 +155,11 @@ for v = 1:nbarvars
     elseif ismember(barvartext(v), {'Nbr of Interventions', 'Pct Nbr of Interventions'})
         intrcount = varfun(@max, amInterventions, 'InputVariables', {'Pred'}, 'GroupingVariables', {'SmartCareID'});
         nbarsplits = max(intrcount.GroupCount);
-        lc = innerjoin(lc, intrcount, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'SmartCareID'}, 'RightVariables', {'GroupCount'});
+        blc = innerjoin(lc, intrcount, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'SmartCareID'}, 'RightVariables', {'GroupCount'});
         barvardata = zeros(nlatentcurves, nbarsplits);
         for n = 1:nlatentcurves
             for b = 1:nbarsplits
-                barvardata(n, b) = sum(lc.LatentCurve == n & lc.GroupCount == b);
+                barvardata(n, b) = sum(blc.LatentCurve == n & blc.GroupCount == b);
             end
         end
         if ismember(barvartext(v), 'Pct Nbr of Interventions')
@@ -181,7 +167,27 @@ for v = 1:nbarvars
             
         end
         legendtext = {'1', '2', '3', '4'};
-        lc.GroupCount = [];
+        blc.GroupCount = [];
+    elseif ismember(barvartext(v), {'Nbr of IV Treatments', 'Pct Nbr of IV Treatments', 'Nbr of AB Treatments', 'Pct Nbr of AB Treatments'})
+        if ismember(barvartext(v), {'Nbr of IV Treatments', 'Pct Nbr of IV Treatments'})
+            tmpivandmeas = ivandmeasurestable(ivandmeasurestable.Type == 1 | ivandmeasurestable.Type == 3, :);
+        else
+            tmpivandmeas = ivandmeasurestable;
+        end
+        treatcount = varfun(@max, tmpivandmeas, 'InputVariables', {'DaysWithMeasures'}, 'GroupingVariables', {'SmartCareID'});
+        nbarsplits = max(treatcount.GroupCount);
+        blc = innerjoin(lc, treatcount, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'SmartCareID'}, 'RightVariables', {'GroupCount'});
+        barvardata = zeros(nlatentcurves, nbarsplits);
+        for n = 1:nlatentcurves
+            for b = 1:nbarsplits
+                barvardata(n, b) = sum(blc.LatentCurve == n & blc.GroupCount == b);
+            end
+        end
+        if ismember(barvartext(v), {'Pct Nbr of IV Treatments', 'Pct Nbr of AB Treatments'})
+            barvardata = 100 * (barvardata ./ sum(barvardata, 2));
+        end
+        legendtext = {'1', '2', '3', '4', '5', '6', '7'};
+        blc.GroupCount = [];
     end
     
     ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
@@ -190,11 +196,30 @@ for v = 1:nbarvars
     title(ax, barvartext{v}, 'FontSize', 8);
     legend(ax, legendtext, 'FontSize', 6);
     xlim(ax, [0.5 nlatentcurves + 0.5]);
-    if ismember(barvartext(v), {'Pct Gender', 'Pct Nbr of Interventions','Pct Pseudomonas', 'Pct Staphylococcus', 'Pct One or Both'})
+    if ismember(barvartext(v), {'Pct Gender', 'Pct Nbr of Interventions', ...
+            'Pct Pseudomonas', 'Pct Staphylococcus', 'Pct One or Both'})
         ylim(ax, [0 135]);
+    elseif ismember(barvartext(v), {'Pct Nbr of IV Treatments', 'Pct Nbr of AB Treatments'})
+        ylim(ax, [0 150]);
     end
     xlabel(ax, 'Latent Curve Set', 'FontSize', 8);
     ylabel(ax, barvartext{v}, 'FontSize', 8);
+    thisplot = thisplot + 1;    
+end
+
+for v = 1:npolarvars
+    ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
+    pax = polaraxes(p, 'Units', ax.Units,'Position', ax.Position);
+    delete(ax);
+    polarscatter(pax, polarvardata(:, v), (lc.LatentCurve / 5) + 1, pointsize, lc.LatentCurve, 'filled', 'MarkerFaceAlpha', 0.3);
+    pax.ThetaZeroLocation = 'top';
+    pax.ThetaDir          = 'clockwise';
+    pax.ThetaGrid         = 'off';
+    pax.RGrid             = 'off';
+    pax.RTickLabel        = {};
+    pax.FontSize          = 6;
+    pax.ThetaTick         = [0 90 180 270];
+    title(pax, polarvartext{v}, 'FontSize', 8);
     thisplot = thisplot + 1;    
 end
 
