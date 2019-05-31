@@ -1,63 +1,49 @@
-function plotSuperimposedAlignedCurves(meancurvemean, meancurvecount, ...
-    measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder)
+function plotSuperimposedAlignedCurves(ax, meancurvemean, meancurvecount, xl, yl, ...
+    measures, min_offset, max_offset, align_wind, ex_start, lc, cntthresh)
 
 % plotSuperimposedAlignedCurves - plots the aligned curves for each of the
 % measures superimposed on a single plot to show any timing differences in
 % the declines
 
-plotsacross = 1;
-plotsdown = 1;
-plottitle = sprintf('%s - %s Superimposed', plotname, run_type);
 anchor = 1; % latent curve is to be anchored on the plot (right side at min_offset)
-cntthresh = 8;
+
+% comment out/uncomment out one of these depending on whether all measures
+% wanted or just those used for alignment
+tmpmeasures = measures;
+%tmpmeasures = measures(logical(measures.Mask), :);
+tmpnmeasures = size(tmpmeasures, 1);
 
 % add colour array here and use it in the call to plotLatentCurve
-colors = lines(sum(measures.Mask));
+% lines only has 7 unique colours, so change line style after this
+colorthresh = 7;
+colors = lines(tmpnmeasures);
 
-% invert pulse rate
-pridx = ismember(measures.DisplayName, {'PulseRate'});
-meancurvemean(:, pridx) = meancurvemean(:, pridx) * -1;
+% add legend text cell array
+legendtext = tmpmeasures.DisplayName;
+pridx = ismember(tmpmeasures.DisplayName, {'PulseRate'});
+legendtext{pridx} = sprintf('%s %s', legendtext{pridx}, '(Inverted)');
+legendtext = [legendtext; {'ExStart'}];
 
-% need to add filtering of points with < n underlying data points.
-
-
-[f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
-ax = subplot(plotsdown, plotsacross, 1, 'Parent',p);
-
-% initialise plot areas
-xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
-yl = [min(min(meancurvemean)) * .99 ...
-      max(max(meancurvemean)) * 1.01];
-
-am = 0;
-for m = 1:nmeasures
-    if measures.Mask(m) == 1    
-        am = am + 1;
-        tmpmeancurvemean  = meancurvemean(:, m);
-        tmpmeancurvecount = meancurvecount(:, m);
-        tmpmeancurvemean(tmpmeancurvecount < cntthresh) = NaN;
-        
-        [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, movmean(meancurvemean(:, m), 5), xl, yl, colors(am, :), '-', 0.5, anchor);
+for m = 1:tmpnmeasures 
+    if m <= colorthresh
+        lstyle = '-';
+    else
+        lstyle = '-.';
     end
-
+    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, meancurvemean(:, m), xl, yl, colors(m, :), lstyle, 0.5, anchor);
 end
 
 if ex_start ~= 0
-    [xl, yl] = plotVerticalLine(ax, ex_start, xl, yl, 'blue', '--', 0.5); % plot ex_start
+    [xl, yl] = plotVerticalLine(ax, ex_start, xl, yl, 'black', ':', 0.5); % plot ex_start
 end
 
-legendtext = measures.DisplayName(logical(measures.Mask));
-legendtext = [legendtext; {'ExStart'}];
-legend(ax, legendtext, 'Location', 'southwest', 'FontSize', 10);
+legend(ax, legendtext, 'Location', 'southwest', 'FontSize', 6);
 
-ax.XAxis.FontSize = 10;
-xlabel('Days prior to Intervention');
-ax.YAxis.FontSize = 10;
-ylabel('Normalised Measure');
-
-% save plot
-savePlotInDir(f, plottitle, plotsubfolder);
-close(f);
+ax.XAxis.FontSize = 6;
+xlabel(ax, 'Days prior to Intervention');
+ax.YAxis.FontSize = 6;
+ylabel(ax, 'Normalised Measures');
+title(ax, sprintf('Curve Set %d (thresh = %d)', lc, cntthresh));
 
 end
 

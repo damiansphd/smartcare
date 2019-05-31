@@ -1,7 +1,9 @@
-function amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models)
+function amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models, plotmode)
 
 % amEMMCCompareMultipleModelRunToTestData - compares the output of multiple model runs to
 % the labelled test data. Able to handle multiple latent curve sets.
+
+
 
 amLabelledInterventions = [array2table([1:size(amLabelledInterventions,1)]'), amLabelledInterventions];
 amLabelledInterventions.Properties.VariableNames{'Var1'} = 'InterNbr';
@@ -59,6 +61,7 @@ for midx = modelidx:size(models,1)
         end
 
         modelpreds = amInterventions.Pred(testidx);
+        modellcs   = amInterventions.LatentCurve(testidx);
         
         matchidx   = (modelpreds >= (testset.IVScaledDateNum + testset.LowerBound1) & modelpreds <= (testset.IVScaledDateNum + testset.UpperBound1)) | ...
                      (modelpreds >= (testset.IVScaledDateNum + testset.LowerBound2) & modelpreds <= (testset.IVScaledDateNum + testset.UpperBound2));
@@ -69,6 +72,7 @@ for midx = modelidx:size(models,1)
         
         for i = 1:size(testset,1)
             rowtoadd.TestSetNbr = testset.InterNbr(i);
+            rowtoadd.LatentCurve = modellcs(i);
             if matchidx(i)
                 rowtoadd.Count = 0;
             else
@@ -113,30 +117,57 @@ labelsandquality = [array2table(modelrunlist), array2table(ylabels), array2table
 labelsandquality = sortrows(labelsandquality, {'ylabels'}, {'ascend'});
 resulttable = sortrows(resulttable, {'NumLCSets', 'Measures', 'MaxOffset', 'DataSmooth', 'RunMode', 'RandomSeed'});
 
-plotsacross = 1;
-plotsdown = 1;
-plottitle = sprintf('Model Run Results %s(%d-%d) vs Labelled Test Data', mversion, modelidx, size(models,1));
+if ismember(plotmode, {'Overall'})
+    plotsacross = 1;
+    plotsdown = 1;
+    plottitle = sprintf('Model Run Results %s(%d-%d) vs Labelled Test Data', mversion, modelidx, size(models,1));
 
-[f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
+    [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 
-subplot(plotsdown,plotsacross,[1],'Parent',p);
-h = heatmap(p, datatable, 'TestSetNbr', 'ModelRun', 'Colormap', colors(1:max(datatable.Count),:), 'MissingDataColor', 'white', ...
-    'ColorVariable','Count','ColorMethod','max', 'MissingDataLabel', 'No data', 'ColorBarVisible', 'on', 'FontSize', 8);
-h.Title = ' ';
-h.FontName = 'Monaco';
-h.FontSize = 6;
-h.XLabel = 'Intervention Nbr';
-h.YLabel = 'Model Run';
-h.YDisplayData = labelsandquality.modelrunlist;
-h.YDisplayLabels = labelsandquality.ylabels;
-h.CellLabelColor = 'none';
-h.GridVisible = 'on';
+    subplot(plotsdown,plotsacross,[1],'Parent',p);
+    h = heatmap(p, datatable, 'TestSetNbr', 'ModelRun', 'Colormap', colors(1:max(datatable.Count),:), 'MissingDataColor', 'white', ...
+        'ColorVariable','Count','ColorMethod','max', 'MissingDataLabel', 'No data', 'ColorBarVisible', 'on', 'FontSize', 8);
+    h.Title = ' ';
+    h.FontName = 'Monaco';
+    h.FontSize = 6;
+    h.XLabel = 'Intervention Nbr';
+    h.YLabel = 'Model Run';
+    h.YDisplayData = labelsandquality.modelrunlist;
+    h.YDisplayLabels = labelsandquality.ylabels;
+    h.CellLabelColor = 'none';
+    h.GridVisible = 'on';
 
-plotsubfolder = 'Plots';
-savePlotInDir(f, plottitle, plotsubfolder);
-close(f);
+    plotsubfolder = 'Plots';
+    savePlotInDir(f, plottitle, plotsubfolder);
+    close(f);
 
-writetable(resulttable, fullfile(basedir, 'ExcelFiles', sprintf('%s.xlsx', plottitle)));
+    writetable(resulttable, fullfile(basedir, 'ExcelFiles', sprintf('%s.xlsx', plottitle)));
+elseif ismember(plotmode, {'ByLCSet'})
+    for n = 1:nlatentcurves
+        plotsacross = 1;
+        plotsdown = 1;
+        plottitle = sprintf('Model Run Results %s(%d-%d) vs Labelled Test Data C%d', mversion, modelidx, size(models,1), n);
 
+        [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
+
+        subplot(plotsdown,plotsacross,[1],'Parent',p);
+        h = heatmap(p, datatable(datatable.LatentCurve==n,:), 'TestSetNbr', 'ModelRun', 'Colormap', colors(1:max(datatable.Count),:), 'MissingDataColor', 'white', ...
+            'ColorVariable','Count','ColorMethod','max', 'MissingDataLabel', 'No data', 'ColorBarVisible', 'on', 'FontSize', 8);
+        h.Title = ' ';
+        h.FontName = 'Monaco';
+        h.FontSize = 6;
+        h.XLabel = 'Intervention Nbr';
+        h.YLabel = 'Model Run';
+        h.YDisplayData = labelsandquality.modelrunlist;
+        h.YDisplayLabels = labelsandquality.ylabels;
+        h.CellLabelColor = 'none';
+        h.GridVisible = 'on';
+
+        plotsubfolder = 'Plots';
+        savePlotInDir(f, plottitle, plotsubfolder);
+        close(f);
+    end
+else
+    fprintf('**** Unknown plot mode ****\n');
 end
 

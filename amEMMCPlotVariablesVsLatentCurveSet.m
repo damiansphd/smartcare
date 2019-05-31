@@ -55,7 +55,7 @@ scattervardata(:, 4) = lc.Duration;
 % 5) Day of year
 lc.DayOfYear = day(lc.IVStartDate, 'dayofyear');
 lc.DaysInYear = day(datetime(year(lc.IVStartDate), 12, 31), 'dayofyear');
-lc.PolarDays = (lc.DayOfYear ./ lc.DaysInYear) * 360;
+lc.PolarDays = (lc.DayOfYear ./ lc.DaysInYear) * 2 * pi; % polar plots are in radians
 scattervardata(:, 5) = lc.DayOfYear;
 polarvardata(:, 1) = lc.PolarDays;
 
@@ -78,15 +78,19 @@ end
 plotsdown   = 3; 
 plotsacross = ceil((nscattervars + nbarvars + npolarvars)/plotsdown);
 pointsize = 36;
-if nlatentcurves == 1
-    cmap = [0, 1, 0];
-elseif nlatentcurves == 2
-    cmap = [0, 1, 0 ; 0, 0, 1 ];
-elseif nlatentcurves == 3
-    cmap = [0, 1, 0 ; 0, 0, 1 ; 1, 0, 0 ];
-elseif nlatentcurves == 4
-    cmap = [0, 1, 0 ; 0, 0, 1 ; 1, 0, 0 ; 1 0 1];
-else
+if nlatentcurves >= 1
+    cmap = [ 0.4, 0.8, 0.2 ];
+end
+if nlatentcurves >= 2
+    cmap(2,:) = [ 0, 0, 1 ];
+end
+if nlatentcurves >= 3
+    cmap(3,:) = [ 1, 0, 0 ];
+end
+if nlatentcurves >= 4
+    cmap(4,:) = [ 1 0 1 ];
+end
+if nlatentcurves >= 5
     fprintf('Add more colours to the palette\n');
     return;
 end
@@ -96,8 +100,19 @@ plottitle = sprintf('%s - Variables vs Latent Curve Set', plotname);
 colormap(f, cmap);
 thisplot = 1;
 for v = 1:nscattervars
+    if ismember(scattervartext(v), {'BMI'})
+        compressrange = [0, 32];
+    elseif ismember(scattervartext(v), {'CRP Adm'})
+        compressrange = [0, 100];
+    elseif ismember(scattervartext(v), {'CRP Stable'})
+        compressrange = [0, 50];
+    else
+       compressrange = [-Inf, Inf];
+    end
     ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
-    scatter(ax, lc.LatentCurve, scattervardata(:, v), pointsize, lc.LatentCurve, 'filled', 'MarkerFaceAlpha', 0.3);
+    %scatter(ax, lc.LatentCurve, scattervardata(:, v), pointsize, lc.LatentCurve, 'filled', 'MarkerFaceAlpha', 0.3);
+    boxplot(ax, scattervardata(:, v), lc.LatentCurve, 'Colors', cmap, 'ColorGroup', lc.LatentCurve, ...
+        'Notch', 'on', 'DataLim', compressrange, 'ExtremeMode', 'compress', 'Jitter', 1, 'Symbol', 'x');
     ax.FontSize = 6;
     title(ax, scattervartext{v}, 'FontSize', 8);
     xlim(ax, [0.5 nlatentcurves + 0.5]);

@@ -4,33 +4,50 @@ function amEMMCPlotInterventionsByLatentCurveSet(pmPatients, pmAntibiotics, amIn
 % treatments over time for all patients, and colour codes the treatments by
 % latent curve set.
 
-intrarray = ones(npatients, maxdays);
+tempintrcount = varfun(@max, amInterventions, 'InputVariables', {'Pred'}, 'GroupingVariables', {'SmartCareID'});
+maxpatintr = max(tempintrcount.GroupCount);
+widthperintr = 5;
+
+intrarray = ones(npatients, (maxdays + (maxpatintr  * widthperintr)));
+
+intrcnt = 1;
 
 for p = 1:npatients
     prellastmday = pmPatients.RelLastMeasdn(pmPatients.PatientNbr == p);
     pabs         = pmAntibiotics(pmAntibiotics.PatientNbr == p, :);
     ampredrows   = amInterventions(amInterventions.SmartCareID == pmPatients.ID(pmPatients.PatientNbr == p), :);
+    intrcnt = 1;
     
     for d = 1:maxdays
         ampredidx     = find(ampredrows.Pred <= d & ampredrows.IVScaledDateNum >= d, 1, 'first');
         ampredidx2    = find(ampredrows.Pred >= d & ampredrows.IVScaledDateNum <= d, 1, 'first');
         predtreatidx  = find(pabs.RelStartdn >= d, 1, 'first');
         treatidx   = find(pabs.RelStartdn <= d & pabs.RelStopdn >= d, 1, 'last');
+        % for treatments
         if size(treatidx, 1) ~= 0 && ...
                 (d >= pabs.RelStartdn(treatidx) && ...
                  d <= pabs.RelStopdn(treatidx))
             intrarray(p, d) = 2;  
         end
+        % for good predictions (before treatment date)
         if size(ampredidx,1)~=0 && ...
                 (d >= ampredrows.Pred(ampredidx) && ...
                  d < ampredrows.IVScaledDateNum(ampredidx))
             intrarray(p, d) = 3 + ampredrows.LatentCurve(ampredidx);
         end
+        % to plot a single day for bad predictions (on or after treatment
+        % date)
         if size(ampredidx2,1)~=0 && ...
                 (d == ampredrows.Pred(ampredidx2) && ...
                  d >= ampredrows.IVScaledDateNum(ampredidx2))
             intrarray(p, d) = 3 + ampredrows.LatentCurve(ampredidx2);
         end
+        % populate rhs colour boxes for sequence of interventions
+        if size(ampredidx,1)~=0 && (d == ampredrows.Pred(ampredidx))
+            intrarray(p, (maxdays + ((intrcnt -1) * widthperintr) + 1):(maxdays + (intrcnt * widthperintr))) = 3 + ampredrows.LatentCurve(ampredidx);
+            intrcnt = intrcnt + 1;
+        end
+        % plot vertical black line to indicate end of measurement period
         if d == prellastmday + 1
             intrarray(p, d) = 3;
         end
@@ -78,7 +95,7 @@ end
 colors(1,:) = [1    1    1];      % white = background
 colors(2,:) = [0.85 0.85 0.85];   % grey  = treatments 
 colors(3,:) = [0    0    0];      % black = end of patient measurement period
-colors(4,:) = [0    1    0];      % green = latent curve set 1
+colors(4,:) = [0.4, 0.8, 0.2];      % dark green = latent curve set 1
 if nlatentcurves > 1
     colors(5,:) = [0    0    1];  % blue  = latent curve set 2
 end

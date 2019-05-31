@@ -6,9 +6,21 @@ function [modelrun, modelidx, ModelResultFiles] = amEMMCSelectModelRunFromDir(lo
 
 modelstring = amEMMCSelectModelVersion();
 
+if isequal(loadtype, 'LCSet')
+    snbrlc = input('Enter number of latent curve sets to run for ? ', 's');
+    nbrlc = str2double(snbrlc);
+    if (isnan(nbrlc) || nbrlc < 1 || nbrlc > 5)
+        fprintf('Invalid choice - defaulting to 1\n');
+        nbrlc = 1;
+    end
+    lcstring = sprintf('*nl%d*', nbrlc);
+else
+    lcstring = '*';
+end
+
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-modelresultlisting = dir(fullfile(basedir, subfolder, sprintf('*%s*.mat', modelstring)));
+modelresultlisting = dir(fullfile(basedir, subfolder, sprintf('*%s%s.mat', modelstring, lcstring)));
 ModelResultFiles = cell(size(modelresultlisting,1),1);
 for a = 1:size(ModelResultFiles,1)
     ModelResultFiles{a} = strrep(modelresultlisting(a).name, '.mat', '');

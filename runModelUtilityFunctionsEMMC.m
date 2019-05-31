@@ -32,12 +32,13 @@ fprintf('21: Load variables for a given model run\n');
 fprintf('22: Plot a measure for a set of examples\n');
 fprintf('23: Compare latent curve set populations for 2 model runs\n');
 fprintf('24: Plot superimposed alignment surves\n');
+fprintf('25: Compare results for multiple model runs to labelled test data by latent curve set\n');
 fprintf('\n');
-runfunction = input('Choose function (1-24): ');
+runfunction = input('Choose function (1-25): ');
 
 fprintf('\n');
 
-if runfunction > 24
+if runfunction > 25
     fprintf('Invalid choice\n');
     return;
 end
@@ -46,7 +47,11 @@ if isequal(runfunction,'')
     return;
 end
 
-[modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('');
+if runfunction ~= 25
+    [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('');
+else
+    [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('LCSet');
+end
 
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
@@ -210,7 +215,8 @@ elseif runfunction == 10
     subfolder = 'MatlabSavedVariables';
     testdatafilename = sprintf('%s_LabelledInterventions.mat', study);
     load(fullfile(basedir, subfolder, testdatafilename));
-    amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models);
+    plotmode = 'Overall'; 
+    amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models, plotmode);
 elseif runfunction == 11
     fprintf('Comparing results of multiple model runs\n');
     fprintf('\n');
@@ -327,9 +333,16 @@ elseif runfunction == 24
     subfolder = 'Plots';
     fprintf('Plotting superimposed alignment curves\n');
     centerplots = false;
-    amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, ...
+    amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
         measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves);
-
+elseif runfunction == 25
+    fprintf('Comparing results of multiple model runs to the labelled test data by latent curve set\n');
+    fprintf('\n');
+    subfolder = 'MatlabSavedVariables';
+    testdatafilename = sprintf('%s_LabelledInterventions.mat', study);
+    load(fullfile(basedir, subfolder, testdatafilename));
+    plotmode = 'ByLCSet'; 
+    amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models, plotmode);
 else
     fprintf('Should not get here....\n');
 end
