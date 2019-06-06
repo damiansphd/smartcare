@@ -10,8 +10,6 @@ widthperintr = 5;
 
 intrarray = ones(npatients, (maxdays + (maxpatintr  * widthperintr)));
 
-intrcnt = 1;
-
 for p = 1:npatients
     prellastmday = pmPatients.RelLastMeasdn(pmPatients.PatientNbr == p);
     pabs         = pmAntibiotics(pmAntibiotics.PatientNbr == p, :);
@@ -42,9 +40,15 @@ for p = 1:npatients
                  d >= ampredrows.IVScaledDateNum(ampredidx2))
             intrarray(p, d) = 3 + ampredrows.LatentCurve(ampredidx2);
         end
-        % populate rhs colour boxes for sequence of interventions
-        if size(ampredidx,1)~=0 && (d == ampredrows.Pred(ampredidx))
+        % populate rhs colour boxes for sequence of interventions - first
+        % good predictions
+        if size(ampredidx,1)~=0 && (d == ampredrows.Pred(ampredidx) || (d == 1 && ampredrows.Pred(ampredidx) < 1))
             intrarray(p, (maxdays + ((intrcnt -1) * widthperintr) + 1):(maxdays + (intrcnt * widthperintr))) = 3 + ampredrows.LatentCurve(ampredidx);
+            intrcnt = intrcnt + 1;
+        end
+        % next for bad predictions
+        if size(ampredidx2,1)~=0 && (d == ampredrows.Pred(ampredidx2))
+            intrarray(p, (maxdays + ((intrcnt -1) * widthperintr) + 1):(maxdays + (intrcnt * widthperintr))) = 3 + ampredrows.LatentCurve(ampredidx2);
             intrcnt = intrcnt + 1;
         end
         % plot vertical black line to indicate end of measurement period

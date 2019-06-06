@@ -112,7 +112,7 @@ for v = 1:nscattervars
     ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
     %scatter(ax, lc.LatentCurve, scattervardata(:, v), pointsize, lc.LatentCurve, 'filled', 'MarkerFaceAlpha', 0.3);
     boxplot(ax, scattervardata(:, v), lc.LatentCurve, 'Colors', cmap, 'ColorGroup', lc.LatentCurve, ...
-        'Notch', 'on', 'DataLim', compressrange, 'ExtremeMode', 'compress', 'Jitter', 1, 'Symbol', 'x');
+        'Notch', 'off', 'DataLim', compressrange, 'ExtremeMode', 'compress', 'Jitter', 1, 'Symbol', 'x');
     ax.FontSize = 6;
     title(ax, scattervartext{v}, 'FontSize', 8);
     xlim(ax, [0.5 nlatentcurves + 0.5]);

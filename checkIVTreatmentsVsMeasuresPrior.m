@@ -178,7 +178,7 @@ fprintf('\n');
 tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('%sivandmeasures.mat', study);
+outputfilename = sprintf('%sivandmeasuresOLD.mat', study);
 
 fprintf('Saving output variables to file %s\n', outputfilename);
 save(fullfile(basedir, subfolder, outputfilename), 'ivandmeasurestable');
@@ -191,7 +191,7 @@ fprintf('Saving results to excel\n');
 
 basedir = setBaseDir();
 subfolder = 'ExcelFiles';
-outputfilename = sprintf('%sMeasuresPriorToIVTreatments.xlsx', study);
+outputfilename = sprintf('%sMeasuresPriorToIVTreatmentsOLD.xlsx', study);
 summarysheet = 'SummaryByIVTreatment';
 detailsheet = 'MeasuresDetail';
 

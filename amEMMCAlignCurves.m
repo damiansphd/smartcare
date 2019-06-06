@@ -77,11 +77,6 @@ elseif runmode == 7 || runmode == 8 || runmode == 10 || runmode == 11
     amInterventions.Offset(:) = 0;
     amInterventions.LatentCurve = lc.NTile;
     if runmode == 8 || runmode == 11
-        fprintf('Loading Elective Treatment file\n');
-        basedir = setBaseDir();
-        pmElectiveTreatments = readtable(fullfile(basedir, 'DataFiles', 'SCelectivetreatments.xlsx'));
-        pmElectiveTreatments.ElectiveTreatment(:) = 'Y';
-        amInterventions = outerjoin(amInterventions, pmElectiveTreatments, 'LeftKeys', {'SmartCareID', 'Hospital', 'IVScaledDateNum'}, 'RightKeys', {'ID', 'Hospital', 'IVScaledDateNum'}, 'RightVariables', {'ElectiveTreatment'});
         amInterventions.LatentCurve(amInterventions.ElectiveTreatment == 'Y') = ntiles + 1;   
     end    
 elseif runmode == 4 || runmode == 5 || runmode == 9   

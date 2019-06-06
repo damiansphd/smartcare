@@ -43,6 +43,12 @@ for midx = modelidx:size(models,1)
         if (~exist('heldbackpct','var'))
             heldbackpct = 0;
         end
+        if (~exist('intrmode','var'))
+            intrmode = 1;
+        end
+        if (~exist('scenario','var'))
+            scenario = '';
+        end
         temp = hsv;
         brightness = .9;
         colors(1,:) = temp(20,:) .* brightness;
@@ -97,12 +103,15 @@ for midx = modelidx:size(models,1)
         else
             convergeflag = ' ';
         end
-        ylabels = [ylabels; sprintf('nl%dmm%dmo%dds%drm%drs%d%s\n(%2d:%2d)', nlatentcurves, measuresmask, max_offset, datasmoothmethod, runmode, randomseed,convergeflag, sum(matchidx), sum(datatable.Count(datatable.ModelRun==midx)))];
+        ylabels = [ylabels; sprintf('nl%dmm%dmo%dds%drm%drs%din%dct%dsc%s%s\n(%2d:%2d)', nlatentcurves, measuresmask, ...
+            max_offset, datasmoothmethod, runmode, randomseed, intrmode, countthreshold, scenario, convergeflag, ...
+            sum(matchidx), sum(datatable.Count(datatable.ModelRun==midx)))];
 
         [resultrow] = setResultTableDisplayRow(mversion, study, sigmamethod, mumethod, ...
                         curveaveragingmethod, smoothingmethod, datasmoothmethod, measuresmask, runmode, randomseed, ...
-                        imputationmode, confidencemode, max_offset, align_wind, ...
-                        outprior, heldbackpct, confidencethreshold, nlatentcurves, niterations, ex_start, qual, ...
+                        intrmode, imputationmode, confidencemode, max_offset, align_wind, ...
+                        outprior, heldbackpct, confidencethreshold, countthreshold, nlatentcurves, ...
+                        niterations, scenario, ex_start, qual, ...
                         sum(matchidx), testsetsize, sum(datatable.Count(datatable.ModelRun==midx)), measures, nmeasures);
         resulttable = [resulttable; resultrow];
     end
@@ -120,7 +129,7 @@ resulttable = sortrows(resulttable, {'NumLCSets', 'Measures', 'MaxOffset', 'Data
 if ismember(plotmode, {'Overall'})
     plotsacross = 1;
     plotsdown = 1;
-    plottitle = sprintf('Model Run Results %s(%d-%d) vs Labelled Test Data', mversion, modelidx, size(models,1));
+    plottitle = sprintf('Model Run Results %s_in%d_nl%d(%d-%d) vs Labelled Test Data', mversion, intrmode, nlatentcurves, modelidx, size(models,1));
 
     [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 
@@ -146,7 +155,7 @@ elseif ismember(plotmode, {'ByLCSet'})
     for n = 1:nlatentcurves
         plotsacross = 1;
         plotsdown = 1;
-        plottitle = sprintf('Model Run Results %s(%d-%d) vs Labelled Test Data C%d', mversion, modelidx, size(models,1), n);
+        plottitle = sprintf('Model Run Results %s_in%d_nl%d(%d-%d) vs Labelled Test Data C%d', mversion, intrmode, nlatentcurves, modelidx, size(models,1), n);
 
         [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 
