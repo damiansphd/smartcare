@@ -6,8 +6,7 @@ function [amInterventions, amIntrDatacube, ninterventions, intrkeepidx] = amEMMC
 
 meanwindow = 10;
 
-% add columns for Data Window Completeness and Flag for Sequential
-% Intervention to amInterventions table
+% add columns for Data Window Completeness
 for i = 1:ninterventions
     actualpoints = 0;
     maxpoints = 0;
@@ -16,12 +15,12 @@ for i = 1:ninterventions
         maxpoints = maxpoints + align_wind;
     end
     amInterventions.DataWindowCompleteness(i) = 100 * actualpoints/maxpoints;
-    if i >= 2
-        if (amInterventions.SmartCareID(i) == amInterventions.SmartCareID(i-1) ...
-                && amInterventions.IVDateNum(i) - amInterventions.IVStopDateNum(i-1) < (align_wind + meanwindow))
-            amInterventions.SequentialIntervention(i) = 'Y';
-        end
-    end
+    %if i >= 2
+    %    if (amInterventions.SmartCareID(i) == amInterventions.SmartCareID(i-1) ...
+    %            && amInterventions.IVDateNum(i) - amInterventions.IVStopDateNum(i-1) < (align_wind + meanwindow))
+    %        amInterventions.SequentialIntervention(i) = 'Y';
+    %    end
+    %end
 end
 
 amInterventions = outerjoin(amInterventions, amElectiveTreatments, 'LeftKeys', {'SmartCareID', 'Hospital', 'IVScaledDateNum'}, 'RightKeys', {'ID', 'Hospital', 'IVScaledDateNum'}, 'RightVariables', {'ElectiveTreatment'});

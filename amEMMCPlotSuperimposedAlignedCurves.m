@@ -1,13 +1,18 @@
 function amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-    measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves)
+    measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, compactplot)
 
 % amEMMCPlotSuperimposedAlignedCurves - wrapper around the
 % plotSuperimposedAlignedCurves to plot for each set of latent curves
 
-plotsacross = 2;
-plotsdown   = 2;
-plottitle   = sprintf('%s - %s Superimposed', plotname, run_type);
-[f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
+if compactplot
+    plotsacross = 2;
+    plotsdown   = 2;
+    plottitle   = sprintf('%s - %s Superimposed', plotname, run_type);
+    [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
+else
+    plotsacross = 1;
+    plotsdown   = 1;
+end
 
 cntthresh = 5;
 smoothwdth = 4;
@@ -43,14 +48,27 @@ for n = 1:nlatentcurves
     tmp_ninterventions   = sum(amInterventions.LatentCurve == n);
     
     if tmp_ninterventions ~= 0
-        ax = subplot(plotsdown, plotsacross, n, 'Parent',p);
+        if compactplot
+            ax = subplot(plotsdown, plotsacross, n, 'Parent',p);
+        else
+            plottitle   = sprintf('%s - %s Superimposed C%d', plotname, run_type, n);
+            [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
+            ax = subplot(plotsdown, plotsacross, 1, 'Parent',p);
+        end
         plotSuperimposedAlignedCurves(ax, tmp_meancurvemean, tmp_meancurvecount, xl, yl, ...
                 measures, min_offset, max_offset, align_wind, ex_start(n), n, cntthresh);
+        if ~compactplot
+            % save plot
+            savePlotInDir(f, plottitle, plotsubfolder);
+            close(f);
+        end
     end
 end
 
-% save plot
-savePlotInDir(f, plottitle, plotsubfolder);
-close(f);
+if compactplot
+    % save plot
+    savePlotInDir(f, plottitle, plotsubfolder);
+    close(f);
+end
 
 end

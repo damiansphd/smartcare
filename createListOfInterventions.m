@@ -7,7 +7,7 @@ function [interventions] = createListOfInterventions(ivandmeasurestable, physdat
 patientoffsets = getPatientOffsets(physdata);
 
 interventions = ivandmeasurestable(ivandmeasurestable.DaysWithMeasures >= 15 & ivandmeasurestable.AvgMeasuresPerDay >= 2, ...
-    {'SmartCareID', 'Hospital', 'IVStartDate', 'IVDateNum', 'IVStopDate', 'IVStopDateNum', 'Route', 'Type', 'DaysWithMeasures', 'AvgMeasuresPerDay'});
+    {'SmartCareID', 'Hospital', 'IVStartDate', 'IVDateNum', 'IVStopDate', 'IVStopDateNum', 'Route', 'Type', 'SequentialIntervention', 'DaysWithMeasures', 'AvgMeasuresPerDay'});
 
 
 % do inner join to reduce to only patients with enough data

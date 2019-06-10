@@ -4,13 +4,22 @@ function amEMMCPlotVariablesVsLatentCurveSet(amInterventions, initial_latentcurv
 % amEMMCPlotVariablesVsLatentCurveSet - compact plots of various variables
 % against latent curve set assigned to try and observe correlations
 
-scattervartext = {'Stable FEV1'; ...
-                'BMI';  ...
-                'Age';  ...
-                'Duration of exacerbation'; ...
-                'Day of Year'; ...
-                'CRP Adm'; ...
-                'CRP Stable'};
+%scattervartext = {'Stable FEV1'; ...
+%                'BMI';  ...
+%                'Age';  ...
+%                'Duration of exacerbation'; ...
+%                'Day of Year'; ...
+%                'CRP Adm'; ...
+%                'CRP Stable'};
+            
+scattervartext = {'Stable FEV1',            'Box'; ...
+                'BMI',                      'Box';  ...
+                'Age',                      'Box';  ...
+                'Duration of exacerbation', 'Box'; ...
+                'Day of Year',              'Scatter'; ...
+                'CRP Adm',                  'Box'; ...
+                'CRP Stable',               'Box'};            
+            
 
 polarvartext = {'Day of Year'};
 
@@ -100,24 +109,30 @@ plottitle = sprintf('%s - Variables vs Latent Curve Set', plotname);
 colormap(f, cmap);
 thisplot = 1;
 for v = 1:nscattervars
-    if ismember(scattervartext(v), {'BMI'})
+    if ismember(scattervartext(v, 1), {'BMI'})
         compressrange = [0, 32];
-    elseif ismember(scattervartext(v), {'CRP Adm'})
+    elseif ismember(scattervartext(v, 1), {'CRP Adm'})
         compressrange = [0, 100];
-    elseif ismember(scattervartext(v), {'CRP Stable'})
+    elseif ismember(scattervartext(v, 1), {'CRP Stable'})
         compressrange = [0, 50];
     else
        compressrange = [-Inf, Inf];
     end
     ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
-    %scatter(ax, lc.LatentCurve, scattervardata(:, v), pointsize, lc.LatentCurve, 'filled', 'MarkerFaceAlpha', 0.3);
-    boxplot(ax, scattervardata(:, v), lc.LatentCurve, 'Colors', cmap, 'ColorGroup', lc.LatentCurve, ...
-        'Notch', 'off', 'DataLim', compressrange, 'ExtremeMode', 'compress', 'Jitter', 1, 'Symbol', 'x');
+    if ismember(scattervartext(v, 2), 'Scatter')
+        scatter(ax, lc.LatentCurve, scattervardata(:, v), pointsize, lc.LatentCurve, 'filled', 'MarkerFaceAlpha', 0.3);
+    elseif ismember(scattervartext(v, 2), 'Box')
+        boxplot(ax, scattervardata(:, v), lc.LatentCurve, 'Colors', cmap, 'ColorGroup', lc.LatentCurve, ...
+            'Notch', 'off', 'DataLim', compressrange, 'ExtremeMode', 'compress', 'Jitter', 1, 'Symbol', 'x');
+    else
+        fprintf('Unknown plot type\n');
+        return
+    end
     ax.FontSize = 6;
-    title(ax, scattervartext{v}, 'FontSize', 8);
+    title(ax, scattervartext{v, 1}, 'FontSize', 8);
     xlim(ax, [0.5 nlatentcurves + 0.5]);
     xlabel(ax, 'Latent Curve Set', 'FontSize', 8);
-    ylabel(ax, scattervartext{v}, 'FontSize', 8);
+    ylabel(ax, scattervartext{v, 1}, 'FontSize', 8);
     thisplot = thisplot + 1;    
 end
 

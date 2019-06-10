@@ -31,15 +31,16 @@ fprintf('20: Plot interventions over time by latent curve set\n');
 fprintf('21: Load variables for a given model run\n');
 fprintf('22: Plot a measure for a set of examples\n');
 fprintf('23: Compare latent curve set populations for 2 model runs\n');
-fprintf('24: Plot superimposed alignment surves\n');
-fprintf('25: Compare results for multiple model runs to labelled test data by latent curve set\n');
-fprintf('26: Run plots 18, 19, 20, 24 in one go\n');
+fprintf('24: Plot superimposed alignment surves - one per page\n');
+fprintf('25: Plot superimposed alignment surves - all on one page\n');
+fprintf('26: Compare results for multiple model runs to labelled test data by latent curve set\n');
+fprintf('27: Run plots 18, 19, 20, 24, 25 in one go\n');
 fprintf('\n');
-runfunction = input('Choose function (1-26): ');
+runfunction = input('Choose function (1-27): ');
 
 fprintf('\n');
 
-if runfunction > 26
+if runfunction > 27
     fprintf('Invalid choice\n');
     return;
 end
@@ -239,8 +240,7 @@ elseif runfunction == 13
     fprintf('Plotting labelled test data\n');
     fprintf('\n');
     amEMMCPlotLabelledInterventions(amIntrDatacube, amInterventions, amLabelledInterventions, ...
-    pdoffset, overall_pdoffset, measures, normmean, max_offset, align_wind, ex_start, ...
-    study, nmeasures)  
+    measures, normmean, max_offset, align_wind, study, nmeasures)  
 elseif runfunction == 14
     fprintf('Loading latest labelled test data file\n');
     inputfilename = sprintf('%s_LabelledInterventions.mat', study);
@@ -251,28 +251,24 @@ elseif runfunction == 14
         overall_pdoffset, max_offset, sprintf('Plots/%s', modelrun), modelrun, ninterventions, nlatentcurves);
 elseif runfunction == 15
     run_type = 'Best Alignment';
-    subfolder = 'Plots';
     fprintf('Plotting aligned curves \n');
     amEMMCPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, ...
         amInterventions.Offset, amInterventions.LatentCurve, ...
         measures, max_points, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, sigmamethod, plotname, plotsubfolder, nlatentcurves);
 elseif runfunction == 16
     run_type = 'Best Alignment';
-    subfolder = 'Plots';
     fprintf('Plotting alignment detail\n');
     [sorted_interventions, max_points] = amEMMCVisualiseAlignmentDetail(amIntrNormcube, amHeldBackcube, amInterventions, meancurvemean, ...
         meancurvecount, meancurvestd, overall_pdoffset, measures, min_offset, max_offset, align_wind, nmeasures, ninterventions, ...
         run_type, ex_start, curveaveragingmethod, plotname, plotsubfolder, nlatentcurves);
 elseif runfunction == 17
     run_type = 'Best Alignment';
-    subfolder = 'Plots';
     fprintf('Plotting alignment curves side-by-side\n');
     centerplots = false;
     amEMMCPlotAlignedCurvesSideBySide(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, amInterventions.Offset, amInterventions.LatentCurve, ...
         measures, max_points, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, sigmamethod, plotname, plotsubfolder, nlatentcurves, centerplots);
 elseif runfunction == 18
     run_type = 'Best Alignment';
-    subfolder = 'Plots';
     fprintf('Plotting alignment curves side-by-side with centering\n');
     centerplots = true;
     amEMMCPlotAlignedCurvesSideBySide(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, amInterventions.Offset, amInterventions.LatentCurve, ...
@@ -336,12 +332,17 @@ elseif runfunction == 23
     amEMMCCompareModelRunsByLCSets(modelrun, modelidx, modelrun2, modelidx2);
 elseif runfunction == 24
     run_type = 'Best Alignment';
-    subfolder = 'Plots';
-    fprintf('Plotting superimposed alignment curves\n');
-    centerplots = false;
+    fprintf('Plotting superimposed alignment curves - one per page\n');
+    compactplot = false;
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, compactplot);
 elseif runfunction == 25
+    run_type = 'Best Alignment';
+    fprintf('Plotting superimposed alignment curves - all on one page\n');
+    compactplot = true;
+    amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, compactplot);
+elseif runfunction == 26
     fprintf('Comparing results of multiple model runs to the labelled test data by latent curve set\n');
     fprintf('\n');
     subfolder = 'MatlabSavedVariables';
@@ -349,10 +350,9 @@ elseif runfunction == 25
     load(fullfile(basedir, subfolder, testdatafilename));
     plotmode = 'ByLCSet'; 
     amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions(intrkeepidx, :), modelrun, modelidx, models, plotmode);
-elseif runfunction == 26
+elseif runfunction == 27
     % run plot 18
     run_type = 'Best Alignment';
-    subfolder = 'Plots';
     fprintf('Plotting alignment curves side-by-side with centering\n');
     centerplots = true;
     amEMMCPlotAlignedCurvesSideBySide(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, amInterventions.Offset, amInterventions.LatentCurve, ...
@@ -402,12 +402,16 @@ elseif runfunction == 26
     amEMMCPlotInterventionsByLatentCurveSet(pmPatients, pmAntibiotics, amInterventions, npatients, maxdays, plotname, plotsubfolder, nlatentcurves);
     % run plot 24
     run_type = 'Best Alignment';
-    subfolder = 'Plots';
-    fprintf('Plotting superimposed alignment curves\n');
-    centerplots = false;
+    fprintf('Plotting superimposed alignment curves  - one per page\n');
+    compactplot = false; 
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves);
-else
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, compactplot);
+    % run plot 25
+    run_type = 'Best Alignment';
+    fprintf('Plotting superimposed alignment curves - all on one page\n');
+    compactplot = true;
+    amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, compactplot);
     fprintf('Should not get here....\n');
 end
     
