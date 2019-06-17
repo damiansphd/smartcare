@@ -27,7 +27,7 @@ fprintf('16: Plot alignment detail\n');
 fprintf('17: Plot alignment surves side-by-side\n');
 fprintf('18: Plot alignment surves side-by-side with centering\n');
 fprintf('19: Plot variables vs latent curve assignment\n');
-fprintf('20: Plot interventions over time by latent curve set\n');
+fprintf('20: Plot interventions over time by latent curve set (scaled days)\n');
 fprintf('21: Load variables for a given model run\n');
 fprintf('22: Plot a measure for a set of examples\n');
 fprintf('23: Compare latent curve set populations for 2 model runs\n');
@@ -35,12 +35,14 @@ fprintf('24: Plot superimposed alignment surves - one per page\n');
 fprintf('25: Plot superimposed alignment surves - all on one page\n');
 fprintf('26: Compare results for multiple model runs to labelled test data by latent curve set\n');
 fprintf('27: Run plots 18, 19, 20, 24, 25 in one go\n');
+fprintf('28: Compare latent curve set populations for multiple model runs\n');
+fprintf('29: Plot interventions over time by latent curve set (absolute days)\n');
 fprintf('\n');
-runfunction = input('Choose function (1-27): ');
+runfunction = input('Choose function (1-29): ');
 
 fprintf('\n');
 
-if runfunction > 27
+if runfunction > 29
     fprintf('Invalid choice\n');
     return;
 end
@@ -50,11 +52,6 @@ if isequal(runfunction,'')
 end
 
 [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('', 'LCSet', 'IntrFilt');
-%if runfunction ~= 25
-%    [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('');
-%else
-%    [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('LCSet');
-%end
 
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
@@ -277,11 +274,11 @@ elseif runfunction == 19
     fprintf('Loading Predictive Model Patient Measures Stats\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
-    load(fullfile(basedir, subfolder, 'SCpredictivemodelinputs.mat'), 'pmPatients', 'pmPatientMeasStats');
+    load(fullfile(basedir, subfolder, sprintf('%spredictivemodelinputs.mat', study)), 'pmPatients', 'pmPatientMeasStats');
     fprintf('Loading Treatment and Measures Prior info\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
-    load(fullfile(basedir, subfolder, 'SCivandmeasures.mat'), 'ivandmeasurestable');
+    load(fullfile(basedir, subfolder, sprintf('%sivandmeasures.mat', study)), 'ivandmeasurestable');
     if ismember(study, 'SC')
         clinicalmatfile   = 'clinicaldata.mat';
         microbiologytable = 'cdMicrobiology';
@@ -307,15 +304,22 @@ elseif runfunction == 19
         cdCRP          = tmCRP;
     end
     fprintf('Plotting Variables vs latent curve allocation\n');
-    amEMMCPlotVariablesVsLatentCurveSet(amInterventions, initial_latentcurve, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
+    amEMMCPlotVariablesVsLatentCurveSet(amInterventions, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
         cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves);
 elseif runfunction == 20
-    fprintf('Loading Predictive Model Patient Measures Stats\n');
+    fprintf('Loading Predictive Model Patient info\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
-    load(fullfile(basedir, subfolder, 'SCpredictivemodelinputs.mat'), 'pmPatients', 'pmAntibiotics', 'pmAMPred', 'pmPatientMeasStats', 'npatients', 'maxdays');
+    sprintf('%s_LabelledInterventions.mat', study);
+    load(fullfile(basedir, subfolder, sprintf('%spredictivemodelinputs.mat', study)), 'pmPatients', 'npatients', 'maxdays');
+    fprintf('Loading unfiltered interventions\n');
+    amInterventionsKeep = amInterventions;
+    load(fullfile(basedir, subfolder, sprintf('%salignmentmodelinputs.mat', study)), 'amInterventions');
+    amInterventionsFull = amInterventions;
+    amInterventions = amInterventionsKeep;
     fprintf('Plotting interventions over time by latent curve set\n');
-    amEMMCPlotInterventionsByLatentCurveSet(pmPatients, pmAntibiotics, amInterventions, npatients, maxdays, plotname, plotsubfolder, nlatentcurves);
+    plotmode = 1; % plot using scaled dates
+    amEMMCPlotInterventionsByLatentCurveSet(pmPatients, amInterventions, amInterventionsFull, npatients, maxdays, plotname, plotsubfolder, nlatentcurves, plotmode);
 elseif runfunction == 21
     fprintf('Done\n');
 elseif runfunction == 22
@@ -361,11 +365,11 @@ elseif runfunction == 27
     fprintf('Loading Predictive Model Patient Measures Stats\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
-    load(fullfile(basedir, subfolder, 'SCpredictivemodelinputs.mat'), 'pmPatients', 'pmPatientMeasStats');
+    load(fullfile(basedir, subfolder, sprintf('%spredictivemodelinputs.mat', study)), 'pmPatients', 'pmPatientMeasStats');
     fprintf('Loading Treatment and Measures Prior info\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
-    load(fullfile(basedir, subfolder, 'SCivandmeasures.mat'), 'ivandmeasurestable');
+    load(fullfile(basedir, subfolder, sprintf('%sivandmeasures.mat', study)), 'ivandmeasurestable');
     if ismember(study, 'SC')
         clinicalmatfile   = 'clinicaldata.mat';
         microbiologytable = 'cdMicrobiology';
@@ -394,12 +398,18 @@ elseif runfunction == 27
     amEMMCPlotVariablesVsLatentCurveSet(amInterventions, initial_latentcurve, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
         cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves);
     % run plot 20
-    fprintf('Loading Predictive Model Patient Measures Stats\n');
+    fprintf('Loading Predictive Model Patient info\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
-    load(fullfile(basedir, subfolder, 'SCpredictivemodelinputs.mat'), 'pmPatients', 'pmAntibiotics', 'pmAMPred', 'pmPatientMeasStats', 'npatients', 'maxdays');
+    load(fullfile(basedir, subfolder, sprintf('%spredictivemodelinputs.mat', study)), 'pmPatients', 'npatients', 'maxdays');
+    fprintf('Loading unfiltered interventions\n');
+    amInterventionsKeep = amInterventions;
+    load(fullfile(basedir, subfolder, sprintf('%salignmentmodelinputs.mat', study)), 'amInterventions');
+    amInterventionsFull = amInterventions;
+    amInterventions = amInterventionsKeep;
     fprintf('Plotting interventions over time by latent curve set\n');
-    amEMMCPlotInterventionsByLatentCurveSet(pmPatients, pmAntibiotics, amInterventions, npatients, maxdays, plotname, plotsubfolder, nlatentcurves);
+    plotmode = 1; % plot using scaled dates
+    amEMMCPlotInterventionsByLatentCurveSet(pmPatients, amInterventions, amInterventionsFull, npatients, maxdays, plotname, plotsubfolder, nlatentcurves, plotmode);
     % run plot 24
     run_type = 'Best Alignment';
     fprintf('Plotting superimposed alignment curves  - one per page\n');
@@ -413,6 +423,23 @@ elseif runfunction == 27
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
         measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, compactplot);
     fprintf('Should not get here....\n');
+elseif runfunction == 28
+    fprintf('Comparing latent curve set population to multiple model runs\n');
+    amEMMCCompareMultipleModelRunsByLCSets(modelrun, modelidx, models);
+elseif runfunction == 29
+    fprintf('Loading Predictive Model Patient info\n');
+    basedir = setBaseDir();
+    subfolder = 'MatlabSavedVariables';
+    sprintf('%s_LabelledInterventions.mat', study);
+    load(fullfile(basedir, subfolder, sprintf('%spredictivemodelinputs.mat', study)), 'pmPatients', 'npatients', 'maxdays');
+    fprintf('Loading unfiltered interventions\n');
+    amInterventionsKeep = amInterventions;
+    load(fullfile(basedir, subfolder, sprintf('%salignmentmodelinputs.mat', study)), 'amInterventions');
+    amInterventionsFull = amInterventions;
+    amInterventions = amInterventionsKeep;
+    fprintf('Plotting interventions over time by latent curve set\n');
+    plotmode = 2; % plot using scaled dates
+    amEMMCPlotInterventionsByLatentCurveSet(pmPatients, amInterventions, amInterventionsFull, npatients, maxdays, plotname, plotsubfolder, nlatentcurves, plotmode);
 end
     
 

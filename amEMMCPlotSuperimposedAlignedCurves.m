@@ -37,12 +37,18 @@ for n = 1:nlatentcurves
 end
 
 % set the plot range over all curves to ensure comparable visual scaling
-xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
+xfrom = -1 * (align_wind + max_offset - 1 + ex_start);
+xto   = -1 * (1 + ex_start);
+xl = [xfrom, xto];
+%xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
 yl = [min(min(min(meancurvemean))) ...
       max(max(max(meancurvemean)))];
 
 % for each curve, plot all measures superimposed
 for n = 1:nlatentcurves
+    xfrom = -1 * (align_wind + max_offset - 1 + ex_start(n));
+    xto   = -1 * (1 + ex_start(n));
+    xl = [xfrom, xto];
     tmp_meancurvemean  = reshape(meancurvemean(n, :, :),  [max_offset + align_wind - 1, nmeasures]);
     tmp_meancurvecount = reshape(meancurvecount(n, :, :), [max_offset + align_wind - 1, nmeasures]);
     tmp_ninterventions   = sum(amInterventions.LatentCurve == n);
@@ -56,7 +62,7 @@ for n = 1:nlatentcurves
             ax = subplot(plotsdown, plotsacross, 1, 'Parent',p);
         end
         plotSuperimposedAlignedCurves(ax, tmp_meancurvemean, tmp_meancurvecount, xl, yl, ...
-                measures, min_offset, max_offset, align_wind, ex_start(n), n, cntthresh);
+                measures, min_offset, max_offset, align_wind, ex_start(n), n, cntthresh, sum(amInterventions.LatentCurve == n));
         if ~compactplot
             % save plot
             savePlotInDir(f, plottitle, plotsubfolder);

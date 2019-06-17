@@ -1,54 +1,103 @@
-function amEMMCPlotInterventionsByLatentCurveSet(pmPatients, pmAntibiotics, amInterventions, npatients, maxdays, plotname, plotsubfolder, nlatentcurves)
+function amEMMCPlotInterventionsByLatentCurveSet(pmPatients, amInterventions, ...
+    amInterventionsFull, npatients, maxdays, plotname, plotsubfolder, nlatentcurves, plotmode)
 
 % amEMMCPlotInterventionsByLatentCurveSet - plots interventions and
 % treatments over time for all patients, and colour codes the treatments by
 % latent curve set.
 
 tempintrcount = varfun(@max, amInterventions, 'InputVariables', {'Pred'}, 'GroupingVariables', {'SmartCareID'});
-maxpatintr = max(tempintrcount.GroupCount);
-widthperintr = 5;
+maxpatintr    = max(tempintrcount.GroupCount);
 
-intrarray = ones(npatients, (maxdays + (maxpatintr  * widthperintr)));
+if plotmode == 1 % plot with days scaled to start of study for each patient
+    plotmaxdays = maxdays;
+    amInterventions.PStartdn     = amInterventions.IVScaledDateNum;
+    amInterventions.PPred        = amInterventions.Pred;
+    amInterventionsFull.PStartdn = amInterventionsFull.IVScaledDateNum;
+    amInterventionsFull.PStopdn  = amInterventionsFull.IVScaledStopDateNum;
+    plottext                     = 'RelDays';
+    widthperintr                 = 5;
+    xdisplabels = cell(1, plotmaxdays + (maxpatintr  * widthperintr));
+    for i = 1:plotmaxdays
+        if i/50 == round(i/50)
+            xdisplabels{i} = num2str(i);
+        else
+            xdisplabels{i} = '';
+        end
+    end
+    for i = plotmaxdays + 1: plotmaxdays + (maxpatintr  * widthperintr)
+        xdisplabels{i} = '';
+    end
+elseif plotmode == 2 % plot real days
+    plotmaxdays = max(amInterventionsFull.IVStopDateNum);
+    amInterventions.PStartdn     = amInterventions.IVDateNum;
+    amInterventions.PPred        = amInterventions.Pred + amInterventions.PatientOffset;
+    amInterventionsFull.PStartdn = amInterventionsFull.IVDateNum;
+    amInterventionsFull.PStopdn  = amInterventionsFull.IVStopDateNum;
+    mindate     = amInterventions.IVStartDate(1) - days(amInterventions.IVDateNum(1));
+    plottext                     = 'AbsDays';
+    widthperintr                 = 10;
+    xdisplabels = cell(1, plotmaxdays + (maxpatintr  * widthperintr));
+    for i = 1:plotmaxdays
+        if i/50 == round(i/50)
+            xdisplabels{i} = datestr(mindate + days(i), 1);
+        else
+            xdisplabels{i} = '';
+        end
+    end
+    for i = plotmaxdays + 1: plotmaxdays + (maxpatintr  * widthperintr)
+        xdisplabels{i} = '';
+    end
+else
+    fprintf('**** Unknown Plot Mode ****\n');
+    return
+end
+
+intrarray = ones(npatients, (plotmaxdays + (maxpatintr  * widthperintr)));
 
 for p = 1:npatients
-    prellastmday = pmPatients.RelLastMeasdn(pmPatients.PatientNbr == p);
-    pabs         = pmAntibiotics(pmAntibiotics.PatientNbr == p, :);
+    if plotmode == 1
+        prellastmday = pmPatients.RelLastMeasdn(pmPatients.PatientNbr == p);
+    elseif plotmode == 2
+        prellastmday = pmPatients.LastMeasdn(pmPatients.PatientNbr == p);
+    else
+        return;
+    end
+    pabs         = amInterventionsFull(amInterventionsFull.SmartCareID == pmPatients.ID(pmPatients.PatientNbr == p),:);
     ampredrows   = amInterventions(amInterventions.SmartCareID == pmPatients.ID(pmPatients.PatientNbr == p), :);
     intrcnt = 1;
     
-    for d = 1:maxdays
-        ampredidx     = find(ampredrows.Pred <= d & ampredrows.IVScaledDateNum >= d, 1, 'first');
-        ampredidx2    = find(ampredrows.Pred >= d & ampredrows.IVScaledDateNum <= d, 1, 'first');
-        predtreatidx  = find(pabs.RelStartdn >= d, 1, 'first');
-        treatidx   = find(pabs.RelStartdn <= d & pabs.RelStopdn >= d, 1, 'last');
+    for d = 1:plotmaxdays
+        ampredidx     = find(ampredrows.PPred <= d & ampredrows.PStartdn >= d, 1, 'first');
+        ampredidx2    = find(ampredrows.PPred >= d & ampredrows.PStartdn <= d, 1, 'first');
+        treatidx      = find(pabs.PStartdn <= d & pabs.PStopdn >= d);
         % for treatments
         if size(treatidx, 1) ~= 0 && ...
-                (d >= pabs.RelStartdn(treatidx) && ...
-                 d <= pabs.RelStopdn(treatidx))
+                (d >= pabs.PStartdn(treatidx) && ...
+                 d <= pabs.PStopdn(treatidx))
             intrarray(p, d) = 2;  
         end
         % for good predictions (before treatment date)
         if size(ampredidx,1)~=0 && ...
-                (d >= ampredrows.Pred(ampredidx) && ...
-                 d < ampredrows.IVScaledDateNum(ampredidx))
+                (d >= ampredrows.PPred(ampredidx) && ...
+                 d < ampredrows.PStartdn(ampredidx))
             intrarray(p, d) = 3 + ampredrows.LatentCurve(ampredidx);
         end
         % to plot a single day for bad predictions (on or after treatment
         % date)
         if size(ampredidx2,1)~=0 && ...
-                (d == ampredrows.Pred(ampredidx2) && ...
-                 d >= ampredrows.IVScaledDateNum(ampredidx2))
+                (d == ampredrows.PPred(ampredidx2) && ...
+                 d >= ampredrows.PStartdn(ampredidx2))
             intrarray(p, d) = 3 + ampredrows.LatentCurve(ampredidx2);
         end
         % populate rhs colour boxes for sequence of interventions - first
         % good predictions
-        if size(ampredidx,1)~=0 && (d == ampredrows.Pred(ampredidx) || (d == 1 && ampredrows.Pred(ampredidx) < 1))
-            intrarray(p, (maxdays + ((intrcnt -1) * widthperintr) + 1):(maxdays + (intrcnt * widthperintr))) = 3 + ampredrows.LatentCurve(ampredidx);
+        if size(ampredidx,1)~=0 && (d == ampredrows.PPred(ampredidx) || (d == 1 && ampredrows.PPred(ampredidx) < 1))
+            intrarray(p, (plotmaxdays + ((intrcnt -1) * widthperintr) + 1):(plotmaxdays + (intrcnt * widthperintr))) = 3 + ampredrows.LatentCurve(ampredidx);
             intrcnt = intrcnt + 1;
         end
         % next for bad predictions
-        if size(ampredidx2,1)~=0 && (d == ampredrows.Pred(ampredidx2))
-            intrarray(p, (maxdays + ((intrcnt -1) * widthperintr) + 1):(maxdays + (intrcnt * widthperintr))) = 3 + ampredrows.LatentCurve(ampredidx2);
+        if size(ampredidx2,1)~=0 && (d == ampredrows.PPred(ampredidx2))
+            intrarray(p, (plotmaxdays + ((intrcnt -1) * widthperintr) + 1):(plotmaxdays + (intrcnt * widthperintr))) = 3 + ampredrows.LatentCurve(ampredidx2);
             intrcnt = intrcnt + 1;
         end
         % plot vertical black line to indicate end of measurement period
@@ -110,7 +159,7 @@ if nlatentcurves > 3
     colors(7,:) = [1    0    1];  % magenta = latent curve set 4
 end
 
-plottitle = sprintf('%s - Intr vs LatentCurveSet', plotname);
+plottitle = sprintf('%s - Intr vs LCSet %s', plotname, plottext);
 [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 
 sp(1)    = uipanel('Parent', p, ...
@@ -125,6 +174,7 @@ h.CellLabelColor = 'none';
 h.GridVisible = 'off';
 h.ColorbarVisible = 'off';
 h.YDisplayLabels = num2cell(lc.ID);
+h.XDisplayLabels = xdisplabels;
 
 sp(2)    = uicontrol('Parent', p, ... 
                 'Units', 'normalized', ...

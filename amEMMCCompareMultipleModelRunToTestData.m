@@ -122,6 +122,9 @@ modelrunlist(1) = [];
 qualityscore(1) = [];
 ylabels(1) = [];
 
+dispmin = min(datatable.ModelRun);
+dispmax = max(datatable.ModelRun);
+
 labelsandquality = [array2table(modelrunlist), array2table(ylabels), array2table(qualityscore)];
 labelsandquality = sortrows(labelsandquality, {'ylabels'}, {'ascend'});
 resulttable = sortrows(resulttable, {'NumLCSets', 'Measures', 'MaxOffset', 'DataSmooth', 'RunMode', 'RandomSeed'});
@@ -152,6 +155,20 @@ if ismember(plotmode, {'Overall'})
 
     writetable(resulttable, fullfile(basedir, 'ExcelFiles', sprintf('%s.xlsx', plottitle)));
 elseif ismember(plotmode, {'ByLCSet'})
+    % add dummy rows to ensure a column for each entry in the test set is
+    % shown on all latent curve heatmaps
+    dispmin = min(datatable.ModelRun);
+    dispmax = max(datatable.ModelRun);
+    rowtoadd.ModelRun = 0;
+    for i = 1:testsetsize
+        rowtoadd.TestSetNbr = testset.InterNbr(i);
+        rowtoadd.Count      = 0;
+        for n = 1:nlatentcurves;
+            rowtoadd.LatentCurve = n;
+            datatable = [datatable ; rowtoadd];
+        end
+    end
+    
     for n = 1:nlatentcurves
         plotsacross = 1;
         plotsdown = 1;
@@ -169,6 +186,7 @@ elseif ismember(plotmode, {'ByLCSet'})
         h.YLabel = 'Model Run';
         h.YDisplayData = labelsandquality.modelrunlist;
         h.YDisplayLabels = labelsandquality.ylabels;
+        h.YLimits = {dispmin,dispmax};
         h.CellLabelColor = 'none';
         h.GridVisible = 'on';
 

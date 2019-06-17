@@ -1,5 +1,5 @@
 function plotSuperimposedAlignedCurves(ax, meancurvemean, meancurvecount, xl, yl, ...
-    measures, min_offset, max_offset, align_wind, ex_start, lc, cntthresh)
+    measures, min_offset, max_offset, align_wind, ex_start, lc, cntthresh, nlcex)
 
 % plotSuperimposedAlignedCurves - plots the aligned curves for each of the
 % measures superimposed on a single plot to show any timing differences in
@@ -30,20 +30,20 @@ for m = 1:tmpnmeasures
     else
         lstyle = '-.';
     end
-    [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, meancurvemean(:, m), xl, yl, colors(m, :), lstyle, 0.5, anchor);
+    [xl, yl] = plotLatentCurve(ax, max_offset, (align_wind + ex_start), (min_offset + ex_start), meancurvemean(:, m), xl, yl, colors(m, :), lstyle, 0.5, anchor);
 end
 
 if ex_start ~= 0
-    [xl, yl] = plotVerticalLine(ax, ex_start, xl, yl, 'black', ':', 0.5); % plot ex_start
+    [xl, yl] = plotVerticalLine(ax, 0, xl, yl, 'black', ':', 0.5); % plot ex_start
 end
 
 legend(ax, legendtext, 'Location', 'southwest', 'FontSize', 6);
 
 ax.XAxis.FontSize = 6;
-xlabel(ax, 'Days prior to Intervention');
+xlabel(ax, 'Days before/after exacerbation start');
 ax.YAxis.FontSize = 6;
-ylabel(ax, 'Normalised Measures');
-title(ax, sprintf('Curve Set %d (thresh = %d)', lc, cntthresh));
+ylabel(ax, 'Number of standard deviation moves');
+title(ax, sprintf('Curve Set %d (nexamples = %d)', lc, nlcex));
 
 end
 

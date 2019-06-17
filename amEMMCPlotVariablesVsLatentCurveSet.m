@@ -1,16 +1,8 @@
-function amEMMCPlotVariablesVsLatentCurveSet(amInterventions, initial_latentcurve, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
+function amEMMCPlotVariablesVsLatentCurveSet(amInterventions, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
         cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves)
     
 % amEMMCPlotVariablesVsLatentCurveSet - compact plots of various variables
 % against latent curve set assigned to try and observe correlations
-
-%scattervartext = {'Stable FEV1'; ...
-%                'BMI';  ...
-%                'Age';  ...
-%                'Duration of exacerbation'; ...
-%                'Day of Year'; ...
-%                'CRP Adm'; ...
-%                'CRP Stable'};
             
 scattervartext = {'Stable FEV1',            'Box'; ...
                 'BMI',                      'Box';  ...
@@ -20,7 +12,6 @@ scattervartext = {'Stable FEV1',            'Box'; ...
                 'CRP Adm',                  'Box'; ...
                 'CRP Stable',               'Box'};            
             
-
 polarvartext = {'Day of Year'};
 
 barvartext = {%'Gender'; ...
@@ -41,13 +32,26 @@ polarvardata   = zeros(ninterventions, npolarvars);
 
 nbarvars       = size(barvartext, 1);
 
-amInterventions.InitialLC = initial_latentcurve;
+nlccombs = (nlatentcurves * (nlatentcurves - 1)) / 2;
+nkeycols = 1;
+comb = -1 * ones((nscattervars + npolarvars + nbarvars),nlccombs);
+comb = array2table(comb);
+pvaltable = table('Size',[(nscattervars + npolarvars + nbarvars), nkeycols], 'VariableTypes', {'cell'}, 'VariableNames', {'VarName'});
+pvaltable = [pvaltable, comb];
+cnt = 1;
+for i = 2:nlatentcurves
+    for j = 1:i - 1
+        pvaltable.Properties.VariableNames{nkeycols + cnt} = sprintf('LC%dvsLC%d',j, i);
+        %fprintf('Comb %d: LC%dvsLC%d\n', cnt, j, i);
+        cnt = cnt + 1;
+    end
+end
 
 % Scatter plot variables
 % 1) Robust Max FEV1
 mfev1idx  = measures.Index(ismember(measures.DisplayName, 'LungFunction'));
 fev1max  = pmPatientMeasStats(pmPatientMeasStats.MeasureIndex == mfev1idx, {'PatientNbr', 'Study', 'ID', 'RobustMax'});
-lc = innerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'LeftVariables', {'SmartCareID', 'IVStartDate', 'IVScaledDateNum', 'LatentCurve', 'InitialLC'}, 'RightVariables', {'RobustMax'});
+lc = innerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'LeftVariables', {'SmartCareID', 'IVStartDate', 'IVScaledDateNum', 'LatentCurve'}, 'RightVariables', {'RobustMax'});
 scattervardata(:, 1) = lc.RobustMax;
 
 % 2 & 3) BMI, Age
@@ -133,7 +137,24 @@ for v = 1:nscattervars
     xlim(ax, [0.5 nlatentcurves + 0.5]);
     xlabel(ax, 'Latent Curve Set', 'FontSize', 8);
     ylabel(ax, scattervartext{v, 1}, 'FontSize', 8);
-    thisplot = thisplot + 1;    
+    
+    % store p-values for different combinations of comparisons
+    pvaltable.VarName{thisplot} = scattervartext{v, 1};
+    for i = 2:nlatentcurves
+        for j = 1:i - 1
+            [pval, h] = ranksum(scattervardata(lc.LatentCurve == j, v), scattervardata(lc.LatentCurve == i, v));
+            pvaltable(thisplot, {sprintf('LC%dvsLC%d',j, i)}) = array2table(pval);
+            if h == 1
+                flagtext = ' *****';
+            else
+                flagtext = ' ';
+            end
+            fprintf('%24s : LC%dvsLC%d : p-value %5.3f%s\n', scattervartext{v, 1}, j, i, pval, flagtext);
+        end
+    end
+
+    thisplot = thisplot + 1;
+    
 end
 
 for v = 1:nbarvars
@@ -148,7 +169,9 @@ for v = 1:nbarvars
             barvardata = 100 * (barvardata ./ sum(barvardata, 2));
         end
         legendtext = {'M', 'F'};
-        
+        blc = lc;
+        blc.PValCol(:) = 1;
+        blc.PValCol(ismember(blc.Sex, 'Female')) = 2;
     elseif ismember(barvartext(v), {'Pct Pseudomonas', 'Pct Staphylococcus', 'Pct One or Both'})
         pseudpat = unique(cdMicrobiology.ID(contains(lower(cdMicrobiology.Microbiology), 'pseud')));
         staphpat = unique(cdMicrobiology.ID(contains(lower(cdMicrobiology.Microbiology), 'staph') | contains(lower(cdMicrobiology.Microbiology), 'mrsa')));
@@ -180,6 +203,8 @@ for v = 1:nbarvars
         if ismember(barvartext(v), {'Pct Pseudomonas', 'Pct Staphylococcus', 'Pct One or Both'})
             barvardata = 100 * (barvardata ./ sum(barvardata, 2));
         end
+        blc = lc;
+        blc.PValCol = blc.Microbiology;
         lc.Microbiology = [];
         
     elseif ismember(barvartext(v), {'Nbr of Interventions', 'Pct Nbr of Interventions'})
@@ -197,7 +222,8 @@ for v = 1:nbarvars
             
         end
         legendtext = {'1', '2', '3', '4'};
-        blc.GroupCount = [];
+        blc.PValCol = blc.GroupCount;
+        %lc.GroupCount = [];
     elseif ismember(barvartext(v), {'Nbr of IV Treatments', 'Pct Nbr of IV Treatments', 'Nbr of AB Treatments', 'Pct Nbr of AB Treatments'})
         if ismember(barvartext(v), {'Nbr of IV Treatments', 'Pct Nbr of IV Treatments'})
             tmpivandmeas = ivandmeasurestable(ivandmeasurestable.Type == 1 | ivandmeasurestable.Type == 3, :);
@@ -217,7 +243,8 @@ for v = 1:nbarvars
             barvardata = 100 * (barvardata ./ sum(barvardata, 2));
         end
         legendtext = {'1', '2', '3', '4', '5', '6', '7'};
-        blc.GroupCount = [];
+        blc.PValCol = blc.GroupCount;
+        %lc.GroupCount = [];
     end
     
     ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
@@ -234,6 +261,23 @@ for v = 1:nbarvars
     end
     xlabel(ax, 'Latent Curve Set', 'FontSize', 8);
     ylabel(ax, barvartext{v}, 'FontSize', 8);
+    
+    % store p-values for different combinations of comparisons
+    pvaltable.VarName{thisplot} = barvartext{v, 1};
+    for i = 2:nlatentcurves
+        for j = 1:i - 1
+            [pval, h] = ranksum(blc.PValCol(blc.LatentCurve == j), blc.PValCol(blc.LatentCurve == i));
+            pvaltable(thisplot, {sprintf('LC%dvsLC%d',j, i)}) = array2table(pval);
+            if h == 1
+                flagtext = ' *****';
+            else
+                flagtext = ' ';
+            end
+            fprintf('%24s : LC%dvsLC%d : p-value %5.3f%s\n', barvartext{v, 1}, j, i, pval, flagtext);
+        end
+    end
+    blc = [];
+    
     thisplot = thisplot + 1;    
 end
 
@@ -250,12 +294,34 @@ for v = 1:npolarvars
     pax.FontSize          = 6;
     pax.ThetaTick         = [0 90 180 270];
     title(pax, polarvartext{v}, 'FontSize', 8);
+    
+    % store p-values for different combinations of comparisons
+    pvaltable.VarName{thisplot} = polarvartext{v, 1};
+    for i = 2:nlatentcurves
+        for j = 1:i - 1
+            [pval, h] = ranksum(polarvardata(lc.LatentCurve == j, v), polarvardata(lc.LatentCurve == i, v));
+            pvaltable(thisplot, {sprintf('LC%dvsLC%d',j, i)}) = array2table(pval);
+            if h == 1
+                flagtext = ' *****';
+            else
+                flagtext = ' ';
+            end
+            fprintf('%24s : LC%dvsLC%d : p-value %5.3f%s\n', polarvartext{v, 1}, j, i, pval, flagtext);
+        end
+    end
+    
+    thisplot = thisplot + 1;    
     thisplot = thisplot + 1;    
 end
 
 % save plot
 savePlotInDir(f, plottitle, plotsubfolder);
 close(f);
+
+% save p-value table
+basedir = setBaseDir();
+xlfilename = sprintf('%s.xlsx', plottitle);
+writetable(pvaltable, fullfile(basedir, plotsubfolder, xlfilename));
 
 end
 

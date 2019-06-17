@@ -36,6 +36,17 @@ else
 end
 [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 
+overalldiff = 0;
+for n = 1:nlatentcurves
+    lastpoint = 0;
+    for m = 1:nmeasures
+        lastmpoint = find(~isnan(meancurvemean(n,:,m)), 1, 'last');
+        lastpoint = max(lastpoint, lastmpoint);
+    end
+    lastpoint = lastpoint - (align_wind + max_offset);
+    curvediff = abs(ex_start(n) - lastpoint);
+    overalldiff = max(overalldiff, curvediff);
+end
 
 for m = 1:nmeasures
     yl = [min(min(meancurvemean(:, :, m) - meancurvestd(:, :, m))), max(max(meancurvemean(:, :, m) + meancurvestd(:, :, m)))];
@@ -50,7 +61,8 @@ for m = 1:nmeasures
         yl(2) = yl(2) * .99;
     end
     for n = 1:nlatentcurves
-        xl = [ex_start(n) - (max_offset - 1), ex_start(n) + (max_offset - 1)];
+        xl = [ex_start(n) - overalldiff, ex_start(n) + overalldiff];
+        %xl = [ex_start(n) - (max_offset - 1), ex_start(n) + (max_offset - 1)];
         subplottitle = sprintf('%s: C%d', measures.DisplayName{m}, n);
         ax = subplot(plotsdown,plotsacross,thisplot,'Parent',p);
         amEMPlotAlignedCurve(ax, profile_pre(n, :, m), meancurvemean(n, :, m), meancurvecount(n, :, m), meancurvestd(n, :, m), ...
