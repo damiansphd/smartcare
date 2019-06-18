@@ -1,23 +1,24 @@
 clear; close all; clc;
 
 studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
+chosentreatgap = selectTreatmentGap();
 
 if studynbr == 1
     study = 'SC';
     clinicalmatfile = 'clinicaldata.mat';
     datamatfile = 'smartcaredata.mat';
-    ivandmeasuresfile = 'SCivandmeasures.mat';
-    datademographicsfile = 'SCdatademographicsbypatient.mat';
+    
 elseif studynbr == 2
     study = 'TM';
     clinicalmatfile = 'telemedclinicaldata.mat';
     datamatfile = 'telemeddata.mat';
-    ivandmeasuresfile = 'TMivandmeasures.mat';
-    datademographicsfile = 'TMdatademographicsbypatient.mat';
 else
     fprintf('Invalid study\n');
     return;
 end
+
+ivandmeasuresfile = sprintf('%sivandmeasures_gap%d.mat', study, chosentreatgap);
+datademographicsfile = sprintf('%sdatademographicsbypatient.mat', study);
 
 tic
 basedir = setBaseDir();
@@ -77,7 +78,7 @@ toc
 tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('%salignmentmodelinputs.mat', study);
+outputfilename = sprintf('%salignmentmodelinputs_gap%d.mat', study, treatgap);
 fprintf('Saving output variables to file %s\n', outputfilename);
 save(fullfile(basedir, subfolder,outputfilename), 'amInterventions','amDatacube', 'measures', 'npatients','ndays', 'nmeasures', 'ninterventions');
 toc

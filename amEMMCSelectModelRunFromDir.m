@@ -1,4 +1,4 @@
-function [modelrun, modelidx, ModelResultFiles] = amEMMCSelectModelRunFromDir(loadtype, lcmode, intrfilt)
+function [modelrun, modelidx, ModelResultFiles] = amEMMCSelectModelRunFromDir(loadtype, lcmode, intrfilt, tgapmode)
 
 % amEMMCSelectModelRunFromDir- allows you to load the saved variables from a
 % historical model run. 
@@ -8,38 +8,30 @@ modelstring = amEMMCSelectModelVersion();
 modelstring = sprintf('%s*', modelstring);
 
 if isequal(intrfilt, 'IntrFilt')
-    sintrmode = input('Enter Intervention Filtering mode ? ', 's');
-    intrmode = str2double(sintrmode);
-    if (isnan(intrmode) || intrmode < 1 || intrmode > 5)
-        fprintf('Invalid choice - defaulting to 1\n');
-        intrmode = 1;
-    end
-    %if intrmode == 1
-    %    % for backward compatibility
-    %    intrstring = '';
-    %else
-        intrstring = sprintf('in%d*', intrmode);
-    %end
+    intrmode = selectIntrFilterMthd();
+    intrstring = sprintf('in%d*', intrmode);
 else
     intrstring = '';
 end
 
 if isequal(lcmode, 'LCSet')
-    snbrlc = input('Enter number of latent curve sets to run for ? ', 's');
-    nbrlc = str2double(snbrlc);
-    if (isnan(nbrlc) || nbrlc < 1 || nbrlc > 5)
-        fprintf('Invalid choice - defaulting to 1\n');
-        nbrlc = 1;
-    end
+    nbrlc = selectNbrLCSets();
     lcstring = sprintf('nl%d*', nbrlc);
 else
     lcstring = '';
 end
 
+if isequal(tgapmode, 'TGap')
+    treatgap = selectTreatmentGap();
+    tgapstring = sprintf('gp%d*', treatgap);
+else
+    tgapstring = '';
+end
+
 
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-modelresultlisting = dir(fullfile(basedir, subfolder, sprintf('*%s%s%s.mat', modelstring, intrstring, lcstring)));
+modelresultlisting = dir(fullfile(basedir, subfolder, sprintf('*%s%s%s%s.mat', modelstring, tgapstring, intrstring, lcstring)));
 ModelResultFiles = cell(size(modelresultlisting,1),1);
 for a = 1:size(ModelResultFiles,1)
     ModelResultFiles{a} = strrep(modelresultlisting(a).name, '.mat', '');

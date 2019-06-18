@@ -64,10 +64,13 @@ basedir = setBaseDir();
 %plotsubfolder = sprintf('Plots/%s', subfolder);
 savePlotInDir(f1, name1, plotsubfolder);
 close(f1);
-    
-[~, maxpt] = max(sumtrue ./ (sumtrue + sumfalse));
 
-ex_start = -1 * (size(truevotes,2)) - 1 + maxpt;
+if sum(sumtrue) == 0
+    ex_start = -1;
+else
+    [~, maxpt] = max(sumtrue ./ (sumtrue + sumfalse));
+    ex_start = -1 * (size(truevotes,2)) - 1 + maxpt;
+end
 
 end
 

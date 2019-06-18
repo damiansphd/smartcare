@@ -1,4 +1,5 @@
-function [mversion, study, modelinputsmatfile, datademographicsfile, dataoutliersfile, labelledinterventionsfile, electivefile, ...
+function [mversion, study, treatgap, testlabelmthd, testlabeltxt, ...
+    modelinputsmatfile, datademographicsfile, dataoutliersfile, labelledinterventionsfile, electivefile, ...
     sigmamethod, mumethod, curveaveragingmethod, smoothingmethod, datasmoothmethod, ...
     measuresmask, runmode, randomseed, intrmode, modelrun, imputationmode, confidencemode, printpredictions, ...
     max_offset, align_wind, outprior, heldbackpct, confidencethreshold, nlatentcurves, countthreshold, scenario] ...
@@ -9,11 +10,22 @@ function [mversion, study, modelinputsmatfile, datademographicsfile, dataoutlier
 
 mversion                  = amRunParameters.mversion{1};
 study                     = amRunParameters.study{1};
-modelinputsmatfile        = amRunParameters.modelinputsmatfile{1};
-datademographicsfile      = amRunParameters.datademographicsfile{1};
-dataoutliersfile          = amRunParameters.dataoutliersfile{1};
-labelledinterventionsfile = amRunParameters.labelledinterventionsfile{1};
-electivefile              = amRunParameters.electivefile{1};
+treatgap                  = amRunParameters.treatgap;
+testlabelmthd             = amRunParameters.testlabelmthd;
+if testlabelmthd == 1
+    testlabeltxt = 'consensus';
+elseif testlabelmthd == 2
+    testlabeltxt = 'earliest';
+else
+    fprintf('**** Unknown test label method ****\n');
+    testlabeltxt = 'unknown';
+    return;
+end
+modelinputsmatfile        = sprintf(amRunParameters.modelinputsmatfile{1}, study, treatgap);
+datademographicsfile      = sprintf(amRunParameters.datademographicsfile{1}, study);
+dataoutliersfile          = sprintf(amRunParameters.dataoutliersfile{1}, study);
+labelledinterventionsfile = sprintf(amRunParameters.labelledinterventionsfile{1}, study, treatgap, testlabeltxt);
+electivefile              = sprintf(amRunParameters.electivefile{1}, study, treatgap);
 sigmamethod               = amRunParameters.sigmamethod;
 mumethod                  = amRunParameters.mumethod;
 curveaveragingmethod      = amRunParameters.curveaveragingmethod;

@@ -37,12 +37,13 @@ fprintf('26: Compare results for multiple model runs to labelled test data by la
 fprintf('27: Run plots 18, 19, 20, 24, 25 in one go\n');
 fprintf('28: Compare latent curve set populations for multiple model runs\n');
 fprintf('29: Plot interventions over time by latent curve set (absolute days)\n');
+fprintf('30: Plot probilities of latent curve set assignment\n');
 fprintf('\n');
-runfunction = input('Choose function (1-29): ');
+runfunction = input('Choose function (1-30): ');
 
 fprintf('\n');
 
-if runfunction > 29
+if runfunction > 30
     fprintf('Invalid choice\n');
     return;
 end
@@ -51,12 +52,16 @@ if isequal(runfunction,'')
     return;
 end
 
-[modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('', 'LCSet', 'IntrFilt');
+[modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('', '', 'IntrFilt', 'TGap');
 
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 fprintf('Loading output from model run\n');
 load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun)));
+
+predictivemodelinputsfile = sprintf('%spredictivemodelinputs.mat', study);
+ivandmeasuresfile = sprintf('%sivandmeasures_gap%d.mat', study, treatgap);
+
 
 % default some variables for backward compatibility with prior versions
 if ~exist('animated_overall_pdoffset', 'var')
@@ -117,6 +122,11 @@ elseif runfunction == 5
         'pdoffset', 'overall_hist', 'overall_pdoffset');
 elseif runfunction == 6
     fprintf('Labelling exacerbation start on measurement plots to create test data set\n');
+    treatgap = selectTreatmentGap();
+    [testlabelmthd, testlabeltxt] = selectLabelMethodology();
+    
+    basetestlabelfilename = sprintf('%s_LabelledInterventions_gap%d%s', study, treatgap, testlabeltxt);
+    
     fprintf('1: Run from scratch\n');
     fprintf('2: Continue from partway through\n');
     fprintf('3: Update a single intervention\n');
@@ -147,7 +157,7 @@ elseif runfunction == 6
         amLabelledInterventions.RelLB2      = [];
         amLabelledInterventions.RelUB2      = [];
         
-        amLabelledInterventions.Offset(:)            = 0;
+        %amLabelledInterventions.Offset(:)            = 0;
         amLabelledInterventions.IncludeInTestSet(:)  = 'N';
         amLabelledInterventions.LowerBound1(:)       = 0;
         amLabelledInterventions.UpperBound1(:)       = 0;
@@ -156,9 +166,8 @@ elseif runfunction == 6
         interfrom = 1;
         interto = ninterventions;
     elseif labelmode == 2
-        fprintf('Loading latest labelled test data file\n');
-        inputfilename = sprintf('%s_LabelledInterventions.mat', study);
-        load(fullfile(basedir, subfolder, inputfilename));
+        fprintf('Loading latest labelled test data file %s\n', basetestlabelfilename);
+        load(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)));
         interfrom = input('Enter intervention to restart from ? ');
         if interfrom < 2 || interfrom > ninterventions 
             fprintf('Invalid choice\n');
@@ -170,9 +179,8 @@ elseif runfunction == 6
         end
         interto = ninterventions;
     else
-        fprintf('Loading latest labelled test data file\n');
-        inputfilename = sprintf('%s_LabelledInterventions.mat', study);
-        load(fullfile(basedir, subfolder, inputfilename));
+        fprintf('Loading latest labelled test data file %s\n', basetestlabelfilename);
+        load(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)));
         interfrom = input('Enter intervention to update ? ');
         if interfrom < 1 || interfrom > ninterventions 
             fprintf('Invalid choice\n');
@@ -186,28 +194,26 @@ elseif runfunction == 6
     end
 
     [amLabelledInterventions] = amEMMCCreateLabelledInterventions(amIntrDatacube, amLabelledInterventions, ...
-        interfrom, interto, measures, normmean, max_offset, align_wind, ex_start, study, nmeasures);
+        interfrom, interto, measures, normmean, max_offset, align_wind, study, nmeasures);
     
     fprintf('Saving labelled interventions to a separate matlab file\n');
     subfolder = 'MatlabSavedVariables';
-    outputfilename = sprintf('%s_LabelledInterventions%s.mat', study, datestr(clock(),30));
+    outputfilename = sprintf('%s%s.mat', basetestlabelfilename, datestr(clock(),30));
     save(fullfile(basedir, subfolder, outputfilename), 'amLabelledInterventions');
-    outputfilename = sprintf('%s_LabelledInterventions.mat', study);
+    outputfilename = sprintf('%s.mat', basetestlabelfilename);
     save(fullfile(basedir, subfolder, outputfilename), 'amLabelledInterventions');
 elseif runfunction == 7
     fprintf('Comparing results to another model run\n');
     fprintf('\n');
     fprintf('Select second model to compare\n');
     fprintf('\n');
-    %[modelrun2, modelidx2] = amEMMCSelectModelRunFromDir('');
-    [modelrun2, modelidx2] = amEMMCSelectModelRunFromDir('', 'LCSet', 'IntrFilt');
+    [modelrun2, modelidx2] = amEMMCSelectModelRunFromDir('', '', 'IntrFilt', 'TGap');
     amEMMCCompareModelRuns(modelrun, modelidx, modelrun2, modelidx2);
 elseif runfunction == 8
     fprintf('Comparing results to the labelled test data\n');
     fprintf('\n');
     subfolder = 'MatlabSavedVariables';
-    testdatafilename = sprintf('%s_LabelledInterventions.mat', study);
-    load(fullfile(basedir, subfolder, testdatafilename));
+    load(fullfile(basedir, subfolder, labelledinterventionsfile));
     amEMMCCompareModelRunToTestData(amLabelledInterventions(intrkeepidx, :), amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, hstg, overall_hist, ...
         meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, nlatentcurves, max_offset, align_wind, sigmamethod, study, mversion, modelrun, modelidx);
 elseif runfunction == 9
@@ -216,8 +222,7 @@ elseif runfunction == 10
     fprintf('Comparing results of multiple model runs to the labelled test data\n');
     fprintf('\n');
     subfolder = 'MatlabSavedVariables';
-    testdatafilename = sprintf('%s_LabelledInterventions.mat', study);
-    load(fullfile(basedir, subfolder, testdatafilename));
+    load(fullfile(basedir, subfolder, labelledinterventionsfile));
     plotmode = 'Overall'; 
     amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions(intrkeepidx, :), modelrun, modelidx, models, plotmode);
 elseif runfunction == 11
@@ -229,19 +234,17 @@ elseif runfunction == 12
     fprintf('\n');
     run_type = 'Best Alignment';
     amEMPlotAndSaveAlignedCurvesBasic(unaligned_profile, meancurvemean, offsets, ...
-    measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder);
 elseif runfunction == 13
     fprintf('Loading latest labelled test data file\n');
-    inputfilename = sprintf('%s_LabelledInterventions.mat', study);
-    load(fullfile(basedir, subfolder, inputfilename));
+    load(fullfile(basedir, subfolder, labelledinterventionsfile));
     fprintf('Plotting labelled test data\n');
     fprintf('\n');
     amEMMCPlotLabelledInterventions(amIntrDatacube, amInterventions, amLabelledInterventions, ...
-    measures, normmean, max_offset, align_wind, study, nmeasures)  
+        measures, normmean, max_offset, align_wind, study, nmeasures)  
 elseif runfunction == 14
     fprintf('Loading latest labelled test data file\n');
-    inputfilename = sprintf('%s_LabelledInterventions.mat', study);
-    load(fullfile(basedir, subfolder, inputfilename));
+    load(fullfile(basedir, subfolder, labelledinterventionsfile));
     fprintf('Calculating Ex_Start from Test Labels and Offsets\n');
     fprintf('\n');
     derived_ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions(intrkeepidx, :), amInterventions, ...
@@ -274,11 +277,11 @@ elseif runfunction == 19
     fprintf('Loading Predictive Model Patient Measures Stats\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
-    load(fullfile(basedir, subfolder, sprintf('%spredictivemodelinputs.mat', study)), 'pmPatients', 'pmPatientMeasStats');
+    load(fullfile(basedir, subfolder, predictivemodelinputsfile), 'pmPatients', 'pmPatientMeasStats');
     fprintf('Loading Treatment and Measures Prior info\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
-    load(fullfile(basedir, subfolder, sprintf('%sivandmeasures.mat', study)), 'ivandmeasurestable');
+    load(fullfile(basedir, subfolder, ivandmeasuresfile), 'ivandmeasurestable');
     if ismember(study, 'SC')
         clinicalmatfile   = 'clinicaldata.mat';
         microbiologytable = 'cdMicrobiology';
@@ -311,10 +314,11 @@ elseif runfunction == 20
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
     sprintf('%s_LabelledInterventions.mat', study);
-    load(fullfile(basedir, subfolder, sprintf('%spredictivemodelinputs.mat', study)), 'pmPatients', 'npatients', 'maxdays');
+    load(fullfile(basedir, subfolder, predictivemodelinputsfile), 'pmPatients', 'npatients', 'maxdays');
     fprintf('Loading unfiltered interventions\n');
     amInterventionsKeep = amInterventions;
-    load(fullfile(basedir, subfolder, sprintf('%salignmentmodelinputs.mat', study)), 'amInterventions');
+    sprintf(amRunParameters.modelinputsmatfile{1}, study, treatgap)
+    load(fullfile(basedir, subfolder, modelinputsmatfile), 'amInterventions');
     amInterventionsFull = amInterventions;
     amInterventions = amInterventionsKeep;
     fprintf('Plotting interventions over time by latent curve set\n');
@@ -331,8 +335,7 @@ elseif runfunction == 23
     fprintf('\n');
     fprintf('Select second model to compare\n');
     fprintf('\n');
-    %[modelrun2, modelidx2] = amEMMCSelectModelRunFromDir('');
-    [modelrun2, modelidx2] = amEMMCSelectModelRunFromDir('', 'LCSet', 'IntrFilt');
+    [modelrun2, modelidx2] = amEMMCSelectModelRunFromDir('', '', 'IntrFilt', 'TGap');
     amEMMCCompareModelRunsByLCSets(modelrun, modelidx, modelrun2, modelidx2);
 elseif runfunction == 24
     run_type = 'Best Alignment';
@@ -350,8 +353,7 @@ elseif runfunction == 26
     fprintf('Comparing results of multiple model runs to the labelled test data by latent curve set\n');
     fprintf('\n');
     subfolder = 'MatlabSavedVariables';
-    testdatafilename = sprintf('%s_LabelledInterventions.mat', study);
-    load(fullfile(basedir, subfolder, testdatafilename));
+    load(fullfile(basedir, subfolder, labelledinterventionsfile));
     plotmode = 'ByLCSet'; 
     amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions(intrkeepidx, :), modelrun, modelidx, models, plotmode);
 elseif runfunction == 27
@@ -365,11 +367,11 @@ elseif runfunction == 27
     fprintf('Loading Predictive Model Patient Measures Stats\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
-    load(fullfile(basedir, subfolder, sprintf('%spredictivemodelinputs.mat', study)), 'pmPatients', 'pmPatientMeasStats');
+    load(fullfile(basedir, subfolder, predictivemodelinputsfile), 'pmPatients', 'pmPatientMeasStats');
     fprintf('Loading Treatment and Measures Prior info\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
-    load(fullfile(basedir, subfolder, sprintf('%sivandmeasures.mat', study)), 'ivandmeasurestable');
+    load(fullfile(basedir, subfolder, ivandmeasuresfile), 'ivandmeasurestable');
     if ismember(study, 'SC')
         clinicalmatfile   = 'clinicaldata.mat';
         microbiologytable = 'cdMicrobiology';
@@ -395,16 +397,16 @@ elseif runfunction == 27
         cdCRP          = tmCRP;
     end
     fprintf('Plotting Variables vs latent curve allocation\n');
-    amEMMCPlotVariablesVsLatentCurveSet(amInterventions, initial_latentcurve, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
+    amEMMCPlotVariablesVsLatentCurveSet(amInterventions, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
         cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves);
     % run plot 20
     fprintf('Loading Predictive Model Patient info\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
-    load(fullfile(basedir, subfolder, sprintf('%spredictivemodelinputs.mat', study)), 'pmPatients', 'npatients', 'maxdays');
+    load(fullfile(basedir, subfolder, predictivemodelinputsfile), 'pmPatients', 'npatients', 'maxdays');
     fprintf('Loading unfiltered interventions\n');
     amInterventionsKeep = amInterventions;
-    load(fullfile(basedir, subfolder, sprintf('%salignmentmodelinputs.mat', study)), 'amInterventions');
+    load(fullfile(basedir, subfolder, modelinputsmatfile), 'amInterventions');
     amInterventionsFull = amInterventions;
     amInterventions = amInterventionsKeep;
     fprintf('Plotting interventions over time by latent curve set\n');
@@ -422,7 +424,7 @@ elseif runfunction == 27
     compactplot = true;
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
         measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, compactplot);
-    fprintf('Should not get here....\n');
+    
 elseif runfunction == 28
     fprintf('Comparing latent curve set population to multiple model runs\n');
     amEMMCCompareMultipleModelRunsByLCSets(modelrun, modelidx, models);
@@ -431,15 +433,20 @@ elseif runfunction == 29
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
     sprintf('%s_LabelledInterventions.mat', study);
-    load(fullfile(basedir, subfolder, sprintf('%spredictivemodelinputs.mat', study)), 'pmPatients', 'npatients', 'maxdays');
+    load(fullfile(basedir, subfolder, predictivemodelinputsfile), 'pmPatients', 'npatients', 'maxdays');
     fprintf('Loading unfiltered interventions\n');
     amInterventionsKeep = amInterventions;
-    load(fullfile(basedir, subfolder, sprintf('%salignmentmodelinputs.mat', study)), 'amInterventions');
+    load(fullfile(basedir, subfolder, modelinputsmatfile), 'amInterventions');
     amInterventionsFull = amInterventions;
     amInterventions = amInterventionsKeep;
     fprintf('Plotting interventions over time by latent curve set\n');
     plotmode = 2; % plot using scaled dates
     amEMMCPlotInterventionsByLatentCurveSet(pmPatients, amInterventions, amInterventionsFull, npatients, maxdays, plotname, plotsubfolder, nlatentcurves, plotmode);
+elseif runfunction == 30
+    fprintf('Plotting probilities of latent curve set assignment\n');
+    amEMMCPlotProbsLCSet(overall_pdoffset, amInterventions, min_offset, max_offset, plotname, plotsubfolder, ninterventions, nlatentcurves);
+else
+    fprintf('Should not get here....\n');
 end
     
 

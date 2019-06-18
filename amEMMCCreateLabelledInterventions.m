@@ -1,6 +1,5 @@
 function [amLabelledInterventions] = amEMMCCreateLabelledInterventions(amIntrDatacube, amLabelledInterventions, ...
-    interfrom, interto, measures, normmean, max_offset, align_wind, ex_start, ...
-    study, nmeasures)
+    interfrom, interto, measures, normmean, max_offset, align_wind, study, nmeasures)
 
 % amEMMCCreateLabelledInterventions - plots measurement data and asks for lower
 % and upper bounds for predicted exacerbation start in order to create a
@@ -15,7 +14,6 @@ yl  = zeros(nmeasures + 1, 2);
 i = interfrom;
 while i <= interto 
     scid = amLabelledInterventions.SmartCareID(i);
-    lc = amLabelledInterventions.LatentCurve(i);
     fprintf('Intervention %2d: ID %3d, Date %s, Data Window Completeness = %.2f%%\n', i, scid, ...
         datestr(amLabelledInterventions.IVStartDate(i),29), amLabelledInterventions.DataWindowCompleteness(i));
     name = sprintf('%s_AM Labelling Data - Ex %d (ID %d Date %s)', study, i, scid, ...

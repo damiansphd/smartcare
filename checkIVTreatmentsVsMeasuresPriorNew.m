@@ -72,8 +72,10 @@ ivTreatments.IVStopDateNum = datenum(ivTreatments.StopDate)  - offset*(ivTreatme
 ivTreatments.Type          = zeros(height(ivTreatments),1);
 
 % consider any treatment gaps (stop date to next start date) of less than
-% 20 days to be part of the same treatment
-treatgap = 20;
+% 20 days to be part of the same treatment 
+%treatgap = 20;
+% now make treatgap a parameter
+treatgap = selectTreatmentGap();
 
 % counting and labelling - IVO = 1 , OO = 2, IVPBO = 3
 oldid = 0;
@@ -248,10 +250,10 @@ fprintf('\n');
 tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-outputfilename = sprintf('%sivandmeasuresNEW.mat', study);
+outputfilename = sprintf('%sivandmeasures_gap%d.mat', study, treatgap);
 
 fprintf('Saving output variables to file %s\n', outputfilename);
-save(fullfile(basedir, subfolder, outputfilename), 'ivandmeasurestable');
+save(fullfile(basedir, subfolder, outputfilename), 'ivandmeasurestable', 'treatgap');
 
 %ivandmeasurestable.IVDateNum = [];
 measuresdetailtable.ScaledDateNum = [];
@@ -261,7 +263,7 @@ fprintf('Saving results to excel\n');
 
 basedir = setBaseDir();
 subfolder = 'ExcelFiles';
-outputfilename = sprintf('%sMeasuresPriorToIVTreatmentsNEW.xlsx', study);
+outputfilename = sprintf('%sMeasuresPriorToIVTreatments_gap%d.xlsx', study, treatgap);
 summarysheet = 'SummaryByIVTreatment';
 detailsheet = 'MeasuresDetail';
 
