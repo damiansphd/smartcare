@@ -1,5 +1,5 @@
 function amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-    measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, compactplot)
+    measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode)
 
 % amEMMCPlotSuperimposedAlignedCurves - wrapper around the
 % plotSuperimposedAlignedCurves to plot for each set of latent curves
@@ -14,7 +14,14 @@ else
     plotsdown   = 1;
 end
 
-cntthresh = 5;
+if shiftmode == 1
+    plottitle   = sprintf('%s %s', plottitle, 'MeanShift');
+elseif shiftmode == 2
+    plottitle   = sprintf('%s %s', plottitle, 'MaxShift');
+else
+    fprintf('**** Unknown shift mode ****\n');
+end
+
 smoothwdth = 4;
 
 % Preprocess the latent curve :-
@@ -28,9 +35,13 @@ for n = 1:nlatentcurves
     pridx = ismember(measures.DisplayName, {'PulseRate'});
     meancurvemean(n, :, pridx) = meancurvemean(n, :, pridx) * -1;
     for m = 1:nmeasures
-        meancurvemean(n, meancurvecount(n, :, m) < cntthresh, m) = NaN;
+        meancurvemean(n, meancurvecount(n, :, m) < countthreshold, m) = NaN;
         meancurvemean(n, :, m) = movmean(meancurvemean(n, :, m), smoothwdth, 'omitnan');
-        vertshift = mean(meancurvemean(n, 1:(align_wind + max_offset - 1 + ex_start(n)), m));
+        if shiftmode == 1
+            vertshift = mean(meancurvemean(n, 1:(align_wind + max_offset + ex_start(n)), m));
+        elseif shiftmode == 2
+            vertshift = max(meancurvemean(n, 1:(align_wind + max_offset + ex_start(n)), m));
+        end
         meancurvemean(n, :, m) = meancurvemean(n, :, m) - vertshift;
         fprintf('For curve %d and measure %13s, vertical shift is %.3f\n', n, measures.DisplayName{m}, -vertshift);
     end
@@ -50,7 +61,7 @@ for n = 1:nlatentcurves
     xto   = -1 * (1 + ex_start(n));
     xl = [xfrom, xto];
     tmp_meancurvemean  = reshape(meancurvemean(n, :, :),  [max_offset + align_wind - 1, nmeasures]);
-    tmp_meancurvecount = reshape(meancurvecount(n, :, :), [max_offset + align_wind - 1, nmeasures]);
+    %tmp_meancurvecount = reshape(meancurvecount(n, :, :), [max_offset + align_wind - 1, nmeasures]);
     tmp_ninterventions   = sum(amInterventions.LatentCurve == n);
     
     if tmp_ninterventions ~= 0
@@ -61,8 +72,8 @@ for n = 1:nlatentcurves
             [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
             ax = subplot(plotsdown, plotsacross, 1, 'Parent',p);
         end
-        plotSuperimposedAlignedCurves(ax, tmp_meancurvemean, tmp_meancurvecount, xl, yl, ...
-                measures, min_offset, max_offset, align_wind, ex_start(n), n, cntthresh, sum(amInterventions.LatentCurve == n));
+        plotSuperimposedAlignedCurves(ax, tmp_meancurvemean, xl, yl, ...
+                measures, min_offset, max_offset, align_wind, ex_start(n), n, sum(amInterventions.LatentCurve == n));
         if ~compactplot
             % save plot
             savePlotInDir(f, plottitle, plotsubfolder);

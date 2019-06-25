@@ -1,5 +1,5 @@
 function amEMMCPlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, ...
-    overall_pdoffset, hstg, overall_hist, meancurvemean, normmean, normstd, isOutlier, ...
+    overall_pdoffset, hstg, overall_hist, vshift, meancurvemean, normmean, normstd, isOutlier, ...
     ex_start_array, thisinter, nmeasures, max_offset, align_wind, sigmamethod, plotname, plotsubfolder)
 
 % amEMMCPlotsAndSavePredictions - plots measures prior to
@@ -30,9 +30,9 @@ for m = 1:nmeasures
         continue;
     end
     if sigmamethod == 4
-        adjmeancurvemean = (meancurvemean(lc, :, m) * normstd(thisinter, m)) + normmean(thisinter, m);
+        adjmeancurvemean = ((meancurvemean(lc, :, m) - vshift(lc, thisinter, m, amInterventions.Offset(thisinter) + 1)) * normstd(thisinter, m)) + normmean(thisinter, m)  ;
     else
-        adjmeancurvemean =  meancurvemean(lc, :, m) + normmean(thisinter, m);
+        adjmeancurvemean =  meancurvemean(lc, :, m) - vshift(lc, thisinter, m, amInterventions.Offset(thisinter) + 1) + normmean(thisinter, m) ;
     end
     
     % initialise plot areas

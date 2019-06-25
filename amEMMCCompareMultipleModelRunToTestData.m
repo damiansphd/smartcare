@@ -3,8 +3,6 @@ function amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions, modelr
 % amEMMCCompareMultipleModelRunToTestData - compares the output of multiple model runs to
 % the labelled test data. Able to handle multiple latent curve sets.
 
-
-
 amLabelledInterventions = [array2table([1:size(amLabelledInterventions,1)]'), amLabelledInterventions];
 amLabelledInterventions.Properties.VariableNames{'Var1'} = 'InterNbr';
 
@@ -32,6 +30,7 @@ for midx = modelidx:size(models,1)
     if (~isequal(models{midx}, 'placeholder') && ~contains(models{midx}, 'xxx'))
         clear randomseed;
         clear datasmoothmethod;
+        clear vshiftmode;
         load(fullfile(basedir, subfolder, sprintf('%s.mat', models{midx})));
         % for backward compatibility
         if (~exist('randomseed','var'))
@@ -48,6 +47,9 @@ for midx = modelidx:size(models,1)
         end
         if (~exist('scenario','var'))
             scenario = '';
+        end
+        if (~exist('vshiftmode','var'))
+            vshiftmode = 0;
         end
         temp = hsv;
         brightness = .9;
@@ -98,20 +100,20 @@ for midx = modelidx:size(models,1)
         fprintf('\n');
         modelrunlist = [modelrunlist; midx];
         qualityscore = [qualityscore; sum(datatable.Count(datatable.ModelRun==midx))];
-        if niterations == 200
-            convergeflag = '*';
-        else
-            convergeflag = ' ';
-        end
-        ylabels = [ylabels; sprintf('nl%dmm%dmo%dds%drm%drs%din%dct%dsc%s%s\n(%2d:%2d)', nlatentcurves, measuresmask, ...
-            max_offset, datasmoothmethod, runmode, randomseed, intrmode, countthreshold, scenario, convergeflag, ...
+        %if niterations == 200
+        %    convergeflag = '*';
+        %else
+        %    convergeflag = ' ';
+        %end
+        ylabels = [ylabels; sprintf('mm%dmo%dds%drm%drs%dct%dlm%dvs%dsc%sni%d\n(%2d:%2d)', measuresmask, ...
+            max_offset, datasmoothmethod, runmode, randomseed, countthreshold, testlabelmthd, vshiftmode, scenario, niterations, ...
             sum(matchidx), sum(datatable.Count(datatable.ModelRun==midx)))];
 
-        [resultrow] = setResultTableDisplayRow(mversion, study, sigmamethod, mumethod, ...
+        [resultrow] = setResultTableDisplayRow(mversion, study, treatgap, testlabelmthd, sigmamethod, mumethod, ...
                         curveaveragingmethod, smoothingmethod, datasmoothmethod, measuresmask, runmode, randomseed, ...
                         intrmode, imputationmode, confidencemode, max_offset, align_wind, ...
                         outprior, heldbackpct, confidencethreshold, countthreshold, nlatentcurves, ...
-                        niterations, scenario, ex_start, qual, ...
+                        niterations, vshiftmode, scenario, ex_start, qual, ...
                         sum(matchidx), testsetsize, sum(datatable.Count(datatable.ModelRun==midx)), measures, nmeasures);
         resulttable = [resulttable; resultrow];
     end
@@ -132,7 +134,7 @@ resulttable = sortrows(resulttable, {'NumLCSets', 'Measures', 'MaxOffset', 'Data
 if ismember(plotmode, {'Overall'})
     plotsacross = 1;
     plotsdown = 1;
-    plottitle = sprintf('Model Run Results %s_in%d_nl%d(%d-%d) vs Labelled Test Data', mversion, intrmode, nlatentcurves, modelidx, size(models,1));
+    plottitle = sprintf('Model Run Results %s_in%d_nl%d_tg%d(%d-%d) vs Labelled Test Data', mversion, intrmode, nlatentcurves, treatgap, modelidx, size(models,1));
 
     [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 
@@ -172,7 +174,7 @@ elseif ismember(plotmode, {'ByLCSet'})
     for n = 1:nlatentcurves
         plotsacross = 1;
         plotsdown = 1;
-        plottitle = sprintf('Model Run Results %s_in%d_nl%d(%d-%d) vs Labelled Test Data C%d', mversion, intrmode, nlatentcurves, modelidx, size(models,1), n);
+        plottitle = sprintf('Model Run Results %s_in%d_nl%d_tg%d(%d-%d) vs Labelled Test Data C%d', mversion, intrmode, nlatentcurves, treatgap, modelidx, size(models,1), n);
 
         [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 

@@ -9,6 +9,6 @@ else
     username = getenv('USERNAME');
 end
 
-basedir = sprintf('/Users/%s/OneDrive - UIS/Documents/AlignmentModel/', username);
+basedir = sprintf('/Users/%s/OneDrive - University Of Cambridge/Documents/AlignmentModel/', username);
 
 end

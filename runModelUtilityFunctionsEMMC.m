@@ -31,19 +31,21 @@ fprintf('20: Plot interventions over time by latent curve set (scaled days)\n');
 fprintf('21: Load variables for a given model run\n');
 fprintf('22: Plot a measure for a set of examples\n');
 fprintf('23: Compare latent curve set populations for 2 model runs\n');
-fprintf('24: Plot superimposed alignment surves - one per page\n');
-fprintf('25: Plot superimposed alignment surves - all on one page\n');
+fprintf('24: Plot superimposed alignment surves - mean shift - one per page\n');
+fprintf('25: Plot superimposed alignment surves - mean shift - all on one page\n');
 fprintf('26: Compare results for multiple model runs to labelled test data by latent curve set\n');
 fprintf('27: Run plots 18, 19, 20, 24, 25 in one go\n');
 fprintf('28: Compare latent curve set populations for multiple model runs\n');
 fprintf('29: Plot interventions over time by latent curve set (absolute days)\n');
 fprintf('30: Plot probilities of latent curve set assignment\n');
+fprintf('31: Plot superimposed alignment surves - max shift - one per page\n');
+fprintf('32: Plot superimposed alignment surves - max shift - all on one page\n');
 fprintf('\n');
-runfunction = input('Choose function (1-30): ');
+runfunction = input('Choose function (1-32): ');
 
 fprintf('\n');
 
-if runfunction > 30
+if runfunction > 32
     fprintf('Invalid choice\n');
     return;
 end
@@ -52,7 +54,11 @@ if isequal(runfunction,'')
     return;
 end
 
-[modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('', '', 'IntrFilt', 'TGap');
+if ismember(runfunction, [10, 26, 28, 30])
+    [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('', 'LCSet', 'IntrFilt', 'TGap');
+else
+    [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('', '', 'IntrFilt', 'TGap');
+end
 
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
@@ -80,7 +86,7 @@ if runfunction == 1
     fprintf('Plotting prediction results\n');
     for i=1:ninterventions
         amEMMCPlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, ...
-            hstg, overall_hist, meancurvemean, normmean, normstd, isOutlier, ex_start, i, nmeasures, ...
+            hstg, overall_hist, vshift, meancurvemean, normmean, normstd, isOutlier, ex_start, i, nmeasures, ...
             max_offset, align_wind, sigmamethod, plotname, plotsubfolder);
     end
     toc
@@ -339,16 +345,18 @@ elseif runfunction == 23
     amEMMCCompareModelRunsByLCSets(modelrun, modelidx, modelrun2, modelidx2);
 elseif runfunction == 24
     run_type = 'Best Alignment';
-    fprintf('Plotting superimposed alignment curves - one per page\n');
+    fprintf('Plotting superimposed alignment curves - mean shift - one per page\n');
     compactplot = false;
+    shiftmode = 1; % shift by mean to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, compactplot);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
 elseif runfunction == 25
     run_type = 'Best Alignment';
-    fprintf('Plotting superimposed alignment curves - all on one page\n');
+    fprintf('Plotting superimposed alignment curves - mean shift - all on one page\n');
     compactplot = true;
+    shiftmode = 1; % shift by mean to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, compactplot);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
 elseif runfunction == 26
     fprintf('Comparing results of multiple model runs to the labelled test data by latent curve set\n');
     fprintf('\n');
@@ -414,16 +422,18 @@ elseif runfunction == 27
     amEMMCPlotInterventionsByLatentCurveSet(pmPatients, amInterventions, amInterventionsFull, npatients, maxdays, plotname, plotsubfolder, nlatentcurves, plotmode);
     % run plot 24
     run_type = 'Best Alignment';
-    fprintf('Plotting superimposed alignment curves  - one per page\n');
-    compactplot = false; 
+    fprintf('Plotting superimposed alignment curves - mean shift - one per page\n');
+    compactplot = false;
+    shiftmode = 1; % shift by mean to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, compactplot);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
     % run plot 25
     run_type = 'Best Alignment';
-    fprintf('Plotting superimposed alignment curves - all on one page\n');
+    fprintf('Plotting superimposed alignment curves - mean shift - all on one page\n');
     compactplot = true;
+    shiftmode = 1; % shift by mean to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, compactplot);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
     
 elseif runfunction == 28
     fprintf('Comparing latent curve set population to multiple model runs\n');
@@ -445,6 +455,20 @@ elseif runfunction == 29
 elseif runfunction == 30
     fprintf('Plotting probilities of latent curve set assignment\n');
     amEMMCPlotProbsLCSet(overall_pdoffset, amInterventions, min_offset, max_offset, plotname, plotsubfolder, ninterventions, nlatentcurves);
+elseif runfunction == 31
+    run_type = 'Best Alignment';
+    fprintf('Plotting superimposed alignment curves - max shift - one per page\n');
+    compactplot = false;
+    shiftmode = 2; % shift by mean to left of ex_start
+    amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+elseif runfunction == 32
+    run_type = 'Best Alignment';
+    fprintf('Plotting superimposed alignment curves - max shift - all on one page\n');
+    compactplot = true;
+    shiftmode = 2; % shift by mean to left of ex_start
+    amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
 else
     fprintf('Should not get here....\n');
 end

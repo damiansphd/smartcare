@@ -1,5 +1,5 @@
-function plotSuperimposedAlignedCurves(ax, meancurvemean, meancurvecount, xl, yl, ...
-    measures, min_offset, max_offset, align_wind, ex_start, lc, cntthresh, nlcex)
+function plotSuperimposedAlignedCurves(ax, meancurvemean, xl, yl, ...
+    measures, min_offset, max_offset, align_wind, ex_start, lc, nlcex)
 
 % plotSuperimposedAlignedCurves - plots the aligned curves for each of the
 % measures superimposed on a single plot to show any timing differences in

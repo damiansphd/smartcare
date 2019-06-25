@@ -26,6 +26,7 @@ for midx = modelidx:size(models,1)
     if (~isequal(models{midx}, 'placeholder') && ~contains(models{midx}, 'xxx'))
         clear randomseed;
         clear datasmoothmethod;
+        clear vshiftmode;
         load(fullfile(basedir, subfolder, sprintf('%s.mat', models{midx})));
         % for backward compatibility
         if (~exist('randomseed','var'))
@@ -43,6 +44,9 @@ for midx = modelidx:size(models,1)
         if (~exist('scenario','var'))
             scenario = '';
         end
+        if (~exist('vshiftmode','var'))
+            vshiftmode = 0;
+        end
        
         modellcs   = amInterventions.LatentCurve; 
         rowtoadd.ModelRun = midx;
@@ -54,13 +58,13 @@ for midx = modelidx:size(models,1)
         end
         
         modelrunlist = [modelrunlist; midx];
-        if niterations == 200
-            convergeflag = '*';
-        else
-            convergeflag = ' ';
-        end
-        ylabels = [ylabels; sprintf('nl%dmm%dmo%dds%drm%drs%din%dct%dsc%s%s', nlatentcurves, measuresmask, ...
-            max_offset, datasmoothmethod, runmode, randomseed, intrmode, countthreshold, scenario, convergeflag)];
+        %if niterations == 200
+        %    convergeflag = '*';
+        %else
+        %    convergeflag = ' ';
+        %end
+        ylabels = [ylabels; sprintf('mm%dmo%dds%drm%drs%dct%dlm%dvs%dsc%sni%d', measuresmask, max_offset, ...
+            datasmoothmethod, runmode, randomseed, countthreshold, testlabelmthd, vshiftmode, scenario, niterations)];
     end
 end
 
@@ -73,7 +77,7 @@ labels = sortrows(labels, {'ylabels'}, {'ascend'});
    
 plotsacross = 1;
 plotsdown = 1;
-plottitle = sprintf('Model Runs %s_in%d_nl%d(%d-%d) By Latent Curve Set', mversion, intrmode, nlatentcurves, modelidx, size(models,1));
+plottitle = sprintf('Model Runs %s_in%d_nl%d_tg%d(%d-%d) By Latent Curve Set', mversion, intrmode, nlatentcurves, treatgap, modelidx, size(models,1));
 
 [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 
