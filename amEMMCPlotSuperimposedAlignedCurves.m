@@ -4,10 +4,11 @@ function amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amIn
 % amEMMCPlotSuperimposedAlignedCurves - wrapper around the
 % plotSuperimposedAlignedCurves to plot for each set of latent curves
 
+plottitle   = sprintf('%s - %s Superimposed', plotname, run_type);
+
 if compactplot
     plotsacross = 2;
     plotsdown   = 2;
-    plottitle   = sprintf('%s - %s Superimposed', plotname, run_type);
     [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 else
     plotsacross = 1;

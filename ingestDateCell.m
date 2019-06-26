@@ -1,4 +1,4 @@
-function [outputdate, isValid] = ingestDateCell(inputcell, matlabexcelserialdatediff, row)
+function [outputdate, isValid] = ingestDateCell(inputcell, matlabexcelserialdatediff, row, notime)
 
 % ingestDateCell - ingest a date cell from a spreadsheet, handling various
 % diffrent potential formats
@@ -23,7 +23,7 @@ if ismember(class(inputcell), 'double')
             if strlength(inputcell{1}) == 11
                 outputdate = datetime(inputcell, 'InputFormat', 'dd-MMM-yyyy');
             elseif strlength(inputcell{1}) == 20
-                outputdate = datetime(inputcell, 'InputFormat', 'dd-MMM-yyyy hh:mm:ss');
+                outputdate = datetime(inputcell, 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
             else
                 fprintf('%3d: **** Invalid date format %s ****\n', row, inputcell{1});
                 isValid = false;
@@ -35,6 +35,12 @@ if ismember(class(inputcell), 'double')
     else
         fprintf('%3d: **** Invalid date format ****\n');
         isValid = false;
+end
+
+if isValid && notime && ~isnat(outputdate)
+    %fprintf('Orig Date %s ', datestr(outputdate, 29));
+    outputdate = dateshift(outputdate, 'start', 'day');
+    %fprintf('Rounded Date %s \n', datestr(outputdate, 29));
 end
     
 end

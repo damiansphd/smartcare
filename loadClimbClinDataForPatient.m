@@ -1,5 +1,5 @@
-function [cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, cdPFT, cdMicrobiology] = ...
-            loadClimbClinDataForPatient(cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, cdPFT, cdMicrobiology, patfile, basedir, subfolder, userid)
+function [cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, cdPFT, cdMicrobiology, cdHghtWght] = ...
+            loadClimbClinDataForPatient(cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, cdPFT, cdMicrobiology, cdHghtWght, patfile, basedir, subfolder, userid)
         
 % loadClimbClinDataForPatient - populate the clinical data tables for a given
 % patient's information
@@ -7,8 +7,9 @@ function [cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, cdPFT, cdMicro
 hosplength = 3;
 idlength = 3;
 matlabexcelserialdatediff = datenum(datetime(1899,12,31)) - 1;
+notime = true;
 
-[cdpatrow, cdadmrow, cdabrow, cdcvrow, ~, ~, cdpftrow, cdmicrorow, ~] = createClimbClinicalTables(1);
+[cdpatrow, cdadmrow, cdabrow, cdcvrow, ~, ~, cdpftrow, cdmicrorow, cdhwrow, ~] = createClimbClinicalTables(1);
 
 cdpatientsheet = '(1) Enrolment Visit Worksheet';
 cdmicrosheet = '(1) Positive bacterial growth i';
@@ -16,6 +17,7 @@ cdcvsheet = '(1) Clinic attendance dates dur';
 cdpftsheet = '(1) Hospital Lung Function meas';
 cdadmsheet = '(1) Hospital Admission dates in';
 cdabsheet = '(1) Hospital Admission dates in';
+cdhwsheet = '(1) Height and Weight measureme';
 
 fprintf('File %s, ID %d\n', patfile, userid);
 fprintf('=======================\n');
@@ -30,6 +32,7 @@ if ~ismember(cdpatrow.StudyNumber, extractBefore(patfile, 7))
 end
 cdpatrow.Hospital      = extractBefore(cdpatrow.StudyNumber, hosplength + 1);
 cdpatrow.StudyDate     = datetime(tmppatient.Var2(ismember(tmppatient.Var1, 'Date')));
+cdpatrow.StudyDate     = ingestDateCell(tmppatient.Var2(ismember(tmppatient.Var1, 'Date')),   matlabexcelserialdatediff, 1, notime);
 cdpatrow.Age           = str2double(tmppatient.Var2(ismember(tmppatient.Var1, 'Age(Y)')));
 if isnan(cdpatrow.Age)
     fprintf('**** Invalid Age: %s ****\n', tmppatient.Var2{ismember(tmppatient.Var1, 'Age(Y)')});
@@ -67,6 +70,14 @@ if isnan(cdpatrow.FEV1SetAs)
         cdpatrow.TooYoung{1}, cdpatrow.AgeYy, cdpatrow.AgeMm);
     cdpatrow.FEV1SetAs = 0;
 end
+if ismember(cdpatrow.TooYoung, 'No')
+    if cdpatrow.PredictedFEV1 ~= 0 && cdpatrow.FEV1SetAs == 0
+        cdpatrow.FEV1SetAs = round(cdpatrow.PredictedFEV1, 1);
+    end
+    if cdpatrow.FEV1SetAs ~= 0 && cdpatrow.PredictedFEV1 == 0
+        cdpatrow.PredictedFEV1 = cdpatrow.FEV1SetAs;
+    end
+end
 cdpatrow.StudyEmail    = tmppatient.Var2(ismember(tmppatient.Var1, 'Email'));
 cdpatrow.CalcAge       = cdpatrow.Age;
 cdpatrow.CalcAgeExact  = cdpatrow.Age + str2double(tmppatient.Var2(ismember(tmppatient.Var1, 'Age(M)'))) / 12;
@@ -87,7 +98,7 @@ for i = 1:size(tmpmicro, 1)
     cdmicrorow.StudyNumber = cdpatrow.StudyNumber;
     cdmicrorow.Hospital   = cdpatrow.Hospital;
     cdmicrorow.Microbiology = tmpmicro.Bacteria(i);
-    [cdmicrorow.DateMicrobiology, isValid] = ingestDateCell(tmpmicro.Date(i), matlabexcelserialdatediff, i);
+    [cdmicrorow.DateMicrobiology, isValid] = ingestDateCell(tmpmicro.Date(i), matlabexcelserialdatediff, i, notime);
     if isValid
         cdMicrobiology = [cdMicrobiology; cdmicrorow];
     end
@@ -101,7 +112,7 @@ for i = 1:size(tmpcv, 1)
     cdcvrow.ID          = userid;
     cdcvrow.StudyNumber = cdpatrow.StudyNumber;
     cdcvrow.Hospital   = cdpatrow.Hospital;
-    [cdcvrow.AttendanceDate, isValid] = ingestDateCell(tmpcv.Date(i), matlabexcelserialdatediff, i);
+    [cdcvrow.AttendanceDate, isValid] = ingestDateCell(tmpcv.Date(i), matlabexcelserialdatediff, i, notime);
     if isValid
         cdClinicVisits = [cdClinicVisits; cdcvrow];
     end
@@ -115,7 +126,7 @@ for i = 1:size(tmppft, 1)
     cdpftrow.ID          = userid;
     cdpftrow.StudyNumber = cdpatrow.StudyNumber;
     cdpftrow.Hospital   = cdpatrow.Hospital;
-    [cdpftrow.LungFunctionDate, isValid] = ingestDateCell(tmppft.Date(i), matlabexcelserialdatediff, i);
+    [cdpftrow.LungFunctionDate, isValid] = ingestDateCell(tmppft.Date(i), matlabexcelserialdatediff, i, notime);
     cdpftrow.FEV1 = tmppft.FEV1_litresPredicted_(i);
     if isnan(cdpftrow.FEV1)
         fprintf('%3d: **** Invalid Clinical FEV1 Volume: %d ****\n', i, cdpftrow.FEV1);
@@ -152,8 +163,8 @@ for i = 1:size(tmpadm, 1)
     cdadmrow.StudyNumber = cdpatrow.StudyNumber;
     cdadmrow.Hospital    = cdpatrow.Hospital;
     cdadmrow.Reason      = tmpadm.ReasonForAdmission(i);
-    [cdadmrow.Admitted,  isValid] = ingestDateCell(tmpadm.DateAdmitted(i),   matlabexcelserialdatediff, i);
-    [cdadmrow.Discharge, tmpisValid] = ingestDateCell(tmpadm.DateDischarged(i), matlabexcelserialdatediff, i);
+    [cdadmrow.Admitted,  isValid] = ingestDateCell(tmpadm.DateAdmitted(i),   matlabexcelserialdatediff, i, notime);
+    [cdadmrow.Discharge, tmpisValid] = ingestDateCell(tmpadm.DateDischarged(i), matlabexcelserialdatediff, i, notime);
     if ~tmpisValid
         isValid = tmpisValid;
     end
@@ -169,8 +180,8 @@ for i = 1:size(tmpadm, 1)
     cdabrow.ID          = userid;
     cdabrow.StudyNumber = cdpatrow.StudyNumber;
     cdabrow.Hospital    = cdpatrow.Hospital;
-    [cdabrow.StartDate, isValid] = ingestDateCell(tmpadm.StartDate(i), matlabexcelserialdatediff, i);
-    [cdabrow.StopDate,  tmpisValid] = ingestDateCell(tmpadm.StopDate(i),  matlabexcelserialdatediff, i);
+    [cdabrow.StartDate, isValid] = ingestDateCell(tmpadm.StartDate(i), matlabexcelserialdatediff, i, notime);
+    [cdabrow.StopDate,  tmpisValid] = ingestDateCell(tmpadm.StopDate(i),  matlabexcelserialdatediff, i, notime);
     if ~tmpisValid
         isValid = tmpisValid;
     end
@@ -201,6 +212,47 @@ for i = 1:size(tmpadm, 1)
                 end
             end
         end
+    end
+end
+
+hwopts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', cdhwsheet);
+hwopts.VariableTypes(:, ismember(hwopts.VariableNames, {'HeightInCM', 'ZScore_ifKnown_', 'WeightInKG', 'ZScore_ifKnown__1', 'BMI_ifKnown_'})) = {'double'};
+tmphw = readtable(fullfile(basedir, subfolder, patfile), hwopts, 'Sheet', cdhwsheet);
+fprintf('Clinical Height & Weight Measures - %2d rows\n', size(tmphw, 1));
+fprintf('-------------------------------------------\n');
+for i = 1:size(tmphw, 1)
+    isValid = true;
+    cdhwrow.ID          = userid;
+    cdhwrow.StudyNumber = cdpatrow.StudyNumber;
+    cdhwrow.Hospital   = cdpatrow.Hospital;
+    [cdhwrow.MeasDate, isValid] = ingestDateCell(tmphw.Date(i), matlabexcelserialdatediff, i, notime);
+    cdhwrow.Height = tmphw.HeightInCM(i);
+    if isnan(cdhwrow.Height)
+        fprintf('%3d: **** Invalid Clinical Height: %d ****\n', i, cdhwrow.Height);
+        cdhwrow.Height = 0;
+    end
+    cdhwrow.H_ZScore = tmphw.ZScore_ifKnown_(i);
+    if isnan(cdhwrow.H_ZScore)
+        fprintf('%3d: **** Invalid Clinical Height Z-Score: %d ****\n', i, cdhwrow.H_ZScore);
+        cdhwrow.H_ZScore = 0;
+    end
+    cdhwrow.Weight = tmphw.WeightInKG(i);
+    if isnan(cdhwrow.Weight)
+        fprintf('%3d: **** Invalid Clinical Weight: %d ****\n', i, cdhwrow.Weight);
+        cdhwrow.Weight = 0;
+    end
+    cdhwrow.W_ZScore = tmphw.ZScore_ifKnown__1(i);
+    if isnan(cdhwrow.W_ZScore)
+        fprintf('%3d: **** Invalid Clinical Weight Z-Score: %d ****\n', i, cdhwrow.W_ZScore);
+        cdhwrow.W_ZScore = 0;
+    end
+    cdhwrow.BMI = tmphw.BMI_ifKnown_(i);
+    if isnan(cdhwrow.BMI)
+        fprintf('%3d: **** Invalid Clinical BMI: %d ****\n', i, cdhwrow.BMI);
+        cdhwrow.BMI = 0;
+    end
+    if isValid
+        cdHghtWght = [cdHghtWght; cdhwrow];
     end
 end
 
