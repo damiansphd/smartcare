@@ -4,7 +4,15 @@ function amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amIn
 % amEMMCPlotSuperimposedAlignedCurves - wrapper around the
 % plotSuperimposedAlignedCurves to plot for each set of latent curves
 
-plottitle   = sprintf('%s - %s Superimposed', plotname, run_type);
+if shiftmode == 1
+    shifttext = 'MeanShift';
+elseif shiftmode == 2
+    shifttext = 'MaxShift';
+else
+    fprintf('**** Unknown shift mode ****\n');
+end
+
+plottitle   = sprintf('%s - %s Superimposed %s', plotname, run_type, shifttext);
 
 if compactplot
     plotsacross = 2;
@@ -13,14 +21,6 @@ if compactplot
 else
     plotsacross = 1;
     plotsdown   = 1;
-end
-
-if shiftmode == 1
-    plottitle   = sprintf('%s %s', plottitle, 'MeanShift');
-elseif shiftmode == 2
-    plottitle   = sprintf('%s %s', plottitle, 'MaxShift');
-else
-    fprintf('**** Unknown shift mode ****\n');
 end
 
 smoothwdth = 4;
@@ -69,7 +69,7 @@ for n = 1:nlatentcurves
         if compactplot
             ax = subplot(plotsdown, plotsacross, n, 'Parent',p);
         else
-            plottitle   = sprintf('%s - %s Superimposed C%d', plotname, run_type, n);
+            plottitle   = sprintf('%s - %s Superimposed %s C%d', plotname, run_type, shifttext, n);
             [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
             ax = subplot(plotsdown, plotsacross, 1, 'Parent',p);
         end

@@ -48,12 +48,21 @@ for midx = modelidx:size(models,1)
             vshiftmode = 0;
         end
        
-        modellcs   = amInterventions.LatentCurve; 
+        modellcs   = amInterventions.LatentCurve;
+        
+        lcs = 1:nlatentcurves;
+        nlcs = zeros(nlatentcurves, 1);
+        for i = 1:nlatentcurves
+            nlcs(i) = sum(modellcs==i);
+        end
+        [~, nlcsidx] = sort(nlcs, 'descend');
+        
         rowtoadd.ModelRun = midx;
         
         for i = 1:ninterventions
             rowtoadd.IntrNbr = i;
-            rowtoadd.LatentCurve = modellcs(i);
+            %rowtoadd.LatentCurve = modellcs(i);
+            rowtoadd.LatentCurve = lcs(nlcsidx==modellcs(i));
             datatable = [datatable ; rowtoadd];
         end
         
@@ -77,7 +86,7 @@ labels = sortrows(labels, {'ylabels'}, {'ascend'});
    
 plotsacross = 1;
 plotsdown = 1;
-plottitle = sprintf('Model Runs %s_in%d_nl%d_tg%d(%d-%d) By Latent Curve Set', mversion, intrmode, nlatentcurves, treatgap, modelidx, size(models,1));
+plottitle = sprintf('Model Runs %s_gp%d_lm%d_in%d_nl%d(%d-%d) By Latent Curve Set', mversion, treatgap, testlabelmthd, intrmode, nlatentcurves, modelidx, size(models,1));
 
 [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 

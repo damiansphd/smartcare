@@ -1,11 +1,10 @@
 function [dist, count, hstg, vshift, isOutlier] = amEMMCCalcObjFcn(meancurvemean, meancurvestd, amIntrCube, ...
     amHeldBackcube, vshift, isOutlier, outprior, measuresmask, measuresrange, normstd, hstg, currinter, ...
-    curroffset, max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod, allowvshift)
+    curroffset, max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod, allowvshift, vshiftmax)
 
 % amEMMCCalcObjFcn - calculates residual sum of squares distance for points in
 % curve vs a given meancurve incorporating offset
 
-maxvshift = 0.3;
 dist = 0;
 count = 0;
 tempmean = zeros(max_offset + align_wind - 1, nmeasures);
@@ -74,10 +73,10 @@ for m = 1:nmeasures
     
     if allowvshift && sum(actidx) ~= 0
         vshift(1, currinter, m, curroffset + 1) = (sum(offsettempmean(actidx)) - sum(intrdata(actidx))) / sum(actidx);
-        if vshift(1, currinter, m, curroffset + 1) > maxvshift
-            vshift(1, currinter, m, curroffset + 1) = maxvshift;
-        elseif vshift(1, currinter, m, curroffset + 1) < -maxvshift
-            vshift(1, currinter, m, curroffset + 1) = -maxvshift;
+        if vshift(1, currinter, m, curroffset + 1) > vshiftmax
+            vshift(1, currinter, m, curroffset + 1) = vshiftmax;
+        elseif vshift(1, currinter, m, curroffset + 1) < -vshiftmax
+            vshift(1, currinter, m, curroffset + 1) = -vshiftmax;
         end
     end
     

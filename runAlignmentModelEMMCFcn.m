@@ -9,7 +9,7 @@ function runAlignmentModelEMMCFcn(amRunParameters)
     modelinputsmatfile, datademographicsfile, dataoutliersfile, labelledinterventionsfile, electivefile, ...
     sigmamethod, mumethod, curveaveragingmethod, smoothingmethod, datasmoothmethod, ...
     measuresmask, runmode, randomseed, intrmode, modelrun, imputationmode, confidencemode, printpredictions, ...
-    max_offset, align_wind, outprior, heldbackpct, confidencethreshold, nlatentcurves, countthreshold, scenario, vshiftmode] ...
+    max_offset, align_wind, outprior, heldbackpct, confidencethreshold, nlatentcurves, countthreshold, scenario, vshiftmode, vshiftmax] ...
     = amEMMCSetModelRunParametersFromTable(amRunParameters);
 
 fprintf('Running Alignment Model %s\n', mversion);
@@ -37,8 +37,8 @@ toc
 tic
 fprintf('Preparing input data\n');
 
-baseplotname = sprintf('%s%s_gp%d_lm%d_sig%d_mu%d_ca%d_sm%d_rm%d_in%d_im%d_cm%d_mm%d_mo%d_dw%d_nl%d_rs%d_ds%d_ct%d_sc%s_vs%d', study, mversion, treatgap, testlabelmthd, sigmamethod, mumethod, curveaveragingmethod, ...
-    smoothingmethod, runmode, intrmode, imputationmode, confidencemode, measuresmask, max_offset, align_wind, nlatentcurves, randomseed, datasmoothmethod, countthreshold, scenario, vshiftmode);
+baseplotname = sprintf('%s%s_gp%d_lm%d_sig%d_mu%d_ca%d_sm%d_rm%d_in%d_im%d_cm%d_mm%d_mo%d_dw%d_nl%d_rs%d_ds%d_ct%d_sc%s_vs%d_vm%.1f', study, mversion, treatgap, testlabelmthd, sigmamethod, mumethod, curveaveragingmethod, ...
+    smoothingmethod, runmode, intrmode, imputationmode, confidencemode, measuresmask, max_offset, align_wind, nlatentcurves, randomseed, datasmoothmethod, countthreshold, scenario, vshiftmode, vshiftmax);
 detaillog = true;
 
 % pre-process measures table and associated measurement data
@@ -83,19 +83,20 @@ fprintf('\n');
 if vshiftmode == 0
     fprintf('Running alignment - without vertical shift\n');
     allowvshift1 = false;
-    maxiterations1 = 100;
+    maxiterations1 = 200;
     maxiterations2 = 0;
 elseif vshiftmode == 1
     fprintf('Running alignment - with vertical shift\n');
     allowvshift1 = true;
-    maxiterations1 = 100;
+    maxiterations1 = 200;
     maxiterations2 = 0;
 elseif vshiftmode == 2
     fprintf('Running alignment - initially without vertical shift, then with\n');
     allowvshift1 = false;
-    maxiterations1 = 100;
-    maxiterations2 = 50;
+    maxiterations1 = 200;
     allowvshift2 = true;
+    maxiterations2 = 50;
+    
 end
 miniiter = 0;
 
@@ -109,7 +110,7 @@ tic
         hstg, pdoffset, overall_hist, overall_pdoffset, vshift, isOutlier, ...
         amInterventions, outprior, measures, normstd, min_offset, max_offset, align_wind, ...
         nmeasures, ninterventions, nlatentcurves, sigmamethod, smoothingmethod, ...
-        runmode, countthreshold, aniterations, maxiterations1, allowvshift1, miniiter, fnmodelrun);
+        runmode, countthreshold, aniterations, maxiterations1, allowvshift1, vshiftmax, miniiter, fnmodelrun);
 fprintf('%s - ErrFcn = %.8f\n', run_type, qual);
 toc
 
@@ -124,7 +125,7 @@ if maxiterations2 ~= 0
         hstg, pdoffset, overall_hist, overall_pdoffset, vshift, isOutlier, ...
         amInterventions, outprior, measures, normstd, min_offset, max_offset, align_wind, ...
         nmeasures, ninterventions, nlatentcurves, sigmamethod, smoothingmethod, ...
-        runmode, countthreshold, aniterations, maxiterations2, allowvshift2, miniiter, fnmodelrun);
+        runmode, countthreshold, aniterations, maxiterations2, allowvshift2, vshiftmax, miniiter, fnmodelrun);
     
     niterations = niterations + niterations2;
     %[meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, amInterventions, initial_offsets, initial_latentcurve, ...
@@ -234,7 +235,7 @@ save(fullfile(basedir, subfolder, outputfilename), 'amDatacube', 'amIntrDatacube
     'study', 'mversion', 'treatgap', 'testlabelmthd', 'sigmamethod','min_offset', 'max_offset', 'align_wind', 'ex_start', 'confidencethreshold', ...
     'sigmamethod', 'mumethod', 'curveaveragingmethod', 'smoothingmethod', 'datasmoothmethod', 'countthreshold', ...
     'measuresmask', 'runmode', 'randomseed', 'intrmode', 'imputationmode', 'heldbackpct', 'confidencemode', 'printpredictions', ...
-    'nmeasures', 'ninterventions', 'niterations', 'nlatentcurves', 'scenario', 'vshiftmode', ...
+    'nmeasures', 'ninterventions', 'niterations', 'nlatentcurves', 'scenario', 'vshiftmode', 'vshiftmax', ...
     'modelinputsmatfile', 'datademographicsfile', 'dataoutliersfile', 'labelledinterventionsfile', 'electivefile');
 toc
 fprintf('\n');

@@ -7,7 +7,7 @@ function [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurve
         hstg, pdoffset, overall_hist, overall_pdoffset, vshift, isOutlier, ...
         amInterventions, outprior, measures, normstd, min_offset, max_offset, align_wind, ...
         nmeasures, ninterventions, nlatentcurves, sigmamethod, smoothingmethod, ...
-        runmode, countthreshold, aniterations, maxiterations, allowvshift, miniiter, fnmodelrun)
+        runmode, countthreshold, aniterations, maxiterations, allowvshift, vshiftmax, miniiter, fnmodelrun)
 
 % amEMMCAlignCurves - function to align measurement curves prior to
 % intervention (allowing for multiple versions of the latent curves)
@@ -42,7 +42,7 @@ while (smmpddiff > pddiffthreshold && iter < maxiterations)
     if ok == 1
         [better_offset, better_curve, hstg, pdoffset, overall_hist, overall_pdoffset, vshift, isOutlier] = amEMMCBestFit(meancurvemean, meancurvestd, amIntrCube, amHeldBackcube, ...
             measures.Mask, measures.OverallRange, normstd, hstg, pdoffset, overall_hist, overall_pdoffset, vshift, isOutlier, outprior, ...
-            pnt, min_offset, max_offset, align_wind, nmeasures, sigmamethod, smoothingmethod, runmode, nlatentcurves, allowvshift);
+            pnt, min_offset, max_offset, align_wind, nmeasures, sigmamethod, smoothingmethod, runmode, nlatentcurves, allowvshift, vshiftmax);
     else
         better_offset = amInterventions.Offset(pnt);
         better_curve  = amInterventions.LatentCurve(pnt);
@@ -119,7 +119,7 @@ while (smmpddiff > pddiffthreshold && iter < maxiterations)
             tmpallowvshift = false;
             [iqual, icount] = amEMMCCalcObjFcn(meancurvemean(lc, :, :), meancurvestd(lc, :, :), amIntrCube, amHeldBackcube, ...
                 vshift(lc, :, :, :), isOutlier(lc, :, :, :, :), outprior, measures.Mask, measures.OverallRange, normstd, hstg(lc, :, :, :), i, ...
-                amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod, tmpallowvshift); 
+                amInterventions.Offset(i), max_offset, align_wind, nmeasures, update_histogram, sigmamethod, smoothingmethod, tmpallowvshift, vshiftmax); 
             
             qual = qual + iqual;
             qualcount = qualcount + icount;
@@ -150,13 +150,6 @@ end
 %[meancurvesumsq, meancurvesum, meancurvecount] = amEMMCAddAdjacentAdjustments(meancurvesumsq, meancurvesum, meancurvecount, pptsstruct, nlatentcurves);
 [meancurvemean, meancurvestd] = amEMMCCalcMeanAndStd(meancurvesumsq, meancurvesum, meancurvecount, min_offset, max_offset, align_wind);
 
-% remove points from latent curves that don't have enough underlying data
-% points contributing
-%meancurvemean(meancurvecount  < countthreshold) = nan;
-%meancurvestd(meancurvecount   < countthreshold) = nan;
-%meancurvesumsq(meancurvecount < countthreshold) = nan;
-%meancurvesum(meancurvecount   < countthreshold) = nan;
-%meancurvecount(meancurvecount < countthreshold) = nan;
 
 end
 

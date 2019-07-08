@@ -1,6 +1,6 @@
 function [better_offset, better_curve, hstg, pdoffset, overall_hist, overall_pdoffset, vshift, isOutlier] = amEMMCBestFit(meancurvemean, meancurvestd, ...
     amIntrCube, amHeldBackcube, measuresmask, measuresrange, normstd, hstg, pdoffset, overall_hist, overall_pdoffset, vshift, ...
-    isOutlier, outprior, currinter, min_offset, max_offset, align_wind, nmeasures, sigmamethod, smoothingmethod, runmode, nlatentcurves, allowvshift)
+    isOutlier, outprior, currinter, min_offset, max_offset, align_wind, nmeasures, sigmamethod, smoothingmethod, runmode, nlatentcurves, allowvshift, vshiftmax)
 
 % amEMMCBestFit - calculates the offset and curve for an intervention by minimising the
 % objective function (with multiple sets of latent curves)
@@ -17,7 +17,7 @@ for n = 1:nlatentcurves
     for i = min_offset:max_offset - 1
         [currdist, ~, hstg(n, :, :, :), vshift(n, :, :, :), isOutlier(n, :, :, :, :)] = amEMMCCalcObjFcn(meancurvemean(n, :, :), meancurvestd(n, :, :), amIntrCube, amHeldBackcube, vshift(n, :, :, :), ...
             isOutlier(n, :, :, :, :), outprior, measuresmask, measuresrange, normstd, hstg(n, :, :, :), currinter, i, max_offset, align_wind, nmeasures, ...
-            update_histogram, sigmamethod, smoothingmethod, allowvshift);
+            update_histogram, sigmamethod, smoothingmethod, allowvshift, vshiftmax);
         if currdist < minidist
             better_offset = i;
             better_curve = n;

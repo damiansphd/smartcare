@@ -31,8 +31,10 @@ for m = 1:nmeasures
     end
     if sigmamethod == 4
         adjmeancurvemean = ((meancurvemean(lc, :, m) - vshift(lc, thisinter, m, amInterventions.Offset(thisinter) + 1)) * normstd(thisinter, m)) + normmean(thisinter, m)  ;
+        %adjmeancurvemean = (meancurvemean(lc, :, m) * normstd(thisinter, m)) + normmean(thisinter, m)  ;
     else
         adjmeancurvemean =  meancurvemean(lc, :, m) - vshift(lc, thisinter, m, amInterventions.Offset(thisinter) + 1) + normmean(thisinter, m) ;
+        %adjmeancurvemean =  meancurvemean(lc, :, m) + normmean(thisinter, m) ;
     end
     
     % initialise plot areas

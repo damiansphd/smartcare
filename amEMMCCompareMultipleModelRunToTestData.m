@@ -31,6 +31,7 @@ for midx = modelidx:size(models,1)
         clear randomseed;
         clear datasmoothmethod;
         clear vshiftmode;
+        clear vshiftmax;
         load(fullfile(basedir, subfolder, sprintf('%s.mat', models{midx})));
         % for backward compatibility
         if (~exist('randomseed','var'))
@@ -50,6 +51,9 @@ for midx = modelidx:size(models,1)
         end
         if (~exist('vshiftmode','var'))
             vshiftmode = 0;
+        end
+        if (~exist('vshiftmax','var'))
+            vshiftmax = 0.3;
         end
         temp = hsv;
         brightness = .9;
@@ -105,15 +109,15 @@ for midx = modelidx:size(models,1)
         %else
         %    convergeflag = ' ';
         %end
-        ylabels = [ylabels; sprintf('mm%dmo%dds%drm%drs%dct%dlm%dvs%dsc%sni%d\n(%2d:%2d)', measuresmask, ...
-            max_offset, datasmoothmethod, runmode, randomseed, countthreshold, testlabelmthd, vshiftmode, scenario, niterations, ...
+        ylabels = [ylabels; sprintf('mm%dmo%dds%drm%drs%dct%dlm%dvs%dvm%.1fsc%sni%d\n(%2d:%2d)', measuresmask, ...
+            max_offset, datasmoothmethod, runmode, randomseed, countthreshold, testlabelmthd, vshiftmode, vshiftmax, scenario, niterations, ...
             sum(matchidx), sum(datatable.Count(datatable.ModelRun==midx)))];
 
         [resultrow] = setResultTableDisplayRow(mversion, study, treatgap, testlabelmthd, sigmamethod, mumethod, ...
                         curveaveragingmethod, smoothingmethod, datasmoothmethod, measuresmask, runmode, randomseed, ...
                         intrmode, imputationmode, confidencemode, max_offset, align_wind, ...
                         outprior, heldbackpct, confidencethreshold, countthreshold, nlatentcurves, ...
-                        niterations, vshiftmode, scenario, ex_start, qual, ...
+                        niterations, vshiftmode, vshiftmax, scenario, ex_start, qual, ...
                         sum(matchidx), testsetsize, sum(datatable.Count(datatable.ModelRun==midx)), measures, nmeasures);
         resulttable = [resulttable; resultrow];
     end
@@ -134,7 +138,7 @@ resulttable = sortrows(resulttable, {'NumLCSets', 'Measures', 'MaxOffset', 'Data
 if ismember(plotmode, {'Overall'})
     plotsacross = 1;
     plotsdown = 1;
-    plottitle = sprintf('Model Run Results %s_in%d_nl%d_tg%d(%d-%d) vs Labelled Test Data', mversion, intrmode, nlatentcurves, treatgap, modelidx, size(models,1));
+    plottitle = sprintf('Model Run Results %s_gp%d_lm%d_in%d_nl%d(%d-%d) vs Labelled Test Data', mversion, treatgap, testlabelmthd, intrmode, nlatentcurves,  modelidx, size(models,1));
 
     [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 
