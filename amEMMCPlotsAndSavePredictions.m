@@ -1,6 +1,6 @@
-function amEMMCPlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, ...
+function amEMMCPlotsAndSavePredictions(amInterventions, amIntrcube, measures, pdoffset, ...
     overall_pdoffset, hstg, overall_hist, vshift, meancurvemean, normmean, normstd, isOutlier, ...
-    ex_start_array, thisinter, nmeasures, max_offset, align_wind, sigmamethod, plotname, plotsubfolder)
+    ex_start_array, thisinter, nmeasures, max_offset, align_wind, sigmamethod, plotname, plotsubfolder, normmode)
 
 % amEMMCPlotsAndSavePredictions - plots measures prior to
 % treatment with alignment model predictions and overlaid with the mean
@@ -15,26 +15,38 @@ hpos = [ 5 ; 10 ; 15 ; 20 ; 25 ; 30 ; 35 ; 40 ; 45 ; 44 ; 43 ; 42 ; 41 ];
 dayset = [-1 * (max_offset + align_wind - 1): -1];
 anchor = 0; % latent curve is to be shifted by offset on the plot
 
+if normmode == 2
+    normtxt = 'Norm';
+else
+    normtxt = '';
+end
+
 scid = amInterventions.SmartCareID(thisinter);
 lc = amInterventions.LatentCurve(thisinter);
 ex_start = ex_start_array(lc);
 noutliers = sum(sum(isOutlier(lc, thisinter, :, :, amInterventions.Offset(thisinter) + 1)));
-name = sprintf('%s-%d_ID_%d_Dt_%s_Off_%d_C%d_Out_%d', plotname, thisinter, ...
+name = sprintf('%s-%s-%d_ID_%d_Dt_%s_Off_%d_C%d_Out_%d', plotname, normtxt, thisinter, ...
     scid, datestr(amInterventions.IVStartDate(thisinter),29), amInterventions.Offset(thisinter), amInterventions.LatentCurve(thisinter), noutliers);
 fprintf('%s\n', name);
 
 [f, p] = createFigureAndPanel(name, 'portrait', 'a4');
 
 for m = 1:nmeasures
-    if all(isnan(amIntrDatacube(thisinter, :, m)))
+    if all(isnan(amIntrcube(thisinter, :, m)))
         continue;
     end
-    if sigmamethod == 4
-        adjmeancurvemean = ((meancurvemean(lc, :, m) - vshift(lc, thisinter, m, amInterventions.Offset(thisinter) + 1)) * normstd(thisinter, m)) + normmean(thisinter, m)  ;
-        %adjmeancurvemean = (meancurvemean(lc, :, m) * normstd(thisinter, m)) + normmean(thisinter, m)  ;
+    if normmode == 1
+        adjmeasdata = amIntrcube(thisinter, :, m);
+        if sigmamethod == 4
+            adjmeancurvemean = ((meancurvemean(lc, :, m) - vshift(lc, thisinter, m, amInterventions.Offset(thisinter) + 1)) * normstd(thisinter, m)) + normmean(thisinter, m)  ;
+            %adjmeancurvemean = (meancurvemean(lc, :, m) * normstd(thisinter, m)) + normmean(thisinter, m)  ;
+        else
+            adjmeancurvemean =  meancurvemean(lc, :, m) - vshift(lc, thisinter, m, amInterventions.Offset(thisinter) + 1) + normmean(thisinter, m) ;
+            %adjmeancurvemean =  meancurvemean(lc, :, m) + normmean(thisinter, m) ;
+        end
     else
-        adjmeancurvemean =  meancurvemean(lc, :, m) - vshift(lc, thisinter, m, amInterventions.Offset(thisinter) + 1) + normmean(thisinter, m) ;
-        %adjmeancurvemean =  meancurvemean(lc, :, m) + normmean(thisinter, m) ;
+        adjmeasdata = amIntrcube(thisinter, :, m) + vshift(lc, thisinter, m, amInterventions.Offset(thisinter) + 1);
+        adjmeancurvemean = meancurvemean(lc, :, m);
     end
     
     % initialise plot areas
@@ -44,15 +56,24 @@ for m = 1:nmeasures
     
     % create subplot and plot required data arrays
     ax = subplot(plotsdown, plotsacross, mpos(m,:), 'Parent',p);               
-    [xl, yl] = plotMeasurementData(ax, dayset, amIntrDatacube(thisinter, :, m), xl, yl, measures(m,:), [0, 0.65, 1], '-', 1.0, 'o', 2.0, 'blue', 'green');
-    [xl, yl] = plotHorizontalLine(ax, normmean(thisinter, m), xl, yl, 'blue', '--', 0.5); % plot mean
+    %[xl, yl] = plotMeasurementData(ax, dayset, amIntrcube(thisinter, :, m), xl, yl, measures(m,:), [0, 0.65, 1], '-', 1.0, 'o', 2.0, 'blue', 'green');
+    [xl, yl] = plotMeasurementData(ax, dayset, adjmeasdata, xl, yl, measures(m,:), [0, 0.65, 1], '-', 1.0, 'o', 2.0, 'blue', 'green');
+    
+    if normmode == 1
+        [xl, yl] = plotHorizontalLine(ax, normmean(thisinter, m), xl, yl, 'blue', '--', 0.5); % plot stable mean
+    end
+    
     [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, amInterventions.Offset(thisinter), adjmeancurvemean, xl, yl, 'red', ':', 1.0, anchor);
     [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, amInterventions.Offset(thisinter), smooth(adjmeancurvemean,5), xl, yl, 'red', '-', 1.0, anchor);
 
     [xl, yl] = plotExStart(ax, ex_start, amInterventions.Offset(thisinter), xl, yl,  'black', '-', 0.5);            
     [xl, yl] = plotVerticalLine(ax, 0, xl, yl, 'cyan', '-', 0.5); % plot treatment start
-    plotOutlierDataPoints(ax, dayset, amIntrDatacube(thisinter, :, m), isOutlier(lc, thisinter, :, m, amInterventions.Offset(thisinter) + 1), ...
+    
+    %plotOutlierDataPoints(ax, dayset, amIntrcube(thisinter, :, m), isOutlier(lc, thisinter, :, m, amInterventions.Offset(thisinter) + 1), ...
+    %    max_offset, align_wind, [0, 0.65, 1], 'none', 1.0, 'o', 4.0, 'red', 'yellow');
+    plotOutlierDataPoints(ax, dayset, adjmeasdata, isOutlier(lc, thisinter, :, m, amInterventions.Offset(thisinter) + 1), ...
         max_offset, align_wind, [0, 0.65, 1], 'none', 1.0, 'o', 4.0, 'red', 'yellow');
+    
     hold on;
     plotFillArea(ax, ex_start + amInterventions.LowerBound1(thisinter), ex_start + amInterventions.UpperBound1(thisinter), ...
         yl(1), yl(2), 'red', '0.1', 'none');

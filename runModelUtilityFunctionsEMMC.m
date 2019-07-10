@@ -40,12 +40,14 @@ fprintf('29: Plot interventions over time by latent curve set (absolute days)\n'
 fprintf('30: Plot probilities of latent curve set assignment\n');
 fprintf('31: Plot superimposed alignment surves - max shift - one per page\n');
 fprintf('32: Plot superimposed alignment surves - max shift - all on one page\n');
+fprintf('33: Plot histogram of vertical shifts\n');
+fprintf('34: Run normalised prediction plots\n');
 fprintf('\n');
-runfunction = input('Choose function (1-32): ');
+runfunction = input('Choose function (1-34): ');
 
 fprintf('\n');
 
-if runfunction > 32
+if runfunction > 34
     fprintf('Invalid choice\n');
     return;
 end
@@ -81,15 +83,19 @@ end
 if (~exist('intrkeepidx','var'))
     intrkeepidx = true(ninterventions, 1);
 end
+if (~exist('vshift','var'))
+    vshift = zeros(nlatentcurves, ninterventions, nmeasures, max_offset);
+end
     
 if runfunction == 1
     tic
-    subfolder = 'Plots';
+    %subfolder = 'Plots';
     fprintf('Plotting prediction results\n');
+    normmode = 1; % plot regular measurement data
     for i=1:ninterventions
         amEMMCPlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, ...
             hstg, overall_hist, vshift, meancurvemean, normmean, normstd, isOutlier, ex_start, i, nmeasures, ...
-            max_offset, align_wind, sigmamethod, plotname, plotsubfolder);
+            max_offset, align_wind, sigmamethod, plotname, plotsubfolder, normmode);
     end
     toc
     fprintf('\n');
@@ -502,6 +508,20 @@ elseif runfunction == 32
     shiftmode = 2; % shift by max to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
         measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+elseif runfunction == 33
+    fprintf('Plotting histogram of vertical shifts\n');
+    amEMMCPlotHistogramOfVShifts(amInterventions, vshift, measures, nmeasures, ninterventions, nlatentcurves, plotname, plotsubfolder, vshiftmode, vshiftmax);
+elseif runfunction == 34
+    tic
+    fprintf('Plotting normalised prediction results\n');
+    normmode = 2; % plot normalised measurement data
+    for i=1:ninterventions
+        amEMMCPlotsAndSavePredictions(amInterventions, amIntrNormcube, measures, pdoffset, overall_pdoffset, ...
+            hstg, overall_hist, vshift, meancurvemean, normmean, normstd, isOutlier, ex_start, i, nmeasures, ...
+            max_offset, align_wind, sigmamethod, plotname, plotsubfolder, normmode);
+    end
+    toc
+    fprintf('\n');
 else
     fprintf('Should not get here....\n');
 end

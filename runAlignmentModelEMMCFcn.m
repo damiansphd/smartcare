@@ -243,10 +243,11 @@ fprintf('\n');
 if printpredictions == 1
     tic
     fprintf('Plotting prediction results\n');
+    normmode = 1; % plot regular measurement data
     for i=1:ninterventions
         amEMMCPlotsAndSavePredictions(amInterventions, amIntrDatacube, measures, pdoffset, ...
             overall_pdoffset, hstg, overall_hist, vshift, meancurvemean, normmean, normstd, isOutlier, ex_start, ...
-            i, nmeasures, max_offset, align_wind, sigmamethod, plotname, plotsubfolder);
+            i, nmeasures, max_offset, align_wind, sigmamethod, plotname, plotsubfolder, normmode);
     end
     toc
     fprintf('\n');

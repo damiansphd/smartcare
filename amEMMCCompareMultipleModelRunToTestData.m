@@ -53,7 +53,11 @@ for midx = modelidx:size(models,1)
             vshiftmode = 0;
         end
         if (~exist('vshiftmax','var'))
-            vshiftmax = 0.3;
+            if vshiftmode == 0
+                vshiftmax = 0.0;
+            else
+                vshiftmax = 0.3;
+            end
         end
         temp = hsv;
         brightness = .9;
