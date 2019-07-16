@@ -9,17 +9,17 @@ switch measure
     case {'AppetiteRecording', 'BreathlessnessRecording', 'CoughRecording','SleepActivityRecording', 'SputumVolumeRecording', 'TirednessRecording', 'WellnessRecording'}
         column = 'Rating';
     case 'LungFunctionRecording'
-        column = 'CalcFEV1_';
+        column = 'FEV1';
     case 'O2SaturationRecording'
         column = 'O2Saturation';
     case 'PulseRateRecording'
         column = 'Pulse_BPM_';
     case 'RespiratoryRateRecording'
-        column = 'BreathsPerMin';
+        column = 'BreathsPerMinute';
     case 'SleepDisturbanceRecording'
-        column = 'NumSleepDisturb';
-    case {'SputumColorRecording', 'SputumColourRecording'}
-        column = 'SputumColour';
+        column = 'NumberOfDisturbances';
+    case 'SputumColorRecording'
+        column = 'Colour';
     case 'TemperatureRecording'
         column = 'Temp_degC_';
     case 'WeightRecording'

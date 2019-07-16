@@ -3,7 +3,7 @@ clear; clc; close all;
 basedir = setBaseDir();
 subfolder = 'DataFiles/ProjectClimb';
 
-[cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, cdOtherVisits, cdCRP, cdPFT, cdMicrobiology, cdHghtWght, cdEndStudy] = createClimbClinicalTables(0);
+[clPatient, clAdmissions, clAntibiotics, clClinicVisits, clOtherVisits, clCRP, clPFT, clMicrobiology, clHghtWght, clEndStudy] = createClimbClinicalTables(0);
 userid = 301;
 
 tic
@@ -17,18 +17,18 @@ for i = 1:size(cbhosp, 1)
     for p = 1:size(patfilelist, 1)
         % for each patient file, extract the data and store in the clinical
         % data tables
-        [cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, cdPFT, cdMicrobiology, cdHghtWght] = loadClimbClinDataForPatient(cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, cdPFT, cdMicrobiology, cdHghtWght, patfilelist{p}, basedir, tmpfolder, userid);
+        [clPatient, clAdmissions, clAntibiotics, clClinicVisits, clPFT, clMicrobiology, clHghtWght] = loadClimbClinDataForPatient(clPatient, clAdmissions, clAntibiotics, clClinicVisits, clPFT, clMicrobiology, clHghtWght, patfilelist{p}, basedir, tmpfolder, userid);
         userid = userid + 1;
     end 
 end
 
 % sort rows
-cdAdmissions   = sortrows(cdAdmissions,   {'ID', 'Admitted'});
-cdAntibiotics  = sortrows(cdAntibiotics,  {'ID', 'StartDate', 'AntibioticName'});
-cdClinicVisits = sortrows(cdClinicVisits, {'ID', 'AttendanceDate'});
-cdPFT          = sortrows(cdPFT,          {'ID', 'LungFunctionDate'});
-cdMicrobiology = sortrows(cdMicrobiology, {'ID', 'DateMicrobiology'});
-cdHghtWght     = sortrows(cdHghtWght,     {'ID', 'MeasDate'});
+clAdmissions   = sortrows(clAdmissions,   {'ID', 'Admitted'});
+clAntibiotics  = sortrows(clAntibiotics,  {'ID', 'StartDate', 'AntibioticName'});
+clClinicVisits = sortrows(clClinicVisits, {'ID', 'AttendanceDate'});
+clPFT          = sortrows(clPFT,          {'ID', 'LungFunctionDate'});
+clMicrobiology = sortrows(clMicrobiology, {'ID', 'DateMicrobiology'});
+clHghtWght     = sortrows(clHghtWght,     {'ID', 'MeasDate'});
 
 toc
 fprintf('\n');
@@ -57,6 +57,6 @@ basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 outputfilename = 'climbclinicaldata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
-save(fullfile(basedir, subfolder,outputfilename), 'cdPatient', 'cdMicrobiology', 'cdClinicVisits', ...
-    'cdOtherVisits','cdPFT', 'cdHghtWght', 'cdAdmissions', 'cdAntibiotics', 'cdCRP', 'cdEndStudy');
+save(fullfile(basedir, subfolder,outputfilename), 'clPatient', 'clMicrobiology', 'clClinicVisits', ...
+    'clOtherVisits','clPFT', 'clHghtWght', 'clAdmissions', 'clAntibiotics', 'clCRP', 'clEndStudy');
 toc

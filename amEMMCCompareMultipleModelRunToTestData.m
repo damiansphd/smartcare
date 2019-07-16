@@ -1,7 +1,10 @@
-function amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models, plotmode)
+function [lcbymodelrun, offsetbymodelrun] = amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models, plotmode)
 
 % amEMMCCompareMultipleModelRunToTestData - compares the output of multiple model runs to
 % the labelled test data. Able to handle multiple latent curve sets.
+
+lcbymodelrun     = zeros(size(amLabelledInterventions, 1), size(models,1));
+offsetbymodelrun = zeros(size(amLabelledInterventions, 1), size(models,1));
 
 amLabelledInterventions = [array2table([1:size(amLabelledInterventions,1)]'), amLabelledInterventions];
 amLabelledInterventions.Properties.VariableNames{'Var1'} = 'InterNbr';
@@ -124,6 +127,11 @@ for midx = modelidx:size(models,1)
                         niterations, vshiftmode, vshiftmax, scenario, ex_start, qual, ...
                         sum(matchidx), testsetsize, sum(datatable.Count(datatable.ModelRun==midx)), measures, nmeasures);
         resulttable = [resulttable; resultrow];
+        
+        for i = 1:ninterventions
+            lcbymodelrun(i, midx)     = amInterventions.LatentCurve(i);
+            offsetbymodelrun(i, midx) = amInterventions.Offset(i);
+        end
     end
 end
 

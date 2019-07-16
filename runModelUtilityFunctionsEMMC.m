@@ -238,7 +238,7 @@ elseif runfunction == 10
     subfolder = 'MatlabSavedVariables';
     load(fullfile(basedir, subfolder, labelledinterventionsfile));
     plotmode = 'Overall'; 
-    amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions(intrkeepidx, :), modelrun, modelidx, models, plotmode);
+    [lcbymodelrun, offsetbymodelrun] = amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions(intrkeepidx, :), modelrun, modelidx, models, plotmode);
 elseif runfunction == 11
     fprintf('Comparing results of multiple model runs\n');
     fprintf('\n');

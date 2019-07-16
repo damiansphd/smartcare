@@ -323,5 +323,24 @@ basedir = setBaseDir();
 xlfilename = sprintf('%s.xlsx', plottitle);
 writetable(pvaltable, fullfile(basedir, plotsubfolder, xlfilename));
 
+plottitle = sprintf('%s - Variables vs Latent Curve Set P2', plotname);
+[f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
+%colormap(f, cmap)
+
+plotsdown   = 3; 
+plotsacross = 3;
+edges = 0:30.5:366;
+
+for i = 1:nlatentcurves
+    ax = subplot(plotsdown, plotsacross, i, 'Parent', p);
+    histogram(ax, scattervardata(lc.LatentCurve == i, 5), edges, 'Orientation', 'horizontal', 'Normalization', 'probability', 'FaceColor', cmap(i, :));
+    title(ax, sprintf('LC Set %d', i));
+    xlabel(ax, 'Count');
+    ylabel(ax, 'Day of Year');
+end
+
+% save plot
+savePlotInDir(f, plottitle, plotsubfolder);
+close(f);
 end
 
