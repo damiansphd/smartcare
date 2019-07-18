@@ -58,7 +58,7 @@ physdata_predupehandling = physdata;
 generateDataDemographicsByPatientFn(physdata, cdPatient, study);
 
 % handle duplicates
-physdata = handleDuplicateMeasures(physdata, doupdates, detaillog);
+physdata = handleDuplicateMeasures(physdata, study, doupdates, detaillog);
 
 % calc and print overall data demographics after data anomaly fixes
 printDataDemographics(physdata,0);

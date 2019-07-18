@@ -5,7 +5,7 @@ function [column] = getColumnForMeasure(measure)
 
 switch measure
     case 'ActivityRecording'
-        column = 'Activity_Steps';
+        column = 'Steps';
     case {'AppetiteRecording', 'BreathlessnessRecording', 'CoughRecording','SleepActivityRecording', 'SputumVolumeRecording', 'TirednessRecording', 'WellnessRecording'}
         column = 'Rating';
     case 'LungFunctionRecording'

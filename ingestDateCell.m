@@ -20,8 +20,12 @@ if ismember(class(inputcell), 'double')
         outputdate = dateshift(inputcell, 'start', 'day');
     elseif ismember(class(inputcell), 'cell')
         if ~ismember(inputcell, '')
-            if strlength(inputcell{1}) == 11
+            if strlength(inputcell{1}) == 10
+                outputdate = datetime(inputcell, 'InputFormat', 'dd/MM/yyyy');
+            elseif strlength(inputcell{1}) == 11
                 outputdate = datetime(inputcell, 'InputFormat', 'dd-MMM-yyyy');
+            elseif strlength(inputcell{1}) == 19
+                outputdate = datetime(inputcell, 'InputFormat', 'dd/MM/yyyy HH:mm:ss');
             elseif strlength(inputcell{1}) == 20
                 outputdate = datetime(inputcell, 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
             else

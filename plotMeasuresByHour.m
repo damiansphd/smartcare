@@ -5,34 +5,36 @@ function plotMeasuresByHour(physdata, smartcareID, imagefilename)
 % patient (if smartcareid ~= 0)
 % Use this to inform whether to adjust date offset 
 
+if smartcareID ~= 0
+    imagefilename = sprintf('%s - ID %d', imagefilename, smartcareID);
+end
 
 % index or rows for smartcare id (all or single patient)
 if (smartcareID == 0)
-    idxs = find(physdata.SmartCareID);
+    idxs = physdata.SmartCareID >= 0;
 else
-    idxs = find(physdata.SmartCareID == smartcareID);
+    idxs = physdata.SmartCareID == smartcareID;
 end
 
 tic
 fprintf('Plot number of measures recorded by hour for each measure\n');
 fprintf('---------------------------------------------------------\n');
 
-f = figure('Name','MeasuresByHour');
-set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8, 0.8], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, .75], 'PaperType', 'a4');
-p = uipanel('Parent',f,'BorderType','none'); 
-p.Title = 'Histograms of Measures by Hour'; 
-p.TitlePosition = 'centertop';
-p.FontSize = 20;
-p.FontWeight = 'bold'; 
+[f, p] = createFigureAndPanel('Histograms of Measures by Hour', 'portrait', 'a4');
         
 measures = unique(physdata.RecordingType);
-for i = 1:size(measures,1)
+nmeasures = size(measures, 1);
+plotsacross = 3;
+plotsdown = ceil(nmeasures/plotsacross);
+
+for i = 1:nmeasures
     m = measures{i};
-    idxm = find(ismember(physdata.RecordingType, m));
-    idx = intersect(idxs,idxm);
-    subplot(3,3,i,'Parent',p);
-    histogram(hour(datetime(physdata.Date_TimeRecorded(idx))));
-    t = title(sprintf('%s by Hour of Day',m), 'FontSize', 6);
+    idxm = ismember(physdata.RecordingType, m);
+    idx = idxs & idxm;
+    ax = subplot(plotsdown, plotsacross, i, 'Parent', p);
+    %histogram(hour(datetime(physdata.Date_TimeRecorded(idx))));
+    histogram(ax, hour(physdata.Date_TimeRecorded(idx)));
+    %t = title(sprintf('%s by Hour of Day',m), 'FontSize', 6);
 end
 
 

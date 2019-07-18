@@ -18,7 +18,8 @@ basedir = setBaseDir();
 subfolder = 'DataFiles/ProjectClimb/MeasurementData';
 
 clphysdata = createClimbMeasuresTable(0);
-%rowtoadd   = createClimbMeasuresTable(1);
+clphysdata_deleted = clphysdata;
+clphysdata_deleted.Reason(:) = {''};
 
 measfilelisting = dir(fullfile(basedir, subfolder, '*.xls*'));
 MeasFiles = cell(size(measfilelisting,1),1);
@@ -47,6 +48,7 @@ for i = 1:nmeasfile
     mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'BreathsPerMinute', 'FEV1', 'NumberOfDisturbances', 'O2Saturation', 'Pulse_BPM_', 'Rating', 'Temp_degC_'})) = {'double'};
     
     tmpmeasdata = readtable(fullfile(basedir, subfolder, MeasFiles{i}), mfopts, 'Sheet', measdatasheetname);
+    tmpmeasdata.UserID = upper(tmpmeasdata.UserID);
     nmeasurements = size(tmpmeasdata, 1);
     mclphysdata = createClimbMeasuresTable(nmeasurements);
     % ingest user name (force uppercase for consistency) and recording type
@@ -80,6 +82,7 @@ for i = 1:nmeasfile
         fprintf('Unknown data type for measurement column\n');
     end
     nonnullmeasurements = sum(~nullidx);
+    clphysdata_deleted = appendDeletedRows(mclphysdata(nullidx, :), clphysdata_deleted, {'NULL Measurement'});
     clphysdata = [clphysdata; mclphysdata(~nullidx,:)];
     fprintf('%5d Raw Measurements, %5d Non-null measurements\n', nmeasurements, nonnullmeasurements);
     toc
@@ -94,6 +97,7 @@ fprintf('\n');
 dummies = {'TEST1', 'TEST2', 'TESTDAVE'};
 idx = ismember(clphysdata.UserName, dummies);
 fprintf('Removing dummy users - %d rows\n', sum(idx));
+clphysdata_deleted = appendDeletedRows(clphysdata(idx,:), clphysdata_deleted, {'Dummy User'});
 clphysdata(idx,:) = [];
 
 fprintf('Climb data now has %d rows\n', size(clphysdata, 1));
@@ -132,52 +136,68 @@ if (size(missedids, 1) > 0)
         fprintf('%6s\n', missedids{i});
     end
 end
+
+fprintf('Removing %4d measurements with no patient ID match\n', sum(idx));
+clphysdata_deleted = appendDeletedRows(clphysdata(idx, :), clphysdata_deleted, {'No Patient ID Match'});
+clphysdata(idx, :) = [];
 toc
 fprintf('\n');
 
-% followed up with Claire re the 28 missing users - ALD016 + RBH031-068
+% remove blank/zero values 
+idx1 = ismember(clphysdata.RecordingType, {'ActivityRecording'});
+idx2 = isnan(clphysdata.Activity_Steps);
+idx = idx1 & idx2;
+fprintf('Removing %4d blank Activity measurements\n', sum(idx));
+clphysdata_deleted = appendDeletedRows(clphysdata(idx,:), clphysdata_deleted, {'Zero Value'});
+clphysdata(idx,:) = [];
 
-% remove blank/zero values
 idx1 = ismember(clphysdata.RecordingType, {'AppetiteRecording', 'BreathlessnessRecording', 'CoughRecording','SleepActivityRecording', 'SputumVolumeRecording', 'TirednessRecording', 'WellnessRecording'});
 idx2 = isnan(clphysdata.Rating);
 idx = idx1 & idx2;
 fprintf('Removing %4d blank Rating measurements\n', sum(idx));
+clphysdata_deleted = appendDeletedRows(clphysdata(idx,:), clphysdata_deleted, {'Zero Value'});
 clphysdata(idx,:) = [];
 
 idx1 = ismember(clphysdata.RecordingType, {'LungFunctionRecording'});
 idx2 = isnan(clphysdata.CalcFEV1_);
 idx = idx1 & idx2;
 fprintf('Removing %4d blank FEV1 measurements\n', sum(idx));
+clphysdata_deleted = appendDeletedRows(clphysdata(idx,:), clphysdata_deleted, {'Zero Value'});
 clphysdata(idx,:) = [];
 
 idx1 = ismember(clphysdata.RecordingType, {'O2SaturationRecording'});
 idx2 = isnan(clphysdata.O2Saturation);
 idx = idx1 & idx2;
 fprintf('Removing %4d blank O2 Saturation measurements\n', sum(idx));
+clphysdata_deleted = appendDeletedRows(clphysdata(idx,:), clphysdata_deleted, {'Zero Value'});
 clphysdata(idx,:) = [];
 
 idx1 = ismember(clphysdata.RecordingType, {'PulseRateRecording'});
 idx2 = isnan(clphysdata.Pulse_BPM_);
 idx = idx1 & idx2;
 fprintf('Removing %4d blank Pulse Rate measurements\n', sum(idx));
+clphysdata_deleted = appendDeletedRows(clphysdata(idx,:), clphysdata_deleted, {'Zero Value'});
 clphysdata(idx,:) = [];
 
 idx1 = ismember(clphysdata.RecordingType, {'RespiratoryRateRecording'});
 idx2 = isnan(clphysdata.BreathsPerMin);
 idx = idx1 & idx2;
 fprintf('Removing %4d blank Resp Rate measurements\n', sum(idx));
+clphysdata_deleted = appendDeletedRows(clphysdata(idx,:), clphysdata_deleted, {'Zero Value'});
 clphysdata(idx,:) = [];
 
 idx1 = ismember(clphysdata.RecordingType, {'SleepDisturbanceRecording'});
 idx2 = isnan(clphysdata.NumSleepDisturb);
 idx = idx1 & idx2;
 fprintf('Removing %4d blank Sleep Disturb measurements\n', sum(idx));
+clphysdata_deleted = appendDeletedRows(clphysdata(idx,:), clphysdata_deleted, {'Zero Value'});
 clphysdata(idx,:) = [];
 
 idx1 = ismember(clphysdata.RecordingType, {'TemperatureRecording'});
 idx2 = isnan(clphysdata.Temp_degC_);
 idx = idx1 & idx2;
 fprintf('Removing %4d blank Temperature measurements\n', sum(idx));
+clphysdata_deleted = appendDeletedRows(clphysdata(idx,:), clphysdata_deleted, {'Zero Value'});
 clphysdata(idx,:) = [];
 
 % update sputum colour to be lower case to ensure consistency and rename
@@ -186,46 +206,37 @@ idx = ismember(clphysdata.RecordingType, {'SputumColorRecording'});
 clphysdata.SputumColour(idx) = lower(clphysdata.SputumColour(idx));
 clphysdata.RecordingType(idx) = {'SputumColourRecording'};
 fprintf('Updating %4d Sputum Colour to be lower case and making recording type english spelling\n', sum(idx));
-
-
+fprintf('\n');
 
 % calc and print overall data demographics before data anomaly fixes
 printDataDemographics(clphysdata,0);
+fprintf('\n');
 
 % remove duplicates
-% look for data anomalies
 % populate scaled days by patient in the measures file
 % remove patients with insufficient duration or measures (or sparsity of
 % measures)
 
-clphysdata = correctClimbDataAnomalies(clphysdata);
+[clphysdata, clphysdata_deleted] = correctClimbDataAnomalies(clphysdata, clphysdata_deleted);
 
 % sort measurement data
 clphysdata = sortrows(clphysdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
 
 printDataDemographics(clphysdata,0);
 
-plotMeasuresByHour(physdata, 0, 'measuresbyhourhistograms');
+plotMeasuresByHour(clphysdata, 0, 'CL - Measures By Hour Histograms');
 
-physdata = analyseOvernightMeasures(physdata,0, doupdates, detaillog);
+doupdates = false; % update to be true once rerun at home to fix IWK001
+detaillog = true;
+clphysdata = analyseOvernightMeasures(clphysdata,0, doupdates, detaillog);
 
-
-% plot histograms of numher of measures recorded by hour for each
-% measurement
-%plotMeasuresByHour(physdata, 0, 'measuresbyhourhistograms');
-
-% analyse overnight measures (activity and non-activity)
-% update DateNum to prior day for logic contained within the function
-% (following analysis performed)
-%physdata = analyseOvernightMeasures(physdata,0, doupdates, detaillog);
-
-%physdata_predupehandling = physdata;
+clphysdata_predupehandling = clphysdata;
 
 % generate data demographics by patient
-%generateDataDemographicsByPatientFn(physdata, cdPatient, study);
+generateDataDemographicsByPatientFn(clphysdata, clPatient, study);
 
 % handle duplicates
-%physdata = handleDuplicateMeasures(physdata, doupdates, detaillog);
+%physdata = handleDuplicateMeasures(physdata, study, doupdates, detaillog);
 
 % calc and print overall data demographics after data anomaly fixes
 %printDataDemographics(physdata,0);
@@ -249,5 +260,9 @@ subfolder = 'MatlabSavedVariables';
 outputfilename = 'climbdata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
 %save(fullfile(basedir, subfolder, outputfilename), 'clphysdata', 'cloffset','clphysdata_original', 'clphysdata_predupehandling', 'clphysdata_predateoutlierhandling');
-save(fullfile(basedir, subfolder, outputfilename), 'clphysdata', 'cloffset');
+save(fullfile(basedir, subfolder, outputfilename), 'clphysdata', 'cloffset', 'clphysdata_deleted', 'clphysdata_original', 'clphysdata_predupehandling');
+
+subfolder = 'ExcelFiles';
+delrowfilename = 'ClimbDeletedMeasurementData3.xlsx';
+writetable(clphysdata_deleted(~ismember(clphysdata_deleted.Reason, {'NULL Measurement'}),:), fullfile(basedir, subfolder, delrowfilename));
 toc

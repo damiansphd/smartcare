@@ -1,7 +1,7 @@
 clear; clc; close all;
 
 basedir = setBaseDir();
-subfolder = 'DataFiles/ProjectClimb';
+subfolder = 'DataFiles/ProjectClimb/Proformas checked for PEX';
 
 [clPatient, clAdmissions, clAntibiotics, clClinicVisits, clOtherVisits, clCRP, clPFT, clMicrobiology, clHghtWght, clEndStudy] = createClimbClinicalTables(0);
 userid = 301;

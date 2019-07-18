@@ -17,6 +17,7 @@ cdcvsheet = '(1) Clinic attendance dates dur';
 cdpftsheet = '(1) Hospital Lung Function meas';
 cdadmsheet = '(1) Hospital Admission dates in';
 cdabsheet = '(1) Hospital Admission dates in';
+cdoralabsheet = '(1) New  or  Changes to Medicat';
 cdhwsheet = '(1) Height and Weight measureme';
 
 fprintf('File %s, ID %d\n', patfile, userid);
@@ -31,7 +32,7 @@ if ~ismember(cdpatrow.StudyNumber, extractBefore(patfile, 7))
     return
 end
 cdpatrow.Hospital      = extractBefore(cdpatrow.StudyNumber, hosplength + 1);
-cdpatrow.StudyDate     = datetime(tmppatient.Var2(ismember(tmppatient.Var1, 'Date')));
+%cdpatrow.StudyDate     = datetime(tmppatient.Var2(ismember(tmppatient.Var1, 'Date')), 'InputFormat', 'dd-MMM-yyyy');
 cdpatrow.StudyDate     = ingestDateCell(tmppatient.Var2(ismember(tmppatient.Var1, 'Date')),   matlabexcelserialdatediff, 1, notime);
 cdpatrow.Age           = str2double(tmppatient.Var2(ismember(tmppatient.Var1, 'Age(Y)')));
 if isnan(cdpatrow.Age)
@@ -211,6 +212,29 @@ for i = 1:size(tmpadm, 1)
                     fprintf('**** Invalid Antibiotic format %s ****\n', oneabstr);
                 end
             end
+        end
+    end
+end
+
+oropts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', cdoralabsheet);
+oropts.VariableTypes(:, ismember(oropts.VariableNames, {'Medication'})) = {'char'};
+tmporal = readtable(fullfile(basedir, subfolder, patfile), oropts, 'Sheet', cdoralabsheet);
+fprintf('Oral Antibiotics - %2d rows\n', size(tmporal, 1));
+fprintf('--------------------------\n');
+for i = 1:size(tmporal, 1)
+    if ismember(tmporal.Exacerbation(i), 'X')
+        cdabrow.ID          = userid;
+        cdabrow.StudyNumber = cdpatrow.StudyNumber;
+        cdabrow.Hospital    = cdpatrow.Hospital;
+        [cdabrow.StartDate, isValid] = ingestDateCell(tmporal.StartDate(i), matlabexcelserialdatediff, i, notime);
+        [cdabrow.StopDate,  tmpisValid] = ingestDateCell(tmporal.StopDate(i),  matlabexcelserialdatediff, i, notime);
+        if ~tmpisValid
+            isValid = tmpisValid;
+        end
+        if isValid
+            cdabrow.AntibioticName = tmporal.Medication{i};
+            cdabrow.Route = 'Oral';
+            cdAntibiotics = [cdAntibiotics; cdabrow];  
         end
     end
 end

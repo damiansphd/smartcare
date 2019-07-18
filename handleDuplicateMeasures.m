@@ -1,4 +1,4 @@
-function [physdataout] = handleDuplicateMeasures(physdata, doupdates, detaillog)
+function [physdataout] = handleDuplicateMeasures(physdata, study, doupdates, detaillog)
 
 % handleDuplicateMeasures -  Analyse and correct for duplicate measures
 % Duplicates are of three types - for a given patient ID and recordingtype :-
@@ -12,7 +12,7 @@ fprintf('-------------------\n');
 tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-demographicsmatfile = 'SCdatademographicsbypatient.mat';
+demographicsmatfile = sprintf('%sdatademographicsbypatient.mat', study);
 fprintf('Loading demographic data by patient\n');
 load(fullfile(basedir, subfolder, demographicsmatfile));
 toc
