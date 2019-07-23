@@ -8,12 +8,13 @@ tic
 fprintf('Correcting anomalies in the data\n');
 fprintf('--------------------------------\n');
 
-% Activity Reading - > 20,000 steps
+% Activity Reading - > 30,000 steps
 idx1 = ismember(physdata.RecordingType, 'ActivityRecording');
-idx2 = physdata.Activity_Steps > 20000;
+idx2 = physdata.Activity_Steps > 30000;
 idx  = idx1 & idx2;
-fprintf('Found %4d Activity measurements > 20,000\n', sum(idx));
-physdata(idx,:)
+fprintf('Removing %4d Activity measurements > 30,000\n', sum(idx));
+physdata_deleted = appendDeletedRows(physdata(idx, :), physdata_deleted, {'Anomalous Value'});
+physdata(idx, :) = [];
 
 % Lung Function - FEV1 < 0.25l or > 4l
 idx1 = ismember(physdata.RecordingType, 'LungFunctionRecording');
@@ -35,7 +36,7 @@ physdata(idx, :) = [];
 idx1 = ismember(physdata.RecordingType, 'O2SaturationRecording');
 idx2 = physdata.O2Saturation < 70 | physdata.O2Saturation > 100;
 idx  = idx1 & idx2;
-fprintf('Removimg %4d O2 Saturation measurements < 70%% or > 100%%\n', sum(idx));
+fprintf('Removing %4d O2 Saturation measurements < 70%% or > 100%%\n', sum(idx));
 physdata_deleted = appendDeletedRows(physdata(idx, :), physdata_deleted, {'Anomalous Value'});
 physdata(idx, :) = [];
 

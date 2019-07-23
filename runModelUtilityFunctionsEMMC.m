@@ -42,12 +42,14 @@ fprintf('31: Plot superimposed alignment surves - max shift - one per page\n');
 fprintf('32: Plot superimposed alignment surves - max shift - all on one page\n');
 fprintf('33: Plot histogram of vertical shifts\n');
 fprintf('34: Run normalised prediction plots\n');
+fprintf('35: Plot superimposed alignment surves - exzero shift - one per page\n');
+fprintf('36: Plot superimposed alignment surves - exzero shift - all on one page\n');
 fprintf('\n');
-runfunction = input('Choose function (1-34): ');
+runfunction = input('Choose function (1-36): ');
 
 fprintf('\n');
 
-if runfunction > 34
+if runfunction > 36
     fprintf('Invalid choice\n');
     return;
 end
@@ -522,6 +524,20 @@ elseif runfunction == 34
     end
     toc
     fprintf('\n');
+elseif runfunction == 35
+    run_type = 'Best Alignment';
+    fprintf('Plotting superimposed alignment curves - exzero shift - one per page\n');
+    compactplot = false;
+    shiftmode = 3; % shift to be zero at ex_start
+    amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+elseif runfunction == 36
+    run_type = 'Best Alignment';
+    fprintf('Plotting superimposed alignment curves - exzero shift - all on one page\n');
+    compactplot = true;
+    shiftmode = 3; % shift to be zero at ex_start
+    amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
 else
     fprintf('Should not get here....\n');
 end

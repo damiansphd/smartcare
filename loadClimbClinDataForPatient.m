@@ -217,8 +217,10 @@ for i = 1:size(tmpadm, 1)
 end
 
 oropts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', cdoralabsheet);
-oropts.VariableTypes(:, ismember(oropts.VariableNames, {'Medication'})) = {'char'};
-tmporal = readtable(fullfile(basedir, subfolder, patfile), oropts, 'Sheet', cdoralabsheet);
+oropts.DataRange = 'A2';
+oropts.VariableNamesRange = 'A1';
+oropts.VariableTypes(:, ismember(oropts.VariableNames, {'Medication', 'Exacerbation'})) = {'char'};
+tmporal = readtable(fullfile(basedir, subfolder, patfile), oropts, 'Sheet', cdoralabsheet, 'ReadVariableNames', true);
 fprintf('Oral Antibiotics - %2d rows\n', size(tmporal, 1));
 fprintf('--------------------------\n');
 for i = 1:size(tmporal, 1)

@@ -69,9 +69,9 @@ physdata = scaleDaysByPatient(physdata, doupdates);
 physdata_predateoutlierhandling = physdata;
 
 % analyse measurement date outliers and handle as appropriate
-physdata = analyseAndHandleDateOutliers(physdata, doupdates);
+physdata = analyseAndHandleDateOutliers(physdata, study, doupdates);
 
-createMeasuresHeatmapWithStudyPeriod(physdata, offset, cdPatient);
+createMeasuresHeatmapWithStudyPeriod(physdata, offset, cdPatient, study);
 
 % calc and print overall data demographics after data anomaly fixes
 printDataDemographics(physdata,0);

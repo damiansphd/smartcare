@@ -1,22 +1,65 @@
 clc; clear; close all;
 
+studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed 3 = Climb): ');
+
+if studynbr == 1
+    study = 'SC';
+    clinicalmatfile = 'clinicaldata.mat';
+    datamatfile = 'smartcaredata.mat';
+elseif studynbr == 2
+    study = 'TM';
+    clinicalmatfile = 'telemedclinicaldata.mat';
+    datamatfile = 'telemeddata.mat';
+elseif studynbr == 3
+    study = 'CL';
+    clinicalmatfile = 'climbclinicaldata.mat';
+    datamatfile = 'climbdata.mat';
+else
+    fprintf('Invalid study\n');
+    return;
+end
+
 tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-clinicalmatfile = 'clinicaldata.mat';
-scmatfile = 'smartcaredata.mat';
 
 fprintf('Loading Clinical data\n');
 load(fullfile(basedir, subfolder, clinicalmatfile));
 fprintf('Loading SmartCare measurement data\n');
-load(fullfile(basedir, subfolder, scmatfile));
+load(fullfile(basedir, subfolder, datamatfile));
 toc
-
 fprintf('\n');
+
+if studynbr == 2
+    physdata       = tmphysdata;
+    cdPatient      = tmPatient;
+    cdMicrobiology = tmMicrobiology;
+    cdAntibiotics  = tmAntibiotics;
+    cdAdmissions   = tmAdmissions;
+    cdPFT          = tmPFT;
+    cdCRP          = tmCRP;
+    cdClinicVisits = tmClinicVisits;
+    cdEndStudy     = tmEndStudy;
+    offset         = tmoffset;
+elseif studynbr == 3
+    physdata       = clphysdata;
+    cdPatient      = clPatient;
+    cdMicrobiology = clMicrobiology;
+    cdAntibiotics  = clAntibiotics;
+    cdAdmissions   = clAdmissions;
+    cdPFT          = clPFT;
+    cdCRP          = clCRP;
+    cdClinicVisits = clClinicVisits;
+    cdOtherVisits  = clOtherVisits;
+    cdEndStudy     = clEndStudy;
+    cdHghtWght     = clHghtWght;
+    offset         = cloffset;
+end
+
 
 basedir = setBaseDir();
 subfolder = 'ExcelFiles';
-outputfilename = 'AdmissionsVsAntibiotics.xlsx';
+outputfilename = sprintf('%s-AdmissionsVsAntibiotics.xlsx', study);
 exceptionsheet = '1)AdmissionWithNoTreatment';
 matchsheet = '3)AdmissionsWithTreatments';
 ipsheet = '2)HospitalIVWithNoAdmission';
@@ -56,28 +99,28 @@ for i = 1:size(cdAdmissions,1)
     
     rowtoadd.SmartCareID = scid;
     rowtoadd.Hospital = cdAdmissions.Hospital(i);
-    rowtoadd.AdmissionID = cdAdmissions.HospitalAdmissionID(i);
+    %rowtoadd.AdmissionID = cdAdmissions.HospitalAdmissionID(i);
     rowtoadd.Admitted = admitted;
     rowtoadd.Discharge = discharge;
     
     if (size(idx,1) == 0)
         rowtoadd.RowType = '*** Admission with no treatment ***';
-        fprintf('%35s  :  Hospital %8s  Patient ID %3d  Admitted  %11s  Discharge  %11s\n', ... 
-            rowtoadd.RowType, string(rowtoadd.Hospital), scid, datestr(admitted,1), datestr(discharge,1)); 
+        fprintf('%3d: %35s  :  Hospital %8s  Patient ID %3d  Admitted  %11s  Discharge  %11s\n', ... 
+            i, rowtoadd.RowType, string(rowtoadd.Hospital), scid, datestr(admitted,1), datestr(discharge,1)); 
         exceptiontable = [exceptiontable;rowtoadd(1,{'RowType','Hospital', 'SmartCareID', 'AdmissionID', 'Admitted', 'Discharge'})];  
     else
         for t = 1:size(idx,1)
             rowtoadd.RowType = 'OK - Treatment during admission';
-            rowtoadd.AntibioticID = cdAntibiotics.AntibioticID(idx(t));
+            %rowtoadd.AntibioticID = cdAntibiotics.AntibioticID(idx(t));
             rowtoadd.AntibioticName = cdAntibiotics.AntibioticName{idx(t)};
             rowtoadd.Route = cdAntibiotics.Route{idx(t)};
-            rowtoadd.HomeIV = cdAntibiotics.HomeIV_s_{idx(t)};
+            %rowtoadd.HomeIV = cdAntibiotics.HomeIV_s_{idx(t)};
             rowtoadd.Start = cdAntibiotics.StartDate(idx(t));
             rowtoadd.Stop = cdAntibiotics.StopDate(idx(t));
         
-            fprintf('%35s  :  Hospital %8s  Patient ID %3d  Admitted  %11s  Discharge  %11s  :  Antibiotic ID %3d %15s %5s %5s  Start  %11s  End  %11s\n', ... 
-                rowtoadd.RowType, string(rowtoadd.Hospital), scid, datestr(admitted,1), datestr(discharge,1), rowtoadd.AntibioticID, ...
-                string(rowtoadd.AntibioticName), string(rowtoadd.Route), string(rowtoadd.HomeIV), datestr(rowtoadd.Start,1), datestr(rowtoadd.Stop,1)); 
+            fprintf('%3d: %35s  :  Hospital %8s  Patient ID %3d  Admitted  %11s  Discharge  %11s  : %15s %5s Start  %11s  End  %11s\n', ... 
+                i, rowtoadd.RowType, string(rowtoadd.Hospital), scid, datestr(admitted,1), datestr(discharge,1), ...
+                string(rowtoadd.AntibioticName), string(rowtoadd.Route), datestr(rowtoadd.Start,1), datestr(rowtoadd.Stop,1)); 
         
             matchtable = [matchtable;rowtoadd];  
         end
@@ -102,35 +145,36 @@ iptable(1,:) = [];
 for i = 1:size(residualidx,1)
     scid = cdAntibiotics.ID(residualidx(i));
     route = cdAntibiotics.Route{residualidx(i)};
-    homeiv = cdAntibiotics.HomeIV_s_{residualidx(i)};
+    %homeiv = cdAntibiotics.HomeIV_s_{residualidx(i)};
     
     rowtoadd.SmartCareID = scid;
     rowtoadd.Hospital = cdAntibiotics.Hospital{residualidx(i)};
     rowtoadd.Route = route;
-    rowtoadd.HomeIV = homeiv;
+    %rowtoadd.HomeIV = homeiv;
 
-    if (isequal(route,'IV') & ismember(homeiv, {'No', 'part','IP+OP'}))
+    %if (isequal(route,'IV') & ismember(homeiv, {'No', 'part','IP+OP'}))
+    if (isequal(route,'IV'))
         rowtoadd.RowType = '*** Hospital IV with no Admission ***';
-        rowtoadd.AntibioticID = cdAntibiotics.AntibioticID(residualidx(i));
+        %rowtoadd.AntibioticID = cdAntibiotics.AntibioticID(residualidx(i));
         rowtoadd.AntibioticName = cdAntibiotics.AntibioticName{residualidx(i)};
         rowtoadd.Start = cdAntibiotics.StartDate(residualidx(i));
         rowtoadd.Stop = cdAntibiotics.StopDate(residualidx(i));
         
-        fprintf('%38s  :  Hospital %8s  Patient ID %3d  :  Antibiotic ID %3d %15s %5s %5s  Start  %11s  End  %11s\n', ... 
-                rowtoadd.RowType, rowtoadd.Hospital, scid, rowtoadd.AntibioticID, rowtoadd.AntibioticName, route, ...
-                homeiv, datestr(rowtoadd.Start,1), datestr(rowtoadd.Stop,1)); 
+        fprintf('%38s  :  Hospital %8s  Patient ID %3d  : %15s %5s Start  %11s  End  %11s\n', ... 
+                rowtoadd.RowType, rowtoadd.Hospital, scid, rowtoadd.AntibioticName, route, ...
+                datestr(rowtoadd.Start,1), datestr(rowtoadd.Stop,1)); 
         
         iptable = [iptable; rowtoadd];
     else
         rowtoadd.RowType = 'Ok - Oral or Home IV treatment';
-        rowtoadd.AntibioticID = cdAntibiotics.AntibioticID(residualidx(i));
+        %rowtoadd.AntibioticID = cdAntibiotics.AntibioticID(residualidx(i));
         rowtoadd.AntibioticName = cdAntibiotics.AntibioticName{residualidx(i)};
         rowtoadd.Start = cdAntibiotics.StartDate(residualidx(i));
         rowtoadd.Stop = cdAntibiotics.StopDate(residualidx(i));
         
-        fprintf('%38s  :  Hospital %8s  Patient ID %3d  :  Antibiotic ID %3d %15s %5s %5s  Start  %11s  End  %11s\n', ... 
-                rowtoadd.RowType, rowtoadd.Hospital, scid, rowtoadd.AntibioticID, rowtoadd.AntibioticName, route, ...
-                homeiv, datestr(rowtoadd.Start,1), datestr(rowtoadd.Stop,1)); 
+        fprintf('%38s  :  Hospital %8s  Patient ID %3d  : %15s %5s Start  %11s  End  %11s\n', ... 
+                rowtoadd.RowType, rowtoadd.Hospital, scid, rowtoadd.AntibioticName, route, ...
+                datestr(rowtoadd.Start,1), datestr(rowtoadd.Stop,1)); 
         
         residualtable = [residualtable; rowtoadd];
     end

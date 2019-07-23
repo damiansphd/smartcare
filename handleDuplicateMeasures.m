@@ -1,4 +1,4 @@
-function [physdataout] = handleDuplicateMeasures(physdata, study, doupdates, detaillog)
+function [physdata] = handleDuplicateMeasures(physdata, study, doupdates, detaillog)
 
 % handleDuplicateMeasures -  Analyse and correct for duplicate measures
 % Duplicates are of three types - for a given patient ID and recordingtype :-
@@ -159,7 +159,7 @@ for i = 1:size(asimilaridx,1)
         setmax = max(physdata.Activity_Steps(ntidx));
         if detaillog    
             if ((setmax < patientmean-2*patientstd) | (setmax > patientmean+2*patientstd))
-                fprintf('Max of similar dupe set (size %3d) is %3d, patient: -2SD = %3d, mean = %3d, +2SD = %3d\n',setmax, size(ntidx,1), patientmean - 2*patientstd, patientmean, patientmean + 2*patientstd);
+                fprintf('Max of similar dupe set (size %3d) is %3d, patient: -2SD = %.2f, mean = %.2f, +2SD = %.2f\n', size(ntidx,1), setmax, patientmean - 2*patientstd, patientmean, patientmean + 2*patientstd);
                 %physdata(ntidx,:)
             end
         end
@@ -233,8 +233,8 @@ for i = 1:size(nasimidx,1)
             addsimrows = [addsimrows ; rowtoadd];
             nasimpairidx = [nasimpairidx; ntidx];
             if detaillog    
-               physdata(ntidx,:)
-              rowtoadd
+                physdata(ntidx,:)
+                rowtoadd
             end
         else
             % for other measures, multiple entries in a short space of time 
@@ -244,8 +244,8 @@ for i = 1:size(nasimidx,1)
             addsimrows = [addsimrows ; rowtoadd];
             nasimpairidx = [nasimpairidx; ntidx];
             if detaillog    
-               physdata(ntidx,:)
-              rowtoadd
+                physdata(ntidx,:)
+                rowtoadd
             end
         end
     end
@@ -316,10 +316,11 @@ for i = 1:size(asamedayidx,1)
         setsum = sum(physdata.Activity_Steps(ntidx));
         if detaillog
             if ((setsum < patientmean-2*patientstd) | (setsum > patientmean+2*patientstd))
-                fprintf('Sum of same day dupe set (size %3d) is %3d, patient: -2SD = %3d, mean = %3d, +2SD = %3d\n',setsum, size(ntidx,1), patientmean - 2*patientstd, patientmean, patientmean + 2*patientstd);
-                physdata(ntidx,:)
-                sortrows(getMeasuresForPatientAndDateRange(physdata(idxa,:),scid,dtnum, 1, true),{'SmartCareID', 'RecordingType','Date_TimeRecorded'}, 'ascend')
+                fprintf('Sum of same day dupe set (size %3d) is %3d, patient: -2SD = %.2f, mean = %.2f, +2SD = %.2f\n',size(ntidx,1), setsum , patientmean - 2*patientstd, patientmean, patientmean + 2*patientstd);
+                %physdata(ntidx,:)
+                
             end
+            sortrows(getMeasuresForPatientAndDateRange(physdata(idxa,:),scid,dtnum, 1, rectype, true),{'SmartCareID', 'RecordingType','Date_TimeRecorded'}, 'ascend')
         end
         rowtoadd = physdata(ntidx(1),:);
         rowtoadd.Activity_Steps = setsum;
@@ -377,11 +378,14 @@ for i = 1:size(nasamedayidx,1)
     end
     if (scid ~= priorscid | dtnum ~= priordtnum | ~ismember(rectype, priorrectype))
         ntidx = find(physdata.SmartCareID == scid & physdata.DateNum == dtnum & ismember(physdata.RecordingType,rectype));
-        meantable = varfun(@mean, physdata(ntidx,:), 'GroupingVariables', {'SmartCareID','DateNum','UserName','RecordingType'});
+        temp = physdata(ntidx,:);
+        temp.SputumColour = [];
+        %meantable = varfun(@mean, physdata(ntidx,:), 'GroupingVariables', {'SmartCareID','DateNum','UserName','RecordingType'});
+        meantable = varfun(@mean, temp, 'GroupingVariables', {'SmartCareID','DateNum','UserName','RecordingType'});
         if (size(meantable,1) >1)
             fprintf('Multiple rows returned from mean calc !! dupe %3d, scid %3d, dtnum %3d dupe set size = %d\n', i, scid, dtnum, size(ntidx,1));
         end
-        rowtoadd = physdata(ntidx(1),:);
+        rowtoadd = physdata(ntidx(end),:);
         rowtoadd.FEV1 = meantable.mean_FEV1;
         rowtoadd.PredictedFEV = meantable.mean_PredictedFEV;
         rowtoadd.FEV1_ = meantable.mean_FEV1_;
@@ -390,10 +394,16 @@ for i = 1:size(nasamedayidx,1)
         rowtoadd.Pulse_BPM_ = meantable.mean_Pulse_BPM_;
         rowtoadd.Rating = meantable.mean_Rating;
         rowtoadd.Temp_degC_ = meantable.mean_Temp_degC_;
+        rowtoadd.CalcFEV1SetAs = meantable.mean_CalcFEV1SetAs;
+        rowtoadd.ScalingRatio = meantable.mean_ScalingRatio;
+        rowtoadd.CalcFEV1_ = meantable.mean_CalcFEV1_;
+        rowtoadd.NumSleepDisturb = meantable.mean_NumSleepDisturb;
+        rowtoadd.BreathsPerMin = meantable.mean_BreathsPerMin;
         addsamerows = [addsamerows ; rowtoadd];
         nasamedaypairidx = [nasamedaypairidx; ntidx];
         if detaillog
-            sortrows(getMeasuresForPatientAndDateRange(physdata(idxa,:),scid,dtnum, 1, true),{'SmartCareID', 'RecordingType','Date_TimeRecorded'}, 'ascend')
+            %physdata(ntidx,:)
+            sortrows(getMeasuresForPatientAndDateRange(physdata(idxna,:),scid,dtnum, 1, rectype, true),{'SmartCareID', 'RecordingType','Date_TimeRecorded'}, 'ascend')
         end
     end
     priorscid = scid;
@@ -415,6 +425,5 @@ end
 toc
 fprintf('\n');
 
-physdataout = physdata;
 end
 

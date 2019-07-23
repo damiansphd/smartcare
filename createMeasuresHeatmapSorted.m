@@ -1,4 +1,4 @@
-function createMeasuresHeatmapSorted(physdata, offset, cdPatient)
+function createMeasuresHeatmapSorted(physdata, offset, cdPatient, study)
 
 % createMeasuresHeatmapSorted - creates the Patient/Measures
 % heatmap just for study period, sorted by number of days with measures
@@ -8,21 +8,49 @@ fprintf('----------------------------------------------------\n');
 tic
 
 basedir = setBaseDir();
-subfolder = 'Plots';
+subfolder = sprintf('Plots/%s', study);
 
 temp = hsv;
 brightness = .9;
-%colors(1,:)  = [0 0 0];     % black for no measures
-colors(1,:)  = temp(4,:)  .* brightness;
-colors(2,:)  = temp(6,:)  .* brightness;
-colors(3,:)  = temp(8,:)  .* brightness;
-colors(4,:)  = temp(10,:) .* brightness;
-colors(5,:)  = temp(12,:) .* brightness;
-colors(6,:)  = temp(14,:) .* brightness;
-colors(7,:)  = temp(16,:) .* brightness;
-colors(8,:)  = temp(18,:) .* brightness;
-colors(9,:)  = temp(20,:) .* brightness;
-%colors(10,:)  = [1 0 1];
+
+if ismember(study, {'SC', 'TM'})
+    %colors(1,:)  = [0 0 0];     % black for no measures
+    colors(1,:)  = temp(4,:);
+    colors(2,:)  = temp(6,:);
+    colors(3,:)  = temp(8,:);
+    colors(4,:)  = temp(10,:);
+    colors(5,:)  = temp(12,:);
+    colors(6,:)  = temp(14,:);
+    colors(7,:)  = temp(16,:);
+    colors(8,:)  = temp(18,:);
+    colors(9,:)  = temp(20,:);
+    %colors(10,:)  = [1 0 1];
+    nmeasures = 9;
+elseif ismember(study, {'CL'})
+    %colors(1,:)  = [0 0 0];     % black for no measures
+    colors(1,:)  = temp(4,:);
+    colors(2,:)  = temp(6,:);
+    colors(3,:)  = temp(7,:);
+    colors(4,:)  = temp(8,:);
+    colors(5,:)  = temp(9,:);
+    colors(6,:)  = temp(10,:);
+    colors(7,:)  = temp(11,:);
+    colors(8,:)  = temp(12,:);
+    colors(9,:)  = temp(13,:);
+    colors(10,:)  = temp(14,:);
+    colors(11,:)  = temp(15,:);
+    colors(12,:)  = temp(16,:);
+    colors(13,:)  = temp(17,:);
+    colors(14,:)  = temp(18,:);
+    colors(15,:)  = temp(20,:);
+    %colors(16,:)  = [1 0 1];
+    nmeasures = 15;
+else
+    fprintf('**** Unknown Study ****');
+    return;
+end
+
+studyduration = 184;
 
 % get the date scaling offset for each patient
 patientoffsets = getPatientOffsets(physdata);
@@ -30,7 +58,7 @@ patientoffsets = getPatientOffsets(physdata);
 % create a table of counts of measures by patient/day (@max function here
 % is irrelevant as we just want the group counts
 %pdcountmtable = varfun(@max, physdata(:, {'SmartCareID','ScaledDateNum'}), 'GroupingVariables', {'SmartCareID', 'ScaledDateNum'});
-pdcountmtable = varfun(@max, physdata(physdata.ScaledDateNum<184, {'SmartCareID','ScaledDateNum'}), 'GroupingVariables', {'SmartCareID', 'ScaledDateNum'});
+pdcountmtable = varfun(@max, physdata(physdata.ScaledDateNum < (studyduration + 1), {'SmartCareID','ScaledDateNum'}), 'GroupingVariables', {'SmartCareID', 'ScaledDateNum'});
 
 % create two different sort orders - 1) most days with measures 2) longest
 % period of measures (with a max of the study period)
@@ -70,32 +98,40 @@ for i = 1:dummymax-dummymin+1
 end
 pdcountmtable = [pdcountmtable ; dummymeasures];
 
+labelinterval = 25;
+xdisplaylabels = cell(studyduration, 1);
+for i = 1:studyduration
+    if i == 1 || i == studyduration || (i / labelinterval == round(i / labelinterval))
+        xdisplaylabels{i} = sprintf('%d', i);
+    else
+        xdisplaylabels{i} = ' ';
+    end
+end
+
+ydisplaylabels = cell(size(unique(pdcountmtable.SmartCareID), 1) - 1, 1);
+ydisplaylabels(:) = {' '};
+
 % create the heatmap
-  
-title = 'Recorded Measures by Patient for the Study Period';
-f = figure('Name', title);
-p = uipanel('Parent',f,'BorderType','none'); 
-p.Title = title; 
-p.TitlePosition = 'centertop';
-p.FontSize = 18;
-p.FontWeight = 'bold';
-set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8, 0.8], 'PaperOrientation', 'portrait', ...
-    'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
+
+title = 'Recorded Measures by Participant for the Study Period';
+
+[f, p] = createFigureAndPanel(title, 'portrait', 'a4');
+
 h = heatmap(p, pdcountmtable, 'ScaledDateNum', 'SmartCareID', 'Colormap', colors, 'MissingDataColor', 'black', ...
     'ColorVariable','GroupCount','ColorMethod','max', 'MissingDataLabel', 'No data');
 h.Title = ' ';
 h.XLabel = 'Days';
-h.YLabel = 'Patients';
+h.YLabel = 'Participants';
 h.YDisplayData = ysortmaxdays;
-%h.YLimits = {dispmin,dispmax};
+h.XDisplayLabels = xdisplaylabels;
+h.YDisplayLabels = ydisplaylabels;
 h.CellLabelColor = 'none';
 h.GridVisible = 'off';
 
-%[C,x] = sortx(h);
-
 % save results
-filename = 'Heatmap - RecordedMeasuresByPatientForStudyPeriod';
+filename = sprintf('%s-Heatmap - RecordedMeasuresByParticipantForStudyPeriod', study);
 savePlotInDir(f, filename, subfolder);
+savePlotInDirAsSVG(f, filename, subfolder);
 close(f);
 
 toc

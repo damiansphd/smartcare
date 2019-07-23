@@ -1,56 +1,31 @@
 clc; clear; close all;
 
-studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
-
-if studynbr == 1
-    study = 'SC';
-    clinicalmatfile = 'clinicaldata.mat';
-    datamatfile = 'smartcaredata.mat';
-    datademographicsfile = 'SCdatademographicsbypatient.mat';
-elseif studynbr == 2
-    study = 'TM';
-    clinicalmatfile = 'telemedclinicaldata.mat';
-    datamatfile = 'telemeddata.mat';
-    datademographicsfile = 'TMdatademographicsbypatient.mat';
-else
-    fprintf('Invalid study\n');
-    return;
-end
-
-tic
-
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-fprintf('Loading clinical data\n');
-load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading measurement data\n');
-load(fullfile(basedir, subfolder, datamatfile));
-fprintf('Loading datademographics by patient\n');
-load(fullfile(basedir, subfolder, datademographicsfile));
-toc
 
-if studynbr == 2
-    physdata = tmphysdata;
-    cdPatient = tmPatient;
-    cdMicrobiology = tmMicrobiology;
-    cdAntibiotics = tmAntibiotics;
-    cdAdmissions = tmAdmissions;
-    cdPFT = tmPFT;
-    cdCRP = tmCRP;
-    cdClinicVisits = tmClinicVisits;
-    cdEndStudy = tmEndStudy;
-    offset = tmoffset;
-end
-    
+[studynbr, study, ~] = selectStudy();
+[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
+[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+[cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
+
+tic
+fprintf('Loading demographic data by patient\n');
+load(fullfile(basedir, subfolder, demographicsmatfile), 'demographicstable', 'overalltable');
+toc
+fprintf('\n');
+
 basedir = setBaseDir();
-subfolder = 'Plots';
-figurearray = [];
+subfolder = sprintf('Plots/%s', study);
+if ~exist(strcat(basedir, subfolder), 'dir')
+    mkdir(strcat(basedir, subfolder));
+end
 
 patientoffsets = getPatientOffsets(physdata);
 
 patientlist = unique(physdata.SmartCareID);
-for i = 1:size(patientlist,1)
-%for i = 103:104
+%for i = 1:size(patientlist,1)
+for i = 59:59
 %for i = 1:4
     tic
     scid       = patientlist(i);
@@ -137,8 +112,8 @@ for i = 1:size(patientlist,1)
                   ];
                                                    
     microbiology = unique(cdMicrobiology.Microbiology(cdMicrobiology.ID==scid));
-    for a = 1:size(microbiology,1)
-        rowstring = sprintf('%s', microbiology{a});
+    for m = 1:size(microbiology,1)
+        rowstring = sprintf('%s', microbiology{m});
         leftstring = [leftstring ; rowstring];
     end
     
@@ -165,8 +140,8 @@ for i = 1:size(patientlist,1)
                   ];
               
     measures = unique(physdata.RecordingType(physdata.SmartCareID == scid));
-    for a = 1:size(measures,1)
-        measure = measures{a};
+    for m = 1:size(measures,1)
+        measure = measures{m};
         column = getColumnForMeasure(measure);
         ddcolumn = sprintf('Fun_%s',column);
         mmean = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(1);
@@ -186,8 +161,8 @@ for i = 1:size(patientlist,1)
                     {sprintf('       Mid 50%% Avg +/- Std (Min, Max)')}      ; ...
                     {sprintf('----------------------------------------------')} ];
                 
-    for a = 1:size(measures,1)
-        measure = measures{a};
+    for m = 1:size(measures,1)
+        measure = measures{m};
         column = getColumnForMeasure(measure);
         ddcolumn  = sprintf('Fun_%s',column);
         mid50mean = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(5);
@@ -202,15 +177,12 @@ for i = 1:size(patientlist,1)
         rightstring = [rightstring ; rowstring];
     end
     
+    npages = 3;
     page = 1;
+    filenameprefix = sprintf('%s-Patient Summary - ID %d Hosp %s', study, scid, hospital);
+    imagefilename = sprintf('%s - Page %d of %d', filenameprefix, page, npages);
+    [f, p] = createFigureAndPanel(imagefilename, 'Portrait', 'a4');
     
-    figurearray(page) = figure('Name',sprintf('%s-Patient Summary - ID %d Hosp %s - Page %d', study, scid, hospital, page));
-    set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
-    p = uipanel('Parent', figurearray(page), 'BorderType', 'none'); 
-    p.Title = sprintf('%s-Patient Summary - ID %d (%s) - Page %d', study, scid, hospital, page); 
-    p.TitlePosition = 'centertop';
-    p.FontSize = 20;
-    p.FontWeight = 'bold';
     sp1 = uicontrol('Parent', p, ... 
                     'Units', 'normalized', ...
                     'OuterPosition', [0.02, 0.45, 0.48, 0.54], ...
@@ -235,17 +207,16 @@ for i = 1:size(patientlist,1)
     
     plotsacross = 1;
     plotsdown = 3;
-    plotsperpage = plotsacross * plotsdown;
     
     daysfrom = min(spstartdn, hmstartdn) - 14;
     daysto   = max(spenddn, hmenddn) + 14;
     xl = [daysfrom daysto];
     
-    subplot(plotsdown, plotsacross, 1,'Parent',sp3);
+    ax = subplot(plotsdown, plotsacross, 1,'Parent',sp3);
     hold on;
-    title('Clinic Visits ({\color{green}g}), Admissions ({\color{red}r}), IV Antibiotics ({\color{magenta}m}) and Oral Antibiotics ({\color{cyan}c})');
-    xlabel('Days');
-    ylabel('Event');
+    title(ax, 'Clinic Visits ({\color{green}g}), Admissions ({\color{red}r}), IV Antibiotics ({\color{magenta}m}) and Oral Antibiotics ({\color{cyan}c})');
+    xlabel(ax, 'Days');
+    ylabel(ax, 'Event');
     xlim(xl);
     yl = [0 4];
     ylim(yl);
@@ -253,15 +224,15 @@ for i = 1:size(patientlist,1)
     
     cvset     = cdClinicVisits(cdClinicVisits.ID == scid,:);
     cvset.AttendanceDatedn = datenum(cvset.AttendanceDate) - offset - poffset + 1;
-    for a = 1:size(cvset,1)
-        line( [cvset.AttendanceDatedn(a) cvset.AttendanceDatedn(a) + 1], [3.5, 3.5], 'Color', 'g', 'LineStyle', '-', 'LineWidth', linewidth);
+    for m = 1:size(cvset,1)
+        line(ax, [cvset.AttendanceDatedn(m) cvset.AttendanceDatedn(m) + 1], [3.5, 3.5], 'Color', 'g', 'LineStyle', '-', 'LineWidth', linewidth);
     end
     admset    = cdAdmissions(cdAdmissions.ID == scid,:);
     admset.Admitteddn = datenum(admset.Admitted) - offset - poffset + 1;
     admset.Dischargedn = datenum(admset.Discharge) - offset - poffset + 1;
     admdates = unique([admset.Admitteddn ; admset.Dischargedn]);
-    for a = 1:size(admset,1)
-        line( [admset.Admitteddn(a) admset.Dischargedn(a)], [2.5, 2.5], 'Color', 'r', 'LineStyle', '-', 'LineWidth', linewidth);
+    for m = 1:size(admset,1)
+        line(ax, [admset.Admitteddn(m) admset.Dischargedn(m)], [2.5, 2.5], 'Color', 'r', 'LineStyle', '-', 'LineWidth', linewidth);
     end
     ivabset   = cdAntibiotics(cdAntibiotics.ID == scid & ismember(cdAntibiotics.Route, {'IV'}),:);
     ivabset.Startdn = datenum(ivabset.StartDate) - offset - poffset + 1;
@@ -270,68 +241,84 @@ for i = 1:size(patientlist,1)
     ivabgroupeddates.Startdn = datenum(ivabgroupeddates.StartDate) - offset - poffset + 1;
     ivabgroupeddates.Stopdn = datenum(ivabgroupeddates.StopDate) - offset - poffset + 1;
     ivabdates = unique([ivabgroupeddates.Startdn ; ivabgroupeddates.Stopdn]);
-    for a = 1:size(ivabset,1)
-        line( [ivabset.Startdn(a) ivabset.Stopdn(a)], [1.5, 1.5], 'Color', 'm', 'LineStyle', '-', 'LineWidth', linewidth);
+    for m = 1:size(ivabset,1)
+        line(ax, [ivabset.Startdn(m) ivabset.Stopdn(m)], [1.5, 1.5], 'Color', 'm', 'LineStyle', '-', 'LineWidth', linewidth);
     end
     oralabset = cdAntibiotics(cdAntibiotics.ID == scid & ismember(cdAntibiotics.Route, {'Oral'}),:);
     oralabset.Startdn = datenum(oralabset.StartDate) - offset - poffset + 1;
     oralabset.Stopdn = datenum(oralabset.StopDate) - offset - poffset + 1;
-    for a = 1:size(oralabset,1)
-        line( [oralabset.Startdn(a) oralabset.Stopdn(a)], [0.5, 0.5], 'Color', 'c', 'LineStyle', '-', 'LineWidth', linewidth);
+    for m = 1:size(oralabset,1)
+        line(ax, [oralabset.Startdn(m) oralabset.Stopdn(m)], [0.5, 0.5], 'Color', 'c', 'LineStyle', '-', 'LineWidth', linewidth);
     end
     hold off;
     
-    subplot(plotsdown, plotsacross, 2,'Parent',sp3);
+    ax = subplot(plotsdown, plotsacross, 2,'Parent',sp3);
     pcrp = cdCRP(cdCRP.ID == scid,:);
     pcrp.ScaledDateNum = datenum(pcrp.CRPDate) - offset - poffset + 1;
     if size(pcrp,1) > 0
         hold on;
-        plot(pcrp.ScaledDateNum,pcrp.NumericLevel,'c-o',...
+        plot(ax, pcrp.ScaledDateNum,pcrp.NumericLevel, ...
+            'Color', [0, 0.65, 1], ...
+            'LineStyle', ':', ...
+            'Marker', 'o', ...
             'LineWidth',1,...
-            'MarkerSize',3,...
-            'MarkerEdgeColor','m',...
-            'MarkerFaceColor','w');
-        title('Clinical CRP Level');
-        xlabel('Days');
-        ylabel('CRP Level');
+            'MarkerSize',2,...
+            'MarkerEdgeColor','b',...
+            'MarkerFaceColor','g');
+        
+        title(ax, 'Clinical CRP Level');
+        xlabel(ax, 'Days');
+        ylabel(ax, 'CRP Level');
         xlim(xl);
         rangelimit = setMinYDisplayRangeForMeasure('ClinicalCRP');
         yl = setYDisplayRange(min(pcrp.NumericLevel), max(pcrp.NumericLevel), rangelimit);
         ylim(yl);
-        for a = 1:size(ivabdates,1)
-            line( [ivabdates(a) ivabdates(a)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
+        for m = 1:size(ivabdates,1)
+            line(ax, [ivabdates(m) ivabdates(m)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
         end
         for c = 1:size(admdates,1)
-            line( [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
+            line(ax, [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
         end
         hold off;
     end
     
-    subplot(plotsdown, plotsacross, 3,'Parent',sp3);
+    ax = subplot(plotsdown, plotsacross, 3,'Parent',sp3);
     ppft = cdPFT(cdPFT.ID == scid,:);
     ppft.ScaledDateNum = datenum(ppft.LungFunctionDate) - offset - poffset + 1;
     if size(ppft,1) > 0
         hold on;
-        plot(ppft.ScaledDateNum,ppft.CalcFEV1_,'c-o',...
+        plot(ax, ppft.ScaledDateNum, ppft.CalcFEV1_, ...
+            'Color', [0, 0.65, 1], ...
+            'LineStyle', ':', ...
+            'Marker', 'o', ...
             'LineWidth',1,...
-           'MarkerSize',3,...
-           'MarkerEdgeColor','m',...
-           'MarkerFaceColor','w');
-        title('Clinical FEV1%');
-        xlabel('Days');
-        ylabel('FEV1%');
+            'MarkerSize',2,...
+            'MarkerEdgeColor','b',...
+            'MarkerFaceColor','g');
+        title(ax, 'Clinical FEV1%');
+        xlabel(ax, 'Days');
+        ylabel(ax, 'FEV1%');
         xlim(xl);
         rangelimit = setMinYDisplayRangeForMeasure('ClinicalFEV1');
         yl = setYDisplayRange(min(ppft.CalcFEV1_), max(ppft.CalcFEV1_), rangelimit);
         ylim(yl);
-        for a = 1:size(ivabdates,1)
-            line( [ivabdates(a) ivabdates(a)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
+        for m = 1:size(ivabdates,1)
+            line(ax, [ivabdates(m) ivabdates(m)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
         end
         for c = 1:size(admdates,1)
-            line( [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
+            line(ax, [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
         end
         hold off;
     end
+    
+    savePlotInDir(f, imagefilename, subfolder);
+    close(f);
+    page = page + 1;
+    fprintf('Next Page\n');
+    
+    imagefilename = sprintf('%s - Page %d of %d', filenameprefix, page, npages);
+    [f, p] = createFigureAndPanel(imagefilename, 'Portrait', 'a4');
+    
     % plots for home measures on pages 2 & 3
     plotsacross = 1;
     plotsdown = 5;
@@ -340,43 +327,39 @@ for i = 1:size(patientlist,1)
     % get all measures so the plots for each appear in a consistent place
     % across all patients
     measures = unique(physdata.RecordingType);
-    for a = 1:size(measures,1)
-        measure = measures{a};
+    for m = 1:size(measures,1)
+        measure = measures{m};
         column = getColumnForMeasure(measure);
         scdata = physdata(physdata.SmartCareID == scid & ismember(physdata.RecordingType, measure), :);
         scdata = scdata(:, {'SmartCareID','ScaledDateNum' 'Date_TimeRecorded', column});
         scdata.Properties.VariableNames{column} = 'Measurement';
         
-        if round((a-1)/plotsperpage) == (a-1)/plotsperpage
-            page = page + 1;
-            fprintf('Next Page\n');
-            figurearray(page) = figure('Name',sprintf('Patient Summary - ID %d Hosp %s - Page %d', scid, hospital, page));
-            set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
-            p = uipanel('Parent', figurearray(page), 'BorderType', 'none'); 
-            p.Title = sprintf('Patient Summary - ID %d (%s) - Page %d', scid, hospital, page); 
-            p.TitlePosition = 'centertop';
-            p.FontSize = 20;
-            p.FontWeight = 'bold';
-        end
-        
         if size(scdata,1) > 0
-            subplot(plotsdown,plotsacross,a - (page-2)*plotsperpage,'Parent',p);
+            ax = subplot(plotsdown, plotsacross, m - (page-2) * plotsperpage,'Parent',p);
             hold on;
             xlim(xl);
             rangelimit = setMinYDisplayRangeForMeasure(measure);
             yl = setYDisplayRange(min(scdata.Measurement), max(scdata.Measurement), rangelimit);
             ylim(yl);
-            title(measure);
-            xlabel('Days');
-            ylabel('Measure');
-            plot(scdata.ScaledDateNum, scdata.Measurement,...
+            title(ax, replace(measure, 'Recording', ''));
+            xlabel(ax, 'Days');
+            ylabel(ax, 'Measure');
+            
+            plot(ax, scdata.ScaledDateNum, scdata.Measurement, ...
                 'Color', [0, 0.65, 1], ...
-                'LineStyle', '-', ...
+                'LineStyle', ':', ...
                 'Marker', 'o', ...
                 'LineWidth',1,...
-                'MarkerSize',3,...
+                'MarkerSize',2,...
                 'MarkerEdgeColor','b',...
                 'MarkerFaceColor','g');
+            
+            plot(ax, scdata.ScaledDateNum, movmean(scdata.Measurement, 4, 'omitnan'), ...
+                'Color', [0, 0.65, 1], ...
+                'LineStyle', '-', ...
+                'Marker', 'none', ...
+                'LineWidth', 1);
+            
             ddcolumn = sprintf('Fun_%s',column);
             mid50mean = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(5);
             mid50std = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(6);
@@ -391,16 +374,24 @@ for i = 1:size(patientlist,1)
             end
             hold off;
         end
+        
+        if round(m/plotsperpage) == m/plotsperpage
+            savePlotInDir(f, imagefilename, subfolder);
+            close(f);
+            page = page + 1;
+            fprintf('Next Page\n');
+            imagefilename = sprintf('%s - Page %d of %d', filenameprefix, page, npages);
+            [f, p] = createFigureAndPanel(imagefilename, 'Portrait', 'a4');
+        end
     end
+    
+    if exist('f', 'var')
+        savePlotInDir(f, imagefilename, subfolder);
+        close(f);
+    end
+
     toc
     
-    tic
-    for a = 1:size(figurearray,2)
-        imagefilename = sprintf('%sPatientSummary_ID%d_%s_page%d', study, scid, hospital, a);
-        savePlotInDir(figurearray(a), imagefilename, subfolder);
-        close(figurearray(a));
-    end
-    toc
 end
 
     

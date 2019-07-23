@@ -42,14 +42,31 @@ fprintf('\n');
 %
 % otherTables
 %      - Dates < Jun 2016 or > Jun 2019
-%      - stop/discharge dates < start/admitted dates
-%      - zero lung function or height/weight measures
-%      - values out of tolerance (eg lung function > 6l, height > 200cm or < 50cm,
+%      - zero height/weight measures
+%      - values out of tolerance (eg height > 200cm or < 50cm,
 %      weight > 75kg or < 10kg
 
 % potentially replace codes with decoded values for admission reason,
 % antibiotics etc
 
+idx = clPFT.FEV1 == 0;
+fprintf('Removing %d zero PFT Clinical Measurements\n', sum(idx));
+clPFT(idx,:) = [];
+
+idx =  clPFT.FEV1 > 4;
+fprintf('Removing %d Anomalous PFT Clinical Measurements (>4l)\n', sum(idx));
+clPFT(idx,:) = [];
+
+idx = clAdmissions.Discharge < clAdmissions.Admitted;
+fprintf('Found %d Admissions with Discharge before Admission\n', sum(idx));
+if sum(idx) > 0
+    clAdmissions(idx,:)
+end
+idx = clAntibiotics.StopDate < clAntibiotics.StartDate;
+fprintf('Found %d Antibiotic Treatments with Stop Date before Start Date\n', sum(idx));
+if sum(idx) > 0
+    clAntibiotics(idx,:)
+end
 
 tic
 fprintf('\n');

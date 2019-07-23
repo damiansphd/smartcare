@@ -8,6 +8,8 @@ if shiftmode == 1
     shifttext = 'MeanShift';
 elseif shiftmode == 2
     shifttext = 'MaxShift';
+elseif shiftmode == 3
+    shifttext = 'ExZeroShift';
 else
     fprintf('**** Unknown shift mode ****\n');
 end
@@ -42,6 +44,8 @@ for n = 1:nlatentcurves
             vertshift = mean(meancurvemean(n, 1:(align_wind + max_offset + ex_start(n)), m));
         elseif shiftmode == 2
             vertshift = max(meancurvemean(n, 1:(align_wind + max_offset + ex_start(n)), m));
+        elseif shiftmode == 3
+            vertshift = meancurvemean(n, (align_wind + max_offset + ex_start(n)), m);
         end
         meancurvemean(n, :, m) = meancurvemean(n, :, m) - vertshift;
         fprintf('For curve %d and measure %13s, vertical shift is %.3f\n', n, measures.DisplayName{m}, -vertshift);
@@ -78,6 +82,7 @@ for n = 1:nlatentcurves
         if ~compactplot
             % save plot
             savePlotInDir(f, plottitle, plotsubfolder);
+            savePlotInDirAsSVG(f, plottitle, plotsubfolder);
             close(f);
         end
     end
@@ -86,6 +91,7 @@ end
 if compactplot
     % save plot
     savePlotInDir(f, plottitle, plotsubfolder);
+    savePlotInDirAsSVG(f, plottitle, plotsubfolder);
     close(f);
 end
 

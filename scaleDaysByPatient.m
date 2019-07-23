@@ -1,4 +1,4 @@
-function [physdataout] = scaleDaysByPatient(physdata,doupdates)
+function [physdata] = scaleDaysByPatient(physdata,doupdates)
 
 % scaleDateByPatient - adds a new column to physdata for the scaled datenum 
 % (relative to the first measurement date for each patient)
@@ -21,8 +21,6 @@ if doupdates
 end
 toc
 fprintf('\n');
-
-physdataout = physdata;
 
 end
 

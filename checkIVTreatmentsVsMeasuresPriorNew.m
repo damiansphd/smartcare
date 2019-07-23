@@ -1,6 +1,6 @@
 clc; clear; close all;
 
-studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed, 3 = joint): ');
+studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed, 3 = joint, 4 = Climb): ');
 
 if studynbr == 1
     study = 'SC';
@@ -14,6 +14,10 @@ elseif studynbr == 3
     study = 'SC+TM';
     clinicalmatfile = 'clinicaldata.mat';
     datamatfile = 'smartcaredata.mat';
+elseif studynbr == 4
+    study = 'CL';
+    clinicalmatfile = 'climbclinicaldata.mat';
+    datamatfile = 'climbdata.mat';
 else
     fprintf('Invalid study\n');
     return;
@@ -59,6 +63,21 @@ if studynbr == 3
     cdCRP = [cdCRP ; tmCRP];
     cdClinicVisits = [cdClinicVisits ; tmClinicVisits];
     cdEndStudy = [cdEndStudy ; tmEndStudy];
+end
+
+if studynbr == 4
+    physdata       = clphysdata;
+    cdPatient      = clPatient;
+    cdMicrobiology = clMicrobiology;
+    cdAntibiotics  = clAntibiotics;
+    cdAdmissions   = clAdmissions;
+    cdPFT          = clPFT;
+    cdCRP          = clCRP;
+    cdClinicVisits = clClinicVisits;
+    cdOtherVisits  = clOtherVisits;
+    cdEndStudy     = clEndStudy;
+    cdHghtWght     = clHghtWght;
+    offset         = cloffset;
 end
 
 tic

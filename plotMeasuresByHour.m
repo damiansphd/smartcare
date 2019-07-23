@@ -34,7 +34,7 @@ for i = 1:nmeasures
     ax = subplot(plotsdown, plotsacross, i, 'Parent', p);
     %histogram(hour(datetime(physdata.Date_TimeRecorded(idx))));
     histogram(ax, hour(physdata.Date_TimeRecorded(idx)));
-    %t = title(sprintf('%s by Hour of Day',m), 'FontSize', 6);
+    t = title(ax, sprintf('%s by Hour of Day',m), 'FontSize', 6);
 end
 
 

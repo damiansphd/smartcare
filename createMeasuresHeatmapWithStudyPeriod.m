@@ -1,4 +1,4 @@
-function createMeasuresHeatmapWithStudyPeriod(physdata, offset, cdPatient)
+function createMeasuresHeatmapWithStudyPeriod(physdata, offset, cdPatient, study)
 
 % createMeasuresHeatmapWithStudyPeriod - creates the Patient/Measures
 % heatmap, and overlays study period start and end
@@ -7,22 +7,47 @@ fprintf('Creating Heatmap of Measures with Study Period\n');
 fprintf('----------------------------------------------\n');
 tic
 
-basedir = setBaseDir();
-subfolder = 'Plots';
-
 temp = hsv;
 brightness = .75;
-%colors(1,:)  = [0 0 0];     % black for no measures
-colors(1,:)  = temp(4,:)  .* brightness;
-colors(2,:)  = temp(6,:)  .* brightness;
-colors(3,:)  = temp(8,:)  .* brightness;
-colors(4,:)  = temp(10,:) .* brightness;
-colors(5,:)  = temp(12,:) .* brightness;
-colors(6,:)  = temp(14,:) .* brightness;
-colors(7,:)  = temp(16,:) .* brightness;
-colors(8,:)  = temp(18,:) .* brightness;
-colors(9,:)  = temp(20,:) .* brightness;
-colors(10,:)  = [1 0 1];
+
+if ismember(study, {'SC', 'TM'})
+    %colors(1,:)  = [0 0 0];     % black for no measures
+    colors(1,:)  = temp(4,:);
+    colors(2,:)  = temp(6,:);
+    colors(3,:)  = temp(8,:);
+    colors(4,:)  = temp(10,:);
+    colors(5,:)  = temp(12,:);
+    colors(6,:)  = temp(14,:);
+    colors(7,:)  = temp(16,:);
+    colors(8,:)  = temp(18,:);
+    colors(9,:)  = temp(20,:);
+    colors(10,:)  = [1 0 1];
+    nmeasures = 9;
+elseif ismember(study, {'CL'})
+    %colors(1,:)  = [0 0 0];     % black for no measures
+    colors(1,:)  = temp(4,:);
+    colors(2,:)  = temp(6,:);
+    colors(3,:)  = temp(7,:);
+    colors(4,:)  = temp(8,:);
+    colors(5,:)  = temp(9,:);
+    colors(6,:)  = temp(10,:);
+    colors(7,:)  = temp(11,:);
+    colors(8,:)  = temp(12,:);
+    colors(9,:)  = temp(13,:);
+    colors(10,:)  = temp(14,:);
+    colors(11,:)  = temp(15,:);
+    colors(12,:)  = temp(16,:);
+    colors(13,:)  = temp(17,:);
+    colors(14,:)  = temp(18,:);
+    colors(15,:)  = temp(20,:);
+    colors(16,:)  = [1 0 1];
+    nmeasures = 15;
+else
+    fprintf('**** Unknown Study ****');
+    return;
+end
+
+colors(2:end - 1, :) = colors(2:end - 1,:) .* brightness;
 
 % get the date scaling offset for each patient
 patientoffsets = getPatientOffsets(physdata);
@@ -44,7 +69,7 @@ patientstudydate.ScaledDateNum = datenum(patientstudydate.StudyDate) - offset - 
 % add rows to the count table to mark the study start and end dates (use a count
 % of 10 to allow it to be highlighted in a different colour on the heatmap
 studyduration = 183;
-fixedcount = ones(size(patientstudydate,1),1)*10;
+fixedcount = ones(size(patientstudydate, 1), 1) * (nmeasures + 1);
 fixedcount = array2table(fixedcount);
 fixedcount.Properties.VariableNames{'fixedcount'} = 'GroupCount';
 rowstoadd = [patientstudydate(:,{'SmartCareID', 'ScaledDateNum'}) fixedcount];   
@@ -71,15 +96,19 @@ end
 pdcountmtable = [pdcountmtable ; dummymeasures];
 
 % create the heatmap
-title = 'Heatmap of Measures with Study Period';
-f = figure('Name', title);
-p = uipanel('Parent',f,'BorderType','none'); 
-p.Title = title; 
-p.TitlePosition = 'centertop';
-p.FontSize = 20;
-p.FontWeight = 'bold'; 
-set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8, 0.8], 'PaperOrientation', 'landscape', ...
-    'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a3');
+title = sprintf('%s-Heatmap of Measures with Study Period', study);
+
+[f, p] = createFigureAndPanel(title, 'portrait', 'a4');
+
+%f = figure('Name', title);
+%p = uipanel('Parent',f,'BorderType','none'); 
+%p.Title = title; 
+%p.TitlePosition = 'centertop';
+%p.FontSize = 20;
+%p.FontWeight = 'bold'; 
+%set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8, 0.8], 'PaperOrientation', 'landscape', ...
+%    'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a3');
+
 h = heatmap(p, pdcountmtable, 'ScaledDateNum', 'SmartCareID', 'Colormap', colors, 'MissingDataColor', 'black', ...
     'ColorVariable','GroupCount','ColorMethod','max', 'MissingDataLabel', 'No data');
 h.Title = ' ';
@@ -92,7 +121,8 @@ h.GridVisible = 'off';
 %[C,x] = sortx(h);
 
 % save results
-filename = 'HeatmapAllPatientsWithStudyPeriod';
+filename = sprintf('%s-HeatmapAllPatientsWithStudyPeriod', study);
+subfolder = 'Plots';
 savePlotInDir(f, filename, subfolder);
 close(f);
 

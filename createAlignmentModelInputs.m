@@ -1,17 +1,20 @@
 clear; close all; clc;
 
-studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
+studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed 3 = Climb): ');
 chosentreatgap = selectTreatmentGap();
 
 if studynbr == 1
     study = 'SC';
     clinicalmatfile = 'clinicaldata.mat';
     datamatfile = 'smartcaredata.mat';
-    
 elseif studynbr == 2
     study = 'TM';
     clinicalmatfile = 'telemedclinicaldata.mat';
     datamatfile = 'telemeddata.mat';
+elseif studynbr == 3
+    study = 'CL';
+    clinicalmatfile = 'climbclinicaldata.mat';
+    datamatfile = 'climbdata.mat';
 else
     fprintf('Invalid study\n');
     return;
@@ -34,22 +37,35 @@ load(fullfile(basedir, subfolder, datademographicsfile));
 toc
 
 if studynbr == 2
-    physdata = tmphysdata;
-    cdPatient = tmPatient;
+    physdata       = tmphysdata;
+    cdPatient      = tmPatient;
     cdMicrobiology = tmMicrobiology;
-    cdAntibiotics = tmAntibiotics;
-    cdAdmissions = tmAdmissions;
-    cdPFT = tmPFT;
-    cdCRP = tmCRP;
+    cdAntibiotics  = tmAntibiotics;
+    cdAdmissions   = tmAdmissions;
+    cdPFT          = tmPFT;
+    cdCRP          = tmCRP;
     cdClinicVisits = tmClinicVisits;
-    cdEndStudy = tmEndStudy;
-    offset = tmoffset;
+    cdEndStudy     = tmEndStudy;
+    offset         = tmoffset;
+elseif studynbr == 3
+    physdata       = clphysdata;
+    cdPatient      = clPatient;
+    cdMicrobiology = clMicrobiology;
+    cdAntibiotics  = clAntibiotics;
+    cdAdmissions   = clAdmissions;
+    cdPFT          = clPFT;
+    cdCRP          = clCRP;
+    cdClinicVisits = clClinicVisits;
+    cdOtherVisits  = clOtherVisits;
+    cdEndStudy     = clEndStudy;
+    cdHghtWght     = clHghtWght;
+    offset         = cloffset;
 end
 
 % useful variables
 npatients = max(physdata.SmartCareID);
 ndays = max(physdata.ScaledDateNum);
-nmeasures = size(unique(physdata.RecordingType),1);
+nmeasures = size(unique(physdata.RecordingType), 1);
 measures = table('Size',[nmeasures 4], 'VariableTypes', {'int32', 'cell', 'cell', 'cell'} ,'VariableNames', {'Index', 'Name', 'DisplayName', 'Column'});
 measures.Index = [1:nmeasures]';
 measures.Name = unique(physdata.RecordingType);
@@ -72,7 +88,7 @@ toc
 tic
 % create datacube - 3D array of patients/days/measures for model
 fprintf('Creating 3D data array\n');
-[amDatacube] = createDataCube(physdata, measures, demographicstable, overalltable, npatients, ndays, nmeasures);
+[amDatacube] = createDataCube(physdata, measures, npatients, ndays, nmeasures);
 toc
 
 tic

@@ -1,4 +1,4 @@
-function [datacube] = createDataCube(physdata, measures, demographicstable, overalltable, npatients, ndays, nmeasures)
+function [datacube] = createDataCube(physdata, measures, npatients, ndays, nmeasures)
 
 % createDataCube - populates a 3D array from the measurement data of
 % appropriate size
@@ -8,11 +8,9 @@ physdata = innerjoin(physdata, measures, 'LeftKeys', {'RecordingType'}, 'RightKe
 
 for i=1:size(physdata,1)
     scid = physdata.SmartCareID(i);
-    measure = physdata.RecordingType(i);
     scaleddn = physdata.ScaledDateNum(i);
     index = physdata.Index(i);
     column = physdata.Column{i};
-    ddcolumn = sprintf('Fun_%s',column);
     
     datacube(scid, scaleddn, index) = physdata{i, {column}};
     %if ~isnan(datacube(scid, scaleddn, index))
