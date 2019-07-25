@@ -10,7 +10,7 @@ anchor = 1; % latent curve is to be anchored on the plot (right side at min_offs
 % comment out/uncomment out one of these depending on whether all measures
 % wanted or just those used for alignment
 tmpmeasures = measures;
-%tmpmeasures = measures(logical(measures.Mask), :);
+tmpmeasures = measures(logical(measures.Mask), :);
 tmpnmeasures = size(tmpmeasures, 1);
 
 % add colour array here and use it in the call to plotLatentCurve
@@ -30,7 +30,7 @@ for m = 1:tmpnmeasures
     else
         lstyle = '-.';
     end
-    [xl, yl] = plotLatentCurve(ax, max_offset, (align_wind + ex_start), (min_offset + ex_start), meancurvemean(:, m), xl, yl, colors(m, :), lstyle, 0.5, anchor);
+    [xl, yl] = plotLatentCurve(ax, max_offset, (align_wind + ex_start), (min_offset + ex_start), meancurvemean(:, tmpmeasures.Index(m)), xl, yl, colors(m, :), lstyle, 0.5, anchor);
 end
 
 if ex_start ~= 0

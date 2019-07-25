@@ -181,6 +181,7 @@ for i = 1:size(tmpadm, 1)
     cdabrow.ID          = userid;
     cdabrow.StudyNumber = cdpatrow.StudyNumber;
     cdabrow.Hospital    = cdpatrow.Hospital;
+    cdabrow.Reason      = tmpadm.ReasonForAdmission(i);
     [cdabrow.StartDate, isValid] = ingestDateCell(tmpadm.StartDate(i), matlabexcelserialdatediff, i, notime);
     [cdabrow.StopDate,  tmpisValid] = ingestDateCell(tmpadm.StopDate(i),  matlabexcelserialdatediff, i, notime);
     if ~tmpisValid
@@ -228,6 +229,7 @@ for i = 1:size(tmporal, 1)
         cdabrow.ID          = userid;
         cdabrow.StudyNumber = cdpatrow.StudyNumber;
         cdabrow.Hospital    = cdpatrow.Hospital;
+        cdabrow.Reason      = {'PE'};
         [cdabrow.StartDate, isValid] = ingestDateCell(tmporal.StartDate(i), matlabexcelserialdatediff, i, notime);
         [cdabrow.StopDate,  tmpisValid] = ingestDateCell(tmporal.StopDate(i),  matlabexcelserialdatediff, i, notime);
         if ~tmpisValid

@@ -1,93 +1,39 @@
 clc; clear; close all;
 
-studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed, 3 = joint, 4 = Climb): ');
 
-if studynbr == 1
-    study = 'SC';
-    clinicalmatfile = 'clinicaldata.mat';
-    datamatfile = 'smartcaredata.mat';
-elseif studynbr == 2
-    study = 'TM';
-    clinicalmatfile = 'telemedclinicaldata.mat';
-    datamatfile = 'telemeddata.mat';
-elseif studynbr == 3
-    study = 'SC+TM';
-    clinicalmatfile = 'clinicaldata.mat';
-    datamatfile = 'smartcaredata.mat';
-elseif studynbr == 4
-    study = 'CL';
-    clinicalmatfile = 'climbclinicaldata.mat';
-    datamatfile = 'climbdata.mat';
-else
-    fprintf('Invalid study\n');
-    return;
-end
-
-tmoffset = 0;
-
-tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-fprintf('Loading clinical data\n');
-load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading measurement data\n');
-load(fullfile(basedir, subfolder, datamatfile));
-if studynbr == 3
-    clinicalmatfile = 'telemedclinicaldata.mat';
-    datamatfile = 'telemeddata.mat';
-    load(fullfile(basedir, subfolder, clinicalmatfile));
-    load(fullfile(basedir, subfolder, datamatfile));
-end
-toc
 
-if studynbr == 2
-    physdata = tmphysdata;
-    cdPatient = tmPatient;
-    cdMicrobiology = tmMicrobiology;
-    cdAntibiotics = tmAntibiotics;
-    cdAdmissions = tmAdmissions;
-    cdPFT = tmPFT;
-    cdCRP = tmCRP;
-    cdClinicVisits = tmClinicVisits;
-    cdEndStudy = tmEndStudy;
-    offset = tmoffset;
-end
+[studynbr, study, studyfullname] = selectStudy();
+[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
+[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+[cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
 
-if studynbr == 3
-    physdata = [ physdata ; tmphysdata ];
-    cdPatient = [ cdPatient ; tmPatient];
-    cdMicrobiology = [ cdMicrobiology ; tmMicrobiology];
-    cdAntibiotics = [ cdAntibiotics ; tmAntibiotics];
-    cdAdmissions = [ cdAdmissions ; tmAdmissions];
-    cdPFT = [cdPFT ; tmPFT ];
-    cdCRP = [cdCRP ; tmCRP];
-    cdClinicVisits = [cdClinicVisits ; tmClinicVisits];
-    cdEndStudy = [cdEndStudy ; tmEndStudy];
-end
+% can use this for studies without reasons as the reason is defaulted to PE
+% for them
+fprintf('Loading exacerbation reasons\n');
+exreasonsfile = 'climbexacerbationreasons.mat';
+load(fullfile(basedir, subfolder, exreasonsfile), 'exacerbationreasons');
 
-if studynbr == 4
-    physdata       = clphysdata;
-    cdPatient      = clPatient;
-    cdMicrobiology = clMicrobiology;
-    cdAntibiotics  = clAntibiotics;
-    cdAdmissions   = clAdmissions;
-    cdPFT          = clPFT;
-    cdCRP          = clCRP;
-    cdClinicVisits = clClinicVisits;
-    cdOtherVisits  = clOtherVisits;
-    cdEndStudy     = clEndStudy;
-    cdHghtWght     = clHghtWght;
-    offset         = cloffset;
-end
+fprintf('\n');
 
 tic
 % remove Oral treatments & sort by SmartCareID and StopDate
 % after further analysis, changed to include oral ab's as well as iv ab's
 %idx = find(ismember(cdAntibiotics.Route, {'Oral'}));
 %cdAntibiotics(idx,:) = [];
-ivTreatments               = unique(cdAntibiotics(:,{'ID', 'Hospital', 'StartDate', 'StopDate', 'Route'}));
-ivTreatments.IVDateNum     = datenum(ivTreatments.StartDate) - offset*(ivTreatments.ID >= 16) - tmoffset*(ivTreatments.ID < 16) + 1;
-ivTreatments.IVStopDateNum = datenum(ivTreatments.StopDate)  - offset*(ivTreatments.ID >= 16) - tmoffset*(ivTreatments.ID < 16) + 1;
+if studynbr == 3
+    ivTreatments               = unique(cdAntibiotics(:,{'ID', 'Hospital', 'StartDate', 'StopDate', 'Route', 'Reason'}));
+else
+    ivTreatments               = unique(cdAntibiotics(:,{'ID', 'Hospital', 'StartDate', 'StopDate', 'Route'}));
+    ivTreatments.Reason(:)     = {'PE'};
+end
+%ivTreatments.IVDateNum     = datenum(ivTreatments.StartDate) - offset*(ivTreatments.ID >= 16) - tmoffset*(ivTreatments.ID < 16) + 1;
+%ivTreatments.IVStopDateNum = datenum(ivTreatments.StopDate)  - offset*(ivTreatments.ID >= 16) - tmoffset*(ivTreatments.ID < 16) + 1;
+
+ivTreatments.IVDateNum     = datenum(ivTreatments.StartDate) - offset + 1;
+ivTreatments.IVStopDateNum = datenum(ivTreatments.StopDate)  - offset + 1;
 ivTreatments.Type          = zeros(height(ivTreatments),1);
 
 % consider any treatment gaps (stop date to next start date) of less than
@@ -140,12 +86,12 @@ oo = ooandivpbo - ivpbo/2 ;
 
 physdata = sortrows(physdata, {'SmartCareID', 'DateNum', 'RecordingType'}, 'ascend');
 numdays = 40;
-nkeycols = 12;
+nkeycols = 13;
 Day = zeros(1,numdays);
 Day = array2table(Day);
 ivandmeasurestable = table('Size',[1 nkeycols-1], ...
-    'VariableTypes', {'double',      'cell',     'datetime',    'double',    'datetime',   'double',        'double',           'double',        'double',            'cell',  'double'}, ...
-    'VariableNames', {'SmartCareID', 'Hospital', 'IVStartDate', 'IVDateNum', 'IVStopDate', 'IVStopDateNum', 'DaysWithMeasures', 'TotalMeasures', 'AvgMeasuresPerDay', 'Route', 'Type'});
+    'VariableTypes', {'double',      'cell',     'datetime',    'double',    'datetime',   'double',        'double',           'double',        'double',            'cell',  'double', 'logical'     }, ...
+    'VariableNames', {'SmartCareID', 'Hospital', 'IVStartDate', 'IVDateNum', 'IVStopDate', 'IVStopDateNum', 'DaysWithMeasures', 'TotalMeasures', 'AvgMeasuresPerDay', 'Route', 'Type',   'ExRelated'});
 % have to do it this way to get the column type to be a char
 ivandmeasurestable.SequentialIntervention(:) = ' ';
 ivandmeasurestable = [ivandmeasurestable Day];
@@ -175,6 +121,13 @@ rowtoadd.TotalMeasures     = sum(pdcountmtable.GroupCount);
 rowtoadd.AvgMeasuresPerDay = rowtoadd.TotalMeasures/numdays;
 rowtoadd.Route             = ivTreatments.Route(i);
 rowtoadd.Type              = ivTreatments.Type(i);
+rowtoadd.ExRelated         = checkTreatmentExRelated(ivTreatments.Reason(i), exacerbationreasons);
+if rowtoadd.ExRelated
+    exreltxt = '(*)';
+else
+    exreltxt = '( )';
+end
+
 for a = 1:numdays
     colname = sprintf('IVminus%d', a);
     dayidx = (pdcountmtable.SmartCareID == ivTreatments.ID(i)) & (pdcountmtable.DateNum == ivTreatments.IVDateNum(i) - numdays - 1 + a);
@@ -185,8 +138,8 @@ for a = 1:numdays
         rowtoadd{1,colname} = 0;
     end
 end
-fprintf('ID %3d, StartDate %11s, StopDate %11s, Route %4s, Type %d: First Treatment\n', ...
-                ivTreatments.ID(i), datestr(ivTreatments.StartDate(i), 1), datestr(ivTreatments.StopDate(i), 1), ivTreatments.Route{i}, ivTreatments.Type(i));
+fprintf('ID %3d, StartDate %11s, StopDate %11s, Route %4s, Type %d %3s: First Treatment\n', ...
+            ivTreatments.ID(i), datestr(ivTreatments.StartDate(i), 1), datestr(ivTreatments.StopDate(i), 1), ivTreatments.Route{i}, ivTreatments.Type(i), exreltxt);
 
 for i = 2:size(ivTreatments,1)
     
@@ -194,19 +147,27 @@ for i = 2:size(ivTreatments,1)
         if ivTreatments.IVStopDateNum(i) > rowtoadd.IVStopDateNum
             rowtoadd.IVStopDate        = ivTreatments.StopDate(i);
             rowtoadd.IVStopDateNum     = ivTreatments.IVStopDateNum(i);
-            fprintf('ID %3d, StartDate %11s, StopDate %11s, Route %4s, Type %d: Skipping but updating stop date\n', ...
-                ivTreatments.ID(i), datestr(ivTreatments.StartDate(i), 1), datestr(ivTreatments.StopDate(i), 1), ivTreatments.Route{i}, ivTreatments.Type(i));
-        else
-            fprintf('ID %3d, StartDate %11s, StopDate %11s, Route %4s, Type %d: Skipping\n', ...
-                ivTreatments.ID(i), datestr(ivTreatments.StartDate(i), 1), datestr(ivTreatments.StopDate(i), 1), ivTreatments.Route{i}, ivTreatments.Type(i));
+            rowtoadd.ExRelated         = rowtoadd.ExRelated || checkTreatmentExRelated(ivTreatments.Reason(i), exacerbationreasons);
+            if rowtoadd.ExRelated
+                exreltxt = '(*)';
+            else
+                exreltxt = '( )';
+            end
+            fprintf('ID %3d, StartDate %11s, StopDate %11s, Route %4s, Type %d %3s: Skipping but updating stop date and exrelated\n', ...
+                ivTreatments.ID(i), datestr(ivTreatments.StartDate(i), 1), datestr(ivTreatments.StopDate(i), 1), ivTreatments.Route{i}, ivTreatments.Type(i), exreltxt);
         end
     else
         % we've hit a new patient or treatment, so add pending rowtoadd
-        % first
-        ivandmeasurestable = [ivandmeasurestable ; rowtoadd];
-        measuresdetailtable = [measuresdetailtable ; physdata(idx,:)]; 
-        fprintf('ID %3d, StartDate %11s, StopDate %11s, Route %4s, Type %d: ******************************** Adding New Intervention\n', ...
-            rowtoadd.SmartCareID, datestr(rowtoadd.IVStartDate, 1), datestr(rowtoadd.IVStopDate, 1), rowtoadd.Route{1}, rowtoadd.Type);
+        % first if it is exacerbation related
+        if rowtoadd.ExRelated
+            ivandmeasurestable = [ivandmeasurestable ; rowtoadd];
+            measuresdetailtable = [measuresdetailtable ; physdata(idx,:)];
+            fprintf('ID %3d, StartDate %11s, StopDate %11s, Route %4s, Type %d %3s: ******************************** Adding New Intervention\n', ...
+            rowtoadd.SmartCareID, datestr(rowtoadd.IVStartDate, 1), datestr(rowtoadd.IVStopDate, 1), rowtoadd.Route{1}, rowtoadd.Type, exreltxt);
+        else
+            fprintf('ID %3d, StartDate %11s, StopDate %11s, Route %4s, Type %d %3s: ******************************** Skipping - not exacerbation related\n', ...
+            rowtoadd.SmartCareID, datestr(rowtoadd.IVStartDate, 1), datestr(rowtoadd.IVStopDate, 1), rowtoadd.Route{1}, rowtoadd.Type, exreltxt);
+        end
         
         % now update rowtoadd with current row
         idx = find(physdata.SmartCareID == ivTreatments.ID(i) & physdata.DateNum < ivTreatments.IVDateNum(i) & physdata.DateNum >= (ivTreatments.IVDateNum(i) - numdays));
@@ -222,6 +183,12 @@ for i = 2:size(ivTreatments,1)
         rowtoadd.AvgMeasuresPerDay = rowtoadd.TotalMeasures/numdays;
         rowtoadd.Route             = ivTreatments.Route(i);
         rowtoadd.Type              = ivTreatments.Type(i);
+        rowtoadd.ExRelated         = checkTreatmentExRelated(ivTreatments.Reason(i), exacerbationreasons);
+        if rowtoadd.ExRelated
+            exreltxt = '(*)';
+        else
+            exreltxt = '( )';
+        end
         for a = 1:numdays
             colname = sprintf('IVminus%d', a);
             dayidx = (pdcountmtable.SmartCareID == ivTreatments.ID(i)) & (pdcountmtable.DateNum == ivTreatments.IVDateNum(i) - numdays - 1 + a);
@@ -236,14 +203,21 @@ for i = 2:size(ivTreatments,1)
                 rowtoadd{1,colname} = 0;
             end
         end
-        fprintf('ID %3d, StartDate %11s, StopDate %11s, Route %4s, Type %d: New Treatment\n', ...
-            ivTreatments.ID(i), datestr(ivTreatments.StartDate(i), 1), datestr(ivTreatments.StopDate(i), 1), ivTreatments.Route{i}, ivTreatments.Type(i));
+        fprintf('ID %3d, StartDate %11s, StopDate %11s, Route %4s, Type %d %3s: New Treatment\n', ...
+            ivTreatments.ID(i), datestr(ivTreatments.StartDate(i), 1), datestr(ivTreatments.StopDate(i), 1), ivTreatments.Route{i}, ivTreatments.Type(i), exreltxt);
     end
 end
-ivandmeasurestable = [ivandmeasurestable ; rowtoadd];
-measuresdetailtable = [measuresdetailtable ; physdata(idx,:)]; 
-fprintf('ID %3d, StartDate %11s, StopDate %11s, Route %4s, Type %d: ******************************** Adding Final Intervention\n', ...
-    rowtoadd.SmartCareID, datestr(rowtoadd.IVStartDate, 1), datestr(rowtoadd.IVStopDate, 1), rowtoadd.Route{1}, rowtoadd.Type);
+if rowtoadd.ExRelated
+    ivandmeasurestable = [ivandmeasurestable ; rowtoadd];
+    measuresdetailtable = [measuresdetailtable ; physdata(idx,:)];
+    fprintf('ID %3d, StartDate %11s, StopDate %11s, Route %4s, Type %d %3s: ******************************** Adding Final Intervention\n', ...
+    rowtoadd.SmartCareID, datestr(rowtoadd.IVStartDate, 1), datestr(rowtoadd.IVStopDate, 1), rowtoadd.Route{1}, rowtoadd.Type, exreltxt);
+else
+    fprintf('ID %3d, StartDate %11s, StopDate %11s, Route %4s, Type %d %3s: ******************************** Skipping - not exacerbation related\n', ...
+    rowtoadd.SmartCareID, datestr(rowtoadd.IVStartDate, 1), datestr(rowtoadd.IVStopDate, 1), rowtoadd.Route{1}, rowtoadd.Type, exreltxt);
+end
+
+
 
 % hardcode definitions for data window and mean window here - need to
 % change if these model parameters are changed at any point

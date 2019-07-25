@@ -1,22 +1,16 @@
 clc; clear; close all;
 
 tic
+studynbr = 3;
+study = 'CL';
+studyfullname = 'Climb';
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-clinicalmatfile = 'climbclinicaldata.mat';
-scmatfile = 'climbdata.mat';
-
-fprintf('Loading Clinical data\n');
-load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading Climb measurement data\n');
-load(fullfile(basedir, subfolder, scmatfile));
+[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
+[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+[cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
 toc
-
-study          = 'CL';
-physdata       = clphysdata;
-cdPatient      = clPatient;
-cdPFT          = clPFT;
-offset         = cloffset;
 
 tic
 % get the date scaling offset for each patient
@@ -60,8 +54,11 @@ maxdays = max([pmeasuresfev.ScaledDateNum ; pstudydate.ScaledDateNum + 183]);
 plotsacross = 3;
 plotsdown = 5;
 plotsperpage = plotsacross * plotsdown;
-basedir = setBaseDir();
-subfolder = 'Plots';
+
+subfolder = sprintf('Plots/%s', study);
+if ~exist(strcat(basedir, subfolder), 'dir')
+    mkdir(strcat(basedir, subfolder));
+end
 toc
 
 tic

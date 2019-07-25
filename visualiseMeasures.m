@@ -45,7 +45,7 @@ for i = 59:59
     hmend      = max(physdata.Date_TimeRecorded(physdata.SmartCareID == scid));
     hmenddn    = max(physdata.ScaledDateNum(physdata.SmartCareID == scid));
     
-    imagefilename = sprintf('%s - Patient Clinical Measures - ID %d Hosp %s', studyfullname, scid, hospital);
+    imagefilename = sprintf('%s - Participant Clinical Measures - ID %d Hosp %s', studyfullname, scid, hospital);
     [f, p] = createFigureAndPanel(imagefilename, 'Portrait', 'a4');
     
     plotsacross = 1;
@@ -182,7 +182,7 @@ for i = 59:59
     page = 1;
     npages = ceil(nmeasures / plotsperpage);
     
-    filenameprefix = sprintf('%s - Patient Home Measures - ID %d Hosp %s', studyfullname, scid, hospital);
+    filenameprefix = sprintf('%s - Participant Home Measures - ID %d Hosp %s', studyfullname, scid, hospital);
     imagefilename = sprintf('%s - Page %d of %d', filenameprefix, page, npages);
     [f, p] = createFigureAndPanel(imagefilename, 'Portrait', 'a4');
     

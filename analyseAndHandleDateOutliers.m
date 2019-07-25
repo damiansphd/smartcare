@@ -12,7 +12,10 @@ function [physdata] = analyseAndHandleDateOutliers(physdata, study, doupdates)
 tic
 
 basedir = setBaseDir();
-subfolder = 'Plots';
+subfolder = sprintf('Plots/%s', study);
+if ~exist(strcat(basedir, subfolder), 'dir')
+    mkdir(strcat(basedir, subfolder));
+end
 baseplottitle = sprintf('%s-Heatmap of Patient Measures', study);
 
 

@@ -4,7 +4,7 @@ function [studynbr, study, studyfullname] = selectStudy()
 
 nstudies = 3;
 
-sstudynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed 3 = Climb): ', 's');
+sstudynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed, 3 = Climb): ', 's');
 
 studynbr = str2double(sstudynbr);
 

@@ -1,4 +1,4 @@
-function plotMeasuresByHour(physdata, smartcareID, imagefilename)
+function plotMeasuresByHour(physdata, smartcareID, imagefilename, study)
 
 % plotMeasuresByHour - for each measure, plot a histogram of number of 
 % measures by hour recorded. For all data (if smartcareid = 0) or for a given
@@ -37,8 +37,11 @@ for i = 1:nmeasures
     t = title(ax, sprintf('%s by Hour of Day',m), 'FontSize', 6);
 end
 
-
-subfolder = 'Plots';
+basedir = setBaseDir();
+subfolder = sprintf('Plots/%s', study);
+if ~exist(strcat(basedir, subfolder), 'dir')
+    mkdir(strcat(basedir, subfolder));
+end
 savePlotInDir(f, imagefilename, subfolder);
 close(f);
 

@@ -121,8 +121,12 @@ h.GridVisible = 'off';
 %[C,x] = sortx(h);
 
 % save results
+basedir = setBaseDir();
 filename = sprintf('%s-HeatmapAllPatientsWithStudyPeriod', study);
-subfolder = 'Plots';
+subfolder = sprintf('Plots/%s', study);
+if ~exist(strcat(basedir, subfolder), 'dir')
+    mkdir(strcat(basedir, subfolder));
+end
 savePlotInDir(f, filename, subfolder);
 close(f);
 

@@ -24,32 +24,38 @@ fprintf('13: Plot Test Labels\n');
 fprintf('14: Calc Ex Start from Test Labels\n');
 fprintf('15: Plot aligned curves\n');
 fprintf('16: Plot alignment detail\n');
-fprintf('17: Plot alignment surves side-by-side\n');
-fprintf('18: Plot alignment surves side-by-side with centering\n');
+fprintf('17: Plot alignment curves side-by-side\n');
+fprintf('18: Plot alignment curves side-by-side with centering\n');
 fprintf('19: Plot variables vs latent curve assignment\n');
 fprintf('20: Plot interventions over time by latent curve set (scaled days)\n');
 fprintf('21: Load variables for a given model run\n');
 fprintf('22: Plot a measure for a set of examples\n');
 fprintf('23: Compare latent curve set populations for 2 model runs\n');
-fprintf('24: Plot superimposed alignment surves - mean shift - one per page\n');
-fprintf('25: Plot superimposed alignment surves - mean shift - all on one page\n');
+fprintf('24: Plot superimposed alignment curves - mean shift - one per page\n');
+fprintf('25: Plot superimposed alignment curves - mean shift - all on one page\n');
 fprintf('26: Compare results for multiple model runs to labelled test data by latent curve set\n');
 fprintf('27: Run plots 18, 19, 20, 24, 25, 29, 30, 31, 32 in one go\n');
 fprintf('28: Compare latent curve set populations for multiple model runs\n');
 fprintf('29: Plot interventions over time by latent curve set (absolute days)\n');
 fprintf('30: Plot probilities of latent curve set assignment\n');
-fprintf('31: Plot superimposed alignment surves - max shift - one per page\n');
-fprintf('32: Plot superimposed alignment surves - max shift - all on one page\n');
+fprintf('31: Plot superimposed alignment curves - max shift - one per page\n');
+fprintf('32: Plot superimposed alignment curves - max shift - all on one page\n');
 fprintf('33: Plot histogram of vertical shifts\n');
 fprintf('34: Run normalised prediction plots\n');
-fprintf('35: Plot superimposed alignment surves - exzero shift - one per page\n');
-fprintf('36: Plot superimposed alignment surves - exzero shift - all on one page\n');
+fprintf('35: Plot superimposed alignment curves - exzero shift - one per page\n');
+fprintf('36: Plot superimposed alignment curves - exzero shift - all on one page\n');
+fprintf('37: Plot superimposed measures - mean shift - one intervention per page\n');
+fprintf('38: Plot superimposed measures - max shift - one intervention per page\n');
+fprintf('39: Plot superimposed measures - exzero shift - one intervention per page\n');
+fprintf('40: Plot superimposed alignment curves - 5d mean shift - one per page\n');
+fprintf('41: Plot superimposed alignment curves - 5d mean shift - all on one page\n');
+fprintf('42: Plot superimposed measures - 5d mean shift - one intervention per page\n');
 fprintf('\n');
-runfunction = input('Choose function (1-36): ');
+runfunction = input('Choose function (1-42): ');
 
 fprintf('\n');
 
-if runfunction > 36
+if runfunction > 42
     fprintf('Invalid choice\n');
     return;
 end
@@ -538,6 +544,40 @@ elseif runfunction == 36
     shiftmode = 3; % shift to be zero at ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
         measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+elseif runfunction == 37
+    fprintf('Plotting superimposed measures - mean shift - one intervention per page\n');
+    shiftmode = 1; % shift by mean to left of ex_start
+    amEMMCPlotSuperimposedMeasuresB4Intr(amIntrNormcube, amInterventions, ...
+        measures, max_offset, align_wind, nmeasures, ninterventions, ex_start, plotsubfolder, shiftmode);
+elseif runfunction == 38
+    fprintf('Plotting superimposed measures - max shift - one intervention per page\n');
+    shiftmode = 2; % shift by max to left of ex_start
+    amEMMCPlotSuperimposedMeasuresB4Intr(amIntrNormcube, amInterventions, ...
+        measures, max_offset, align_wind, nmeasures, ninterventions, ex_start, plotsubfolder, shiftmode);
+elseif runfunction == 39
+    fprintf('Plotting superimposed measures - exzero shift - one intervention per page\n');
+    shiftmode = 3; % shift to be zero at ex_start
+    amEMMCPlotSuperimposedMeasuresB4Intr(amIntrNormcube, amInterventions, ...
+        measures, max_offset, align_wind, nmeasures, ninterventions, ex_start, plotsubfolder, shiftmode);
+elseif runfunction == 40
+    run_type = 'Best Alignment';
+    fprintf('Plotting superimposed alignment curves - mean shift - one per page\n');
+    compactplot = false;
+    shiftmode = 4; % shift by 5d mean to left of ex_start
+    amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+elseif runfunction == 41
+    run_type = 'Best Alignment';
+    fprintf('Plotting superimposed alignment curves - mean shift - all on one page\n');
+    compactplot = true;
+    shiftmode = 4; % shift by 5d mean to left of ex_start
+    amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+elseif runfunction == 42
+    fprintf('Plotting superimposed measures - 5d mean shift - one intervention per page\n');
+    shiftmode = 4; % shift by 5d mean to left of ex_start
+    amEMMCPlotSuperimposedMeasuresB4Intr(amIntrNormcube, amInterventions, ...
+        measures, max_offset, align_wind, nmeasures, ninterventions, ex_start, plotsubfolder, shiftmode);
 else
     fprintf('Should not get here....\n');
 end

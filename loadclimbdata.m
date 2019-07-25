@@ -230,7 +230,7 @@ clphysdata = sortrows(clphysdata, {'SmartCareID', 'RecordingType', 'Date_TimeRec
 
 printDataDemographics(clphysdata, 0);
 
-plotMeasuresByHour(clphysdata, 0, 'CL - Measures By Hour Histograms');
+plotMeasuresByHour(clphysdata, 0, 'CL - Measures By Hour Histograms', study);
 
 doupdates = true;
 detaillog = false;

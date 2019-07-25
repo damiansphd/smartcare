@@ -30,7 +30,7 @@ plottitle = sprintf('%s - Probs for LC Set', plotname);
 [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 
 ax = subplot(plotsdown, plotsacross, 1, 'Parent',p);
-scatter3(sumpdoffset(:, 1), sumpdoffset(:, 2), sumpdoffset(:, 3), pointsize, cmap(amInterventions.LatentCurve,:), 'MarkerFaceColor', 'auto', 'MarkerFaceAlpha', 1, 'MarkerEdgeAlpha', 1);
+h = scatter3(sumpdoffset(:, 1), sumpdoffset(:, 2), sumpdoffset(:, 3), pointsize, cmap(amInterventions.LatentCurve,:), 'MarkerFaceColor', 'auto', 'MarkerFaceAlpha', 1, 'MarkerEdgeAlpha', 1);
 
 ax = subplot(plotsdown, plotsacross, 2, 'Parent',p);
 scatter(sumpdoffset(:, 1), sumpdoffset(:, 2), pointsize, cmap(amInterventions.LatentCurve,:), 'MarkerFaceColor', 'auto', 'MarkerFaceAlpha', 1, 'MarkerEdgeAlpha', 1);
