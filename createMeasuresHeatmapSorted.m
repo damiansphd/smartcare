@@ -98,10 +98,11 @@ for i = 1:dummymax-dummymin+1
 end
 pdcountmtable = [pdcountmtable ; dummymeasures];
 
-labelinterval = 25;
+labelinterval = 50;
 xdisplaylabels = cell(studyduration, 1);
-for i = 1:studyduration
-    if i == 1 || i == studyduration || (i / labelinterval == round(i / labelinterval))
+xdisplaylabels{1} = sprintf('%d', 0);
+for i = 2:studyduration
+    if (i / labelinterval == round(i / labelinterval))
         xdisplaylabels{i} = sprintf('%d', i);
     else
         xdisplaylabels{i} = ' ';
@@ -113,20 +114,68 @@ ydisplaylabels(:) = {' '};
 
 % create the heatmap
 
-title = 'Recorded Measures by Participant for the Study Period';
+%title = 'Recorded Measures by Participant for the Study Period';
+title = '';
 
-[f, p] = createFigureAndPanel(title, 'portrait', 'a4');
+%[f, p] = createFigureAndPanelForPaper(title, 8.25, 3.92);
+bordertype = 'none';
+fullwidthinch = 8.25;
+fullheightinch = 3.92;
+p1widthinch = 7;
+p2widthinch = 1.25;
+p2heightinch = 2.53;
+p3heightinch = 0.5;
+p2yoffsetinch = 0.3;
 
-h = heatmap(p, pdcountmtable, 'ScaledDateNum', 'SmartCareID', 'Colormap', colors, 'MissingDataColor', 'black', ...
+f = figure('Units', 'inches', 'Position', [2, 4, fullwidthinch, fullheightinch], 'Color', 'white');
+
+p1 = uipanel('Parent', f, 'BorderType', bordertype, 'BackgroundColor', 'white', 'Units', 'Inches', 'OuterPosition', [0, 0, p1widthinch, fullheightinch]);
+p1.Title = 'A.';
+p1.TitlePosition = 'lefttop';
+p1.FontSize = 16;
+p1.FontWeight = 'normal'; 
+
+h = heatmap(p1, pdcountmtable, 'ScaledDateNum', 'SmartCareID', 'Colormap', colors, 'MissingDataColor', 'black', ...
     'ColorVariable','GroupCount','ColorMethod','max', 'MissingDataLabel', 'No data');
 h.Title = ' ';
-h.XLabel = 'Days';
+h.FontSize = 13;
+h.XLabel = 'Time (days)';
 h.YLabel = 'Participants';
 h.YDisplayData = ysortmaxdays;
 h.XDisplayLabels = xdisplaylabels;
 h.YDisplayLabels = ydisplaylabels;
 h.CellLabelColor = 'none';
 h.GridVisible = 'off';
+h.ColorbarVisible = 'off';
+
+
+p2 = uipanel('Parent', f, 'BorderType', bordertype, 'BackgroundColor', 'white', 'Units', 'Inches', 'OuterPosition', [p1widthinch + 0.40, p2yoffsetinch, p2widthinch - 0.75, p2heightinch + p2yoffsetinch]);
+barcolors = [[0,0,0]; colors];
+ax = subplot(1, 1, 1, 'Parent', p2);
+ax.YAxisLocation = 'right';
+
+hold on;
+for i = 1:size(barcolors, 1)
+    plotFillAreaForPaper(ax, -1, 0, (i - 1.5), (i - 0.5), barcolors(i, :), 1.0, 'black')
+end
+ylim(ax, [-0.5, 9.5]);
+ax.XTickLabel = '';
+ax.XColor = 'white';
+ydisplaylabels = cell(size(barcolors, 1), 1);
+for i = 0:size(barcolors, 1) - 1
+    ydisplaylabels{i + 1} = sprintf('%d', i);
+end
+yticks(ax, (0:9));
+ax.YTickLabel = ydisplaylabels;
+
+p3 = uipanel('Parent', f, 'BorderType', bordertype, 'BackgroundColor', 'white', 'Units', 'Inches', 'OuterPosition', [p1widthinch, p2yoffsetinch + p2heightinch + 0.1, p2widthinch, p3heightinch]);
+sp3 = uicontrol('Parent', p3, ... 
+                    'Style', 'text', ...
+                    'BackgroundColor', 'white', ...
+                    'Units', 'normalized', ...
+                    'Position', [0, 0, 1, 1], ...
+                    'HorizontalAlignment', 'Center', ...
+                    'String', sprintf('Data Uploads\n   per Day'));
 
 % save results
 filename = sprintf('%s-Heatmap - RecordedMeasuresByParticipantForStudyPeriod', study);

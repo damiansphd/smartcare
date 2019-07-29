@@ -47,9 +47,10 @@ fprintf('36: Plot superimposed alignment curves - exzero shift - all on one page
 fprintf('37: Plot superimposed measures - mean shift - one intervention per page\n');
 fprintf('38: Plot superimposed measures - max shift - one intervention per page\n');
 fprintf('39: Plot superimposed measures - exzero shift - one intervention per page\n');
-fprintf('40: Plot superimposed alignment curves - 5d mean shift - one per page\n');
-fprintf('41: Plot superimposed alignment curves - 5d mean shift - all on one page\n');
-fprintf('42: Plot superimposed measures - 5d mean shift - one intervention per page\n');
+fprintf('40: Plot superimposed alignment curves - 7d mean shift - one per page\n');
+fprintf('41: Plot superimposed alignment curves - 7d mean shift - all on one page\n');
+fprintf('42: Plot superimposed measures - 7d mean shift - one intervention per page\n');
+
 fprintf('\n');
 runfunction = input('Choose function (1-42): ');
 
@@ -563,19 +564,19 @@ elseif runfunction == 40
     run_type = 'Best Alignment';
     fprintf('Plotting superimposed alignment curves - mean shift - one per page\n');
     compactplot = false;
-    shiftmode = 4; % shift by 5d mean to left of ex_start
+    shiftmode = 4; % shift by 7d mean to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
         measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
 elseif runfunction == 41
     run_type = 'Best Alignment';
     fprintf('Plotting superimposed alignment curves - mean shift - all on one page\n');
     compactplot = true;
-    shiftmode = 4; % shift by 5d mean to left of ex_start
+    shiftmode = 4; % shift by 7d mean to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
         measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
 elseif runfunction == 42
     fprintf('Plotting superimposed measures - 5d mean shift - one intervention per page\n');
-    shiftmode = 4; % shift by 5d mean to left of ex_start
+    shiftmode = 4; % shift by 7d mean to left of ex_start
     amEMMCPlotSuperimposedMeasuresB4Intr(amIntrNormcube, amInterventions, ...
         measures, max_offset, align_wind, nmeasures, ninterventions, ex_start, plotsubfolder, shiftmode);
 else

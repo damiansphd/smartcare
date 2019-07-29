@@ -1,20 +1,11 @@
 clear; close all; clc;
 
-studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
-fprintf('\n');
+[studynbr, study, studyfullname] = selectStudy();
+treatgap = selectTreatmentGap();
 
-if studynbr == 1
-    study = 'SC';
-    modelinputsmatfile = 'SCalignmentmodelinputs.mat';
-    datademographicsfile = 'SCdatademographicsbypatient.mat';
-elseif studynbr == 2
-    study = 'TM';
-    modelinputsmatfile = 'TMalignmentmodelinputs.mat';
-    datademographicsfile = 'TMdatademographicsbypatient.mat';
-else
-    fprintf('Invalid choice\n');
-    return;
-end
+modelinputsmatfile = sprintf('%salignmentmodelinputs_gap%d.mat', study, treatgap);
+datademographicsfile = sprintf('%sdatademographicsbypatient.mat', study);
+fprintf('\n');
 
 tic
 basedir = setBaseDir();
@@ -27,11 +18,15 @@ toc
 
 patientlist = unique(amInterventions.SmartCareID);
 
-idx = ismember(measures.DisplayName, {'Temperature'});
-amDatacube(:,:,measures.Index(idx)) = [];
-measures(idx,:) = [];
-nmeasures = size(measures,1);
-measures.Index = [1:nmeasures]';
+% delete temperature recordings for smartcare and telemed due to only
+% portion of patients completing this meaasure
+if (studynbr == 1 || studynbr == 2)
+    idx = ismember(measures.DisplayName, {'Temperature'});
+    amDatacube(:,:,measures.Index(idx)) = [];
+    measures(idx,:) = [];
+    nmeasures = size(measures,1);
+    measures.Index = [1:nmeasures]';
+end
 
 dataoutliers = table('Size',[1 8], ...
     'VariableTypes', {'double',      'double',    'cell',    'double', 'double',         'double' ,     'double', 'double'}, ...
@@ -63,7 +58,7 @@ for a = 1:npatients
                 if ~isnan(amDatacube(a, i, m))
                     rowtoadd.Day = i;
                     for n = 3:8
-                        if (amDatacube(a, i, m) >= pmmean + (n * pmstd)) || (amDatacube(a, i, m) <= pmmean - (n * pmstd))
+                        if (amDatacube(a, i, m) > pmmean + (n * pmstd)) || (amDatacube(a, i, m) < pmmean - (n * pmstd))
                             rowtoadd.NStdDevOutlier = n;
                             rowtoadd.Measurement    = amDatacube(a, i, m);
                             rowtoadd.Mean           = pmmean;

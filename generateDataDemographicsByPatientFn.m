@@ -13,9 +13,9 @@ fprintf('Calculating data demographics by patient\n');
 tempdata = physdata;
 tempdata(:,{'UserName', 'ScaledDateNum', 'DateNum', 'Date_TimeRecorded', 'FEV1', 'PredictedFEV', 'ScalingRatio', 'CalcFEV1SetAs'}) = [];
 
-if any(ismember(tempdata.Properties.VariableNames', {'SputumColour'}))
-    tempdata.SputumColour = [];
-end
+%if any(ismember(tempdata.Properties.VariableNames', {'SputumColour'}))
+%    tempdata.SputumColour = [];
+%end
 
 demofunc = @(x)[mean(x)  std(x)  min(x)  max(x) mid50mean(x) mid50std(x) mid50min(x) mid50max(x)];
 demographicstable = varfun(demofunc, tempdata, 'GroupingVariables', {'SmartCareID', 'RecordingType'});

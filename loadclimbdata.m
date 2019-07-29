@@ -48,43 +48,52 @@ for i = 1:nmeasfile
     mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'BreathsPerMinute', 'FEV1', 'NumberOfDisturbances', 'O2Saturation', 'Pulse_BPM_', 'Rating', 'Temp_degC_'})) = {'double'};
     
     tmpmeasdata = readtable(fullfile(basedir, subfolder, MeasFiles{i}), mfopts, 'Sheet', measdatasheetname);
+    % special processing for sputum colour recordings to convert from text
+    % labels to a numeric index equivalent
+    if ismember(tmpmeasdata.RecordingType(1), 'SputumColorRecording')
+        [tmpmeasdata, sputumcolouridx] = convertSputumColourToNumeric(tmpmeasdata);
+    end 
     tmpmeasdata.UserID = upper(tmpmeasdata.UserID);
     nmeasurements = size(tmpmeasdata, 1);
-    mclphysdata = createClimbMeasuresTable(nmeasurements);
-    % ingest user name (force uppercase for consistency) and recording type
-    mclphysdata.UserName = upper(tmpmeasdata.UserID);
-    mclphysdata.RecordingType = tmpmeasdata.RecordingType;
-    % set the date time recorded from date and time columns in the raw
-    % measurement file
-    mclphysdata.Date_TimeRecorded = tmpmeasdata.DateRecorded;
-    [tmph, tmpm, tmps] = hms(tmpmeasdata.TimeRecorded);
-    mclphysdata.Date_TimeRecorded.Hour   = tmph;
-    mclphysdata.Date_TimeRecorded.Minute = tmpm;
-    mclphysdata.Date_TimeRecorded.Second = tmps;
-    % override with the timezone corrected columns for the 2 canada
-    % hospitals
-    canidx = ismember(extractBefore(tmpmeasdata.UserID,4), {'IWK', 'LON'});
-    mclphysdata.Date_TimeRecorded(canidx) = tmpmeasdata.CorrectedCanadaDate(canidx);
-    [tmph, tmpm, tmps] = hms(tmpmeasdata.CorrectedCanadaTime);
-    mclphysdata.Date_TimeRecorded.Hour(canidx)   = tmph(canidx);
-    mclphysdata.Date_TimeRecorded.Minute(canidx) = tmpm(canidx);
-    mclphysdata.Date_TimeRecorded.Second(canidx) = tmps(canidx);
-    % ingest the measurements using column mapping functions
-    inputcolname = getColumnForRawClimbMeasure(tmpmeasdata.RecordingType{1});
-    outputcolname = getColumnForMeasure(tmpmeasdata.RecordingType{1});
-    mclphysdata(:, {outputcolname}) = tmpmeasdata(:, {inputcolname});
-    % only includ non-null measurements
-    if ismember(class(table2array(mclphysdata(:, {outputcolname}))), {'double'})
-        nullidx = isnan(table2array(mclphysdata(:, {outputcolname})));
-    elseif ismember(class(table2array(mclphysdata(:, {outputcolname}))), {'cell'})
-        nullidx = ismember(table2array(mclphysdata(:, {outputcolname})), {'NULL'});
+    if nmeasurements > 0
+        mclphysdata = createClimbMeasuresTable(nmeasurements);
+        % ingest user name (force uppercase for consistency) and recording type
+        mclphysdata.UserName = upper(tmpmeasdata.UserID);
+        mclphysdata.RecordingType = tmpmeasdata.RecordingType;
+        % set the date time recorded from date and time columns in the raw
+        % measurement file
+        mclphysdata.Date_TimeRecorded = tmpmeasdata.DateRecorded;
+        [tmph, tmpm, tmps] = hms(tmpmeasdata.TimeRecorded);
+        mclphysdata.Date_TimeRecorded.Hour   = tmph;
+        mclphysdata.Date_TimeRecorded.Minute = tmpm;
+        mclphysdata.Date_TimeRecorded.Second = tmps;
+        % override with the timezone corrected columns for the 2 canada
+        % hospitals
+        canidx = ismember(extractBefore(tmpmeasdata.UserID,4), {'IWK', 'LON'});
+        mclphysdata.Date_TimeRecorded(canidx) = tmpmeasdata.CorrectedCanadaDate(canidx);
+        [tmph, tmpm, tmps] = hms(tmpmeasdata.CorrectedCanadaTime);
+        mclphysdata.Date_TimeRecorded.Hour(canidx)   = tmph(canidx);
+        mclphysdata.Date_TimeRecorded.Minute(canidx) = tmpm(canidx);
+        mclphysdata.Date_TimeRecorded.Second(canidx) = tmps(canidx);
+        % ingest the measurements using column mapping functions
+        inputcolname = getColumnForRawClimbMeasure(tmpmeasdata.RecordingType{1});
+        outputcolname = getColumnForMeasure(tmpmeasdata.RecordingType{1});
+        mclphysdata(:, {outputcolname}) = tmpmeasdata(:, {inputcolname});
+        % only includ non-null measurements
+        if ismember(class(table2array(mclphysdata(:, {outputcolname}))), {'double'})
+            nullidx = isnan(table2array(mclphysdata(:, {outputcolname})));
+        elseif ismember(class(table2array(mclphysdata(:, {outputcolname}))), {'cell'})
+            nullidx = ismember(table2array(mclphysdata(:, {outputcolname})), {'NULL'});
+        else
+            fprintf('Unknown data type for measurement column\n');
+        end
+        nonnullmeasurements = sum(~nullidx);
+        clphysdata_deleted = appendDeletedRows(mclphysdata(nullidx, :), clphysdata_deleted, {'NULL Measurement'});
+        clphysdata = [clphysdata; mclphysdata(~nullidx,:)];
+        fprintf('%5d Raw Measurements, %5d Non-null measurements\n', nmeasurements, nonnullmeasurements);
     else
-        fprintf('Unknown data type for measurement column\n');
+        fprintf('%d Raw Measurements\n', nmeasurements);
     end
-    nonnullmeasurements = sum(~nullidx);
-    clphysdata_deleted = appendDeletedRows(mclphysdata(nullidx, :), clphysdata_deleted, {'NULL Measurement'});
-    clphysdata = [clphysdata; mclphysdata(~nullidx,:)];
-    fprintf('%5d Raw Measurements, %5d Non-null measurements\n', nmeasurements, nonnullmeasurements);
     toc
     fprintf('\n');
 end
@@ -209,19 +218,13 @@ clphysdata(idx,:) = [];
 % update sputum colour to be lower case to ensure consistency and rename
 % recording type to be english spelling
 idx = ismember(clphysdata.RecordingType, {'SputumColorRecording'});
-clphysdata.SputumColour(idx) = lower(clphysdata.SputumColour(idx));
 clphysdata.RecordingType(idx) = {'SputumColourRecording'};
-fprintf('Updating %4d Sputum Colour to be lower case and making recording type english spelling\n', sum(idx));
+fprintf('Updating %4d Sputum Colour to make recording type english spelling\n', sum(idx));
 fprintf('\n');
 
 % calc and print overall data demographics before data anomaly fixes
 printDataDemographics(clphysdata, 0);
 fprintf('\n');
-
-% remove duplicates
-% populate scaled days by patient in the measures file
-% remove patients with insufficient duration or measures (or sparsity of
-% measures)
 
 [clphysdata, clphysdata_deleted] = correctClimbDataAnomalies(clphysdata, clphysdata_deleted);
 
@@ -271,7 +274,7 @@ basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 outputfilename = 'climbdata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
-save(fullfile(basedir, subfolder, outputfilename), 'clphysdata', 'cloffset', 'clphysdata_deleted', 'clphysdata_original', 'clphysdata_predupehandling', 'clphysdata_predateoutlierhandling');
+save(fullfile(basedir, subfolder, outputfilename), 'clphysdata', 'cloffset', 'sputumcolouridx', 'clphysdata_deleted', 'clphysdata_original', 'clphysdata_predupehandling', 'clphysdata_predateoutlierhandling');
 
 subfolder = 'ExcelFiles';
 delrowfilename = 'ClimbDeletedMeasurementData3.xlsx';

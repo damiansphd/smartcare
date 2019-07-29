@@ -26,11 +26,14 @@ fprintf('Loading datademographics by patient %s\n', datademographicsfile);
 load(fullfile(basedir, subfolder, datademographicsfile));
 fprintf('Loading data outliers %s\n', dataoutliersfile);
 load(fullfile(basedir, subfolder, dataoutliersfile));
-fprintf('Loading latest labelled test data file %s\n', labelledinterventionsfile);
-load(fullfile(basedir, subfolder, labelledinterventionsfile), 'amLabelledInterventions');
+%fprintf('Loading latest labelled test data file %s\n', labelledinterventionsfile);
+%load(fullfile(basedir, subfolder, labelledinterventionsfile), 'amLabelledInterventions');
 subfolder = 'DataFiles';
 fprintf('Loading elective treatment file %s\n', electivefile);
-amElectiveTreatments = readtable(fullfile(basedir, 'DataFiles', electivefile));
+elopts = detectImportOptions(fullfile(basedir, subfolder, electivefile));
+elopts.VariableTypes(:, ismember(elopts.VariableNames, {'Hospital'})) = {'char'};
+elopts.VariableTypes(:, ismember(elopts.VariableNames, {'PatientNbr', 'ID', 'IVScaledDateNum'})) = {'double'};
+amElectiveTreatments = readtable(fullfile(basedir, 'DataFiles', electivefile), elopts);
 amElectiveTreatments.ElectiveTreatment(:) = 'Y';
 toc
 
@@ -43,7 +46,7 @@ detaillog = true;
 
 % pre-process measures table and associated measurement data
 [amDatacube, measures, nmeasures] = amEMMCPreprocessMeasures(amDatacube, amInterventions, measures, ...
-    demographicstable, measuresmask, align_wind, npatients, ndays, ninterventions);
+    demographicstable, measuresmask, align_wind, npatients, ndays, ninterventions, nmeasures, study);
 
 % create cube for data window data by intervention (for each measure)
 [amIntrDatacube] = amEMMCCreateIntrDatacube(amDatacube, amInterventions, measures, align_wind, ...
@@ -181,11 +184,11 @@ amEMMCPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount,
 toc
 fprintf('\n');
 
-%ex_start = input('Look at best start and enter exacerbation start: ');
-%fprintf('\n');
+ex_start = input('Look at best start and enter exacerbation start: ');
+fprintf('\n');
 
-ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions(intrkeepidx, :), amInterventions, ...
-             overall_pdoffset, max_offset, 'Plots', plotname, ninterventions, nlatentcurves);
+%ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions(intrkeepidx, :), amInterventions, ...
+%             overall_pdoffset, max_offset, 'Plots', plotname, ninterventions, nlatentcurves);
 
 tic
 run_type = 'Best Alignment';

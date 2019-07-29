@@ -5,6 +5,8 @@ function [interventions] = createListOfInterventions(ivandmeasurestable, physdat
 
 % get the date scaling offset for each patient
 patientoffsets = getPatientOffsets(physdata);
+maxmeasdate = max(physdata.ScaledDateNum);
+
 
 interventions = ivandmeasurestable(ivandmeasurestable.DaysWithMeasures >= 15 & ivandmeasurestable.AvgMeasuresPerDay >= 2, ...
     {'SmartCareID', 'Hospital', 'IVStartDate', 'IVDateNum', 'IVStopDate', 'IVStopDateNum', 'Route', 'Type', 'SequentialIntervention', 'DaysWithMeasures', 'AvgMeasuresPerDay'});
@@ -16,6 +18,9 @@ interventions.IVScaledDateNum     = datenum(interventions.IVStartDate) - offset 
 interventions.IVScaledStopDateNum = datenum(interventions.IVStopDate)  - offset + 1 - interventions.PatientOffset;
 interventions.Offset(:) = 0;
 interventions.LatentCurve(:) = 0;
+
+% remove interventions after the end of measurement period
+interventions(interventions.IVScaledDateNum>maxmeasdate, :) = [];
 
 end
 

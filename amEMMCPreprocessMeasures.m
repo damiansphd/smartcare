@@ -1,15 +1,18 @@
-function [amDatacube, measures, nmeasures] = amEMMCPreprocessMeasures(amDatacube, amInterventions, measures, demographicstable, measuresmask, align_wind, npatients, ndays, ninterventions)
+function [amDatacube, measures, nmeasures] = amEMMCPreprocessMeasures(amDatacube, amInterventions, measures, ...
+    demographicstable, measuresmask, align_wind, npatients, ndays, ninterventions, nmeasures, study)
 
 % amEMMCPreprocessMeasures - various bits of pre-processing to measures table
 % and associated measurement data
 
 % remove temperature readings as insufficient datapoints for a number of
 % the interventions
-idx = ismember(measures.DisplayName, {'Temperature'});
-amDatacube(:,:,measures.Index(idx)) = [];
-measures(idx,:) = [];
-nmeasures = size(measures,1);
-measures.Index = [1:nmeasures]';
+if ismember(study, {'SC', 'TM'})
+    idx = ismember(measures.DisplayName, {'Temperature'});
+    amDatacube(:,:,measures.Index(idx)) = [];
+    measures(idx,:) = [];
+    nmeasures = size(measures,1);
+    measures.Index = [1:nmeasures]';
+end
 
 % set the measures mask depending on option chosen
 if measuresmask == 1

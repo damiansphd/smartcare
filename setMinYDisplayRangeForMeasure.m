@@ -9,7 +9,7 @@ switch measure
     case {'CoughRecording','SleepActivityRecording','WellnessRecording'}
         range = 50;
     case {'LungFunctionRecording'}
-        range = 30;
+        range = 20;
     case {'PulseRateRecording'}
         range = 30;
     case 'O2SaturationRecording'

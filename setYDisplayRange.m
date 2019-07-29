@@ -3,8 +3,9 @@ function [ydisplayrange] = setYDisplayRange(miny, maxy, lowrangelimit)
 % setYDisplayRange - function to scale y axis of plots appropriately
     
 if (maxy - miny) >= lowrangelimit
-    ydisplaymin = miny * 0.99;
-    ydisplaymax = maxy * 1.01;
+    scaledunit = (maxy - miny) * 0.1;
+    ydisplaymin = miny - scaledunit;
+    ydisplaymax = maxy + scaledunit;
 else
     ydisplaymin = 0.5 * (maxy + miny) - 0.5 * lowrangelimit;
     ydisplaymax = 0.5 * (maxy + miny) + 0.5 * lowrangelimit;

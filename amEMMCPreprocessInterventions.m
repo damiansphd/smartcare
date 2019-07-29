@@ -24,6 +24,8 @@ for i = 1:ninterventions
 end
 
 amInterventions = outerjoin(amInterventions, amElectiveTreatments, 'LeftKeys', {'SmartCareID', 'Hospital', 'IVScaledDateNum'}, 'RightKeys', {'ID', 'Hospital', 'IVScaledDateNum'}, 'RightVariables', {'ElectiveTreatment'});
+% delete dummy row
+amInterventions(isnan(amInterventions.SmartCareID), :) = [];
 
 % remove any interventions where insufficient data in the data window
 

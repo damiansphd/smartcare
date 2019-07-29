@@ -11,7 +11,7 @@ elseif shiftmode == 2
 elseif shiftmode == 3
     shifttext = 'ExZeroShift';
 elseif shiftmode == 4
-    meanwindow = 10;
+    meanwindow = 7;
     shifttext = sprintf('%ddMeanShift', meanwindow);
 else
     fprintf('**** Unknown shift mode ****\n');
