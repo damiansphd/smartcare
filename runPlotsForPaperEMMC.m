@@ -87,7 +87,7 @@ if runfunction == 0
     createMeasuresHeatmapSortedForPaper(physdata, offset, cdPatient, study);
 elseif runfunction == 1
     fprintf('Plotting clinical and home measures\n');
-    visualiseMeasuresForPaperFcn(physdata, offset, cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, ...
+    visualiseMeasuresForPaperFcn2(physdata, offset, cdPatient, cdAntibiotics, ...
         cdCRP, cdPFT, cdNewMeds, measures, nmeasures, study);
 elseif runfunction == 2
     fprintf('Plotting measures around exacerbation\n');
@@ -97,18 +97,22 @@ elseif runfunction == 3
     fprintf('Plotting superimposed alignment curves - mean shift - all on one page\n');
     compactplot = true;
     shiftmode = 4; % shift by 7d mean to left of ex_start
+    examplemode = 0; % no examples
     lcexamples = [];
-    amEMMCPlotSuperimposedAlignedCurvesForPaper(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, shiftmode, lcexamples);
+    amEMMCPlotSuperimposedAlignedCurvesForPaper(meancurvemean, meancurvecount, amIntrNormcube, amInterventions, ...
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, ...
+        nlatentcurves, countthreshold, shiftmode, study, examplemode, lcexamples);
 elseif runfunction == 4
     run_type = 'Best Alignment';
     fprintf('Plotting superimposed alignment curves - mean shift - all on one page\n');
     compactplot = true;
     shiftmode = 4; % shift by 7d mean to left of ex_start
     %lcexamples = [42, 52, 61];
+    examplemode = 1; % include examples
     lcexamples = [42, 52, 45];
-    amEMMCPlotSuperimposedAlignedCurvesForPaper(meancurvemean, meancurvecount, amIntrNormcube, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, shiftmode, lcexamples);
+    amEMMCPlotSuperimposedAlignedCurvesForPaper2(meancurvemean, meancurvecount, amIntrNormcube, amInterventions, ...
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, ...
+        nlatentcurves, countthreshold, shiftmode, study, examplemode, lcexamples);
 else
     fprintf('Should not get here....\n');
 end

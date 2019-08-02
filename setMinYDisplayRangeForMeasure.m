@@ -21,7 +21,7 @@ switch measure
     case 'ClinicalCRP'
         range = 20;
     case 'ClinicalFEV1'
-        range = 30;
+        range = 20;
     otherwise
         range = 100;
 end

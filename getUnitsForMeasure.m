@@ -5,13 +5,13 @@ function [units] = getUnitsForMeasure(displaymeasure)
 if ismember(displaymeasure, {'Clinical CRP'})
     units = 'mg/L';
 elseif ismember(displaymeasure, {'Clinical FEV1', 'LungFunction'})
-    units = '% predicted';
+    units = 'percent predicted';
 elseif ismember(displaymeasure, {'Activity'})
     units = 'steps';
 elseif ismember(displaymeasure, {'Cough', 'SleepActivity', 'Wellness'})
-    units = '%';
+    units = 'percent';
 elseif ismember(displaymeasure, {'O2Saturation'})
-    units = '%';
+    units = 'percent';
 elseif ismember(displaymeasure, {'PulseRate'})
     units = 'bpm';
 elseif ismember(displaymeasure, {'Temperature'})
@@ -19,7 +19,7 @@ elseif ismember(displaymeasure, {'Temperature'})
 elseif ismember(displaymeasure, {'Weight'})
     units = 'kg';
 else
-    fprintf('**** Unknown Measure ****');
+    fprintf('**** Unknown Measure ****\n');
     units = ' ';
 end
     

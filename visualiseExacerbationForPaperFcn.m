@@ -81,7 +81,7 @@ for intr= size(amInterventions, 1):-1:1
                 tablemeasure   = measures.Name{m};
                 displaymeasure = measures.DisplayName{m};
                 units          = getUnitsForMeasure(displaymeasure);
-                [rwcolour, smcolour] = getColourForMeasure(displaymeasure);
+                [smcolour, rwcolour] = getColourForMeasure(displaymeasure);
                 ylabeltext = sprintf('%s%s (%s)', patienttext, displaymeasure, units);
                 ylabel(ylabeltext, 'Position',[dispdaysfrom - labeloffset, yl(1) + ((yl(2) - yl(1)) * ylabelposmult)], 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'Rotation', 0);
                 ax.FontSize = fontsize;

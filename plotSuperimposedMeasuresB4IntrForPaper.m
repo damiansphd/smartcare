@@ -1,10 +1,8 @@
 function plotSuperimposedMeasuresB4IntrForPaper(ax, amnormcubesingleintr, amnormcubesingleintrsmth, xl, yl, ...
-    tmpmeasures, tmpnmeasures, max_offset, align_wind, offset, ex_start)
+    tmpmeasures, tmpnmeasures, max_offset, align_wind, offset, ex_start, study)
 
 % plotSuperimposedMeasuresB4Intr - plots the measures for the period prior
 % to a treatment
-
-ylabelposmult = 1.125;
 
 days = xl(1):xl(2);
 
@@ -14,6 +12,7 @@ dto   = max_offset + align_wind - 1 - offset;
 mfrom = 1 + offset; 
 mto   = max_offset + align_wind - 1;
 
+[tmpmeasures] = sortMeasuresForPaper(study, tmpmeasures);
 
 for m = 1:tmpnmeasures
     [smcolour, rwcolour] = getColourForMeasure(tmpmeasures.DisplayName{m});
@@ -41,10 +40,6 @@ end
 if ex_start ~= 0
     [~, ~] = plotVerticalLine(ax, 0, xl, yl, 'black', '-', 0.5); % plot ex_start
 end
-
-xlabel(ax, 'Days before/after exacerbation start');
-ylabeltext = '\Delta value from exacerbation start (\sigma)';
-ylabel(ax, ylabeltext, 'Position',[(xl(1) - 12) (yl(1) + (yl(2) - yl(1) * ylabelposmult))], 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'Rotation', 0);
 
 end
 

@@ -1,12 +1,15 @@
 function amEMMCPlotSuperimposedAlignedCurvesForPaper(meancurvemean, meancurvecount, amIntrNormcube, amInterventions, ...
-    measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, shiftmode, lcexamples)
+    measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, ...
+    countthreshold, shiftmode, study, examplemode, lcexamples)
 
 % amEMMCPlotSuperimposedAlignedCurves - wrapper around the
 % plotSuperimposedAlignedCurves to plot for each set of latent curves
 
-if (size(lcexamples, 1)) ~= 0 && (size(lcexamples, 2) ~= nlatentcurves)
-    fprintf('**** Number of latent curve examples in each set does not match the number of latent curve sets ****\n');
-    return;
+if examplemode ~= 0
+    if (size(lcexamples, 2) ~= nlatentcurves)
+        fprintf('**** Number of latent curve examples in each set does not match the number of latent curve sets ****\n');
+        return;
+    end
 end
 
 if shiftmode == 1
@@ -42,7 +45,6 @@ pgwdth = 0.5 * panelsacross;
 titlexpos = 0.5;
 titleypos = -0.24;
 
-
 [f, p] = createFigureAndPanelForPaper('', pgwdth, pghght);
 
 smoothwdth = 4;
@@ -57,7 +59,7 @@ smoothwdth = 4;
 
 
 for n = 1:nlatentcurves
-    pridx = ismember(measures.DisplayName, {'PulseRate'});
+    pridx = measures.Index(ismember(measures.DisplayName, {'PulseRate'}));
     meancurvemean(n, :, pridx) = meancurvemean(n, :, pridx) * -1;
     for m = 1:nmeasures
         meancurvemean(n, meancurvecount(n, :, m) < countthreshold, m) = NaN;
@@ -99,6 +101,7 @@ for n = 1:nlatentcurves
         end
         ax = subplot(nplotrows, panelsacross, panels, 'Parent',p);
         ax.FontSize = 8;
+        ax.TickDir = 'out';
         % comment out/uncomment out one of these depending on whether all measures
         % wanted or just those used for alignment
         %tmpmeasures = measures;
@@ -106,20 +109,31 @@ for n = 1:nlatentcurves
         tmpnmeasures = size(tmpmeasures, 1);
 
         % add legend text cell array
-        legendtext = tmpmeasures.DisplayName;
+        tmp = sortMeasuresForPaper(study, tmpmeasures);
+        legendtext = tmp.DisplayName;
         for m = 1:tmpnmeasures
             legendtext{m} = formatDisplayMeasure(legendtext{m});
         end
-        pridx = ismember(tmpmeasures.DisplayName, {'PulseRate'});
+        pridx = ismember(tmp.DisplayName, {'PulseRate'});
         legendtext{pridx} = sprintf('%s %s', legendtext{pridx}, '(Inverted)');
         
         plotSuperimposedAlignedCurvesForPaper(ax, tmp_meancurvemean, xl, yl, ...
-                tmpmeasures, tmpnmeasures, min_offset, max_offset, align_wind, ex_start(lc));
+                tmpmeasures, tmpnmeasures, min_offset, max_offset, align_wind, ex_start(lc), study);
+
+        xlabel(ax, 'Days from exacerbation start');
+        ylabelposmult = 1.1;
+        if n == 1
+            ylabeltext = 'Change from stable baseline (s.d.)';
+            ylabel(ax, ylabeltext, 'Position',[(xl(1) - 12) (yl(1) + (yl(2) - yl(1) * ylabelposmult))], 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'Rotation', 0);
+        else
+            ax.YTickLabel = '';
+            ax.YColor = 'white';
+        end
         if n == nlatentcurves
             legend(ax, legendtext, 'Location', 'eastoutside', 'FontSize', 6);
         end
         if nlatentcurves > 1
-            title(ax, sprintf('Sub-population %d (n = %d)', n, sum(amInterventions.LatentCurve == lc)), 'Units', 'normalized', 'Position', [titlexpos, titleypos, 0]);
+            title(ax, sprintf('Group %d (n = %d)', n, sum(amInterventions.LatentCurve == lc)), 'Units', 'normalized', 'Position', [titlexpos, titleypos, 0]);
         end
     end
 end
@@ -194,6 +208,7 @@ for row = 1:size(lcexamples, 1)
         % plot all measures superimposed
         ax = subplot(nplotrows, panelsacross, panels, 'Parent',p);
         ax.FontSize = 8;
+        ax.TickDir = 'out';
         % comment out/uncomment out one of these depending on whether all measures
         % wanted or just those used for alignment
         %tmpmeasures = measures;
@@ -210,9 +225,17 @@ for row = 1:size(lcexamples, 1)
         
         hold on;
         plotSuperimposedMeasuresB4IntrForPaper(ax, tmp_amnormcubesingleintr, tmp_amnormcubesingleintrsmth, xl, yl, ...
-                tmpmeasures, tmpnmeasures, max_offset, align_wind, tmp_offset, tmp_ex_start);
+                tmpmeasures, tmpnmeasures, max_offset, align_wind, tmp_offset, tmp_ex_start, study);
         hold off;
-        
+        xlabel(ax, 'Days from exacerbation start');
+        ylabelposmult = 1.125;
+        if n == 1
+            ylabeltext = 'Change from stable baseline (s.d.)';
+            ylabel(ax, ylabeltext, 'Position',[(xl(1) - 12) (yl(1) + (yl(2) - yl(1) * ylabelposmult))], 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'Rotation', 0);
+        else
+            ax.YTickLabel = '';
+            ax.YColor = 'white';
+        end
         if n == nlatentcurves
             legend(ax, legendtext, 'Location', 'eastoutside', 'FontSize', 6);
         end

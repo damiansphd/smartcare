@@ -242,7 +242,7 @@ for pat = 1:size(patientlist,1)
             ax = subplot(plotsdown, plotsacross, m - (page - 1) * plotsperpage,'Parent',p);
             displaymeasure = measures.DisplayName{m};
             units = getUnitsForMeasure(displaymeasure);
-            [rwcolour, smcolour] = getColourForMeasure(displaymeasure);
+            [smcolour, rwcolour] = getColourForMeasure(displaymeasure);
             ylabeltext = sprintf('%s (%s)', formatDisplayMeasure(displaymeasure), units);
             ylabel(ylabeltext, 'Position',[0 yl(1) + ((yl(2) - yl(1)) * ylabelposmult)], 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'Rotation', 0);
             ax.FontSize = fontsize;
