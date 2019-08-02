@@ -7,7 +7,7 @@ function amEMMCPlotProbsLCSet(overall_pdoffset, amInterventions, min_offset, max
 sumpdoffset = sum(overall_pdoffset(:, :, (min_offset+1:max_offset)), 3)';
 
 plotsdown   = 2; 
-plotsacross = 1;
+plotsacross = 2;
 pointsize = 36 * ones(ninterventions, 1);
 if nlatentcurves >= 1
     cmap = [ 0.4, 0.8, 0.2 ];
@@ -35,7 +35,20 @@ h = scatter3(sumpdoffset(:, 1), sumpdoffset(:, 2), sumpdoffset(:, 3), pointsize,
 ax = subplot(plotsdown, plotsacross, 2, 'Parent',p);
 scatter(sumpdoffset(:, 1), sumpdoffset(:, 2), pointsize, cmap(amInterventions.LatentCurve,:), 'MarkerFaceColor', 'auto', 'MarkerFaceAlpha', 1, 'MarkerEdgeAlpha', 1);
 
+if nlatentcurves == 3
+    ax = subplot(plotsdown, plotsacross, 3, 'Parent',p);
+    
+    projpts = zeros(ninterventions, 2);
 
+    for i = 1:ninterventions
+        projpts(i, 1) = (sumpdoffset(i, 2) - sumpdoffset(i, 1)) * cos(pi * (30/180));
+        projpts(i, 2) = sumpdoffset(i, 3) - ((sumpdoffset(i, 1) + sumpdoffset(i, 2)) * sin(pi * (30/180)));
+    end
+    
+    scatter(projpts(:,1), projpts(:,2), pointsize, cmap(amInterventions.LatentCurve,:), 'filled', ...
+       'MarkerFaceColor', 'auto', 'MarkerFaceAlpha', 1, 'MarkerEdgeAlpha', 1);
+    
+end
 
 % save plot
 savePlotInDir(f, plottitle, plotsubfolder);

@@ -29,10 +29,12 @@ scenPsubpop1candidates = [8, 39, 41, 42, 96];
 scenPsubpop1example    = [42];
 scenPsubpop2Pcandidates = [33, 37, 43, 46, 50, 52, 67, 69];
 scenPsubpop2example    = [52];
-scenPsubpop3Pcandidates = [1, 4, 6, 9, 32, 62, 66, 72, 87];
+scenPsubpop3Pcandidates = [1, 4, 6, 9, 32, 45, 62, 66, 72, 87];
 scenPsubpop3example    = [6];
+scenPsubpopexamples = [42, 52, 6, 45, 1];
+%scenPsubpopexamples = [42, 52, 45];
 
-if ismember(i, scenPsubpop3Pcandidates)
+if ismember(i, scenPsubpopexamples)
     amnormcubesingleintr = amIntrNormcube(i, :, :);
     aminterventionsrow   = amInterventions(i, :);
     amnormcubesingleintrsmth = amnormcubesingleintr;
@@ -83,7 +85,7 @@ if ismember(i, scenPsubpop3Pcandidates)
     ax = subplot(plotsdown, plotsacross, 1, 'Parent',p);
     hold on;
     plotSuperimposedMeasuresB4Intr(ax, tmp_amnormcubesingleintr, tmp_amnormcubesingleintrsmth, xl, yl, ...
-            measures, max_offset, align_wind, tmp_ex_start, tmp_offset, plottitle);
+        measures, max_offset, align_wind, tmp_ex_start, tmp_offset, plottitle);
     hold off;
     % save plot
     savePlotInDir(f, plottitle, plotsubfolder);

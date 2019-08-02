@@ -17,7 +17,8 @@ tempdata(:,{'UserName', 'ScaledDateNum', 'DateNum', 'Date_TimeRecorded', 'FEV1',
 %    tempdata.SputumColour = [];
 %end
 
-demofunc = @(x)[mean(x)  std(x)  min(x)  max(x) mid50mean(x) mid50std(x) mid50min(x) mid50max(x)];
+demofunc = @(x)[mean(x) std(x) min(x) max(x) mid50mean(x) mid50std(x) mid50min(x) mid50max(x) ...
+    xb25mean(x) xb25std(x) xb25min(x) xb25max(x) xu25mean(x) xu25std(x) xu25min(x) xu25max(x)];
 demographicstable = varfun(demofunc, tempdata, 'GroupingVariables', {'SmartCareID', 'RecordingType'});
 
 tempdata(:,{'SmartCareID'}) = [];

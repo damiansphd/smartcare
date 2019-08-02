@@ -2,16 +2,14 @@ function [ticks] = setTicks(minval, maxval, nticks)
 
 % setTicks - create an array of ticks for a plot axis
 
-if (maxval - minval) > 40
-    factor = 10;
-else
-    factor = 1;
-end
-
 ticks = zeros(nticks, 1);
 
-ticks(1) = ceil(minval/factor) * factor;
-ticks(nticks) = floor(maxval/factor) * factor;
+%ticks(1) = ceil(minval/factor) * factor;
+%ticks(nticks) = floor(maxval/factor) * factor;
+roundedrange = roundRangeScaled(minval, maxval, 'inner');
+
+ticks(1)      = roundedrange(1);
+ticks(nticks) = roundedrange(2);
 
 interval = (ticks(nticks) - ticks(1)) / (nticks - 1);
 

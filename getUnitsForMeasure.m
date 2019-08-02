@@ -2,24 +2,22 @@ function [units] = getUnitsForMeasure(displaymeasure)
 
 % getUnitsForMeasure - returns the units for a given measure
 
-if ismember(displaymeasure, {'Clinical CRP Level'})
+if ismember(displaymeasure, {'Clinical CRP'})
     units = 'mg/L';
-elseif ismember(displaymeasure, {'Clinical FEV1'})
-    units = '%';
+elseif ismember(displaymeasure, {'Clinical FEV1', 'LungFunction'})
+    units = '% predicted';
 elseif ismember(displaymeasure, {'Activity'})
-    units = 'Steps';
-elseif ismember(displaymeasure, {'Cough', 'Sleep Activity', 'Wellness'})
-    units = 'Rating';
-elseif ismember(displaymeasure, {'Lung Function'})
+    units = 'steps';
+elseif ismember(displaymeasure, {'Cough', 'SleepActivity', 'Wellness'})
     units = '%';
-elseif ismember(displaymeasure, {'O2 Saturation'})
+elseif ismember(displaymeasure, {'O2Saturation'})
     units = '%';
-elseif ismember(displaymeasure, {'Pulse Rate'})
+elseif ismember(displaymeasure, {'PulseRate'})
     units = 'bpm';
 elseif ismember(displaymeasure, {'Temperature'})
-    units = 'deg C';
+    units = sprintf('%sC', char(176));
 elseif ismember(displaymeasure, {'Weight'})
-    units = 'Kg';
+    units = 'kg';
 else
     fprintf('**** Unknown Measure ****');
     units = ' ';

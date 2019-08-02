@@ -1,5 +1,5 @@
 function [cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
-    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study)
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study)
 
 % loadAndHarmoniseClinVars - loads clinical variables and standardises
 % their naming
@@ -10,7 +10,7 @@ fprintf('Loading %s Clinical data\n', study);
 
 if studynbr == 1
     load(fullfile(basedir, subfolder, clinicalmatfile), 'cdPatient', 'cdMicrobiology', 'cdClinicVisits', 'cdPFT', 'cdAdmissions', ...
-        'cdAntibiotics', 'cdCRP', 'cdEndStudy', 'cdOtherVisits');
+        'cdAntibiotics', 'cdCRP', 'cdEndStudy', 'cdOtherVisits', 'cdMedications', 'cdNewMeds');
     cdHghtWght = [];
 elseif studynbr == 2
     load(fullfile(basedir, subfolder, clinicalmatfile), 'tmPatient', 'tmMicrobiology', 'tmClinicVisits', 'tmPFT', 'tmAdmissions', ...
@@ -24,7 +24,9 @@ elseif studynbr == 2
     cdCRP          = tmCRP;
     cdEndStudy     = tmEndStudy;
     cdOtherVisits  = [];
-    cdHghtWght = [];
+    cdHghtWght     = [];
+    cdMedications  = [];
+    cdNewMeds      = [];
 elseif studynbr == 3
     load(fullfile(basedir, subfolder, clinicalmatfile), 'clPatient', 'clMicrobiology', 'clClinicVisits', 'clPFT', 'clAdmissions', ...
         'clAntibiotics', 'clCRP', 'clEndStudy', 'clOtherVisits', 'clHghtWght');
@@ -38,6 +40,8 @@ elseif studynbr == 3
     cdEndStudy     = clEndStudy;
     cdOtherVisits  = clOtherVisits;
     cdHghtWght     = clHghtWght;
+    cdMedications  = [];
+    cdNewMeds      = [];
 end
 
 toc
