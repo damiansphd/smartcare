@@ -2,7 +2,9 @@ function [roundedrange] = roundRangeScaled(lowval, highval, direction)
 
 % roundScaled - scale a number appropriate to its magnitude
 
-if (highval - lowval) < 5
+if (highval - lowval) < 2.5
+    factor = 0.5;
+elseif (highval - lowval) < 5
     factor = 1;
 elseif (highval - lowval) < 20
     factor = 2;

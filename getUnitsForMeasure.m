@@ -18,6 +18,8 @@ elseif ismember(displaymeasure, {'Temperature'})
     units = sprintf('%sC', char(176));
 elseif ismember(displaymeasure, {'Weight'})
     units = 'kg';
+elseif ismember(displaymeasure, {'Prediction'})
+    units = 'percent';
 else
     fprintf('**** Unknown Measure ****\n');
     units = ' ';
