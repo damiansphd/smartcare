@@ -158,14 +158,14 @@ hold on;
 for i = 1:size(barcolors, 1)
     plotFillAreaForPaper(ax, -1, 0, (i - 1.5), (i - 0.5), barcolors(i, :), 1.0, 'black')
 end
-ylim(ax, [-0.5, 9.5]);
+ylim(ax, [-0.5, nmeasures + 0.5]);
 ax.XTickLabel = '';
 ax.XColor = 'white';
 ydisplaylabels = cell(size(barcolors, 1), 1);
 for i = 0:size(barcolors, 1) - 1
     ydisplaylabels{i + 1} = sprintf('%d', i);
 end
-yticks(ax, (0:9));
+yticks(ax, (0: nmeasures));
 ax.YTickLabel = ydisplaylabels;
 
 p3 = uipanel('Parent', f, 'BorderType', bordertype, 'BackgroundColor', 'white', 'Units', 'Inches', 'OuterPosition', [p1widthinch, p2yoffsetinch + p2heightinch + 0.1, p2widthinch, p3heightinch]);

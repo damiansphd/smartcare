@@ -1,7 +1,7 @@
-function visualiseMeasuresForPaperFcn2(physdata, offset, cdPatient, cdAntibiotics, ...
-    cdCRP, cdPFT, cdNewMeds, measures, nmeasures, study)
+function visualiseMeasuresForPaperFcn2(physdata, offset, amDatacube, cdPatient, cdAntibiotics, ...
+    cdCRP, cdPFT, cdNewMeds, measures, nmeasures, ndays, study)
 
-% visualiseMeasuresForPaperFcn - plots clinical and home measures
+% visualiseMeasuresForPaperFcn2 - plots clinical and home measures
 
 basedir = setBaseDir();
 subfolder = sprintf('Plots/%s', study);
@@ -48,7 +48,7 @@ end
 
 for pat = 1:size(patientlist,1)
     scid       = patientlist(pat);
-    if ismember(scid, [78, 133])
+    %if ismember(scid, [23, 24, 78, 133])
         tic
 
         fprintf('Visualising measures for patient %d\n', scid);
@@ -175,13 +175,18 @@ for pat = 1:size(patientlist,1)
                     ppft = cdPFT(cdPFT.ID == scid,:);
                     ppft.ScaledDateNum = datenum(ppft.LungFunctionDate) - offset - poffset + 1;
                     tablemeasure = 'LungFunctionRecording';
+                    m = measures.Index(ismember(measures.Name, tablemeasure));
                     column = getColumnForMeasure(tablemeasure);
-                    scdata = physdata(physdata.SmartCareID == scid & ismember(physdata.RecordingType, tablemeasure), :);
-                    scdata = scdata(:, {'SmartCareID','ScaledDateNum' 'Date_TimeRecorded', column});
-                    scdata.Properties.VariableNames{column} = 'Measurement';
+                    %scdata = physdata(physdata.SmartCareID == scid & ismember(physdata.RecordingType, tablemeasure), :);
+                    %scdata = scdata(:, {'SmartCareID','ScaledDateNum' 'Date_TimeRecorded', column});
+                    %scdata.Properties.VariableNames{column} = 'Measurement';
                     rangelimit = setMinYDisplayRangeForMeasure(tablemeasure);
-                    if size(scdata,1) > 0
-                        ylm = setYDisplayRange(min(scdata.Measurement), max(scdata.Measurement), rangelimit);
+                    measrow = amDatacube(scid, :, m);
+                    
+                    %if size(scdata,1) > 0
+                    if sum(~isnan(measrow)) > 0
+                        %ylm = setYDisplayRange(min(scdata.Measurement), max(scdata.Measurement), rangelimit);
+                        ylm = setYDisplayRange(min(measrow), max(measrow), rangelimit);
                     else
                         ylm = [0, rangelimit];
                     end
@@ -231,14 +236,19 @@ for pat = 1:size(patientlist,1)
                 else
                     m = currplot - nclinicalmeasures;
                     tablemeasure = measures.Name{m};
-                    column = getColumnForMeasure(tablemeasure);
-                    scdata = physdata(physdata.SmartCareID == scid & ismember(physdata.RecordingType, tablemeasure), :);
-                    scdata = scdata(:, {'SmartCareID','ScaledDateNum' 'Date_TimeRecorded', column});
-                    scdata.Properties.VariableNames{column} = 'Measurement';
-
+                    %column = getColumnForMeasure(tablemeasure);
+                    %scdata = physdata(physdata.SmartCareID == scid & ismember(physdata.RecordingType, tablemeasure), :);
+                    %scdata = scdata(:, {'SmartCareID','ScaledDateNum' 'Date_TimeRecorded', column});
+                    %scdata.Properties.VariableNames{column} = 'Measurement';
+                    
+                    measrow = amDatacube(scid, :, measures.Index(m));
+                    days = 0:(ndays - 1);
+                    
                     rangelimit = setMinYDisplayRangeForMeasure(tablemeasure);
-                    if size(scdata,1) > 0
-                        yl = setYDisplayRange(min(scdata.Measurement), max(scdata.Measurement), rangelimit);
+                    %if size(scdata, 1) > 0
+                    if sum(~isnan(measrow)) > 0
+                        %yl = setYDisplayRange(min(scdata.Measurement), max(scdata.Measurement), rangelimit);
+                        yl = setYDisplayRange(min(measrow), max(measrow), rangelimit);
                     else
                         yl = [0, rangelimit];
                     end
@@ -260,15 +270,11 @@ for pat = 1:size(patientlist,1)
                     xlim(xl);
                     ylim(yl);
 
-                    if size(scdata,1) > 0
+                    %if size(scdata, 1) > 0
+                    if sum(~isnan(measrow)) > 0
                         hold on;
-
-                        actx = find(~isnan(scdata.Measurement));
-                        acty = scdata.Measurement(~isnan(scdata.Measurement));
-                        fullx = (1:size(scdata.Measurement));
-                        fully = interp1(actx, acty, fullx, 'linear');
-
-                        plot(ax, scdata.ScaledDateNum, fully, ...
+                        
+                        plot(ax, days, measrow, ...
                             'Color', rwcolour, ...
                             'LineStyle', '-', ...
                             'Marker', 'o', ...
@@ -277,11 +283,26 @@ for pat = 1:size(patientlist,1)
                             'MarkerEdgeColor', rwcolour, ...
                             'MarkerFaceColor', rwcolour);
 
-                        plot(ax, scdata.ScaledDateNum, movmean(fully, 4, 'omitnan'), ...
-                            'Color', smcolour, ...
-                            'LineStyle', '-', ...
-                            'Marker', 'none', ...
-                            'LineWidth', 1.5);
+                        %actx = find(~isnan(scdata.Measurement));
+                        %acty = scdata.Measurement(~isnan(scdata.Measurement));
+                        %fullx = (1:size(scdata.Measurement));
+                        %fully = interp1(actx, acty, fullx, 'linear');
+                        %fully = scdata.Measurement;
+
+                        %plot(ax, scdata.ScaledDateNum, fully, ...
+                        %    'Color', rwcolour, ...
+                        %    'LineStyle', '-', ...
+                        %    'Marker', 'o', ...
+                        %    'LineWidth',1, ...
+                        %    'MarkerSize',2, ...
+                        %    'MarkerEdgeColor', rwcolour, ...
+                        %    'MarkerFaceColor', rwcolour);
+
+                        %plot(ax, scdata.ScaledDateNum, movmean(fully, 4, 'omitnan'), ...
+                        %    'Color', smcolour, ...
+                        %    'LineStyle', '-', ...
+                        %    'Marker', 'none', ...
+                        %    'LineWidth', 1.5);
 
                         for a = 1:size(ivabgroupeddates, 1)
                             plotFillAreaForPaper(ax, ivabgroupeddates.Startdn(a), ivabgroupeddates.Stopdn(a), ...
@@ -297,11 +318,15 @@ for pat = 1:size(patientlist,1)
                         % use exclude upper quartile mean/std for pulse rate,
                         % otherwise use exclude bottom quartile mean/std
                         if ismember(displaymeasure, {'PulseRate'})
-                            mmean = xu25mean(scdata.Measurement(~isnan(scdata.Measurement)));
-                            mstd  = xu25std(scdata.Measurement(~isnan(scdata.Measurement)));
+                            %mmean = xu25mean(scdata.Measurement(~isnan(scdata.Measurement)));
+                            %mstd  = xu25std(scdata.Measurement(~isnan(scdata.Measurement)));
+                            mmean = xu25mean(measrow(~isnan(measrow)));
+                            mstd  = xu25std(measrow(~isnan(measrow)));
                         else
-                            mmean = xb25mean(scdata.Measurement(~isnan(scdata.Measurement)));
-                            mstd  = xb25std(scdata.Measurement(~isnan(scdata.Measurement)));
+                            %mmean = xb25mean(scdata.Measurement(~isnan(scdata.Measurement)));
+                            %mstd  = xb25std(scdata.Measurement(~isnan(scdata.Measurement)));
+                            mmean = xb25mean(measrow(~isnan(measrow)));
+                            mstd  = xb25std(measrow(~isnan(measrow)));
                         end
                         plotFillArea(ax, xl(1), xl(2), ...
                             mmean - (0.5 * mstd), mmean + (0.5 * mstd), meancolour, '0.2', 'none');
@@ -352,7 +377,7 @@ for pat = 1:size(patientlist,1)
         savePlotInDir(f, imagefilename, subfolder);
         savePlotInDirAsSVG(f, imagefilename, subfolder);
         close(f);
-    end
+    %end
 end
 
 end

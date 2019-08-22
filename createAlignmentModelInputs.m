@@ -40,6 +40,9 @@ fprintf('Creating 3D data array\n');
 [amDatacube] = createDataCube(physdata, measures, npatients, ndays, nmeasures);
 toc
 
+temp = cdPFT(:,{'ID', 'FEV1'});
+
+
 tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';

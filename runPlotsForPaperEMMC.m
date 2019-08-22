@@ -14,9 +14,10 @@ fprintf('2: Paper Figure 2 - Early and Late Exacerbations\n');
 fprintf('3: Paper Figure 3 - Typical profile of an exacerbation\n');
 fprintf('4: Paper Figure 4 - Sub-population decline curve profiles with examples\n');
 fprintf('5: Paper Figure 5\n');
+fprintf('6: Paper Figure 5b - p-Values of correlations\n');
 
 fprintf('\n');
-npaperplots = 5;
+npaperplots = 6;
 srunfunction = input(sprintf('Choose function (0-%d): ', npaperplots), 's');
 runfunction = str2double(srunfunction);
 
@@ -62,8 +63,8 @@ else
     tic
     fprintf('Loading output from model run\n');
     load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun)));
-    %predictivemodelinputsfile = sprintf('%spredictivemodelinputs.mat', study);
-    %ivandmeasuresfile = sprintf('%sivandmeasures_gap%d.mat', study, treatgap);
+    predictivemodelinputsfile = sprintf('%spredictivemodelinputs.mat', study);
+    ivandmeasuresfile = sprintf('%sivandmeasures_gap%d.mat', study, treatgap);
 
     % default some variables for backward compatibility with prior versions
     if ~exist('animated_overall_pdoffset', 'var')
@@ -87,8 +88,8 @@ if runfunction == 0
     createMeasuresHeatmapSortedForPaper(physdata, offset, cdPatient, study);
 elseif runfunction == 1
     fprintf('Plotting clinical and home measures\n');
-    visualiseMeasuresForPaperFcn2(physdata, offset, cdPatient, cdAntibiotics, ...
-        cdCRP, cdPFT, cdNewMeds, measures, nmeasures, study);
+    visualiseMeasuresForPaperFcn2(physdata, offset, amDatacube, cdPatient, cdAntibiotics, ...
+        cdCRP, cdPFT, cdNewMeds, measures, nmeasures, ndays, study);
 elseif runfunction == 2
     fprintf('Plotting measures around exacerbation\n');
     visualiseExacerbationForPaperFcn(amDatacube, amInterventions, measures, nmeasures, npatients, study);
@@ -113,6 +114,44 @@ elseif runfunction == 4
     amEMMCPlotSuperimposedAlignedCurvesForPaper2(meancurvemean, meancurvecount, amIntrNormcube, amInterventions, ...
         measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, ...
         nlatentcurves, countthreshold, shiftmode, study, examplemode, lcexamples);
+elseif runfunction == 5
+    fprintf('Plot being generated from Adobe Illustrator\n');
+elseif runfunction == 6
+    fprintf('Loading Predictive Model Patient Measures Stats\n');
+    basedir = setBaseDir();
+    subfolder = 'MatlabSavedVariables';
+    load(fullfile(basedir, subfolder, predictivemodelinputsfile), 'pmPatients', 'pmPatientMeasStats');
+    fprintf('Loading Treatment and Measures Prior info\n');
+    basedir = setBaseDir();
+    subfolder = 'MatlabSavedVariables';
+    load(fullfile(basedir, subfolder, ivandmeasuresfile), 'ivandmeasurestable');
+    if ismember(study, 'SC')
+        clinicalmatfile   = 'clinicaldata.mat';
+        microbiologytable = 'cdMicrobiology';
+        abtable           = 'cdAntibiotics';
+        admtable          = 'cdAdmissions';
+        crptable          = 'cdCRP';
+    elseif ismember(study, 'TM')
+        clinicalmatfile   = 'telemedclinicaldata.mat';
+        microbiologytable = 'tmMicrobiology';
+        abtable           = 'tmAntibiotics';
+        admtable          = 'tmAdmissions';
+        crptable          = 'tmCRP';
+    else
+        fprintf('Invalid study\n');
+        return;
+    end
+    fprintf('Loading clinical microbiology and CRP data\n');
+    load(fullfile(basedir, subfolder, clinicalmatfile), microbiologytable, abtable, admtable, crptable);
+    if ismember(study, 'TM')
+        cdMicrobiology = tmMicrobiology;
+        cdAntibiotics  = tmAntibiotics;
+        cdAdmissions   = tmAdmissions;
+        cdCRP          = tmCRP;
+    end
+    fprintf('Plotting Variables vs latent curve allocation\n');
+    [pvaltable] = amEMMCPlotVariablesVsLatentCurveSetForPaper(amInterventions, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
+        cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves, scenario, randomseed);
 else
     fprintf('Should not get here....\n');
 end
