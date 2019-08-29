@@ -92,7 +92,7 @@ elseif runfunction == 1
         cdCRP, cdPFT, cdNewMeds, measures, nmeasures, ndays, study);
 elseif runfunction == 2
     fprintf('Plotting measures around exacerbation\n');
-    visualiseExacerbationForPaperFcn(amDatacube, amInterventions, measures, nmeasures, npatients, study);
+    visualiseExacerbationForPaperFcn2(amDatacube, amInterventions, measures, nmeasures, npatients, study);
 elseif runfunction == 3
     run_type = 'Best Alignment';
     fprintf('Plotting superimposed alignment curves - mean shift - all on one page\n');
@@ -108,10 +108,9 @@ elseif runfunction == 4
     fprintf('Plotting superimposed alignment curves - mean shift - all on one page\n');
     compactplot = true;
     shiftmode = 4; % shift by 7d mean to left of ex_start
-    %lcexamples = [42, 52, 61];
     examplemode = 1; % include examples
-    lcexamples = [42, 52, 45];
-    amEMMCPlotSuperimposedAlignedCurvesForPaper2(meancurvemean, meancurvecount, amIntrNormcube, amInterventions, ...
+    lcexamples = [41, 67, 6];
+    amEMMCPlotSuperimposedAlignedCurvesForPaper3(meancurvemean, meancurvecount, amIntrNormcube, amInterventions, normmean, normstd, ...
         measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, ...
         nlatentcurves, countthreshold, shiftmode, study, examplemode, lcexamples);
 elseif runfunction == 5

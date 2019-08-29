@@ -1,9 +1,10 @@
-function amEMMCPlotSuperimposedAlignedCurvesForPaper2(meancurvemean, meancurvecount, amIntrNormcube, amInterventions, ...
+function amEMMCPlotSuperimposedAlignedCurvesForPaper3(meancurvemean, meancurvecount, amIntrNormcube, amInterventions, normmean, normstd, ...
     measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, ...
     countthreshold, shiftmode, study, examplemode, lcexamples)
 
-% amEMMCPlotSuperimposedAlignedCurves2 - wrapper around the
-% plotSuperimposedAlignedCurves to plot for each set of latent curves
+% amEMMCPlotSuperimposedAlignedCurves3 - wrapper around the
+% plotSuperimposedAlignedCurves to plot for each set of latent curves along
+% with examples below
 
 if examplemode ~= 0
     if (size(lcexamples, 2) ~= nlatentcurves)
@@ -61,35 +62,45 @@ unitfontsize = 10;
 legendfontsize = 8;
 
 widthinch = 12;
-heightinch = 17;
+heightinch = 12.5;
 name = '';
-singlehght = 1/17.25;
-oneandhalfhght = singlehght * 1.5;
-doublehght = singlehght * 2;
-triplehght = singlehght * 2.75;
+singlehght = 1/12.5;
+halfhght = singlehght * .5;
+oneandhalfhght = singlehght * 2;
+doublehght = singlehght * 2.5;
+triplehght = singlehght * 3;
 quadhght   = singlehght * 4;
-labelwidth = 0.2;
-plotwidth  = 0.8;
+labelwidth = 0.15;
+plotwidth  = 0.85;
 
-ntitles = 2;
-nlcrow = 1;
-nmeasrows = sum(logical(measures.Mask));
-nlabels = nlcrow + nmeasrows;
 
-typearray = [1, 3, 6, 1, 2, 5, 2, 5, 2, 5, 2, 5, 2, 5, 4, 7];
 
-typehght = [singlehght, doublehght, triplehght, oneandhalfhght, doublehght, triplehght, oneandhalfhght];
+typearray = [1, 3, 6, 1, 3, 8, 1, 2, 5, 4, 7];
 
-labeltext = {'A.'; 'Change from'; ' '; 'B.'};
+typehght = [halfhght, oneandhalfhght, triplehght, doublehght, oneandhalfhght, triplehght, doublehght, triplehght];
+
+labeltext = {'A.'; 'Change from'; ' '; 'B.'; 'Change from'; ' '; 'C.'};
+
 
 tmpmeasures = measures(logical(measures.Mask), :);
+tmpmeasures.PaperMask(:) = 0;
+tmpmeasures.PaperMask(ismember(tmpmeasures.DisplayName, {'LungFunction', 'Wellness'})) = 1;
 tmpnmeasures = size(tmpmeasures, 1);
 [tmpmeasures] = sortMeasuresForPaper(study, tmpmeasures);
-for m = 1:tmpnmeasures
-    labeltext = [labeltext; cellstr(tmpmeasures.DisplayName{m}); ' '];
+tmpsubsetmeasures = tmpmeasures(logical(tmpmeasures.PaperMask), :);
+tmpnsubsetmeasures = size(tmpsubsetmeasures, 1);
+
+ntitles = 3;
+nlcrow = 2;
+nmeasrows = sum(logical(tmpmeasures.PaperMask));
+nlabels = nlcrow + nmeasrows;
+
+for m = 1:tmpnsubsetmeasures
+    labeltext = [labeltext; cellstr(tmpsubsetmeasures.DisplayName{m}); ' '];
 end
 
-plottitle   = sprintf('%s - %s Superimposed %s For Paper 2', plotname, run_type, shifttext);
+extext = sprintf('_%d', lcexamples);
+plottitle   = sprintf('%s - %s Superimposed %s For Paper v3 Examples%s', plotname, run_type, shifttext, extext);
 
 plotsacross = nlatentcurves;
 plotsdown   = 1;
@@ -127,7 +138,7 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
                         'VerticalAlignment', 'middle', ...
                         'LineStyle', 'none', ...
                         'FontSize', titlefontsize);
-        if i == 1
+        if i == 1 || i == 4
             txt = 'Group';
         else
             txt = 'Example';
@@ -136,7 +147,7 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
                         'String', sprintf('%s 1', txt), ...
                         'Interpreter', 'tex', ...
                         'Units', 'normalized', ...
-                        'Position', [0.32, 0, 0.1, 1], ...
+                        'Position', [0.28, 0, 0.1, 1], ...
                         'HorizontalAlignment', 'center', ...
                         'VerticalAlignment', 'bottom', ...
                         'LineStyle', 'none', ...
@@ -145,7 +156,7 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
                         'String', sprintf('%s 2', txt), ...
                         'Interpreter', 'tex', ...
                         'Units', 'normalized', ...
-                        'Position', [0.5, 0, 0.1, 1], ...
+                        'Position', [0.47, 0, 0.1, 1], ...
                         'HorizontalAlignment', 'center', ...
                         'VerticalAlignment', 'bottom', ...
                         'LineStyle', 'none', ...
@@ -154,7 +165,7 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
                         'String', sprintf('%s 3', txt), ...
                         'Interpreter', 'tex', ...
                         'Units', 'normalized', ...
-                        'Position', [0.67, 0, 0.1, 1], ...
+                        'Position', [0.65, 0, 0.1, 1], ...
                         'HorizontalAlignment', 'center', ...
                         'VerticalAlignment', 'bottom', ...
                         'LineStyle', 'none', ...
@@ -183,13 +194,12 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
                         'VerticalAlignment', 'middle', ...
                         'LineStyle', 'none', ...
                         'FontSize', labelfontsize);
-    elseif type == 6
-        % plot
+    elseif type == 6 || type == 8
+        % plot superimposed curves (all measures or just 2 measures)
         sp(i) = uipanel('Parent', p, ...
                         'BorderType', 'none', ...
                         'BackgroundColor', 'white', ...
                         'OuterPosition', [labelwidth, currhght, plotwidth, typehght(type)]);
-        %lcsort = getLCSortOrder(amInterventions, nlatentcurves);
 
         % set the plot range over all curves to ensure comparable visual scaling
         yl = [min(min(min(meancurvemean))) ...
@@ -205,45 +215,40 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
             tmp_ninterventions   = sum(amInterventions.LatentCurve == lc);
 
             if tmp_ninterventions ~= 0
-                if n == nlatentcurves
+                if type == 6 && n == nlatentcurves
                     panels = (((n - 1) * (plotpanels + paddingpanels)) + 1): (((n - 1) * (plotpanels + paddingpanels)) + plotpanels + legendpanels);
                 else
                     panels = (((n - 1) * (plotpanels + paddingpanels)) + 1): (((n - 1) * (plotpanels + paddingpanels)) + plotpanels);
                 end
 
-                ax = subplot(nlcrow, panelsacross, panels, 'Parent', sp(i));
+                ax = subplot(1, panelsacross, panels, 'Parent', sp(i));
                 ax.FontSize = 8;
                 ax.TickDir = 'out';
-                % comment out/uncomment out one of these depending on whether all measures
-                % wanted or just those used for alignment
-                %tmpmeasures = measures;
-                %tmpmeasures = measures(logical(measures.Mask), :);
-                %tmpnmeasures = size(tmpmeasures, 1);
+                
+                if type == 6
+                    % add legend text cell array
+                    legendtext = tmpmeasures.DisplayName;
+                    for m = 1:tmpnmeasures
+                        legendtext{m} = formatDisplayMeasure(legendtext{m});
+                    end
+                    pridx = ismember(tmpmeasures.DisplayName, {'PulseRate'});
+                    legendtext{pridx} = sprintf('%s %s', legendtext{pridx}, '(Inverted)');
 
-                % add legend text cell array
-                %tmp = sortMeasuresForPaper(study, tmpmeasures);
-                %legendtext = tmp.DisplayName;
-                legendtext = tmpmeasures.DisplayName;
-                for m = 1:tmpnmeasures
-                    legendtext{m} = formatDisplayMeasure(legendtext{m});
+                    plotSuperimposedAlignedCurvesForPaper(ax, tmp_meancurvemean, xl, yl, ...
+                            tmpmeasures, tmpnmeasures, min_offset, max_offset, align_wind, ex_start(lc), study);
+                elseif type == 8
+                    plotSuperimposedAlignedCurvesForPaper(ax, tmp_meancurvemean, xl, yl, ...
+                            tmpsubsetmeasures, tmpnsubsetmeasures, min_offset, max_offset, align_wind, ex_start(lc), study);
                 end
-                pridx = ismember(tmpmeasures.DisplayName, {'PulseRate'});
-                legendtext{pridx} = sprintf('%s %s', legendtext{pridx}, '(Inverted)');
-
-                plotSuperimposedAlignedCurvesForPaper(ax, tmp_meancurvemean, xl, yl, ...
-                        tmpmeasures, tmpnmeasures, min_offset, max_offset, align_wind, ex_start(lc), study);
 
                 xlabel(ax, 'Days from exacerbation start');
                 if n ~= 1
                     ax.YTickLabel = '';
                     ax.YColor = 'white';
                 end
-                if n == nlatentcurves
+                if type == 6 && n == nlatentcurves
                     legend(ax, legendtext, 'Location', 'eastoutside', 'FontSize', legendfontsize);
                 end
-                %if nlatentcurves > 1
-                %    title(ax, sprintf('Group %d (n = %d)', n, sum(amInterventions.LatentCurve == lc)), 'Units', 'normalized', 'Position', [titlexpos, titleypos, 0]);
-                %end
             end
         end
     elseif type == 5 || type == 7
@@ -257,7 +262,7 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
 
         for n = 1:nlatentcurves
             a = lcexrow(n);
-            amnormcubesingleintr = amIntrNormcube(a, :, tmpmeasures.Index(currmeas));
+            amnormcubesingleintr = amIntrNormcube(a, :, tmpsubsetmeasures.Index(currmeas));
             aminterventionsrow   = amInterventions(a, :);
             lc = aminterventionsrow.LatentCurve;
             if lc ~= lcsort(n)
@@ -272,7 +277,7 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
             % Preprocess the measures :-
             % 1) invert pulse rate
             % 2) apply a vertical shift (using methodology selected)
-            pridx = find(ismember(tmpmeasures.DisplayName, {'PulseRate'}));
+            pridx = find(ismember(tmpsubsetmeasures.DisplayName, {'PulseRate'}));
             if currmeas == pridx
                 amnormcubesingleintr(1, :, 1) = amnormcubesingleintr(1, :, 1) * -1;
             end
@@ -297,7 +302,7 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
             end
             amnormcubesingleintr(1, :, 1) = amnormcubesingleintr(1, :, 1) - vertshift;
             amnormcubesingleintrsmth(1, :, 1) = amnormcubesingleintrsmth(1, :, 1) - vertshift;
-            fprintf('For intervention %3d, measure %13s, vertical shift is %.3f\n', a, tmpmeasures.DisplayName{1}, -vertshift);
+            fprintf('For intervention %3d, measure %13s, vertical shift is %.3f\n', a, tmpsubsetmeasures.DisplayName{1}, -vertshift);
 
             xfrom = -1 * (align_wind + max_offset - 1 + ex_start(lc));
             xto   = -1 * (1 + ex_start(lc));
@@ -305,16 +310,16 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
 
             %yl = [min(min(amnormcubesingleintrsmth(1, :, logical(measures.Mask)))) ...
             %      max(max(amnormcubesingleintrsmth(1, :, logical(measures.Mask))))];
-            yl = [-4, 2.75];
+            yl = [-3, 2];
             
             panels = (((n - 1) * (plotpanels + paddingpanels)) + 1): (((n - 1) * (plotpanels + paddingpanels)) + plotpanels);
 
             % plot all measures superimposed
-            ax = subplot(plotsdown, panelsacross, panels, 'Parent', sp(i));
+            ax = subplot(1, panelsacross, panels, 'Parent', sp(i));
             ax.FontSize = 8;
 
             hold on;
-            [smcolour, rwcolour] = getColourForMeasure(tmpmeasures.DisplayName{currmeas});
+            [smcolour, rwcolour] = getColourForMeasure(tmpsubsetmeasures.DisplayName{currmeas});
             lstyle = '-';
             lwidth = 1.5;
             days = xl(1):xl(2);
@@ -324,7 +329,7 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
             mto   = max_offset + align_wind - 1;
             plot(ax, days(dfrom:dto), amnormcubesingleintr(1, mfrom:mto, 1), ...
                 'Color', rwcolour, ...
-                'LineStyle', ':', ...
+                'LineStyle', '-', ...
                 'Marker', 'o', ...
                 'LineWidth',1, ...
                 'MarkerSize',2, ...
@@ -339,25 +344,26 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
             if tmp_ex_start ~= 0
                 [~, ~] = plotVerticalLine(ax, 0, xl, yl, 'black', '-', 0.5); % plot ex_start
             end
+            
+            mmean = 0;
+            mstd = 1;
+           
+            plotFillArea(ax, xl(1), xl(2), ...
+                mmean - (0.5 * mstd), mmean + (0.5 * mstd), [0.4, 0.4, 0.4], '0.2', 'none');
+            line(xl, [mmean mmean] , 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', .5)
 
-            %plotSuperimposedMeasuresB4IntrForPaper(ax, tmp_amnormcubesingleintr, tmp_amnormcubesingleintrsmth, xl, yl, ...
-            %        tmpmeasures, tmpnmeasures, max_offset, align_wind, tmp_offset, tmp_ex_start, study);
             hold off;
-            if currmeas == tmpnmeasures
+            if currmeas == tmpnsubsetmeasures
                 xlabel(ax, 'Days from exacerbation start');
             else
                 ax.XTickLabel = '';
                 ax.XColor = 'white';
             end
-            ylabelposmult = 1.125;
-            %if n == 1
-            %    ylabeltext = 'Change from stable baseline (s.d.)';
-            %    ylabel(ax, ylabeltext, 'Position',[(xl(1) - 12) (yl(1) + (yl(2) - yl(1) * ylabelposmult))], 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'Rotation', 0);
-            %else
             if n ~= 1
                 ax.YTickLabel = '';
                 ax.YColor = 'white';
             end
+            ylim(yl);
         end
         currmeas = currmeas + 1;
     end
