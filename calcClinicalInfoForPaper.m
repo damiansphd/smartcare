@@ -27,7 +27,8 @@ toc
 temp = cdPFT(:,{'ID', 'FEV1'});
 temp2 = varfun(@mean, temp, 'GroupingVariables', {'ID'});
 temp3 = outerjoin(cdPatient, temp2, 'LeftKeys', 'ID', 'RightKeys', 'ID', 'RightVariables', {'GroupCount', 'mean_FEV1'});
-temp3.PercentPredicted = 100 * (temp3.mean_FEV1 ./temp3.CalcPredictedFEV1);
+%temp3.PercentPredicted = 100 * (temp3.mean_FEV1 ./temp3.CalcPredictedFEV1);
+temp3.PercentPredicted = 100 * (temp3.mean_FEV1 ./temp3.CalcFEV1SetAs);
 
 fprintf('Total patients                 = %3d\n', size(cdPatient, 1));
 fprintf('Patients with no clinical PFTs = %3d ******\n', sum(isnan(temp3.PercentPredicted)));
@@ -41,7 +42,7 @@ fprintf('# patients >= 70 & < 90        = %3d (%.0f)\n', sum(temp3.PercentPredic
 fprintf('# patients >= 90               = %3d (%.0f)\n', sum(temp3.PercentPredicted >= 90), 100 * sum(temp3.PercentPredicted >= 90) / size(cdPatient, 1));
 
 fprintf('\n');
-fprintf('Overall Study mean /std) = %.1f, %.1f\n', mean(temp3.PercentPredicted), std(temp3.PercentPredicted));
+fprintf('Overall Study mean /std) = %.3f, %.3f\n', mean(temp3.PercentPredicted), std(temp3.PercentPredicted));
 
 
 % also calc actual dates by center
