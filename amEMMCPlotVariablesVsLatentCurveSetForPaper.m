@@ -55,7 +55,11 @@ comb = array2table(comb);
 chisqvaltable = table('Size',[(nbarvars), nkeycols], 'VariableTypes', {'cell'}, 'VariableNames', {'VarName'});
 chisqvaltable = [chisqvaltable, comb];
 for i = 1:nlccombs
-    chisqvaltable.Properties.VariableNames{nkeycols + i} = sprintf('Group%d_pvalDiffSeries', i);
+    chisqvaltable.Properties.VariableNames{nkeycols + i} = sprintf('Group%d_Val', i);
+end
+chisqvaltable = [chisqvaltable, comb];
+for i = 1:nlccombs
+    chisqvaltable.Properties.VariableNames{nkeycols + nlccombs + i} = sprintf('Group%d_pvalDiffSeries', i);
 end
 
 lcsort = getLCSortOrder(amInterventions, nlatentcurves);
@@ -125,7 +129,12 @@ if nlatentcurves >= 5
 end
 
 plottitle = sprintf('%s - Variables vs Latent Curve Set For Paper', plotname);
-[f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
+
+widthinch = 8.5;
+heightinch = 11;
+
+[f, p] = createFigureAndPanelForPaper('', widthinch, heightinch);
+
 colormap(f, cmap);
 thisplot = 1;
 for v = 1:nscattervars
@@ -140,10 +149,14 @@ for v = 1:nscattervars
     end
     ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
     if ismember(scattervartext(v, 2), 'Scatter')
-        scatter(ax, lc.LatentCurve, scattervardata(:, v), pointsize, lc.LatentCurve, 'filled', 'MarkerFaceAlpha', 0.3);
+        scatter(ax, lc.LatentCurve, scattervardata(:, v), pointsize, lc.LatentCurve, 'filled', 'MarkerFaceAlpha', 0.3, 'MarkerEdgeAlpha', 0.3);
     elseif ismember(scattervartext(v, 2), 'Box')
+        %boxplot(ax, scattervardata(:, v), lc.LatentCurve, 'Colors', cmap, 'ColorGroup', lc.LatentCurve, ...
+        %    'Notch', 'off', 'DataLim', compressrange, 'ExtremeMode', 'compress', 'Jitter', 1, 'Symbol', 'x');
+        scatter(ax, lc.LatentCurve, scattervardata(:, v), pointsize, lc.LatentCurve, 'MarkerFaceAlpha', 0.3, 'MarkerEdgeAlpha', 0.3, 'LineWidth', 1.0);
+        hold on;
         boxplot(ax, scattervardata(:, v), lc.LatentCurve, 'Colors', cmap, 'ColorGroup', lc.LatentCurve, ...
-            'Notch', 'off', 'DataLim', compressrange, 'ExtremeMode', 'compress', 'Jitter', 1, 'Symbol', 'x');
+            'Notch', 'off', 'Symbol', '');
     else
         fprintf('Unknown plot type\n');
         return
@@ -242,7 +255,7 @@ for v = 1:nbarvars
             barvardata = 100 * (barvardata ./ sum(barvardata, 2));
             
         end
-        legendtext = {'1', '2', '3', '4'};
+        legendtext = {'1', '2', '3', '4', '5'};
         blc.PValCol = blc.GroupCount;
         %lc.GroupCount = [];
         
@@ -275,11 +288,11 @@ for v = 1:nbarvars
     title(ax, barvartext{v}, 'FontSize', 8);
     legend(ax, legendtext, 'FontSize', 6);
     xlim(ax, [0.5 nlatentcurves + 0.5]);
-    if ismember(barvartext(v), {'Pct Gender', 'Pct Nbr of Interventions', ...
+    if ismember(barvartext(v), {'Pct Gender', ...
             'Pct Pseudomonas', 'Pct Staphylococcus', 'Pct One or Both'})
         ylim(ax, [0 135]);
-    elseif ismember(barvartext(v), {'Pct Nbr of IV Treatments', 'Pct Nbr of AB Treatments'})
-        ylim(ax, [0 150]);
+    elseif ismember(barvartext(v), {'Pct Nbr of Interventions', 'Pct Nbr of IV Treatments', 'Pct Nbr of AB Treatments'})
+        ylim(ax, [0 160]);
     end
     xlabel(ax, 'Latent Curve Set', 'FontSize', 8);
     ylabel(ax, barvartext{v}, 'FontSize', 8);
@@ -304,14 +317,19 @@ for v = 1:nbarvars
             freqtable.ExpFreq(catidx)  = tempexpfreq.GroupCount(c);
         end
         [h, pval, ~] = chi2gof(uniquecats, 'freq', freqtable.ObsFreq', 'expected', freqtable.ExpFreq', 'ctrs', uniquecats);
+        if size(unique(blc.PValCol), 1) <= 2
+            chisqvaltable(v, {sprintf('Group%d_Val', i)}) = array2table(100 * sum(tempobs.LatentCurve == i & tempobs.PValCol == 1)/sum(tempobs.LatentCurve == i));
+        elseif size(unique(blc.PValCol), 1) > 2
+            chisqvaltable(v, {sprintf('Group%d_Val', i)}) = array2table(mean(tempobs.PValCol(tempobs.LatentCurve == i)));
+        end
         chisqvaltable(v, {sprintf('Group%d_pvalDiffSeries', i)}) = array2table(pval);
         if h == 1
             flagtext = ' *****';
         else
             flagtext = ' ';
         end
-        fprintf('%24s : Group%d pvalDiffSeries : %5.3f%s\n', barvartext{v, 1}, i, ...
-            pval, flagtext);
+        fprintf('%24s : Group%d Value %6.2f                 pvalDiffSeries : %5.3f%s\n', barvartext{v, 1}, i, ...
+            table2array(chisqvaltable(v, {sprintf('Group%d_Val', i)})), pval, flagtext);
     end
     
     % store p-values for different combinations of comparisons

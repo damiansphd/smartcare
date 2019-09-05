@@ -5,6 +5,7 @@ function amEMMCPlotSuperimposedAlignedCurvesForPaper(meancurvemean, meancurvecou
 % amEMMCPlotSuperimposedAlignedCurves - wrapper around the
 % plotSuperimposedAlignedCurves to plot for each set of latent curves
 
+% latest format changes have broken examplemode ~= 0
 if examplemode ~= 0
     if (size(lcexamples, 2) ~= nlatentcurves)
         fprintf('**** Number of latent curve examples in each set does not match the number of latent curve sets ****\n');
@@ -29,7 +30,7 @@ plottitle   = sprintf('%s - %s Superimposed %s For Paper', plotname, run_type, s
 
 plotsacross = nlatentcurves;
 plotsdown   = 1;
-plotpanels = 8;
+plotpanels = 5;
 legendpanels = 4;
 if nlatentcurves == 1
     paddingpanels = 0;
@@ -40,12 +41,40 @@ panelsacross = ((plotpanels + paddingpanels) * nlatentcurves) + legendpanels;
 
 nplotrows = 1 + size(lcexamples, 1);
 
+labelfontsize = 8;
 pghght = 3 * nplotrows;
-pgwdth = 0.5 * panelsacross;
+pgwdth = 0.5 * (panelsacross + 3);
+labelwidth = 0.15;
+plotwidth  = 0.85;
+
 titlexpos = 0.5;
 titleypos = -0.24;
 
 [f, p] = createFigureAndPanelForPaper('', pgwdth, pghght);
+
+displaytext1 = sprintf('%s', 'Change from');
+displaytext2 = sprintf('%s', 'stable baseine');
+displaytext3 = sprintf('%s', '(s.d.)');
+displaytext = {displaytext1; displaytext2; displaytext3};
+
+sp(1) = uipanel('Parent', p, ...
+                'BorderType', 'none', ...
+                'BackgroundColor', 'white', ...
+                'OuterPosition', [0, 0, labelwidth, 1]);
+annotation(sp(1), 'textbox',  ...
+                'String', displaytext, ...
+                'Interpreter', 'tex', ...
+                'Units', 'normalized', ...
+                'Position', [0, 0, 1, 1], ...
+                'HorizontalAlignment', 'center', ...
+                'VerticalAlignment', 'middle', ...
+                'LineStyle', 'none', ...
+                'FontSize', labelfontsize);
+            
+sp(2) = uipanel('Parent', p, ...
+                'BorderType', 'none', ...
+                'BackgroundColor', 'white', ...
+                'OuterPosition', [labelwidth, 0, plotwidth, 1]);
 
 smoothwdth = 4;
 
@@ -99,7 +128,7 @@ for n = 1:nlatentcurves
         else
             panels = (((n - 1) * (plotpanels + paddingpanels)) + 1): (((n - 1) * (plotpanels + paddingpanels)) + plotpanels);
         end
-        ax = subplot(nplotrows, panelsacross, panels, 'Parent',p);
+        ax = subplot(nplotrows, panelsacross, panels, 'Parent',sp(2));
         ax.FontSize = 8;
         ax.TickDir = 'out';
         % comment out/uncomment out one of these depending on whether all measures
@@ -123,8 +152,8 @@ for n = 1:nlatentcurves
         xlabel(ax, 'Days from exacerbation start');
         ylabelposmult = 1.1;
         if n == 1
-            ylabeltext = 'Change from stable baseline (s.d.)';
-            ylabel(ax, ylabeltext, 'Position',[(xl(1) - 12) (yl(1) + (yl(2) - yl(1) * ylabelposmult))], 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'Rotation', 0);
+            %ylabeltext = 'Change from stable baseline (s.d.)';
+            %ylabel(ax, ylabeltext, 'Position',[(xl(1) - 12) (yl(1) + (yl(2) - yl(1) * ylabelposmult))], 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'Rotation', 0);
         else
             ax.YTickLabel = '';
             ax.YColor = 'white';
