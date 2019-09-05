@@ -40,7 +40,8 @@ elseif ismember(displaymeasure, {'Weight'})
     smcolour = [0.3, 0, 0];
 else
     fprintf('**** Unknown Measure ****\n');
-    rwcolour = [1, 1, 1];
+    rwcolour = [0.8, 0.8, 0.8];
+    smcolour = [0.8, 0.8, 0.8];
 end
 
 end

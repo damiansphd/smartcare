@@ -15,9 +15,11 @@ fprintf('3: Paper Figure 3 - Typical profile of an exacerbation\n');
 fprintf('4: Paper Figure 4 - Sub-population decline curve profiles with examples\n');
 fprintf('5: Paper Figure 5\n');
 fprintf('6: Paper Figure 5b - p-Values of correlations\n');
+fprintf('7: Paper Figure 5c - Interventions over time\n');
+fprintf('8: Slides - histogram of variable time to treatment\n');
 
 fprintf('\n');
-npaperplots = 6;
+npaperplots = 8;
 srunfunction = input(sprintf('Choose function (0-%d): ', npaperplots), 's');
 runfunction = str2double(srunfunction);
 
@@ -151,6 +153,24 @@ elseif runfunction == 6
     fprintf('Plotting Variables vs latent curve allocation\n');
     [pvaltable] = amEMMCPlotVariablesVsLatentCurveSetForPaper(amInterventions, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
         cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves, scenario, randomseed);
+elseif runfunction == 7
+    fprintf('Loading Predictive Model Patient info\n');
+    basedir = setBaseDir();
+    subfolder = 'MatlabSavedVariables';
+    sprintf('%s_LabelledInterventions.mat', study);
+    load(fullfile(basedir, subfolder, predictivemodelinputsfile), 'pmPatients', 'npatients', 'maxdays');
+    fprintf('Loading unfiltered interventions\n');
+    amInterventionsKeep = amInterventions;
+    load(fullfile(basedir, subfolder, modelinputsmatfile), 'amInterventions');
+    amInterventionsFull = amInterventions;
+    amInterventions = amInterventionsKeep;
+    fprintf('Plotting interventions over time by latent curve set\n');
+    plotmode = 2; % plot using scaled dates
+    amEMMCPlotInterventionsByLatentCurveSetForPaper(pmPatients, amInterventions, amInterventionsFull, npatients, maxdays, plotname, plotsubfolder, nlatentcurves, plotmode);
+elseif runfunction == 8
+    run_type = 'Best Alignment';
+    fprintf('Plotting histogram of variable time to treatment\n');
+    amEMMCPlotHistogramOfTimeToTreatForPaper(amInterventions, plotname, plotsubfolder, nlatentcurves, study);
 else
     fprintf('Should not get here....\n');
 end

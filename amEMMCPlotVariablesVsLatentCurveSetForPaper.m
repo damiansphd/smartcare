@@ -1,4 +1,4 @@
-function [pvaltable] = amEMMCPlotVariablesVsLatentCurveSetForPaper(amInterventions, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
+function [wcxpvaltable] = amEMMCPlotVariablesVsLatentCurveSetForPaper(amInterventions, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
         cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves, scenario, randomseed)
     
 % amEMMCPlotVariablesVsLatentCurveSet - compact plots of various variables
@@ -32,25 +32,31 @@ polarvardata   = zeros(ninterventions, npolarvars);
 
 nbarvars       = size(barvartext, 1);
 
-%nlccombs = (nlatentcurves * (nlatentcurves - 1)) / 2;
 nlccombs = nlatentcurves;
 nkeycols = 1;
-comb = -1 * ones((nscattervars + npolarvars + nbarvars),nlccombs);
+comb = -1 * ones((nscattervars),nlccombs);
 comb = array2table(comb);
-pvaltable = table('Size',[(nscattervars + npolarvars + nbarvars), nkeycols], 'VariableTypes', {'cell'}, 'VariableNames', {'VarName'});
-pvaltable = [pvaltable, comb];
-for i = 1:nlatentcurves
-    pvaltable.Properties.VariableNames{nkeycols + i} = sprintf('Group%d_DiffMedian', i);
+wcxpvaltable = table('Size',[(nscattervars), nkeycols], 'VariableTypes', {'cell'}, 'VariableNames', {'VarName'});
+wcxpvaltable = [wcxpvaltable, comb];
+for i = 1:nlccombs
+    wcxpvaltable.Properties.VariableNames{nkeycols + i} = sprintf('Group%d_Median', i);
 end
-pvaltable = [pvaltable, comb];
-for i = 1:nlatentcurves
-    pvaltable.Properties.VariableNames{nkeycols + nlatentcurves + i} = sprintf('Group%d_GrMedian', i);
+wcxpvaltable = [wcxpvaltable, comb];
+for i = 1:nlccombs
+    wcxpvaltable.Properties.VariableNames{nkeycols + nlccombs + i} = sprintf('Group%d_IQRange', i);
 end
-pvaltable = [pvaltable, comb];
-for i = 1:nlatentcurves
-    pvaltable.Properties.VariableNames{nkeycols + (nlatentcurves * 2) + i} = sprintf('Group%d_LsMedian', i);
+wcxpvaltable = [wcxpvaltable, comb];
+for i = 1:nlccombs
+    wcxpvaltable.Properties.VariableNames{nkeycols + (2 * nlccombs) + i} = sprintf('Group%d_pvalDiffMedian', i);
 end
 
+comb = -1 * ones((nbarvars),nlccombs);
+comb = array2table(comb);
+chisqvaltable = table('Size',[(nbarvars), nkeycols], 'VariableTypes', {'cell'}, 'VariableNames', {'VarName'});
+chisqvaltable = [chisqvaltable, comb];
+for i = 1:nlccombs
+    chisqvaltable.Properties.VariableNames{nkeycols + i} = sprintf('Group%d_pvalDiffSeries', i);
+end
 
 lcsort = getLCSortOrder(amInterventions, nlatentcurves);
 amInterventions.SortedLatentCurve = lcsort(amInterventions.LatentCurve);
@@ -148,34 +154,23 @@ for v = 1:nscattervars
     xlabel(ax, 'Latent Curve Set', 'FontSize', 8);
     ylabel(ax, scattervartext{v, 1}, 'FontSize', 8);
     
-    % store p-values for different combinations of comparisons
-    pvaltable.VarName{thisplot} = scattervartext{v, 1};
+    % store median, inter-quartile range, and p-values for the numeric
+    % series variables
+    wcxpvaltable.VarName{v} = scattervartext{v, 1};
     for i = 1:nlatentcurves
+        wcxpvaltable(v, {sprintf('Group%d_Median', i)}) = array2table(median(scattervardata(lc.LatentCurve == i, v)));
+        wcxpvaltable(v, {sprintf('Group%d_IQRange', i)}) = array2table(iqr(scattervardata(lc.LatentCurve == i, v)));
         [pval, h] = ranksum(scattervardata(lc.LatentCurve == i, v), scattervardata(lc.LatentCurve ~= i, v));
-        pvaltable(thisplot, {sprintf('Group%d_DiffMedian', i)}) = array2table(pval);
+        wcxpvaltable(v, {sprintf('Group%d_pvalDiffMedian', i)}) = array2table(pval);
         if h == 1
             flagtext = ' *****';
         else
             flagtext = ' ';
         end
-        fprintf('%24s : Group%d DiffMedian : p-value %5.3f%s\n', scattervartext{v, 1}, i, pval, flagtext);
-        [pval, h] = ranksum(scattervardata(lc.LatentCurve == i, v), scattervardata(lc.LatentCurve ~= i, v), 'Tail', 'right');
-        pvaltable(thisplot, {sprintf('Group%d_GrMedian', i)}) = array2table(pval);
-        if h == 1
-            flagtext = ' *****';
-        else
-            flagtext = ' ';
-        end
-        fprintf('%24s : Group%d GrMedian : p-value %5.3f%s\n', scattervartext{v, 1}, i, pval, flagtext);
-        [pval, h] = ranksum(scattervardata(lc.LatentCurve == i, v), scattervardata(lc.LatentCurve ~= i, v), 'Tail', 'left');
-        pvaltable(thisplot, {sprintf('Group%d_LsMedian', i)}) = array2table(pval);
-        if h == 1
-            flagtext = ' *****';
-        else
-            flagtext = ' ';
-        end
-        fprintf('%24s : Group%d LsMedian : p-value %5.3f%s\n', scattervartext{v, 1}, i, pval, flagtext);
-        
+        fprintf('%24s : Group%d Median %6.2f IQ Range %6.2f pvalDiffMedian : %5.3f%s\n', scattervartext{v, 1}, i, ...
+            median(scattervardata(lc.LatentCurve == i, v)), ...
+            iqr(scattervardata(lc.LatentCurve == i, v)), ...
+            pval, flagtext);
     end
 
     thisplot = thisplot + 1;
@@ -196,7 +191,8 @@ for v = 1:nbarvars
         legendtext = {'M', 'F'};
         blc = lc;
         blc.PValCol(:) = 1;
-        blc.PValCol(ismember(blc.Sex, 'Female')) = 2;
+        blc.PValCol(ismember(blc.Sex, 'Female')) = 2; 
+        
     elseif ismember(barvartext(v), {'Pct Pseudomonas', 'Pct Staphylococcus', 'Pct One or Both'})
         pseudpat = unique(cdMicrobiology.ID(contains(lower(cdMicrobiology.Microbiology), 'pseud')));
         staphpat = unique(cdMicrobiology.ID(contains(lower(cdMicrobiology.Microbiology), 'staph') | contains(lower(cdMicrobiology.Microbiology), 'mrsa')));
@@ -249,6 +245,7 @@ for v = 1:nbarvars
         legendtext = {'1', '2', '3', '4'};
         blc.PValCol = blc.GroupCount;
         %lc.GroupCount = [];
+        
     elseif ismember(barvartext(v), {'Nbr of IV Treatments', 'Pct Nbr of IV Treatments', 'Nbr of AB Treatments', 'Pct Nbr of AB Treatments'})
         if ismember(barvartext(v), {'Nbr of IV Treatments', 'Pct Nbr of IV Treatments'})
             tmpivandmeas = ivandmeasurestable(ivandmeasurestable.Type == 1 | ivandmeasurestable.Type == 3, :);
@@ -287,34 +284,48 @@ for v = 1:nbarvars
     xlabel(ax, 'Latent Curve Set', 'FontSize', 8);
     ylabel(ax, barvartext{v}, 'FontSize', 8);
     
-    % store p-values for different combinations of comparisons
-    pvaltable.VarName{thisplot} = barvartext{v, 1};
+    tempobs = blc(:,{'PValCol', 'LatentCurve'});
+    uniquecats = unique(tempobs.PValCol);
+    nuniquecats = size(uniquecats, 1);
+    chisqvaltable.VarName{v} = strrep(barvartext{v, 1}, 'Pct ', '');
     for i = 1:nlatentcurves
-        [pval, h] = ranksum(blc.PValCol(blc.LatentCurve == i), blc.PValCol(blc.LatentCurve ~= i));
-        pvaltable(thisplot, {sprintf('Group%d_DiffMedian', i)}) = array2table(pval);
+        tempobsfreq = varfun(@mean, tempobs(tempobs.LatentCurve == i, :), 'GroupingVariables', 'PValCol');
+        tempexpfreq = varfun(@mean, tempobs(tempobs.LatentCurve ~= i, :), 'GroupingVariables', 'PValCol');
+        tempexpfreq.GroupCount = tempexpfreq.GroupCount * sum(tempobsfreq.GroupCount) / sum(tempexpfreq.GroupCount);
+        
+        freqtable = table('Size',[nuniquecats, 3], 'VariableTypes', {'double', 'double', 'double'}, 'VariableNames', {'Category', 'ObsFreq', 'ExpFreq'});
+        freqtable.Category = uniquecats;
+        for c = 1:size(tempobsfreq, 1)
+            catidx  = freqtable.Category == tempobsfreq.PValCol(c);
+            freqtable.ObsFreq(catidx)  = tempobsfreq.GroupCount(c);
+        end
+        for c = 1:size(tempexpfreq, 1)
+            catidx  = freqtable.Category == tempexpfreq.PValCol(c);
+            freqtable.ExpFreq(catidx)  = tempexpfreq.GroupCount(c);
+        end
+        [h, pval, ~] = chi2gof(uniquecats, 'freq', freqtable.ObsFreq', 'expected', freqtable.ExpFreq', 'ctrs', uniquecats);
+        chisqvaltable(v, {sprintf('Group%d_pvalDiffSeries', i)}) = array2table(pval);
         if h == 1
             flagtext = ' *****';
         else
             flagtext = ' ';
         end
-        fprintf('%24s : Group%d DiffMedian : p-value %5.3f%s\n', barvartext{v, 1}, i, pval, flagtext);
-        [pval, h] = ranksum(blc.PValCol(blc.LatentCurve == i), blc.PValCol(blc.LatentCurve ~= i), 'Tail', 'right');
-        pvaltable(thisplot, {sprintf('Group%d_GrMedian', i)}) = array2table(pval);
-        if h == 1
-            flagtext = ' *****';
-        else
-            flagtext = ' ';
-        end
-        fprintf('%24s : Group%d GrMedian : p-value %5.3f%s\n', barvartext{v, 1}, i, pval, flagtext);
-        [pval, h] = ranksum(blc.PValCol(blc.LatentCurve == i), blc.PValCol(blc.LatentCurve ~= i), 'Tail', 'left');
-        pvaltable(thisplot, {sprintf('Group%d_LsMedian', i)}) = array2table(pval);
-        if h == 1
-            flagtext = ' *****';
-        else
-            flagtext = ' ';
-        end
-        fprintf('%24s : Group%d LsMedian : p-value %5.3f%s\n', barvartext{v, 1}, i, pval, flagtext);
+        fprintf('%24s : Group%d pvalDiffSeries : %5.3f%s\n', barvartext{v, 1}, i, ...
+            pval, flagtext);
     end
+    
+    % store p-values for different combinations of comparisons
+    %wcxpvaltable.VarName{thisplot} = barvartext{v, 1};
+    %for i = 1:nlatentcurves
+    %    [pval, h] = ranksum(blc.PValCol(blc.LatentCurve == i), blc.PValCol(blc.LatentCurve ~= i));
+    %    wcxpvaltable(thisplot, {sprintf('Group%d_DiffMedian', i)}) = array2table(pval);
+    %    if h == 1
+    %        flagtext = ' *****';
+    %    else
+    %        flagtext = ' ';
+    %    end
+    %    fprintf('%24s : Group%d DiffMedian : p-value %5.3f%s\n', barvartext{v, 1}, i, pval, flagtext);
+    %end
     
     blc = [];
     
@@ -336,33 +347,17 @@ for v = 1:npolarvars
     title(pax, polarvartext{v}, 'FontSize', 8);
     
     % store p-values for different combinations of comparisons
-    pvaltable.VarName{thisplot} = polarvartext{v, 1};
-    for i = 1:nlatentcurves
-        [pval, h] = ranksum(polarvardata(lc.LatentCurve == i, v), polarvardata(lc.LatentCurve ~= i, v));
-        pvaltable(thisplot, {sprintf('Group%d_DiffMedian', i)}) = array2table(pval);
-        if h == 1
-            flagtext = ' *****';
-        else
-            flagtext = ' ';
-        end
-        fprintf('%24s : Group%d DiffMedian : p-value %5.3f%s\n', polarvartext{v, 1}, i, pval, flagtext);
-        [pval, h] = ranksum(polarvardata(lc.LatentCurve == i, v), polarvardata(lc.LatentCurve ~= i, v), 'Tail', 'right');
-        pvaltable(thisplot, {sprintf('Group%d_GrMedian', i)}) = array2table(pval);
-        if h == 1
-            flagtext = ' *****';
-        else
-            flagtext = ' ';
-        end
-        fprintf('%24s : Group%d GrMedian : p-value %5.3f%s\n', polarvartext{v, 1}, i, pval, flagtext);
-        [pval, h] = ranksum(polarvardata(lc.LatentCurve == i, v), polarvardata(lc.LatentCurve ~= i, v), 'Tail', 'left');
-        pvaltable(thisplot, {sprintf('Group%d_LsMedian', i)}) = array2table(pval);
-        if h == 1
-            flagtext = ' *****';
-        else
-            flagtext = ' ';
-        end
-        fprintf('%24s : Group%d LsMedian : p-value %5.3f%s\n', polarvartext{v, 1}, i, pval, flagtext);
-    end
+    %pvaltable.VarName{thisplot} = polarvartext{v, 1};
+    %for i = 1:nlatentcurves
+    %    [pval, h] = ranksum(polarvardata(lc.LatentCurve == i, v), polarvardata(lc.LatentCurve ~= i, v));
+    %    pvaltable(thisplot, {sprintf('Group%d_pvalDiffMedian', i)}) = array2table(pval);
+    %    if h == 1
+    %        flagtext = ' *****';
+    %    else
+    %        flagtext = ' ';
+    %    end
+    %    fprintf('%24s : Group%d DiffMedian : p-value %5.3f%s\n', polarvartext{v, 1}, i, pval, flagtext);
+    %end
     
     thisplot = thisplot + 1;    
     
@@ -370,13 +365,15 @@ end
 
 % save plot
 savePlotInDir(f, plottitle, plotsubfolder);
+savePlotInDirAsSVG(f, plottitle, plotsubfolder);
 close(f);
 
 % save p-value table
 basedir = setBaseDir();
 %xlfilename = sprintf('%s.xlsx', plottitle);
 xlfilename = sprintf('P-Values nl%d_scen%s_rs%d.xlsx', nlatentcurves, scenario, randomseed);
-writetable(pvaltable, fullfile(basedir, plotsubfolder, xlfilename));
+writetable(wcxpvaltable, fullfile(basedir, plotsubfolder, xlfilename), 'Sheet', 'Numeric');
+writetable(chisqvaltable, fullfile(basedir, plotsubfolder, xlfilename), 'Sheet', 'Non-Numeric');
 
 plottitle = sprintf('%s - Variables vs Latent Curve Set For Paper P2', plotname);
 [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');

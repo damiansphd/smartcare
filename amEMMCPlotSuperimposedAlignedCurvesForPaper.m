@@ -29,7 +29,7 @@ plottitle   = sprintf('%s - %s Superimposed %s For Paper', plotname, run_type, s
 
 plotsacross = nlatentcurves;
 plotsdown   = 1;
-plotpanels = 5;
+plotpanels = 8;
 legendpanels = 4;
 if nlatentcurves == 1
     paddingpanels = 0;
