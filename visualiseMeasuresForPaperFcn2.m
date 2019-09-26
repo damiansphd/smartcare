@@ -49,6 +49,7 @@ end
 for pat = 1:size(patientlist,1)
     scid       = patientlist(pat);
     %if ismember(scid, [23, 24, 78, 133])
+    if ismember(scid, [133])
         tic
 
         fprintf('Visualising measures for patient %d\n', scid);
@@ -288,6 +289,12 @@ for pat = 1:size(patientlist,1)
                         %fullx = (1:size(scdata.Measurement));
                         %fully = interp1(actx, acty, fullx, 'linear');
                         %fully = scdata.Measurement;
+                        
+                        actx = find(~isnan(measrow));
+                        acty = measrow(~isnan(measrow));
+                        fullx = (1:size(measrow));
+                        fully = interp1(actx, acty, fullx, 'linear');
+                        %fully = scdata.Measurement;
 
                         %plot(ax, scdata.ScaledDateNum, fully, ...
                         %    'Color', rwcolour, ...
@@ -304,6 +311,14 @@ for pat = 1:size(patientlist,1)
                         %    'Marker', 'none', ...
                         %    'LineWidth', 1.5);
 
+                        %plot(ax, days, movmean(measrow, 4, 'omitnan'), ...
+                        plot(ax, days, movmean(measrow, 4, 'omitnan'), ...
+                            'Color', smcolour, ...
+                            'LineStyle', '-', ...
+                            'Marker', 'none', ...
+                            'LineWidth', 1.5);
+
+                        
                         for a = 1:size(ivabgroupeddates, 1)
                             plotFillAreaForPaper(ax, ivabgroupeddates.Startdn(a), ivabgroupeddates.Stopdn(a), ...
                                 yl(1), yl(2), 'red', '0.1', 'none');
@@ -377,7 +392,7 @@ for pat = 1:size(patientlist,1)
         savePlotInDir(f, imagefilename, subfolder);
         savePlotInDirAsSVG(f, imagefilename, subfolder);
         close(f);
-    %end
+    end
 end
 
 end
