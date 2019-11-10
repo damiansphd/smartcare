@@ -90,7 +90,8 @@ tic
 fprintf('Trim data table of unneeded data\n');
 fprintf('--------------------------------\n');
 fprintf('Removing unused columns - UserID, FEV10, Calories, SputumSampleTaken,Activity_Points\n');
-physdata(:,{'UserID','FEV10','Calories','SputumSampleTaken_','Activity_Points'}) = [];
+%physdata(:,{'UserID','FEV10','Calories','SputumSampleTaken_','Activity_Points'}) = [];
+physdata(:,{'UserID','FEV10','Calories','Activity_Points'}) = [];
 toc
 fprintf('\n');
 
@@ -114,11 +115,32 @@ fprintf('Removing %4d blank cough, wellness and sleep measurements\n', size(idx,
 physdata(idx,:) = [];
 
 % Sputum Sample Recording - remove blanks
+physdata.SputumSampleTaken_l = physdata.SputumSampleTaken_;
+physdata.SputumSampleTaken_i(:) = 0;
+physdata.SputumSampleTaken_ = [];
+physdata.SputumSampleTaken_ = physdata.SputumSampleTaken_i;
+physdata.SputumSampleTaken_i = [];
+
 idx1 = find(ismember(physdata.RecordingType, 'SputumSampleRecording'));
-%idx2 = find(~ismember(physdata.SputumSampleTaken_,'true'));
+idx2 = find(ismember(physdata.SputumSampleTaken_l,'true'));
+idx = intersect(idx1,idx2);
+physdata.SputumSampleTaken_(idx) = 1;
+idx1 = find(ismember(physdata.RecordingType, 'SputumSampleRecording'));
+idx2 = find(~ismember(physdata.SputumSampleTaken_l,'true'));
+
+% switch these for emem heatmap
 idx = intersect(idx1,idx1);
+%idx = intersect(idx1,idx2);
 fprintf('Removing %4d sputum sample measurements\n', size(idx,1));
 physdata(idx,:) = [];
+
+physdata.SputumSampleTaken_l = [];
+% comment this out for emem heatmap
+physdata.SputumSampleTaken_ = [];
+
+
+
+
 
 % Temperature Recording - remove blanks
 idx1 = find(ismember(physdata.RecordingType, 'TemperatureRecording'));

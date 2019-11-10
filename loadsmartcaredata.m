@@ -29,7 +29,7 @@ patientid = loadAndCorrectPatientIDData(fullfile(basedir, subfolder, patientidfi
 [physdata, physdata_original, offset] = loadAndCorrectSmartCareData(fullfile(basedir, subfolder, scdatafile), patientid, detaillog);
 
 % calc and print overall data demographics before data anomaly fixes
-printDataDemographics(physdata,0);
+%printDataDemographics(physdata,0);
 
 physdata = correctSmartCareDataAnomalies(physdata);
 
@@ -55,7 +55,7 @@ physdata = analyseOvernightMeasures(physdata,0, doupdates, detaillog);
 physdata_predupehandling = physdata;
 
 % generate data demographics by patient
-generateDataDemographicsByPatientFn(physdata, cdPatient, study);
+%generateDataDemographicsByPatientFn(physdata, cdPatient, study);
 
 % handle duplicates
 physdata = handleDuplicateMeasures(physdata, study, doupdates, detaillog);

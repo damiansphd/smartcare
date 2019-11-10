@@ -5,7 +5,7 @@ subfolder = 'MatlabSavedVariables';
 
 [studynbr, study, ~] = selectStudy();
 [datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
-[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+[physdata, offset, physdata_predateoutlierhandling] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
 [cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
     cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
 
@@ -21,11 +21,23 @@ if ~exist(strcat(basedir, subfolder), 'dir')
     mkdir(strcat(basedir, subfolder));
 end
 
+runmode = input('Which patients to run for 1) Those with enough data 2) Those without enough data ?');
+if runmode ~= 1 & runmode ~= 2
+    fprintf('Invalid entry')
+    return;
+end
+if runmode == 1
+    patientlist = unique(physdata.SmartCareID);
+elseif runmode == 2
+    goodpatients = unique(physdata.SmartCareID);
+    patientlist = unique(physdata_predateoutlierhandling.SmartCareID(~ismember(physdata_predateoutlierhandling.SmartCareID, goodpatients)));
+    physdata = physdata_predateoutlierhandling;
+end
+
 patientoffsets = getPatientOffsets(physdata);
 
-patientlist = unique(physdata.SmartCareID);
-%for i = 1:size(patientlist,1)
-for i = 59:59
+for i = 1:size(patientlist,1)
+%for i = 59:59
 %for i = 1:4
     tic
     scid       = patientlist(i);
