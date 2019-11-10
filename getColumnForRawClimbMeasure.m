@@ -1,7 +1,7 @@
-function [column] = getColumnForMeasure(measure)
+function [column] = getColumnForRawClimbMeasure(measure)
 
-% getColumnForMeasure - returns the column name from physdata for the
-% measure passed in
+% getColumnForRawClimbMeasure - returns the column name from the input
+% files for project climbe measurement data
 
 switch measure
     case 'ActivityRecording'

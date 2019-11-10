@@ -27,7 +27,7 @@ for i = 1:size(measures,1)
         mstd  = std(data);
         mmin  = min(data);
         mmax  = max(data);
-        fprintf('Measure %25s has %5d measurements, with mean %4.2f, std %4.2f, min %4.2f, max %4.2f\n', m, count, mmean, mstd, mmin, mmax);
+        fprintf('Measure %25s has %5d measurements, with mean %8.2f, std %8.2f, min %8.2f, max %8.2f\n', m, count, mmean, mstd, mmin, mmax);
     else
         muniquevals = unique(physdata(idx, colname));
         fprintf('Measure %25s has %5d measurements, with %d unique valuea\n', m, count, size(muniquevals, 1));

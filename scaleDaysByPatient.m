@@ -14,7 +14,7 @@ minDatesByPatient.GroupCount = [];
 minDatesByPatient.Properties.VariableNames(2) = {'MinPatientDateNum'};
 
 if doupdates
-    physdata = innerjoin(physdata,minDatesByPatient);
+    physdata = innerjoin(physdata, minDatesByPatient);
     physdata.ScaledDateNum = physdata.DateNum - physdata.MinPatientDateNum +1;
     physdata.MinPatientDateNum = [];
     fprintf('Updates completed\n');

@@ -6,6 +6,7 @@ function [physdata] = handleDuplicateMeasures(physdata, study, doupdates, detail
 %           2) multiple rows within a few minutes
 %           3) multiple rows for the same day
 
+nadupefile = sprintf('%sNonActivityDuplicates.xlsx', study);
 
 fprintf('Handling Duplicates\n');
 fprintf('-------------------\n');
@@ -41,7 +42,12 @@ invalididx = find(physdata.SmartCareID(naexactidx) ~= physdata.SmartCareID(naexa
     string([physdata.RecordingType(naexactidx)]) ~= string([physdata.RecordingType(naexactidx+1)]));
 naexactidx(invalididx) = [];
 
-fprintf('Found %d pairs of non-activity exact matches - delete one row of each pair\n', size(naexactidx,1)); 
+fprintf('Found %d pairs of non-activity exact matches - delete one row of each pair\n', size(naexactidx,1));
+
+temp = physdata(naexactidx, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded', 'DateNum'});
+temp2 = varfun(@mean, temp, 'GroupingVariables', {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'});
+temp2.GroupCount = temp2.GroupCount * 2; % each row is a pair of dupes for this set
+writetable(temp2(:, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded', 'GroupCount'}), fullfile(basedir, 'ExcelFiles', nadupefile), 'Sheet', 'ExactTimeDupes');
 
 % from analysing, all non-activity exact dupes have same values 
 % => therefore just need to keep one of the pairs of rows
@@ -256,6 +262,10 @@ end
 
 fprintf('There are %d sets of Non-Activity similar dupes (< 30mins)\n', size(addsimrows,1));
 
+temp = physdata(nasimpairidx, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded', 'DateNum'});
+temp2 = varfun(@mean, temp, 'GroupingVariables', {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'});
+writetable(temp2(:, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded', 'GroupCount'}), fullfile(basedir, 'ExcelFiles', nadupefile), 'Sheet', 'SimilarTimeDupes');
+
 if doupdates
     fprintf('Deleting %d Activity similar dupe rows\n', size(nasimpairidx,1)); 
     physdata(nasimpairidx,:) = [];
@@ -379,7 +389,9 @@ for i = 1:size(nasamedayidx,1)
     if (scid ~= priorscid | dtnum ~= priordtnum | ~ismember(rectype, priorrectype))
         ntidx = find(physdata.SmartCareID == scid & physdata.DateNum == dtnum & ismember(physdata.RecordingType,rectype));
         temp = physdata(ntidx,:);
-        temp.SputumColour = [];
+        if ismember(study, 'CL')
+            temp.SputumColour = [];
+        end
         %meantable = varfun(@mean, physdata(ntidx,:), 'GroupingVariables', {'SmartCareID','DateNum','UserName','RecordingType'});
         meantable = varfun(@mean, temp, 'GroupingVariables', {'SmartCareID','DateNum','UserName','RecordingType'});
         if (size(meantable,1) >1)
@@ -397,8 +409,10 @@ for i = 1:size(nasamedayidx,1)
         rowtoadd.CalcFEV1SetAs = meantable.mean_CalcFEV1SetAs;
         rowtoadd.ScalingRatio = meantable.mean_ScalingRatio;
         rowtoadd.CalcFEV1_ = meantable.mean_CalcFEV1_;
-        rowtoadd.NumSleepDisturb = meantable.mean_NumSleepDisturb;
-        rowtoadd.BreathsPerMin = meantable.mean_BreathsPerMin;
+        if ismember(study, 'CL')
+            rowtoadd.NumSleepDisturb = meantable.mean_NumSleepDisturb;
+            rowtoadd.BreathsPerMin = meantable.mean_BreathsPerMin;
+        end
         addsamerows = [addsamerows ; rowtoadd];
         nasamedaypairidx = [nasamedaypairidx; ntidx];
         if detaillog
@@ -412,6 +426,10 @@ for i = 1:size(nasamedayidx,1)
 end
 
 fprintf('There are %d sets of Non-Activity same day dupes\n', size(addsamerows,1));
+
+temp = physdata(nasamedaypairidx, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded', 'DateNum'});
+temp2 = varfun(@mean, temp, 'GroupingVariables', {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'});
+writetable(temp2(:, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded', 'GroupCount'}), fullfile(basedir, 'ExcelFiles', nadupefile), 'Sheet', 'SameDayDupes');
 
 if doupdates
     fprintf('Deleting %d Activity similar dupe rows\n', size(nasamedaypairidx,1)); 

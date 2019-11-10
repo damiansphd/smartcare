@@ -24,7 +24,11 @@ fprintf('---------------------------------------------------------\n');
         
 measures = unique(physdata.RecordingType);
 nmeasures = size(measures, 1);
-plotsacross = 3;
+if nmeasures > 12
+    plotsacross = 4;
+else
+    plotsacross = 3;
+end
 plotsdown = ceil(nmeasures/plotsacross);
 
 for i = 1:nmeasures
@@ -34,7 +38,7 @@ for i = 1:nmeasures
     ax = subplot(plotsdown, plotsacross, i, 'Parent', p);
     %histogram(hour(datetime(physdata.Date_TimeRecorded(idx))));
     histogram(ax, hour(physdata.Date_TimeRecorded(idx)));
-    t = title(ax, sprintf('%s by Hour of Day',m), 'FontSize', 6);
+    t = title(ax, m, 'FontSize', 6);
 end
 
 basedir = setBaseDir();

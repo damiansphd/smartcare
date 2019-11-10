@@ -8,11 +8,19 @@ switch measure
         column = 'Activity_Steps';
     case {'AppetiteRecording', 'BreathlessnessRecording', 'CoughRecording','SleepActivityRecording', 'SputumVolumeRecording', 'TirednessRecording', 'WellnessRecording'}
         column = 'Rating';
+    case 'CalorieRecording'
+        column = 'Calories';
+    case {'FEV1Recording', 'FEF2575Recording', 'FEV075Recording', 'FEV1DivFEV6Recording', 'FEV6Recording'}
+        column = 'FEV';
+    case {'HasColdOrFluRecording', 'HasHayFeverRecording'}
+        column = 'HasCondition';
     case 'LungFunctionRecording'
         column = 'CalcFEV1_';
+    case {'MinsAsleepRecording', 'MinsAwakeRecording'}
+        column = 'Sleep';
     case 'O2SaturationRecording'
         column = 'O2Saturation';
-    case 'PulseRateRecording'
+    case {'PulseRateRecording', 'RestingHRRecording'}
         column = 'Pulse_BPM_';
     case 'RespiratoryRateRecording'
         column = 'BreathsPerMin';
@@ -20,11 +28,14 @@ switch measure
         column = 'NumSleepDisturb';
     case {'SputumColorRecording', 'SputumColourRecording'}
         column = 'SputumColour';
+    case {'SputumSampleRecording'}
+        column = 'SputumSampleTaken_';
     case 'TemperatureRecording'
         column = 'Temp_degC_';
     case 'WeightRecording'
         column = 'WeightInKg';
     otherwise
+        fprintf('*** Unknown measure %s ***\n', measure);
         column = '';
 end
 

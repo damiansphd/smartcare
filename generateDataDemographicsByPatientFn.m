@@ -11,7 +11,12 @@ cdPatient = sortrows(cdPatient, {'ID'}, 'ascend');
 
 fprintf('Calculating data demographics by patient\n');
 tempdata = physdata;
-tempdata(:,{'UserName', 'ScaledDateNum', 'DateNum', 'Date_TimeRecorded', 'FEV1', 'PredictedFEV', 'ScalingRatio', 'CalcFEV1SetAs'}) = [];
+tempdata(:,{'UserName', 'ScaledDateNum', 'DateNum', 'Date_TimeRecorded'}) = [];
+if ismember(study, {'SC', 'CL'})
+    tempdata(:,{'FEV1', 'PredictedFEV', 'ScalingRatio', 'CalcFEV1SetAs'}) = [];
+elseif ismember(study, {'BR'})
+    tempdata(:,{'CaptureType'}) = [];
+end
 
 %if any(ismember(tempdata.Properties.VariableNames', {'SputumColour'}))
 %    tempdata.SputumColour = [];
@@ -31,11 +36,8 @@ measurecounttable = demographicstable(:, {'SmartCareID','RecordingType', 'GroupC
 
 demographicstable = sortrows(demographicstable, {'RecordingType','SmartCareID'});
 overalltable = sortrows(overalltable, {'RecordingType'});
-
 toc
 fprintf('\n');
-
-%outputfilename = sprintf('datademographicsbypatient-%s.mat',datestr(clock(),30));
 
 tic
 timenow = datestr(clock(),30);
@@ -57,5 +59,6 @@ writetable(measurecounttable, fullfile(basedir, subfolder, outputfilename), 'She
 writetable(demographicstable, fullfile(basedir, subfolder, outputfilename), 'Sheet', 'DataDemographicsByPatient');
 writetable(overalltable, fullfile(basedir, subfolder, outputfilename), 'Sheet', 'OverallDataDemographics');
 toc
+fprintf('\n');
 
 end
