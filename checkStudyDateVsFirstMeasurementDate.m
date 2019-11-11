@@ -3,19 +3,16 @@ clc; clear; close all;
 tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-clinicalmatfile = 'clinicaldata.mat';
-scmatfile = 'smartcaredata.mat';
 
-fprintf('Loading Clinical data\n');
-load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading SmartCare measurement data\n');
-load(fullfile(basedir, subfolder, scmatfile));
-toc
+[studynbr, study, studyfullname] = selectStudy();
+[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
+[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+[cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
 
 basedir = setBaseDir();
 subfolder = 'ExcelFiles';
-outputfilename = 'StudyStartvsFirstMeasurement.xlsx';
-offset  = datenum(datetime(2015,8,5,0,0,0)); 
+outputfilename = sprintf('%s-StudyStartvsFirstMeasurement.xlsx', study);
 
 tic
 % get patients with enough data
@@ -36,8 +33,8 @@ outputtable = table('Size',[1 6], 'VariableTypes', {'string(39)','int32','dateti
 rowtoadd = outputtable;
 outputtable(1,:) = [];
 
-measurestable = physdata(1:10,:);
-measurestable = [];
+measurestable = physdata(1,:);
+measurestable(1,:) = [];
 
 
 oldid = patients.ID(1);

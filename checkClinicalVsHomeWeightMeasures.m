@@ -1,21 +1,13 @@
 clc; clear; close all;
 
-tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-clinicalmatfile = 'clinicaldata.mat';
-scmatfile = 'smartcaredata.mat';
 
-fprintf('Loading Clinical data\n');
-load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading SmartCare measurement data\n');
-load(fullfile(basedir, subfolder, scmatfile));
-toc
-
-tic
-basedir = setBaseDir();
-subfolder = 'Plots';
-filenameprefix = 'ClinicalVsHomeWeight';
+[studynbr, study, studyfullname] = selectStudy();
+[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
+[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+[cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
 
 % get the date scaling offset for each patient
 patientoffsets = getPatientOffsets(physdata);
@@ -44,30 +36,34 @@ maxdays = max([pmeasuresweight.ScaledDateNum ; pstudydateweight.ScaledDateNum + 
 % with the clinical weight overlaid as a horizontal line
 % six plots per page
 
-plotsacross = 2;
-plotsdown = 4;
+plotsacross = 3;
+plotsdown = 5;
 plotsperpage = plotsacross * plotsdown;
-toc
+
+subfolder = sprintf('Plots/%s', study);
+if ~exist(strcat(basedir, subfolder), 'dir')
+    mkdir(strcat(basedir, subfolder));
+end
+
+filenameprefix = 'ClinicalVsHomeWeight';
 
 tic
-fprintf('Weight Plots for anomalous clinical weight measures\n');
-filenameprefix = 'ClinicalVsHomeWeight - Clinical Anomalies';
-figurearray = createAndSaveWeightPlots(pmeasuresweight, pstudydateweight(ismember(pstudydateweight.SmartCareID, [61,178,191,193,194,195,196,197,200]),:), ...
-    mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
-close all;
-toc
-tic
-fprintf('Weight Plots for anomalous home weight measures\n');
-filenameprefix = 'ClinicalVsHomeWeight - Home Anomalies';
-figurearray = createAndSaveWeightPlots(pmeasuresweight, pstudydateweight(ismember(pstudydateweight.SmartCareID, [30, 35, 62, 80, 99. 100, 102, 134, 216, 241]),:), ...
-    mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
-close all;
-toc
+%fprintf('Weight Plots for anomalous clinical weight measures\n');
+%filenameprefix = 'ClinicalVsHomeWeight - Clinical Anomalies';
+%figurearray = createAndSaveWeightPlots(pmeasuresweight, pstudydateweight(ismember(pstudydateweight.SmartCareID, [61,178,191,193,194,195,196,197,200]),:), ...
+%    mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
+%close all;
+%toc
+%tic
+%fprintf('Weight Plots for anomalous home weight measures\n');
+%filenameprefix = 'ClinicalVsHomeWeight - Home Anomalies';
+%figurearray = createAndSaveWeightPlots(pmeasuresweight, pstudydateweight(ismember(pstudydateweight.SmartCareID, [30, 35, 62, 80, 99. 100, 102, 134, 216, 241]),:), ...
+%    mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
+%close all;
+%toc
 tic
 fprintf('Weight Plots for all patients\n');
-filenameprefix = 'ClinicalVsHomeWeight';
-figurearray = createAndSaveWeightPlots(pmeasuresweight, pstudydateweight, ...
+createAndSaveWeightPlots(pmeasuresweight, pstudydateweight, ...
     mindays, maxdays, plotsacross, plotsdown, plotsperpage, basedir, subfolder, filenameprefix);
-close all;
 toc
 

@@ -198,6 +198,7 @@ idx = isnat(brPatient.StudyDate) | isnat(brPatient.DOB);
 fprintf('Found %d Patients with blank dates\n', sum(idx));
 if sum(idx) > 0
     brPatient(idx,{'ID', 'Hospital', 'StudyNumber', 'StudyDate', 'DOB'})
+    brPatient(idx, :) = [];
 end
 idx = brPatient.Height < 120 | brPatient.Height > 220;
 fprintf('Found %d Patients height < 1.2m or > 2.2m\n', sum(idx));
@@ -230,16 +231,19 @@ idx = isnat(brAdmissions.Admitted) | isnat(brAdmissions.Discharge);
 fprintf('Found %d Admissions with blank dates\n', sum(idx));
 if sum(idx) > 0
     brAdmissions(idx,:)
+    brAdmissions(idx, :) = [];
 end
 idx = brAdmissions.Discharge < brAdmissions.Admitted;
 fprintf('Found %d Admissions with Discharge before Admission\n', sum(idx));
 if sum(idx) > 0
     brAdmissions(idx,:)
+    brAdmissions(idx, :) = [];
 end
 idx = days(brAdmissions.Discharge - brAdmissions.Admitted) > 30;
 fprintf('Found %d Admissions > 1 month duration\n', sum(idx));
 if sum(idx) > 0
     brAdmissions(idx,:)
+    brAdmissions(idx, :) = [];
 end
 
 % antibiotics data
@@ -247,16 +251,19 @@ idx = isnat(brAntibiotics.StartDate) | isnat(brAntibiotics.StopDate);
 fprintf('Found %d Antibiotics with blank dates\n', sum(idx));
 if sum(idx) > 0
     brAntibiotics(idx,:)
+    brAntibiotics(idx, :) = [];
 end
 idx = brAntibiotics.StopDate < brAntibiotics.StartDate;
 fprintf('Found %d Antibiotics with Stop Date before Start Date\n', sum(idx));
 if sum(idx) > 0
     brAntibiotics(idx,:)
+    brAntibiotics(idx, :) = [];
 end
 idx = days(brAntibiotics.StopDate - brAntibiotics.StartDate) > 30;
 fprintf('Found %d Antibiotics > 1 month duration\n', sum(idx));
 if sum(idx) > 0
     brAntibiotics(idx,:)
+    brAntibiotics(idx, :) = [];
 end
 
 % microbiology data
@@ -271,6 +278,7 @@ idx = isnat(brClinicVisits.AttendanceDate);
 fprintf('Found %d Clinic Visits with blank dates\n', sum(idx));
 if sum(idx) > 0
     brClinicVisits(idx,:)
+    brClinicVisits(idx, :) = [];
 end
 
 % other visits
@@ -278,6 +286,7 @@ idx = isnat(brOtherVisits.AttendanceDate);
 fprintf('Found %d Other Visits with blank dates\n', sum(idx));
 if sum(idx) > 0
     brOtherVisits(idx,:)
+    brOtherVisits(idx, :) = [];
 end
 
 % pft
@@ -285,16 +294,19 @@ idx = isnat(brPFT.LungFunctionDate);
 fprintf('Found %d PFT measurements with blank dates\n', sum(idx));
 if sum(idx) > 0
     brPFT(idx,:)
+    brPFT(idx, :) = [];
 end
 idx = brPFT.FEV1 == 0;
 fprintf('Found %d zero PFT measurements\n', sum(idx));
 if sum(idx) > 0
     brPFT(idx,:)
+    brPFT(idx, :) = [];
 end
 idx = brPFT.FEV1 > 4 | brPFT.FEV1 < 0.5;
 fprintf('Found %d < 0.5l or > 4l PFT Clinical Measurements\n', sum(idx));
 if sum(idx) > 0
     brPFT(idx,:)
+    brPFT(idx, :) = [];
 end
 
 % crp
@@ -302,6 +314,7 @@ idx = isnat(brCRP.CRPDate);
 fprintf('Found %d CRP measurements with blank dates\n', sum(idx));
 if sum(idx) > 0
     brCRP(idx,:)
+    brCRP(idx, :) = [];
 end
 idx = brCRP.NumericLevel > 200;
 fprintf('Found %d > 200mg/L CRP measurements\n', sum(idx));

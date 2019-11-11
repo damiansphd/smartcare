@@ -3,20 +3,18 @@ clc; clear; close all;
 tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-clinicalmatfile = 'clinicaldata.mat';
-scmatfile = 'smartcaredata.mat';
 
-fprintf('Loading Clinical data\n');
-load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading SmartCare measurement data\n');
-load(fullfile(basedir, subfolder, scmatfile));
-toc
+[studynbr, study, studyfullname] = selectStudy();
+[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
+[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+[cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
 
 fprintf('\n');
 
 basedir = setBaseDir();
 subfolder = 'ExcelFiles';
-outputfilename = 'ClinicVisitsVsPFT.xlsx';
+outputfilename = sprintf('%s-ClinicVisitsVsPFT.xlsx', study);
 residualsheet = 'PFTWithNoClinicAdmissionAB';
 
 tic
@@ -46,12 +44,12 @@ for i = 1:size(cdPFT,1)
     
     rowtoadd.SmartCareID = scid;
     rowtoadd.Hospital = cdPFT.Hospital{i};
-    rowtoadd.LungFunctionID = cdPFT.LungFunctionID(i);
+    %rowtoadd.LungFunctionID = cdPFT.LungFunctionID(i);
     rowtoadd.LungFunctionDate = pftdate;
     rowtoadd.FEV1  = cdPFT.FEV1(i);
     rowtoadd.FEV1_ = cdPFT.FEV1_(i);
-    rowtoadd.FVC1  = cdPFT.FVC1(i);
-    rowtoadd.FVC1_ = cdPFT.FVC1_(i);
+    %rowtoadd.FVC1  = cdPFT.FVC1(i);
+    %rowtoadd.FVC1_ = cdPFT.FVC1_(i);
     
     idx =  find(cdAdmissions.ID == scid & (cdAdmissions.Admitted-days(7)) <= pftdate & cdAdmissions.Discharge >= pftdate);
     idx2 = find(cdAntibiotics.ID == scid & ismember(cdAntibiotics.Route, {'IV'}) & cdAntibiotics.StartDate <= pftdate & cdAntibiotics.StopDate >= pftdate);

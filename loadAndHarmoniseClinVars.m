@@ -42,6 +42,21 @@ elseif studynbr == 3
     cdHghtWght     = clHghtWght;
     cdMedications  = [];
     cdNewMeds      = [];
+elseif studynbr == 4
+    load(fullfile(basedir, subfolder, clinicalmatfile), 'brPatient', 'brMicrobiology', 'brClinicVisits', 'brPFT', 'brAdmissions', ...
+        'brAntibiotics', 'brCRP', 'brEndStudy', 'brOtherVisits', 'brHghtWght');
+    cdPatient      = brPatient;
+    cdMicrobiology = brMicrobiology;
+    cdClinicVisits = brClinicVisits;
+    cdPFT          = brPFT;
+    cdAdmissions   = brAdmissions;
+    cdAntibiotics  = brAntibiotics;
+    cdCRP          = brCRP;
+    cdEndStudy     = brEndStudy;
+    cdOtherVisits  = brOtherVisits;
+    cdHghtWght     = brHghtWght;
+    cdMedications  = [];
+    cdNewMeds      = [];
 end
 
 toc

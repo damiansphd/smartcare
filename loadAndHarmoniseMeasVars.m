@@ -11,13 +11,20 @@ physdata_original = [];
 if studynbr == 1
     load(fullfile(basedir, subfolder, datamatfile), 'physdata', 'physdata_predateoutlierhandling', 'offset');
 elseif studynbr == 2
-    load(fullfile(basedir, subfolder, datamatfile), 'tmphysdata', 'tmoffset');
+    load(fullfile(basedir, subfolder, datamatfile), 'tmphysdata', 'tmoffset', 'tmphysdata_predateoutlierhandling');
     physdata       = tmphysdata;
     offset         = tmoffset;
+    physdata_predateoutlierhandling = tmphysdata_predateoutlierhandling;
 elseif studynbr == 3
-    load(fullfile(basedir, subfolder, datamatfile), 'clphysdata', 'cloffset');
+    load(fullfile(basedir, subfolder, datamatfile), 'clphysdata', 'cloffset', 'clphysdata_predateoutlierhandling');
     physdata       = clphysdata;
     offset         = cloffset;
+    physdata_predateoutlierhandling = clphysdata_predateoutlierhandling;
+elseif studynbr == 4
+    load(fullfile(basedir, subfolder, datamatfile), 'brphysdata', 'broffset', 'brphysdata_predateoutlierhandling');
+    physdata       = brphysdata;
+    offset         = broffset;
+    physdata_predateoutlierhandling = brphysdata_predateoutlierhandling;
 end
 toc
 

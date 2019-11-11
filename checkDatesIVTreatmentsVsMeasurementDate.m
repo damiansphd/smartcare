@@ -3,18 +3,16 @@ clc; clear; close all;
 tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-clinicalmatfile = 'clinicaldata.mat';
-scmatfile = 'smartcaredata.mat';
 
-fprintf('Loading Clinical data\n');
-load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading SmartCare measurement data\n');
-load(fullfile(basedir, subfolder, scmatfile));
-toc
+[studynbr, study, studyfullname] = selectStudy();
+[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
+[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+[cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
 
 basedir = setBaseDir();
 subfolder = 'ExcelFiles';
-outputfilename = 'TreatmentsOutsideStudyPeriodNotionalEnd.xlsx';
+outputfilename = sprintf('%s-TreatmentsOutsideStudyPeriodNotionalEnd.xlsx', study);
 
 tic
 % get patients with enough data

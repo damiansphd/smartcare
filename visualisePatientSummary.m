@@ -15,7 +15,6 @@ load(fullfile(basedir, subfolder, demographicsmatfile), 'demographicstable', 'ov
 toc
 fprintf('\n');
 
-basedir = setBaseDir();
 subfolder = sprintf('Plots/%s', study);
 if ~exist(strcat(basedir, subfolder), 'dir')
     mkdir(strcat(basedir, subfolder));
@@ -49,6 +48,11 @@ for i = 1:size(patientlist,1)
     spstartdn  = datenum(spstart) - offset - poffset + 1;
     spend      = cdPatient.StudyDate(cdPatient.ID == scid)+days(183);
     spenddn    = spstartdn + 183;
+    if studynbr == 4
+        spendstatus = ' ';
+    else
+        spendstatus = cdEndStudy.EndOfStudyReason{cdEndStudy.ID == scid};
+    end
     hmstart    = min(physdata.Date_TimeRecorded(physdata.SmartCareID == scid));
     hmstartdn  = min(physdata.ScaledDateNum(physdata.SmartCareID == scid));
     hmend      = max(physdata.Date_TimeRecorded(physdata.SmartCareID == scid));
@@ -100,7 +104,7 @@ for i = 1:size(patientlist,1)
                     {sprintf('Hospital         :  %s', hospital)}                                                         ; ...
                     {sprintf('Study Start Date :  %s', datestr(spstart,1))}                                               ; ...
                     {sprintf('Study End Date   :  %s', datestr((spend),1))}                                               ; ...
-                    {sprintf('Study Status     :  %s', cdEndStudy.EndOfStudyReason{cdEndStudy.ID == scid})}               ; ...
+                    {sprintf('Study Status     :  %s', spendstatus)}                                                      ; ...
                     {sprintf(' ')}                                                                                        ; ...
                     {sprintf('              Clinical Data')}                                                              ; ...
                     {sprintf('   StudyPeriod (HomeMeasurePeriod, All)')}                                                  ; ...
@@ -189,7 +193,15 @@ for i = 1:size(patientlist,1)
         rightstring = [rightstring ; rowstring];
     end
     
-    npages = 3;
+    cplotsacross = 1;
+    cplotsdown = 3;
+    
+    mplotsacross = 1;
+    mplotsdown = 6;
+    mplotsperpage = mplotsacross * mplotsdown;
+    
+    measures = unique(physdata.RecordingType);
+    npages = ceil(size(measures, 1) / mplotsperpage) + 1;
     page = 1;
     filenameprefix = sprintf('%s-Patient Summary - ID %d Hosp %s', study, scid, hospital);
     imagefilename = sprintf('%s - Page %d of %d', filenameprefix, page, npages);
@@ -203,6 +215,7 @@ for i = 1:size(patientlist,1)
                     'FontSize', 8, ...
                     'FontWeight', 'bold', ...
                     'HorizontalAlignment', 'left', ...
+                    'BackgroundColor', 'white', ...
                     'String', leftstring);
     sp2 = uicontrol('Parent', p, ... 
                     'Units', 'normalized', ...
@@ -212,19 +225,20 @@ for i = 1:size(patientlist,1)
                     'FontSize', 8, ...
                     'FontWeight', 'bold', ...
                     'HorizontalAlignment', 'left', ...
+                    'BackgroundColor', 'white', ...
                     'String', rightstring);
     sp3 = uipanel('Parent', p, ...
                   'BorderType', 'none', ...
+                  'BackgroundColor', 'white', ...
                   'OuterPosition', [0.0, 0.0, 1.0, 0.45]);
     
-    plotsacross = 1;
-    plotsdown = 3;
+    
     
     daysfrom = min(spstartdn, hmstartdn) - 14;
     daysto   = max(spenddn, hmenddn) + 14;
     xl = [daysfrom daysto];
     
-    ax = subplot(plotsdown, plotsacross, 1,'Parent',sp3);
+    ax = subplot(cplotsdown, cplotsacross, 1,'Parent',sp3);
     hold on;
     title(ax, 'Clinic Visits ({\color{green}g}), Admissions ({\color{red}r}), IV Antibiotics ({\color{magenta}m}) and Oral Antibiotics ({\color{cyan}c})');
     xlabel(ax, 'Days');
@@ -264,7 +278,7 @@ for i = 1:size(patientlist,1)
     end
     hold off;
     
-    ax = subplot(plotsdown, plotsacross, 2,'Parent',sp3);
+    ax = subplot(cplotsdown, cplotsacross, 2,'Parent',sp3);
     pcrp = cdCRP(cdCRP.ID == scid,:);
     pcrp.ScaledDateNum = datenum(pcrp.CRPDate) - offset - poffset + 1;
     if size(pcrp,1) > 0
@@ -294,7 +308,7 @@ for i = 1:size(patientlist,1)
         hold off;
     end
     
-    ax = subplot(plotsdown, plotsacross, 3,'Parent',sp3);
+    ax = subplot(cplotsdown, cplotsacross, 3,'Parent',sp3);
     ppft = cdPFT(cdPFT.ID == scid,:);
     ppft.ScaledDateNum = datenum(ppft.LungFunctionDate) - offset - poffset + 1;
     if size(ppft,1) > 0
@@ -331,10 +345,8 @@ for i = 1:size(patientlist,1)
     imagefilename = sprintf('%s - Page %d of %d', filenameprefix, page, npages);
     [f, p] = createFigureAndPanel(imagefilename, 'Portrait', 'a4');
     
-    % plots for home measures on pages 2 & 3
-    plotsacross = 1;
-    plotsdown = 5;
-    plotsperpage = plotsacross * plotsdown;
+    % plots for home measures on remaining pages
+    
     
     % get all measures so the plots for each appear in a consistent place
     % across all patients
@@ -347,7 +359,7 @@ for i = 1:size(patientlist,1)
         scdata.Properties.VariableNames{column} = 'Measurement';
         
         if size(scdata,1) > 0
-            ax = subplot(plotsdown, plotsacross, m - (page-2) * plotsperpage,'Parent',p);
+            ax = subplot(mplotsdown, mplotsacross, m - (page-2) * mplotsperpage,'Parent',p);
             hold on;
             xlim(xl);
             rangelimit = setMinYDisplayRangeForMeasure(measure);
@@ -387,7 +399,7 @@ for i = 1:size(patientlist,1)
             hold off;
         end
         
-        if round(m/plotsperpage) == m/plotsperpage
+        if round(m/mplotsperpage) == m/mplotsperpage
             savePlotInDir(f, imagefilename, subfolder);
             close(f);
             page = page + 1;

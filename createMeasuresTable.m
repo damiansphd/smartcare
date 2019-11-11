@@ -4,7 +4,7 @@ function [measures, nmeasures] = createMeasuresTable(physdata)
 
 nmeasures = size(unique(physdata.RecordingType), 1);
 
-measures = table('Size',[nmeasures 4], 'VariableTypes', {'int32', 'cell', 'cell', 'cell'} ,'VariableNames', {'Index', 'Name', 'DisplayName', 'Column'});
+measures = table('Size',[nmeasures 4], 'VariableTypes', {'double', 'cell', 'cell', 'cell'} ,'VariableNames', {'Index', 'Name', 'DisplayName', 'Column'});
 measures.Index = [1:nmeasures]';
 measures.Name = unique(physdata.RecordingType);
 measures.DisplayName = replace(measures.Name, 'Recording', '');

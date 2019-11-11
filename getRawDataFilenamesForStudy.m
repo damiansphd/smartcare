@@ -14,6 +14,9 @@ elseif studynbr == 2
 elseif studynbr == 3
     clinicalmatfile = 'climbclinicaldata.mat';
     datamatfile     = 'climbdata.mat';
+elseif studynbr == 4
+    clinicalmatfile = 'breatheclinicaldata.mat';
+    datamatfile     = 'breathedata.mat';
 else
     fprintf('Invalid study\n');
     clinicalmatfile = 'unknown';

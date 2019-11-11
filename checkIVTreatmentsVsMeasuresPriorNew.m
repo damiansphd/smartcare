@@ -260,7 +260,7 @@ outputfilename = sprintf('%sMeasuresPriorToIVTreatments_gap%d.xlsx', study, trea
 summarysheet = 'SummaryByIVTreatment';
 detailsheet = 'MeasuresDetail';
 
-writetable(ivandmeasurestable,        fullfile(basedir, subfolder, outputfilename), 'Sheet', summarysheet);
+writetable(ivandmeasurestable,  fullfile(basedir, subfolder, outputfilename), 'Sheet', summarysheet);
 writetable(measuresdetailtable, fullfile(basedir, subfolder, outputfilename), 'Sheet', detailsheet);
 
 toc

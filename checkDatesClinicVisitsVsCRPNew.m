@@ -1,22 +1,21 @@
 clc; clear; close all;
 
+
 tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-clinicalmatfile = 'clinicaldata.mat';
-scmatfile = 'smartcaredata.mat';
 
-fprintf('Loading Clinical data\n');
-load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading SmartCare measurement data\n');
-load(fullfile(basedir, subfolder, scmatfile));
-toc
+[studynbr, study, studyfullname] = selectStudy();
+[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
+[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+[cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
 
 fprintf('\n');
 
 basedir = setBaseDir();
 subfolder = 'ExcelFiles';
-outputfilename = 'ClinicVisitsVsCRP.xlsx';
+outputfilename = sprintf('%s-ClinicVisitsVsCRP.xlsx', study);
 residualsheet = 'CRPWithNoClinicAdmissionAB';
 
 tic
@@ -46,7 +45,7 @@ for i = 1:size(cdCRP,1)
     
     rowtoadd.SmartCareID = scid;
     rowtoadd.Hospital = cdCRP.Hospital{i};
-    rowtoadd.CRPID = cdCRP.CRPID(i);
+    %rowtoadd.CRPID = cdCRP.CRPID(i);
     rowtoadd.CRPDate = crpdate;
     rowtoadd.CRPLevel = cdCRP.NumericLevel(i);
     

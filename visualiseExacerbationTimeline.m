@@ -1,27 +1,17 @@
 clc; clear; close all;
 
-studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
-
-if studynbr == 1
-    study = 'SC';
-    clinicalmatfile = 'clinicaldata.mat';
-    datamatfile = 'smartcaredata.mat';
-    ivandmeasuresfile = 'SCivandmeasures.mat';
-    datademographicsfile = 'SCdatademographicsbypatient.mat';
-elseif studynbr == 2
-    study = 'TM';
-    clinicalmatfile = 'telemedclinicaldata.mat';
-    datamatfile = 'telemeddata.mat';
-    ivandmeasuresfile = 'TMivandmeasures.mat';
-    datademographicsfile = 'TMdatademographicsbypatient.mat';
-else
-    fprintf('Invalid study\n');
-    return;
-end
-
-tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
+
+[studynbr, study, ~] = selectStudy();
+chosentreatgap = selectTreatmentGap();
+[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
+[physdata, offset, physdata_predateoutlierhandling] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+[cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
+ivandmeasuresfile = sprintf('%sivandmeasures_gap%d.mat', study, chosentreatgap);
+
+tic
 fprintf('Loading clinical data\n');
 load(fullfile(basedir, subfolder, clinicalmatfile));
 fprintf('Loading measurement data\n');
@@ -29,21 +19,8 @@ load(fullfile(basedir, subfolder, datamatfile));
 fprintf('Loading iv treatment and measures prior data\n');
 load(fullfile(basedir, subfolder, ivandmeasuresfile));
 fprintf('Loading datademographics by patient\n');
-load(fullfile(basedir, subfolder, datademographicsfile));
+load(fullfile(basedir, subfolder, demographicsmatfile));
 toc
-
-if studynbr == 2
-    physdata = tmphysdata;
-    cdPatient = tmPatient;
-    cdMicrobiology = tmMicrobiology;
-    cdAntibiotics = tmAntibiotics;
-    cdAdmissions = tmAdmissions;
-    cdPFT = tmPFT;
-    cdCRP = tmCRP;
-    cdClinicVisits = tmClinicVisits;
-    cdEndStudy = tmEndStudy;
-    offset = tmoffset;
-end
 
 tic
 % sort antibiotic and admission clinical data consistently
@@ -67,11 +44,11 @@ patientoffsets = getPatientOffsets(physdata);
 abTreatments = innerjoin(patientoffsets, abTreatments);
 
 % set variables to format uipane
-plotsacross = 2;
-plotsdown = 5;
+measures = unique(physdata.RecordingType);
+plotsacross = 3;
+plotsdown = ceil((1 + size(measures, 1)) / plotsacross);
 plotsperpage = plotsacross * plotsdown;
-basedir = setBaseDir();
-subfolder = 'Plots';
+subfolder = sprintf('Plots/%s', study);
 
 % treat all antibiotic treatments within a -7/+25 day window as being part of
 % the same event
@@ -157,7 +134,7 @@ for i = 1:size(abTreatments,1)
     hold off    
         
     % add plots of measures here
-    measures = unique(physdata.RecordingType);
+    
     for b = 1:size(measures,1)
         measure = measures{b};
         column = getColumnForMeasure(measure);
@@ -167,27 +144,39 @@ for i = 1:size(abTreatments,1)
         scdata.Properties.VariableNames{column} = 'Measurement';
         scdata.DateNum = scdata.DateNum - eventstartdn;
         if size(scdata,1) > 0
-            subplot(plotsdown,plotsacross,b+1,'Parent',p);
+            ax = subplot(plotsdown,plotsacross,b+1,'Parent',p);
             hold on;
             xl = [xplotstartdn xplotstopdn];
             xlim(xl);
             % set y range to be the number of rows in the event table, with a
             % minimum of 8 if less than this
-            ydisplaymin = min(scdata.Measurement) * .9;
-            ydisplaymax = max(scdata.Measurement) * 1.1;
-            yl = [ydisplaymin ydisplaymax];
+            rangelimit = setMinYDisplayRangeForMeasure(measure);
+            yl = setYDisplayRange(min(scdata.Measurement), max(scdata.Measurement), rangelimit);
+            %ydisplaymin = min(scdata.Measurement) * .9;
+            %ydisplaymax = max(scdata.Measurement) * 1.1;
+            %if ydisplaymin == 0 && ydisplaymax == 0
+            %    ydisplaymax = 1;
+            %end
+            %yl = [ydisplaymin ydisplaymax];
             ylim(yl);
-            title(measure);
-            xlabel('Days');
-            ylabel('Measure');
-            plot(scdata.DateNum, scdata.Measurement, ...
+            title(ax, measure);
+            xlabel(ax, 'Days');
+            ylabel(ax, 'Measure');
+            plot(ax, scdata.DateNum, scdata.Measurement, ...
                 'Color', [0, 0.65, 1], ...
-                'LineStyle', '-', ...
+                'LineStyle', ':', ...
                 'Marker', 'o', ...
                 'LineWidth',1,...
-                'MarkerSize',3,...
+                'MarkerSize',2,...
                 'MarkerEdgeColor','b',...
                 'MarkerFaceColor','g');
+            
+            plot(ax, scdata.DateNum, movmean(scdata.Measurement, 4, 'omitnan'), ...
+                'Color', [0, 0.65, 1], ...
+                'LineStyle', '-', ...
+                'Marker', 'none', ...
+                'LineWidth', 1);
+            
             % add vertical line to mark event date & IV antibiotics,
             % & admissions, 
             admdates = unique([eventtable.StartDateNum(ismember(eventtable.EventType, 'Admission')) ; eventtable.StopDateNum(ismember(eventtable.EventType, 'Admission'))]);
@@ -195,18 +184,18 @@ for i = 1:size(abTreatments,1)
             ivdates = setdiff(ivdates, admdates);
             line( [0 0], yl, 'Color', 'black', 'LineStyle', ':', 'LineWidth', 1)
             for c = 1:size(admdates,1)
-                line( [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
+                line(ax, [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
             end
             for c = 1:size(ivdates,1)
-                line( [ivdates(c) ivdates(c)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
+                line(ax, [ivdates(c) ivdates(c)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
             end
             % add horizontal lines for mid50mean and mid50 min/max
             ddcolumn = sprintf('Fun_%s',column);
             mid50mean = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(5);
             mid50std = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(6);
-            line( xl, [mid50mean mid50mean] , 'Color', 'bl', 'LineStyle', '--', 'LineWidth', 1)
-            line( xl, [mid50mean-mid50std mid50mean-mid50std] , 'Color', 'bl', 'LineStyle', ':', 'LineWidth', 1)
-            line( xl, [mid50mean+mid50std mid50mean+mid50std] , 'Color', 'bl', 'LineStyle', ':', 'LineWidth', 1)
+            line(ax, xl, [mid50mean mid50mean] , 'Color', 'bl', 'LineStyle', '--', 'LineWidth', 1)
+            line(ax, xl, [mid50mean-mid50std mid50mean-mid50std] , 'Color', 'bl', 'LineStyle', ':', 'LineWidth', 1)
+            line(ax, xl, [mid50mean+mid50std mid50mean+mid50std] , 'Color', 'bl', 'LineStyle', ':', 'LineWidth', 1)
             
             hold off;
         end

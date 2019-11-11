@@ -1,61 +1,13 @@
 clc; clear; close all;
 
-studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed 3 = Climb): ');
-
-if studynbr == 1
-    study = 'SC';
-    clinicalmatfile = 'clinicaldata.mat';
-    datamatfile = 'smartcaredata.mat';
-elseif studynbr == 2
-    study = 'TM';
-    clinicalmatfile = 'telemedclinicaldata.mat';
-    datamatfile = 'telemeddata.mat';
-elseif studynbr == 3
-    study = 'CL';
-    clinicalmatfile = 'climbclinicaldata.mat';
-    datamatfile = 'climbdata.mat';
-else
-    fprintf('Invalid study\n');
-    return;
-end
-
-tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 
-fprintf('Loading Clinical data\n');
-load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading SmartCare measurement data\n');
-load(fullfile(basedir, subfolder, datamatfile));
-toc
-fprintf('\n');
-
-if studynbr == 2
-    physdata       = tmphysdata;
-    cdPatient      = tmPatient;
-    cdMicrobiology = tmMicrobiology;
-    cdAntibiotics  = tmAntibiotics;
-    cdAdmissions   = tmAdmissions;
-    cdPFT          = tmPFT;
-    cdCRP          = tmCRP;
-    cdClinicVisits = tmClinicVisits;
-    cdEndStudy     = tmEndStudy;
-    offset         = tmoffset;
-elseif studynbr == 3
-    physdata       = clphysdata;
-    cdPatient      = clPatient;
-    cdMicrobiology = clMicrobiology;
-    cdAntibiotics  = clAntibiotics;
-    cdAdmissions   = clAdmissions;
-    cdPFT          = clPFT;
-    cdCRP          = clCRP;
-    cdClinicVisits = clClinicVisits;
-    cdOtherVisits  = clOtherVisits;
-    cdEndStudy     = clEndStudy;
-    cdHghtWght     = clHghtWght;
-    offset         = cloffset;
-end
-
+[studynbr, study, studyfullname] = selectStudy();
+[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
+[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+[cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
 
 basedir = setBaseDir();
 subfolder = 'ExcelFiles';
@@ -145,15 +97,19 @@ iptable(1,:) = [];
 for i = 1:size(residualidx,1)
     scid = cdAntibiotics.ID(residualidx(i));
     route = cdAntibiotics.Route{residualidx(i)};
-    %homeiv = cdAntibiotics.HomeIV_s_{residualidx(i)};
+    if studynbr == 4
+        homeiv = cdAntibiotics.HomeIV_s{residualidx(i)};
+    else
+        homeiv = cdAntibiotics.HomeIV_s_{residualidx(i)};
+    end
     
     rowtoadd.SmartCareID = scid;
     rowtoadd.Hospital = cdAntibiotics.Hospital{residualidx(i)};
     rowtoadd.Route = route;
-    %rowtoadd.HomeIV = homeiv;
+    rowtoadd.HomeIV = homeiv;
 
-    %if (isequal(route,'IV') & ismember(homeiv, {'No', 'part','IP+OP'}))
-    if (isequal(route,'IV'))
+    if (isequal(route,'IV') & ismember(homeiv, {'No', 'part','IP+OP'}))
+    %if (isequal(route,'IV'))
         rowtoadd.RowType = '*** Hospital IV with no Admission ***';
         %rowtoadd.AntibioticID = cdAntibiotics.AntibioticID(residualidx(i));
         rowtoadd.AntibioticName = cdAntibiotics.AntibioticName{residualidx(i)};

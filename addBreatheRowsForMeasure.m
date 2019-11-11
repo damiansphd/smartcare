@@ -19,6 +19,12 @@ if nmeas > 0
     outputcolname = getColumnForMeasure(recordingtype);
     mbrphysdata(:, {outputcolname}) = measdata(:, {inputcolname});
     
+    % scale up cough and wellness by a factor of 10 to make consistent with
+    % other studies
+    if ismember(recordingtype, {'CoughRecording', 'WellnessRecording'})
+        mbrphysdata(:, {outputcolname}) = array2table(table2array(mbrphysdata(:, {outputcolname})) * 10);
+    end
+    
     % only include non-null measurements
     if ismember(class(table2array(mbrphysdata(:, {outputcolname}))), {'double'})
         if delzero

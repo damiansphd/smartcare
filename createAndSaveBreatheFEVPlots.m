@@ -1,7 +1,7 @@
-function createAndSaveClimbFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pstudydate, ...
+function createAndSaveBreatheFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pstudydate, ...
     mindays, maxdays, plotsacross, plotsdown, plotsperpage, subfolder, filenameprefix)
 
-% createAndSaveFEVPlots - function to create plots of FEV home vs clinical 
+% createAndSaveBreatheFEVPlots - function to create plots of FEV home vs clinical 
 % measures and save results to file
 
 npages = ceil(size(patientlist, 1) / plotsperpage);
@@ -25,15 +25,15 @@ for i = 1:size(patientlist, 1)
     % store min and max for patient (and handle case where there are no
     % clinical measures
     if size(pmeasures, 1) > 0
-        minpmfev = min(pmeasures.FEV1_);
-        maxpmfev = max(pmeasures.FEV1_);
+        minpmfev = min(pmeasures.FEV1);
+        maxpmfev = max(pmeasures.FEV1);
     else
         minpmfev = 50;
         maxpmfev = 50;
     end
     if size(pclinical,1) > 0
-        minpcfev = min(pclinical.FEV1_);
-        maxpcfev = max(pclinical.FEV1_);
+        minpcfev = min(pclinical.FEV1);
+        maxpcfev = max(pclinical.FEV1);
     else
         minpcfev = minpmfev;
         maxpcfev = maxpmfev;
@@ -42,12 +42,12 @@ for i = 1:size(patientlist, 1)
     % plot FEV1 measures
     ax = subplot(plotsdown, plotsacross, i - (page - 1) * plotsperpage, 'Parent', p);
     hold on;
-    plot(ax, pmeasures.ScaledDateNum,pmeasures.FEV1_,'y-o',...
+    plot(ax, pmeasures.ScaledDateNum,pmeasures.FEV1,'y-o',...
         'LineWidth',1,...
         'MarkerSize',3,...
         'MarkerEdgeColor','b',...
         'MarkerFaceColor','g');
-    plot(ax, pclinical.ScaledDateNum,pclinical.FEV1_,'c-o',...
+    plot(ax, pclinical.ScaledDateNum,pclinical.FEV1,'c-o',...
         'LineWidth',1,...
         'MarkerSize',3,...
         'MarkerEdgeColor','m',...

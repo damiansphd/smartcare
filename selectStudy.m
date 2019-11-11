@@ -2,9 +2,9 @@ function [studynbr, study, studyfullname] = selectStudy()
 
 % selectStudy - choose which study to run for
 
-nstudies = 3;
+nstudies = 4;
 
-sstudynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed, 3 = Climb): ', 's');
+sstudynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed, 3 = Climb, 4 = Breathe): ', 's');
 
 studynbr = str2double(sstudynbr);
 
@@ -25,6 +25,9 @@ elseif studynbr == 2
 elseif studynbr == 3
     study = 'CL';
     studyfullname = 'Climb';
+elseif studynbr == 4
+    study = 'BR';
+    studyfullname = 'Breathe';
 end
 
 
