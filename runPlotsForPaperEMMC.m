@@ -13,7 +13,7 @@ fprintf('1: Paper Figure 1 - Clinical and Home Measures\n');
 fprintf('2: Paper Figure 2 - Early and Late Exacerbations\n');
 fprintf('3: Paper Figure 3 - Typical profile of an exacerbation\n');
 fprintf('4: Paper Figure 4 - Sub-population decline curve profiles with examples\n');
-fprintf('5: Paper Figure 5\n');
+fprintf('5: Paper Figure 5a - <n/a - done in illustrator>\n');
 fprintf('6: Paper Figure 5b - p-Values of correlations\n');
 fprintf('7: Paper Figure 5c - Interventions over time\n');
 fprintf('8: Slides - histogram of variable time to treatment\n');
@@ -34,7 +34,7 @@ fprintf('\n');
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 [studynbr, study, studyfullname] = selectStudy();
-if runfunction == 0 || runfunction == 1
+if runfunction == 0 || runfunction == 1 || runfunction == 2 || runfunction == 6
     fprintf('Loading raw data for study\n');
     chosentreatgap = selectTreatmentGap();
     tic
@@ -42,32 +42,24 @@ if runfunction == 0 || runfunction == 1
     [physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
     [cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
         cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
-    %fprintf('Loading demographic data by patient\n');
-    %load(fullfile(basedir, subfolder, demographicsmatfile), 'demographicstable', 'overalltable');
     alignmentmodelinputsfile = sprintf('%salignmentmodelinputs_gap%d.mat', study, chosentreatgap);
     fprintf('Loading alignment model inputs\n');
     load(fullfile(basedir, subfolder, alignmentmodelinputsfile), 'amInterventions','amDatacube', 'measures', 'npatients','ndays', 'nmeasures', 'ninterventions');
     toc
     fprintf('\n');
-elseif runfunction == 2
-    chosentreatgap = selectTreatmentGap();
-    tic
-    [datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
-    %fprintf('Loading demographic data by patient\n');
-    %load(fullfile(basedir, subfolder, demographicsmatfile), 'demographicstable', 'overalltable');
-    alignmentmodelinputsfile = sprintf('%salignmentmodelinputs_gap%d.mat', study, chosentreatgap);
-    fprintf('Loading alignment model inputs\n');
-    load(fullfile(basedir, subfolder, alignmentmodelinputsfile), 'amInterventions','amDatacube', 'measures', 'npatients','ndays', 'nmeasures', 'ninterventions');
-    toc
-    fprintf('\n');
-else
+end
+
+if runfunction >= 6
     [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('',      '', 'IntrFilt', 'TGap',       '');
     tic
     fprintf('Loading output from model run\n');
     load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun)));
     predictivemodelinputsfile = sprintf('%spredictivemodelinputs.mat', study);
     ivandmeasuresfile = sprintf('%sivandmeasures_gap%d.mat', study, treatgap);
-
+    fprintf('Loading Predictive Model Patient Measures Stats\n');
+    load(fullfile(basedir, subfolder, predictivemodelinputsfile), 'pmPatients', 'pmPatientMeasStats', 'npatients', 'maxdays');
+    fprintf('Loading Treatment and Measures Prior info\n');
+    load(fullfile(basedir, subfolder, ivandmeasuresfile), 'ivandmeasurestable');
     % default some variables for backward compatibility with prior versions
     if ~exist('animated_overall_pdoffset', 'var')
         animated_overall_pdoffset = 0;
@@ -118,55 +110,17 @@ elseif runfunction == 4
 elseif runfunction == 5
     fprintf('Plot being generated from Adobe Illustrator\n');
 elseif runfunction == 6
-    fprintf('Loading Predictive Model Patient Measures Stats\n');
-    basedir = setBaseDir();
-    subfolder = 'MatlabSavedVariables';
-    load(fullfile(basedir, subfolder, predictivemodelinputsfile), 'pmPatients', 'pmPatientMeasStats');
-    fprintf('Loading Treatment and Measures Prior info\n');
-    basedir = setBaseDir();
-    subfolder = 'MatlabSavedVariables';
-    load(fullfile(basedir, subfolder, ivandmeasuresfile), 'ivandmeasurestable');
-    if ismember(study, 'SC')
-        clinicalmatfile   = 'clinicaldata.mat';
-        microbiologytable = 'cdMicrobiology';
-        abtable           = 'cdAntibiotics';
-        admtable          = 'cdAdmissions';
-        crptable          = 'cdCRP';
-    elseif ismember(study, 'TM')
-        clinicalmatfile   = 'telemedclinicaldata.mat';
-        microbiologytable = 'tmMicrobiology';
-        abtable           = 'tmAntibiotics';
-        admtable          = 'tmAdmissions';
-        crptable          = 'tmCRP';
-    else
-        fprintf('Invalid study\n');
-        return;
-    end
-    fprintf('Loading clinical microbiology and CRP data\n');
-    load(fullfile(basedir, subfolder, clinicalmatfile), microbiologytable, abtable, admtable, crptable);
-    if ismember(study, 'TM')
-        cdMicrobiology = tmMicrobiology;
-        cdAntibiotics  = tmAntibiotics;
-        cdAdmissions   = tmAdmissions;
-        cdCRP          = tmCRP;
-    end
     fprintf('Plotting Variables vs latent curve allocation\n');
     [pvaltable] = amEMMCPlotVariablesVsLatentCurveSetForPaper(amInterventions, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
         cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves, scenario, randomseed);
 elseif runfunction == 7
     fprintf('Loading Predictive Model Patient info\n');
-    basedir = setBaseDir();
-    subfolder = 'MatlabSavedVariables';
-    sprintf('%s_LabelledInterventions.mat', study);
-    load(fullfile(basedir, subfolder, predictivemodelinputsfile), 'pmPatients', 'npatients', 'maxdays');
-    fprintf('Loading unfiltered interventions\n');
-    amInterventionsKeep = amInterventions;
-    load(fullfile(basedir, subfolder, modelinputsmatfile), 'amInterventions');
-    amInterventionsFull = amInterventions;
-    amInterventions = amInterventionsKeep;
     fprintf('Plotting interventions over time by latent curve set\n');
-    plotmode = 2; % plot using scaled dates
-    amEMMCPlotInterventionsByLatentCurveSetForPaper(pmPatients, amInterventions, amInterventionsFull, npatients, maxdays, plotname, plotsubfolder, nlatentcurves, plotmode);
+    plotmode = 2; % plot using absolute dates
+    studymarkermode = 2; % exclude study markers
+    pfiltermode = 2; % exclude patients with zero interventions;
+    amEMMCPlotInterventionsByLatentCurveSetForPaper(pmPatients, amInterventions, ivandmeasurestable, ...
+        npatients, maxdays, plotname, plotsubfolder, nlatentcurves, plotmode, studymarkermode, pfiltermode);
 elseif runfunction == 8
     run_type = 'Best Alignment';
     fprintf('Plotting histogram of variable time to treatment\n');

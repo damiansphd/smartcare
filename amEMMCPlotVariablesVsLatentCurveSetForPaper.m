@@ -11,9 +11,7 @@ scattervartext = {'Stable FEV1',            'Box'; ...
                 'Day of Year',              'Scatter'; ...
                 'CRP Adm',                  'Box'; ...
                 'CRP Stable',               'Box'};            
-            
-polarvartext = {'Day of Year'};
-
+           
 barvartext = {%'Gender'; ...
               'Pct Gender'; ...
               'Pct Nbr of IV Treatments'; ...
@@ -22,16 +20,24 @@ barvartext = {%'Gender'; ...
               'Pct Nbr of Interventions'; ...
               'Pct Pseudomonas'; ...
               'Pct Staphylococcus'; ...
-              'Pct One or Both'};
+              'Pct One or Both'; ...
+              'Time Since Last Ex'; ...
+              'Pct Time Since Last Ex'; ...
+              'Time Since Last Ex or Study Start'; ...
+              'Pct Time Since Last Ex or Study Start'};
+          
+polarvartext = {'Day of Year'};
 
 nscattervars   = size(scattervartext, 1);
 scattervardata = zeros(ninterventions, nscattervars);
 
+nbarvars       = size(barvartext, 1);
+
 npolarvars     = size(polarvartext, 1);
 polarvardata   = zeros(ninterventions, npolarvars);
 
-nbarvars       = size(barvartext, 1);
-
+npages = 4;
+page = 1;
 nlccombs = nlatentcurves;
 nkeycols = 1;
 comb = -1 * ones((nscattervars),nlccombs);
@@ -109,7 +115,7 @@ for i = 1:size(lc, 1)
 end
 
 plotsdown   = 3; 
-plotsacross = ceil((nscattervars + nbarvars + npolarvars)/plotsdown);
+plotsacross = 5;
 pointsize = 36;
 if nlatentcurves >= 1
     cmap = [ 0.4, 0.8, 0.2 ];
@@ -128,7 +134,7 @@ if nlatentcurves >= 5
     return;
 end
 
-plottitle = sprintf('%s - Variables vs Latent Curve Set For Paper', plotname);
+plottitle = sprintf('%s - Variables vs Latent Curve Set For Paper Page %d of %d', plotname, page, npages);
 
 widthinch = 8.5;
 heightinch = 11;
@@ -189,6 +195,15 @@ for v = 1:nscattervars
     thisplot = thisplot + 1;
     
 end
+
+% save plot
+savePlotInDir(f, plottitle, plotsubfolder);
+savePlotInDirAsSVG(f, plottitle, plotsubfolder);
+close(f);
+page = page + 1;
+thisplot = 1;
+plottitle = sprintf('%s - Variables vs Latent Curve Set For Paper Page %d of %d', plotname, page, npages);
+[f, p] = createFigureAndPanelForPaper('', widthinch, heightinch);
 
 for v = 1:nbarvars
     if ismember(barvartext(v), {'Gender', 'Pct Gender'})
@@ -257,7 +272,6 @@ for v = 1:nbarvars
         end
         legendtext = {'1', '2', '3', '4', '5'};
         blc.PValCol = blc.GroupCount;
-        %lc.GroupCount = [];
         
     elseif ismember(barvartext(v), {'Nbr of IV Treatments', 'Pct Nbr of IV Treatments', 'Nbr of AB Treatments', 'Pct Nbr of AB Treatments'})
         if ismember(barvartext(v), {'Nbr of IV Treatments', 'Pct Nbr of IV Treatments'})
@@ -279,20 +293,75 @@ for v = 1:nbarvars
         end
         legendtext = {'1', '2', '3', '4', '5', '6', '7'};
         blc.PValCol = blc.GroupCount;
-        %lc.GroupCount = [];
+        
+    elseif ismember(barvartext(v), {'Time Since Last Ex', 'Time Since Last Ex or Study Start', 'Pct Time Since Last Ex', 'Pct Time Since Last Ex or Study Start'})
+        nbarsplits = 2;
+        barvardata = zeros(nlatentcurves, nbarsplits);
+        
+        blc = amInterventions;
+        tmpivandmtable = innerjoin(ivandmeasurestable, unique(amInterventions(:,{'SmartCareID', 'PatientOffset'})), 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'SmartCareID'}, 'RightVariables', {'PatientOffset'});
+        tmpivandmtable.IVScaledDateNum = tmpivandmtable.IVDateNum - tmpivandmtable.PatientOffset;
+        tmpivandmtable.IVScaledStopDateNum = tmpivandmtable.IVStopDateNum - tmpivandmtable.PatientOffset;
+
+        blc.LastTreatEnd(:)       = -100;
+        blc.TimeSinceLastTreat(:) = -100;
+        blc.Category(:)           = 0;
+        blc.Bucket(:)             = 0;
+        bucketedge                = 28;
+        
+        for i = 1:size(blc, 1)
+            scid = blc.SmartCareID(i);
+            pred = blc.Pred(i);
+            previdx = find(tmpivandmtable.SmartCareID == scid & tmpivandmtable.IVScaledStopDateNum < pred + 5, 1, 'last');
+            if size(previdx, 1) ~= 0
+                blc.LastTreatEnd(i)       = tmpivandmtable.IVScaledStopDateNum(previdx);
+                blc.TimeSinceLastTreat(i) = blc.Pred(i) - blc.LastTreatEnd(i);
+                blc.Category(i)           = 1;
+            else 
+                blc.TimeSinceLastTreat(i) = blc.Pred(i);
+                blc.Category(i)           = 2;
+            end
+        end
+        if ismember(barvartext(v), {'Pct Time Since Last Ex', 'Time Since Last Ex'})
+            blc(blc.Category == 2, :) = [];
+            blc.Bucket(blc.TimeSinceLastTreat <  bucketedge) = 1;
+            blc.Bucket(blc.TimeSinceLastTreat >= bucketedge) = 2;
+        else
+            blc(blc.Category == 2 & blc.TimeSinceLastTreat < bucketedge, :) = [];
+            blc.Bucket(blc.TimeSinceLastTreat <  bucketedge) = 1;
+            blc.Bucket(blc.TimeSinceLastTreat >= bucketedge) = 2;
+        end
+        
+        for n = 1:nlatentcurves
+            for b = 1:nbarsplits
+                    %barvardata(n, b) = 100 * sum(blc.LatentCurve == n & blc.Bucket == b) / sum(blc.LatentCurve == n);
+                %else
+                barvardata(n, b) = sum(blc.LatentCurve == n & blc.Bucket == b);
+            end
+            fprintf('For Latent curve set %d, mean time since last treat is %.1f\n', n, mean(blc.TimeSinceLastTreat(blc.LatentCurve == n)));
+        end
+        if ismember(barvartext(v), {'Pct Time Since Last Ex', 'Pct Time Since Last Ex or Study Start'})
+            barvardata = 100 * (barvardata ./ sum(barvardata, 2));
+        end
+
+        legendtext = {'< 4wks', '>= 4wks'};
+        blc.PValCol = blc.Bucket;
+        
     end
     
     ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
     bar(ax, barvardata, 'Stacked');
     ax.FontSize = 6;
-    title(ax, barvartext{v}, 'FontSize', 8);
+    title(ax, barvartext{v}, 'FontSize', 6);
     legend(ax, legendtext, 'FontSize', 6);
     xlim(ax, [0.5 nlatentcurves + 0.5]);
     if ismember(barvartext(v), {'Pct Gender', ...
-            'Pct Pseudomonas', 'Pct Staphylococcus', 'Pct One or Both'})
+            'Pct Pseudomonas', 'Pct Staphylococcus', 'Pct One or Both', 'Pct Time Since Last Ex', 'Pct Time Since Last Ex or Study Start'})
         ylim(ax, [0 135]);
     elseif ismember(barvartext(v), {'Pct Nbr of Interventions', 'Pct Nbr of IV Treatments', 'Pct Nbr of AB Treatments'})
         ylim(ax, [0 160]);
+    elseif ismember(barvartext(v), {'Time Since Last Ex', 'Time Since Last Ex or Study Start'})
+        ylim(ax, [0 60]);
     end
     xlabel(ax, 'Latent Curve Set', 'FontSize', 8);
     ylabel(ax, barvartext{v}, 'FontSize', 8);
@@ -303,8 +372,17 @@ for v = 1:nbarvars
     chisqvaltable.VarName{v} = strrep(barvartext{v, 1}, 'Pct ', '');
     for i = 1:nlatentcurves
         tempobsfreq = varfun(@mean, tempobs(tempobs.LatentCurve == i, :), 'GroupingVariables', 'PValCol');
-        tempexpfreq = varfun(@mean, tempobs(tempobs.LatentCurve ~= i, :), 'GroupingVariables', 'PValCol');
-        tempexpfreq.GroupCount = tempexpfreq.GroupCount * sum(tempobsfreq.GroupCount) / sum(tempexpfreq.GroupCount);
+        %tempexpfreq = varfun(@mean, tempobs(tempobs.LatentCurve ~= i, :), 'GroupingVariables', 'PValCol');
+        %tempexpfreq.GroupCount = tempexpfreq.GroupCount * sum(tempobsfreq.GroupCount) / sum(tempexpfreq.GroupCount);
+        tempexpfreq = varfun(@mean, tempobs(tempobs.LatentCurve ~= i, :), 'GroupingVariables', {'PValCol', 'LatentCurve'});
+        restlc = unique(tempexpfreq.LatentCurve);
+        for l = 1:size(restlc, 1)
+            thislc = restlc(l);
+            tempexpfreq.GroupCount(tempexpfreq.LatentCurve == thislc) = tempexpfreq.GroupCount(tempexpfreq.LatentCurve == thislc) * sum(tempobsfreq.GroupCount) / sum(tempexpfreq.GroupCount(tempexpfreq.LatentCurve == thislc));
+        end
+        tempexpfreq = varfun(@mean, tempexpfreq(:, {'PValCol', 'GroupCount'}), 'GroupingVariables', {'PValCol'});
+        tempexpfreq(:, 'GroupCount') = [];
+        tempexpfreq.Properties.VariableNames({'mean_GroupCount'}) = {'GroupCount'};
         
         freqtable = table('Size',[nuniquecats, 3], 'VariableTypes', {'double', 'double', 'double'}, 'VariableNames', {'Category', 'ObsFreq', 'ExpFreq'});
         freqtable.Category = uniquecats;
@@ -332,23 +410,20 @@ for v = 1:nbarvars
             table2array(chisqvaltable(v, {sprintf('Group%d_Val', i)})), pval, flagtext);
     end
     
-    % store p-values for different combinations of comparisons
-    %wcxpvaltable.VarName{thisplot} = barvartext{v, 1};
-    %for i = 1:nlatentcurves
-    %    [pval, h] = ranksum(blc.PValCol(blc.LatentCurve == i), blc.PValCol(blc.LatentCurve ~= i));
-    %    wcxpvaltable(thisplot, {sprintf('Group%d_DiffMedian', i)}) = array2table(pval);
-    %    if h == 1
-    %        flagtext = ' *****';
-    %    else
-    %        flagtext = ' ';
-    %    end
-    %    fprintf('%24s : Group%d DiffMedian : p-value %5.3f%s\n', barvartext{v, 1}, i, pval, flagtext);
-    %end
-    
     blc = [];
-    
     thisplot = thisplot + 1;    
 end
+
+% save plot
+savePlotInDir(f, plottitle, plotsubfolder);
+savePlotInDirAsSVG(f, plottitle, plotsubfolder);
+close(f);
+
+page = page + 1;
+thisplot = 1;
+plottitle = sprintf('%s - Variables vs Latent Curve Set For Paper Page %d of %d', plotname, page, npages);
+[f, p] = createFigureAndPanelForPaper('', widthinch, heightinch);
+colormap(f, cmap);
 
 for v = 1:npolarvars
     ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
@@ -386,17 +461,10 @@ savePlotInDir(f, plottitle, plotsubfolder);
 savePlotInDirAsSVG(f, plottitle, plotsubfolder);
 close(f);
 
-% save p-value table
-basedir = setBaseDir();
-%xlfilename = sprintf('%s.xlsx', plottitle);
-xlfilename = sprintf('P-Values nl%d_scen%s_rs%d.xlsx', nlatentcurves, scenario, randomseed);
-writetable(wcxpvaltable, fullfile(basedir, plotsubfolder, xlfilename), 'Sheet', 'Numeric');
-writetable(chisqvaltable, fullfile(basedir, plotsubfolder, xlfilename), 'Sheet', 'Non-Numeric');
-
-plottitle = sprintf('%s - Variables vs Latent Curve Set For Paper P2', plotname);
-[f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
-%colormap(f, cmap)
-
+page = page + 1;
+plottitle = sprintf('%s - Variables vs Latent Curve Set For Paper Page %d of %d', plotname, page, npages);
+[f, p] = createFigureAndPanelForPaper('', widthinch, heightinch);
+colormap(f, cmap);
 plotsdown   = 3; 
 plotsacross = 3;
 edges = 0:30.5:366;
@@ -412,5 +480,12 @@ end
 % save plot
 savePlotInDir(f, plottitle, plotsubfolder);
 close(f);
+
+% save p-value table
+basedir = setBaseDir();
+xlfilename = sprintf('P-Values nl%d_scen%s_rs%d.xlsx', nlatentcurves, scenario, randomseed);
+writetable(wcxpvaltable, fullfile(basedir, plotsubfolder, xlfilename), 'Sheet', 'Numeric');
+writetable(chisqvaltable, fullfile(basedir, plotsubfolder, xlfilename), 'Sheet', 'Non-Numeric');
+
 end
 

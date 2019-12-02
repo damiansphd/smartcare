@@ -50,13 +50,16 @@ fprintf('39: Plot superimposed measures - exzero shift - one intervention per pa
 fprintf('40: Plot superimposed alignment curves - 7d mean shift - one per page\n');
 fprintf('41: Plot superimposed alignment curves - 7d mean shift - all on one page\n');
 fprintf('42: Plot superimposed measures - 7d mean shift - one intervention per page\n');
+fprintf('43: Plot histogram of time since last exacerbation\n');
+
+noptions = 43;
 
 fprintf('\n');
-runfunction = input('Choose function (1-42): ');
+runfunction = input(sprintf('Choose function (1-%d): ', noptions));
 
 fprintf('\n');
 
-if runfunction > 42
+if runfunction > noptions
     fprintf('Invalid choice\n');
     return;
 end
@@ -579,6 +582,14 @@ elseif runfunction == 42
     shiftmode = 4; % shift by 7d mean to left of ex_start
     amEMMCPlotSuperimposedMeasuresB4Intr(amIntrNormcube, amInterventions, ...
         measures, max_offset, align_wind, nmeasures, ninterventions, ex_start, plotsubfolder, shiftmode);
+elseif runfunction == 43
+    fprintf('Plotting histogram of time since last exacerbation\n');
+    fprintf('Loading Predictive Model Patient Measures Stats\n');
+    load(fullfile(basedir, subfolder, predictivemodelinputsfile), 'pmPatients', 'pmPatientMeasStats', 'npatients', 'maxdays');
+    fprintf('Loading Treatment and Measures Prior info\n');
+    load(fullfile(basedir, subfolder, ivandmeasuresfile), 'ivandmeasurestable');
+    amEMMCPlotHistOfTimeSinceLastExacerbation(pmPatients, amInterventions, ivandmeasurestable, ...
+        npatients, maxdays, plotname, plotsubfolder, nlatentcurves);
 else
     fprintf('Should not get here....\n');
 end
