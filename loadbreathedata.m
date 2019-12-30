@@ -12,7 +12,9 @@ toc
 fprintf('\n');
 
 study = 'BR';
-latestuploaddate = '_20191104';
+
+[~, measdate, guidmapdate] = setLatestBreatheDates();
+
 measfileprefix = 'Breathe_';
 basedir   = setBaseDir();
 subfolder = 'DataFiles/ProjectBreathe';
@@ -20,7 +22,7 @@ subfolder = 'DataFiles/ProjectBreathe';
 tic
 fprintf('Loading Breathe GUID Mapping info\n');
 fprintf('---------------------------------\n');
-guidfile  = 'Project Breathe GUID to email address map.xlsx';
+guidfile  = sprintf('Project Breathe GUID to email address map %s.xlsx', guidmapdate);
 guidmap = readtable(fullfile(basedir, subfolder, guidfile));
 guidmap.Properties.VariableNames{1} = 'StudyID';
 toc
@@ -30,7 +32,7 @@ brphysdata = createBreatheMeasuresTable(0);
 brphysdata_deleted = brphysdata;
 brphysdata_deleted.Reason(:) = {''};
 
-measfilelisting = dir(fullfile(basedir, subfolder, sprintf('%s*%s', measfileprefix, latestuploaddate)));
+measfilelisting = dir(fullfile(basedir, subfolder, sprintf('%s*%s', measfileprefix, measdate)));
 MeasFiles = cell(size(measfilelisting,1),1);
 for a = 1:size(MeasFiles,1)
     MeasFiles{a} = measfilelisting(a).name;
@@ -49,7 +51,7 @@ fprintf('\n');
 for i = 1:nmeasfile
     tic
     fprintf('Processing %2d: %s\n', i, MeasFiles{i});
-    filetype = strrep(strrep(MeasFiles{i}, measfileprefix, ''), latestuploaddate, '');
+    filetype = strrep(strrep(MeasFiles{i}, measfileprefix, ''), sprintf('_%s', measdate), '');
     
     mfopts = detectImportOptions(fullfile(basedir, subfolder, MeasFiles{i}), 'FileType', 'Text', 'Delimiter', ',');
     mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'IsDeleted'})) = {'logical'};

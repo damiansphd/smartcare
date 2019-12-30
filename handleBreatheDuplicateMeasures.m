@@ -101,7 +101,7 @@ writetable(physdata(dupeidx, :), fullfile(basedir, 'ExcelFiles', dupefile), 'She
 
 % apply necessary updates.
 if doupdates
-    fprintf('Deleting %d exact duplicates, and adding back %d single rows\n', size(dupeidx, 1), size(addrows, 1));
+    fprintf('Deleting %d similar time duplicates, and adding back %d single rows\n', size(dupeidx, 1), size(addrows, 1));
     physdata(dupeidx, :) = [];
     physdata = [physdata; addrows];
 end
@@ -146,7 +146,7 @@ writetable(physdata(dupeidx, :), fullfile(basedir, 'ExcelFiles', dupefile), 'She
 
 % apply necessary updates.
 if doupdates
-    fprintf('Deleting %d exact duplicates, and adding back %d single rows\n', size(dupeidx, 1), size(addrows, 1));
+    fprintf('Deleting %d same day duplicates, and adding back %d single rows\n', size(dupeidx, 1), size(addrows, 1));
     physdata(dupeidx, :) = [];
     physdata = [physdata; addrows];
 end

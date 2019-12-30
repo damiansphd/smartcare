@@ -31,9 +31,9 @@ cdAntibiotics = sortrows(cdAntibiotics, {'Hospital','ID','StartDate'}, 'ascend')
 
 cdPFT = innerjoin(cdPFT, patientoffsets);
 
-residualtable = table('Size',[1 9], ...
-    'VariableTypes', {'string(56)', 'string(8)', 'int32',       'int32',          'datetime',         'double', 'int32', 'double', 'int32'}, ...
-    'VariableNames', {'RowType',    'Hospital',  'SmartCareID', 'LungFunctionID', 'LungFunctionDate', 'FEV1',   'FEV1_',  'FVC1',   'FVC1_', });
+residualtable = table('Size',[1 10], ...
+    'VariableTypes', {'string(56)', 'string(8)', 'int32',       'string(20)',  'int32',          'datetime',         'double', 'int32', 'double', 'int32'}, ...
+    'VariableNames', {'RowType',    'Hospital',  'SmartCareID', 'StudyNumber', 'LungFunctionID', 'LungFunctionDate', 'FEV1',   'FEV1_',  'FVC1',   'FVC1_', });
 rowtoadd = residualtable;
 residualtable(1,:) = [];
 matchcount = 0;
@@ -44,6 +44,7 @@ for i = 1:size(cdPFT,1)
     
     rowtoadd.SmartCareID = scid;
     rowtoadd.Hospital = cdPFT.Hospital{i};
+    rowtoadd.StudyNumber = cdPFT.StudyNumber{i};
     %rowtoadd.LungFunctionID = cdPFT.LungFunctionID(i);
     rowtoadd.LungFunctionDate = pftdate;
     rowtoadd.FEV1  = cdPFT.FEV1(i);

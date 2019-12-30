@@ -17,7 +17,7 @@ upperthresh = 6000;
 % Lung Function
 recordingtype = 'FEV1Recording';
 lowerthresh = 0.1;
-upperthresh = 5;
+upperthresh = 6;
 [brphysdata, brphysdata_deleted] = findAndDeleteAnomalousMeasures(brphysdata, brphysdata_deleted, recordingtype, lowerthresh, upperthresh);
 recordingtype = 'FEV6Recording';
 lowerthresh = 0.2;

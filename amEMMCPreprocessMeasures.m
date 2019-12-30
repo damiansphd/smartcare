@@ -29,7 +29,15 @@ elseif measuresmask == 4
     idx = ~ismember(measures.DisplayName, {'Activity', 'Weight'});
     measures.Mask(idx) = 1;
 elseif measuresmask == 5
-    idx = ismember(measures.DisplayName, {'Weight'});
+    idx = ~ismember(measures.DisplayName, {'Weight'});
+    measures.Mask(idx) = 1;
+elseif measuresmask == 6
+    idx = ismember(measures.DisplayName, {'Calorie', 'Cough', 'FEV1', 'MinsAsleep', 'MinsAwake', ...
+        'O2Saturation', 'PulseRate', 'RestingHR', 'Temperature', 'Weight', 'Wellness'});
+    measures.Mask(idx) = 1;
+elseif measuresmask == 7
+    idx = ismember(measures.DisplayName, {'Cough', 'FEV1', 'MinsAwake', 'O2Saturation', ...
+        'RestingHR', 'Temperature', 'Wellness'});
     measures.Mask(idx) = 1;
 else
     % shouldn't ever get here - but default to just cough if it ever

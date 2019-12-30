@@ -32,9 +32,9 @@ cdOtherVisits = sortrows(cdOtherVisits, {'Hospital','ID','AttendanceDate'},'asce
 
 cdCRP = innerjoin(cdCRP, patientoffsets);
 
-residualtable = table('Size',[1 6], ...
-    'VariableTypes', {'string(56)', 'string(8)', 'int32',       'int32', 'datetime', 'int32'}, ...
-    'VariableNames', {'RowType',    'Hospital',  'SmartCareID', 'CRPID', 'CRPDate',  'CRPLevel'});
+residualtable = table('Size',[1 7], ...
+    'VariableTypes', {'string(56)', 'string(8)', 'int32',       'string(20)',  'int32', 'datetime', 'int32'}, ...
+    'VariableNames', {'RowType',    'Hospital',  'SmartCareID', 'StudyNumber', 'CRPID', 'CRPDate',  'CRPLevel'});
 rowtoadd = residualtable;
 residualtable(1,:) = [];
 matchcount = 0;
@@ -45,6 +45,7 @@ for i = 1:size(cdCRP,1)
     
     rowtoadd.SmartCareID = scid;
     rowtoadd.Hospital = cdCRP.Hospital{i};
+    rowtoadd.StudyNumber = cdCRP.StudyNumber{i};
     %rowtoadd.CRPID = cdCRP.CRPID(i);
     rowtoadd.CRPDate = crpdate;
     rowtoadd.CRPLevel = cdCRP.NumericLevel(i);

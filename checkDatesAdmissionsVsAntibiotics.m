@@ -29,14 +29,14 @@ cdAntibiotics = innerjoin(cdAntibiotics, patientoffsets);
 cdAdmissions = sortrows(cdAdmissions, {'ID','Admitted'}, 'ascend');
 cdAdmissions = innerjoin(cdAdmissions, patientoffsets);
 
-matchtable = table('Size',[1 12], 'VariableTypes', {'string(35)', 'string(8)', 'int32', 'int32', 'datetime', 'datetime','int32', 'string(15)', 'string(5)', ...
-    'string(10)', 'datetime','datetime'}, 'VariableNames', {'RowType', 'Hospital', 'SmartCareID', 'AdmissionID', 'Admitted', 'Discharge', ...
+matchtable = table('Size',[1 13], 'VariableTypes', {'string(35)', 'string(8)', 'int32', 'string(20)', 'int32', 'datetime', 'datetime','int32', 'string(15)', 'string(5)', ...
+    'string(10)', 'datetime','datetime'}, 'VariableNames', {'RowType', 'Hospital', 'SmartCareID', 'StudyNumber', 'AdmissionID', 'Admitted', 'Discharge', ...
     'AntibioticID', 'AntibioticName','Route', 'HomeIV','Start','Stop'});
 rowtoadd = matchtable;
 matchtable(1,:) = [];
 
-exceptiontable = table('Size',[1 6], 'VariableTypes', {'string(35)','string(8)', 'int32', 'int32', 'datetime', 'datetime'}, ...
-    'VariableNames', {'RowType','Hospital', 'SmartCareID', 'AdmissionID', 'Admitted', 'Discharge'});
+exceptiontable = table('Size',[1 7], 'VariableTypes', {'string(35)','string(8)', 'int32', 'string(20)', 'int32', 'datetime', 'datetime'}, ...
+    'VariableNames', {'RowType','Hospital', 'SmartCareID', 'StudyNumber', 'AdmissionID', 'Admitted', 'Discharge'});
 exceptiontable(1,:) = [];
 
 matchedidx = [];
@@ -50,6 +50,7 @@ for i = 1:size(cdAdmissions,1)
     matchedidx = [matchedidx; idx];
     
     rowtoadd.SmartCareID = scid;
+    rowtoadd.StudyNumber = cdAdmissions.StudyNumber(i);
     rowtoadd.Hospital = cdAdmissions.Hospital(i);
     %rowtoadd.AdmissionID = cdAdmissions.HospitalAdmissionID(i);
     rowtoadd.Admitted = admitted;
@@ -57,9 +58,9 @@ for i = 1:size(cdAdmissions,1)
     
     if (size(idx,1) == 0)
         rowtoadd.RowType = '*** Admission with no treatment ***';
-        fprintf('%3d: %35s  :  Hospital %8s  Patient ID %3d  Admitted  %11s  Discharge  %11s\n', ... 
+        fprintf('%3d: %35s  :  Hospital %8s  Patient ID %3d Admitted  %11s  Discharge  %11s\n', ... 
             i, rowtoadd.RowType, string(rowtoadd.Hospital), scid, datestr(admitted,1), datestr(discharge,1)); 
-        exceptiontable = [exceptiontable;rowtoadd(1,{'RowType','Hospital', 'SmartCareID', 'AdmissionID', 'Admitted', 'Discharge'})];  
+        exceptiontable = [exceptiontable;rowtoadd(1,{'RowType','Hospital', 'SmartCareID', 'StudyNumber', 'AdmissionID', 'Admitted', 'Discharge'})];  
     else
         for t = 1:size(idx,1)
             rowtoadd.RowType = 'OK - Treatment during admission';
@@ -87,8 +88,8 @@ umatchedidx = unique(matchedidx);
 abidx = find(cdAntibiotics.ID);
 residualidx = setdiff(abidx, umatchedidx);
 
-residualtable = table('Size',[1 9], 'VariableTypes', {'string(38)', 'string(8)', 'int32', 'int32', 'string(15)', 'string(5)', 'string(10)', 'datetime', 'datetime'}, ...
-    'VariableNames', {'RowType', 'Hospital', 'SmartCareID', 'AntibioticID', 'AntibioticName', 'Route', 'HomeIV', 'Start', 'Stop'});
+residualtable = table('Size',[1 10], 'VariableTypes', {'string(38)', 'string(8)', 'int32', 'string(20)', 'int32', 'string(15)', 'string(5)', 'string(10)', 'datetime', 'datetime'}, ...
+    'VariableNames', {'RowType', 'Hospital', 'SmartCareID', 'StudyNumber', 'AntibioticID', 'AntibioticName', 'Route', 'HomeIV', 'Start', 'Stop'});
 iptable = residualtable;
 rowtoadd = residualtable;
 residualtable(1,:) = [];
@@ -104,6 +105,7 @@ for i = 1:size(residualidx,1)
     end
     
     rowtoadd.SmartCareID = scid;
+    rowtoadd.StudyNumber = cdAntibiotics.StudyNumber(i);
     rowtoadd.Hospital = cdAntibiotics.Hospital{residualidx(i)};
     rowtoadd.Route = route;
     rowtoadd.HomeIV = homeiv;

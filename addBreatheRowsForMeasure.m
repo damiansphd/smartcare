@@ -24,7 +24,10 @@ if nmeas > 0
     if ismember(recordingtype, {'CoughRecording', 'WellnessRecording'})
         mbrphysdata(:, {outputcolname}) = array2table(table2array(mbrphysdata(:, {outputcolname})) * 10);
     end
-    
+    % invert cough scale so it is consistent with other subjective scores
+    if ismember(recordingtype, {'CoughRecording'})
+        mbrphysdata(:, {outputcolname}) = array2table(100 - table2array(mbrphysdata(:, {outputcolname})));
+    end
     % only include non-null measurements
     if ismember(class(table2array(mbrphysdata(:, {outputcolname}))), {'double'})
         if delzero

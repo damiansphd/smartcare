@@ -2,7 +2,9 @@ clear; clc; close all;
 
 basedir = setBaseDir();
 subfolder = 'DataFiles/ProjectBreathe';
-clinicalfile = 'ProjectBreathe - ClinicalData 20190718.xlsx';
+[clinicaldate, ~, ~] = setLatestBreatheDates();
+
+clinicalfile = sprintf('ProjectBreathe - ClinicalData %s.xlsx', clinicaldate);
 
 [brPatient, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brCRP, brPFT, brMicrobiology, brHghtWght, brEndStudy] = createBreatheClinicalTables(0);
 [brpatrow, bradmrow, brabrow, brcvrow, brovrow, brcrprow, brpftrow, brmicrorow, ~, ~] = createBreatheClinicalTables(1);
@@ -48,17 +50,22 @@ fprintf('\n');
 % admission data
 tic
 fprintf('Loading Project Breathe admission data\n');
+fprintf('--------------------------------------\n');
 opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'Admissions');
 admdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'Admissions');
 nadm = size(admdata, 1);
 for i = 1:nadm
-    bradmrow.ID          = brPatient.ID(ismember(brPatient.StudyNumber, admdata.StudyID(i)));
-    bradmrow.Hospital    = hospital;
-    bradmrow.StudyNumber = admdata.StudyID(i);
-    bradmrow.Admitted    = admdata.Admitted(i);
-    bradmrow.Discharge   = admdata.Discharge(i);
-    
-    brAdmissions = [brAdmissions; bradmrow];
+    if size(brPatient.ID(ismember(brPatient.StudyNumber, admdata.StudyID(i))), 1) == 0
+        fprintf('Row %d (spreadsheet row %d): Invalid StudyID %s\n',  i, i + 2, admdata.StudyID{i});
+    else
+        bradmrow.ID          = brPatient.ID(ismember(brPatient.StudyNumber, admdata.StudyID(i)));
+        bradmrow.Hospital    = hospital;
+        bradmrow.StudyNumber = admdata.StudyID(i);
+        bradmrow.Admitted    = admdata.Admitted(i);
+        bradmrow.Discharge   = admdata.Discharge(i);
+
+        brAdmissions = [brAdmissions; bradmrow];
+    end
 end
 toc
 fprintf('\n');
@@ -66,21 +73,27 @@ fprintf('\n');
 % antibiotic data
 tic
 fprintf('Loading Project Breathe antibiotic data\n');
+fprintf('---------------------------------------\n');
 opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'Antibiotics');
+opts.DataRange = 'A3';
 abdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'Antibiotics');
 nab = size(abdata, 1);
 for i = 1:nab
-    brabrow.ID          = brPatient.ID(ismember(brPatient.StudyNumber, abdata.StudyID(i)));
-    brabrow.Hospital    = hospital;
-    brabrow.StudyNumber = abdata.StudyID(i);
-    brabrow.AntibioticName = abdata.AntibioticName(i);
-    brabrow.Route          = abdata.Route(i);
-    brabrow.HomeIV_s       = abdata.HomeIV_s(i);
-    brabrow.StartDate      = abdata.StartDate(i);
-    brabrow.StopDate       = abdata.StopDate(i);
-    brabrow.Comments       = abdata.Comments(i);
+    if size(brPatient.ID(ismember(brPatient.StudyNumber, abdata.StudyID(i))), 1) == 0
+        fprintf('Row %d (spreadsheet row %d): Invalid StudyID %s\n',  i, i + 2, abdata.StudyID{i});
+    else
+        brabrow.ID          = brPatient.ID(ismember(brPatient.StudyNumber, abdata.StudyID(i)));
+        brabrow.Hospital    = hospital;
+        brabrow.StudyNumber = abdata.StudyID(i);
+        brabrow.AntibioticName = abdata.AntibioticName(i);
+        brabrow.Route          = abdata.Route(i);
+        brabrow.HomeIV_s       = abdata.HomeIV_s(i);
+        brabrow.StartDate      = abdata.StartDate(i);
+        brabrow.StopDate       = abdata.StopDate(i);
+        brabrow.Comments       = abdata.Comments(i);
     
-    brAntibiotics = [brAntibiotics; brabrow];
+        brAntibiotics = [brAntibiotics; brabrow];
+    end
 end
 toc
 fprintf('\n');
@@ -88,93 +101,120 @@ fprintf('\n');
 % microbiology data
 tic
 fprintf('Loading Project Breathe microbiology data\n');
+fprintf('-----------------------------------------\n');
 opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'Microbiology');
 opts.DataRange = 'A3';
 microdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'Microbiology');
 nmicro = size(microdata, 1);
 for i = 1:nmicro
-    brmicrorow.ID               = brPatient.ID(ismember(brPatient.StudyNumber, microdata.StudyID(i)));
-    brmicrorow.Hospital         = hospital;
-    brmicrorow.StudyNumber      = microdata.StudyID(i);
-    brmicrorow.Microbiology     = microdata.Microbiology(i);
-    brmicrorow.DateMicrobiology = microdata.DateFirstSeen(i);
-    brmicrorow.NameIfOther      = microdata.NameIfOther(i);
+    if size(brPatient.ID(ismember(brPatient.StudyNumber, microdata.StudyID(i))), 1) == 0
+        fprintf('Row %d (spreadsheet row %d): Invalid StudyID %s\n',  i, i + 2, microdata.StudyID{i});
+    else
+        brmicrorow.ID               = brPatient.ID(ismember(brPatient.StudyNumber, microdata.StudyID(i)));
+        brmicrorow.Hospital         = hospital;
+        brmicrorow.StudyNumber      = microdata.StudyID(i);
+        brmicrorow.Microbiology     = microdata.Microbiology(i);
+        brmicrorow.DateMicrobiology = microdata.DateFirstSeen(i);
+        brmicrorow.NameIfOther      = microdata.NameIfOther(i);
 
-    brMicrobiology = [brMicrobiology; brmicrorow];
+        brMicrobiology = [brMicrobiology; brmicrorow];
+    end
 end
 toc
 fprintf('\n');
 
 tic
 fprintf('Loading Project Breathe clinic visits data\n');
+fprintf('------------------------------------------\n');
 opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'Clinic Visits');
+opts.DataRange = 'A3';
 cvdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'Clinic Visits');
 ncv = size(cvdata, 1);
 for i = 1:ncv
-    brcvrow.ID               = brPatient.ID(ismember(brPatient.StudyNumber, cvdata.StudyID(i)));
-    brcvrow.Hospital         = hospital;
-    brcvrow.StudyNumber      = cvdata.StudyID(i);
-    brcvrow.AttendanceDate   = cvdata.AttendanceDate(i);
+    % fprintf('%d\n', i);
+    if size(brPatient.ID(ismember(brPatient.StudyNumber, cvdata.StudyID(i))), 1) == 0
+        fprintf('Row %d (spreadsheet row %d): Invalid StudyID %s\n',  i, i + 2, cvdata.StudyID{i});
+    else
+        brcvrow.ID               = brPatient.ID(ismember(brPatient.StudyNumber, cvdata.StudyID(i)));
+        brcvrow.Hospital         = hospital;
+        brcvrow.StudyNumber      = cvdata.StudyID(i);
+        brcvrow.AttendanceDate   = cvdata.AttendanceDate(i);
     
-    brClinicVisits = [brClinicVisits; brcvrow];
+        brClinicVisits = [brClinicVisits; brcvrow];
+    end
 end
 toc
 fprintf('\n');
 
 tic
 fprintf('Loading Project Breathe other visits data\n');
+fprintf('-----------------------------------------\n');
 opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'Other Visits');
 ovdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'Other Visits');
 nov = size(ovdata, 1);
 for i = 1:nov
-    brovrow.ID               = brPatient.ID(ismember(brPatient.StudyNumber, ovdata.StudyID(i)));
-    brovrow.Hospital         = hospital;
-    brovrow.StudyNumber      = ovdata.StudyID(i);
-    brovrow.AttendanceDate   = ovdata.AttendanceDate(i);
-    brovrow.VisitType        = ovdata.TypeOfVisit(i);
-    
-    brOtherVisits = [brOtherVisits; brovrow];
+    if size(brPatient.ID(ismember(brPatient.StudyNumber, ovdata.StudyID(i))), 1) == 0
+        fprintf('Row %d (spreadsheet row %d): Invalid StudyID %s\n',  i, i + 2, ovdata.StudyID{i});
+    else
+        brovrow.ID               = brPatient.ID(ismember(brPatient.StudyNumber, ovdata.StudyID(i)));
+        brovrow.Hospital         = hospital;
+        brovrow.StudyNumber      = ovdata.StudyID(i);
+        brovrow.AttendanceDate   = ovdata.AttendanceDate(i);
+        brovrow.VisitType        = ovdata.TypeOfVisit(i);
+
+        brOtherVisits = [brOtherVisits; brovrow];
+    end
 end
 toc
 fprintf('\n');
 
 tic
 fprintf('Loading Project Breathe PFT data\n');
+fprintf('--------------------------------\n');
 opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'PFT');
 pftdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'PFT');
 npft = size(pftdata, 1);
 for i = 1:npft
-    brpftrow.ID                 = brPatient.ID(ismember(brPatient.StudyNumber, pftdata.StudyID(i)));
-    brpftrow.Hospital           = hospital;
-    brpftrow.StudyNumber        = pftdata.StudyID(i);
-    brpftrow.LungFunctionDate   = pftdata.LungFunctionDate(i);
-    brpftrow.FEV1               = pftdata.FEV1(i);
-    fev1setas                   = brPatient.FEV1SetAs(ismember(brPatient.StudyNumber, pftdata.StudyID(i)));
-    calcfev1setas               = brPatient.CalcFEV1SetAs(ismember(brPatient.StudyNumber, pftdata.StudyID(i)));
-    brpftrow.FEV1_              = 100 * brpftrow.FEV1 / fev1setas;
-    brpftrow.CalcFEV1_          = 100 * brpftrow.FEV1 / calcfev1setas;
-    
-    brPFT = [brPFT; brpftrow];
+    if size(brPatient.ID(ismember(brPatient.StudyNumber, pftdata.StudyID(i))), 1) == 0
+        fprintf('Row %d (spreadsheet row %d): Invalid StudyID %s\n',  i, i + 2, pftdata.StudyID{i});
+    else
+        brpftrow.ID                 = brPatient.ID(ismember(brPatient.StudyNumber, pftdata.StudyID(i)));
+        brpftrow.Hospital           = hospital;
+        brpftrow.StudyNumber        = pftdata.StudyID(i);
+        brpftrow.LungFunctionDate   = pftdata.LungFunctionDate(i);
+        brpftrow.FEV1               = pftdata.FEV1(i);
+        fev1setas                   = brPatient.FEV1SetAs(ismember(brPatient.StudyNumber, pftdata.StudyID(i)));
+        calcfev1setas               = brPatient.CalcFEV1SetAs(ismember(brPatient.StudyNumber, pftdata.StudyID(i)));
+        brpftrow.FEV1_              = 100 * brpftrow.FEV1 / fev1setas;
+        brpftrow.CalcFEV1_          = 100 * brpftrow.FEV1 / calcfev1setas;
+
+        brPFT = [brPFT; brpftrow];
+    end
 end
 toc
 fprintf('\n');
 
 tic
 fprintf('Loading Project Breathe CRP data\n');
+fprintf('--------------------------------\n');
 opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'CRP Levels');
 crpdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'CRP Levels');
 ncrp = size(crpdata, 1);
 for i = 1:ncrp
-    brcrprow.ID                 = brPatient.ID(ismember(brPatient.StudyNumber, crpdata.StudyID(i)));
-    brcrprow.Hospital           = hospital;
-    brcrprow.StudyNumber        = crpdata.StudyID(i);
-    brcrprow.CRPDate            = crpdata.CRPDate(i);
-    brcrprow.Level              = crpdata.Level(i);
-    brcrprow.NumericLevel       = crpdata.Level(i);
-    brcrprow.Units              = {'mg/L'};
-    brcrprow.PatientAntibiotics = crpdata.PatientAntibiotics(i);
-    
-    brCRP = [brCRP; brcrprow];
+    if size(brPatient.ID(ismember(brPatient.StudyNumber, crpdata.StudyID(i))), 1) == 0
+        fprintf('Row %d (spreadsheet row %d): Invalid StudyID %s\n',  i, i + 2, crpdata.StudyID{i});
+    else
+        brcrprow.ID                 = brPatient.ID(ismember(brPatient.StudyNumber, crpdata.StudyID(i)));
+        brcrprow.Hospital           = hospital;
+        brcrprow.StudyNumber        = crpdata.StudyID(i);
+        brcrprow.CRPDate            = crpdata.CRPDate(i);
+        brcrprow.Level              = crpdata.Level(i);
+        brcrprow.NumericLevel       = crpdata.Level(i);
+        brcrprow.Units              = {'mg/L'};
+        brcrprow.PatientAntibiotics = crpdata.PatientAntibiotics(i);
+
+        brCRP = [brCRP; brcrprow];
+    end
 end
 toc
 fprintf('\n');

@@ -18,7 +18,13 @@ for i = 1:size(pstudydateweight,1)
     pmeasures = pmeasuresweight(pmeasuresweight.SmartCareID == scid,:);
     % store min and max for patient
     minpmweight = min(pmeasures.WeightInKg);
+    if size(minpmweight, 1) == 0
+        minpmweight = 100;
+    end
     maxpmweight = max(pmeasures.WeightInKg);
+    if size(maxpmweight, 1) == 0
+        maxpmweight = 0;
+    end
     
     studystart = pstudydateweight.ScaledDateNum(i);
     studyend = studystart + 183;
