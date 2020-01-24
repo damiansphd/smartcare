@@ -64,7 +64,7 @@ for m = 1:nmeasures
         end
     end
 
-    temp = hsv;
+    temp = hsv(64);
     brightness = .9;
     colors(1,:)  = temp(8,:)  .* brightness;
     colors(2,:)  = temp(16,:)  .* brightness;

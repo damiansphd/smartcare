@@ -7,8 +7,9 @@ fprintf('Creating Heatmap of Measures with Study Period\n');
 fprintf('----------------------------------------------\n');
 tic
 
-temp = hsv;
+temp = hsv(64);
 brightness = 0.9;
+
 
 if ismember(study, {'SC', 'TM'})
     colors(1,:)  = temp(4,:);

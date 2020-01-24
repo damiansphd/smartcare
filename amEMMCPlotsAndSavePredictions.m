@@ -8,10 +8,38 @@ function amEMMCPlotsAndSavePredictions(amInterventions, amIntrcube, measures, pd
 % probability distributions by measure (handling multiple sets of latent
 % curves)
 
-plotsdown = 9;
-plotsacross = 5;
-mpos = [ 1 2 6 7 ; 3 4 8 9 ; 11 12 16 17 ; 13 14 18 19 ; 21 22 26 27 ; 23 24 28 29 ; 31 32 36 37 ; 33 34 38 39];
-hpos = [ 5 ; 10 ; 15 ; 20 ; 25 ; 30 ; 35 ; 40 ; 45 ; 44 ; 43 ; 42 ; 41 ];
+
+if nmeasures <= 8
+    plotsdown = 9;
+    plotsacross = 5;
+    mpos = [ 1  2  6  7 ;  3  4  8  9 ; 
+            11 12 16 17 ; 13 14 18 19 ; 
+            21 22 26 27 ; 23 24 28 29 ; 
+            31 32 36 37 ; 33 34 38 39 ];
+    hpos = [ 5 ; 10 ; 
+            15 ; 20 ; 
+            25 ; 30 ; 
+            35 ; 40 ; 
+            45      ];
+    %hpos = [ 5 ; 10 ; 15 ; 20 ; 25 ; 30 ; 35 ; 40 ; 45 ; 44 ; 43 ; 42 ; 41 ];
+elseif nmeasures > 8 && nmeasures <= 18
+    plotsdown = 14;
+    plotsacross = 8;
+    mpos = [ 1  2  9 10 ;  3  4 11 12 ;  5  6 13 14 ; 
+            17 18 25 26 ; 19 20 27 28 ; 21 22 29 30 ; 
+            33 34 41 42 ; 35 36 43 44 ; 37 38 45 46 ; 
+            49 50 57 58 ; 51 52 59 60 ; 53 54 61 62 ;
+            65 66 73 74 ; 67 68 75 76 ; 69 70 77 78 ; 
+            81 82 89 90 ; 83 84 91 92 ; 85 86 93 94 ];
+    hpos = [  7 ;  8 ; 15 ; 
+             23 ; 24 ; 31 ;  
+             39 ; 40 ; 47 ; 
+             55 ; 56 ; 63 ; 
+             71 ; 72 ; 79 ;
+             87 ; 88 ; 95 ;
+             103          ];
+end
+
 dayset = [-1 * (max_offset + align_wind - 1): -1];
 anchor = 0; % latent curve is to be shifted by offset on the plot
 
@@ -53,6 +81,11 @@ for m = 1:nmeasures
     xl = [0 0];
     yl = [min(adjmeancurvemean(1:max_offset + align_wind - 1 - amInterventions.Offset(thisinter)) * .99) ...
           max(adjmeancurvemean(1:max_offset + align_wind - 1 - amInterventions.Offset(thisinter)) * 1.01)];
+    if yl(1) == yl(2)
+        rangelimit = setMinYDisplayRangeForMeasure(measures.Name{m});
+        yl(1) = yl(1) - rangelimit * 0.5;
+        yl(2) = yl(1) + rangelimit * 0.5;
+    end
     
     % create subplot and plot required data arrays
     ax = subplot(plotsdown, plotsacross, mpos(m,:), 'Parent',p);               
@@ -149,6 +182,7 @@ sp1 = uicontrol('Parent', p, ...
                 'FontSize', 8, ...
                 'FontWeight', 'bold', ...
                 'HorizontalAlignment', 'left', ...
+                'BackgroundColor', 'white', ...
                 'String', infostring);
             
 % save plot

@@ -13,9 +13,10 @@ fprintf('\n');
 
 study = 'BR';
 
-[~, measdate, guidmapdate] = setLatestBreatheDates();
+[~, measdate, guidmapdate] = getLatestBreatheDates();
 
 measfileprefix = 'Breathe_';
+measfilesuffix = '.csv';
 basedir   = setBaseDir();
 subfolder = 'DataFiles/ProjectBreathe';
 
@@ -32,7 +33,7 @@ brphysdata = createBreatheMeasuresTable(0);
 brphysdata_deleted = brphysdata;
 brphysdata_deleted.Reason(:) = {''};
 
-measfilelisting = dir(fullfile(basedir, subfolder, sprintf('%s*%s', measfileprefix, measdate)));
+measfilelisting = dir(fullfile(basedir, subfolder, sprintf('%s*%s%s', measfileprefix, measdate, measfilesuffix)));
 MeasFiles = cell(size(measfilelisting,1),1);
 for a = 1:size(MeasFiles,1)
     MeasFiles{a} = measfilelisting(a).name;
@@ -51,7 +52,7 @@ fprintf('\n');
 for i = 1:nmeasfile
     tic
     fprintf('Processing %2d: %s\n', i, MeasFiles{i});
-    filetype = strrep(strrep(MeasFiles{i}, measfileprefix, ''), sprintf('_%s', measdate), '');
+    filetype = strrep(strrep(strrep(MeasFiles{i}, measfileprefix, ''), measfilesuffix, ''), sprintf('_%s', measdate), '');
     
     mfopts = detectImportOptions(fullfile(basedir, subfolder, MeasFiles{i}), 'FileType', 'Text', 'Delimiter', ',');
     mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'IsDeleted'})) = {'logical'};
@@ -193,7 +194,7 @@ brphysdata = scaleDaysByPatient(brphysdata, doupdates);
 
 brphysdata_predateoutlierhandling = brphysdata;
 
-% don't so this for project breathe
+% don't do this for project breathe
 % analyse measurement date outliers and handle as appropriate
 %brphysdata = analyseAndHandleDateOutliers(brphysdata, study, doupdates);
 

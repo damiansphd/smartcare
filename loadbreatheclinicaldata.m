@@ -2,7 +2,7 @@ clear; clc; close all;
 
 basedir = setBaseDir();
 subfolder = 'DataFiles/ProjectBreathe';
-[clinicaldate, ~, ~] = setLatestBreatheDates();
+[clinicaldate, ~, ~] = getLatestBreatheDates();
 
 clinicalfile = sprintf('ProjectBreathe - ClinicalData %s.xlsx', clinicaldate);
 
@@ -19,30 +19,34 @@ npatients = size(patientdata, 1);
 userid = 501;
 hospital = 'PAP';
 for i = 1:npatients
-    brpatrow.ID            = userid;
-    brpatrow.Hospital      = hospital;
-    brpatrow.StudyNumber   = patientdata.StudyID(i);
-    brpatrow.StudyDate     = patientdata.StudyDate(i);
-    brpatrow.DOB           = patientdata.DOB(i);
-    brpatrow.Age           = patientdata.Age(i);
-    brpatrow.Sex           = patientdata.Sex(i);
-    brpatrow.Height        = patientdata.Height(i);
-    brpatrow.Weight        = patientdata.Weight(i);
-    brpatrow.PredictedFEV1 = patientdata.PredictedFEV1(i);
-    brpatrow.FEV1SetAs     = round(patientdata.PredictedFEV1(i), 1);
-    brpatrow.StudyEmail    = patientdata.StudyEmail(i);
-    brpatrow.CFGene1       = patientdata.CFGene1(i);
-    brpatrow.CFGene2       = patientdata.CFGene2(i);
-    
-    brpatrow.CalcAge                  = floor(years(brpatrow.StudyDate - brpatrow.DOB));
-    brpatrow.CalcAgeExact             = years(brpatrow.StudyDate - brpatrow.DOB);
-    brpatrow.CalcPredictedFEV1        = calcPredictedFEV1(brpatrow.CalcAge, brpatrow.Height, brpatrow.Sex);
-    brpatrow.CalcPredictedFEV1OrigAge = calcPredictedFEV1(brpatrow.Age, brpatrow.Height, brpatrow.Sex);
-    brpatrow.CalcFEV1SetAs            = round(calcPredictedFEV1(brpatrow.CalcAge, brpatrow.Height, brpatrow.Sex), 1);
-    brpatrow.CalcFEV1SetAsOrigAge     = round(calcPredictedFEV1(brpatrow.Age, brpatrow.Height, brpatrow.Sex), 1);
-    
-    brPatient = [brPatient; brpatrow];
-    userid = userid + 1;
+    if ~ismember(patientdata.StudyID{i}, '')
+        brpatrow.ID            = userid;
+        brpatrow.Hospital      = hospital;
+        brpatrow.StudyNumber   = patientdata.StudyID(i);
+        brpatrow.StudyDate     = patientdata.StudyDate(i);
+        brpatrow.DOB           = patientdata.DOB(i);
+        brpatrow.Age           = patientdata.Age(i);
+        brpatrow.Sex           = patientdata.Sex(i);
+        brpatrow.Height        = patientdata.Height(i);
+        brpatrow.Weight        = patientdata.Weight(i);
+        brpatrow.PredictedFEV1 = patientdata.PredictedFEV1(i);
+        brpatrow.FEV1SetAs     = round(patientdata.PredictedFEV1(i), 1);
+        brpatrow.StudyEmail    = patientdata.StudyEmail(i);
+        brpatrow.CFGene1       = patientdata.CFGene1(i);
+        brpatrow.CFGene2       = patientdata.CFGene2(i);
+
+        brpatrow.CalcAge                  = floor(years(brpatrow.StudyDate - brpatrow.DOB));
+        brpatrow.CalcAgeExact             = years(brpatrow.StudyDate - brpatrow.DOB);
+        brpatrow.CalcPredictedFEV1        = calcPredictedFEV1(brpatrow.CalcAge, brpatrow.Height, brpatrow.Sex);
+        brpatrow.CalcPredictedFEV1OrigAge = calcPredictedFEV1(brpatrow.Age, brpatrow.Height, brpatrow.Sex);
+        brpatrow.CalcFEV1SetAs            = round(calcPredictedFEV1(brpatrow.CalcAge, brpatrow.Height, brpatrow.Sex), 1);
+        brpatrow.CalcFEV1SetAsOrigAge     = round(calcPredictedFEV1(brpatrow.Age, brpatrow.Height, brpatrow.Sex), 1);
+
+        brPatient = [brPatient; brpatrow];
+        userid = userid + 1;
+    else
+        fprintf('Row %d (spreadsheet row %d): Invalid StudyID %s\n',  i, i + 2, patientdata.StudyID{i});
+    end
 end
 toc
 fprintf('\n');
