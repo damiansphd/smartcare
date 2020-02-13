@@ -28,6 +28,16 @@ if (studynbr == 1 || studynbr == 2)
     measures.Index = [1:nmeasures]';
 end
 
+% delete binary measurement types for Project Breathe (HasColdOrFlu,
+% HasHayFever
+if (studynbr == 4)
+    idx = ismember(measures.DisplayName, {'HasColdOrFlu', 'HasHayFever'});
+    amDatacube(:,:,measures.Index(idx)) = [];
+    measures(idx,:) = [];
+    nmeasures = size(measures,1);
+    measures.Index = [1:nmeasures]';
+end
+
 dataoutliers = table('Size',[1 8], ...
     'VariableTypes', {'double',      'double',    'cell',    'double', 'double',         'double' ,     'double', 'double'}, ...
     'VariableNames', {'SmartCareID', 'MeasureID', 'Measure', 'Day',    'NStdDevOutlier', 'Measurement', 'Mean',   'StdDev'});

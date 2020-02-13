@@ -86,7 +86,7 @@ elseif runfunction == 1
         cdCRP, cdPFT, cdNewMeds, measures, nmeasures, ndays, study);
 elseif runfunction == 2
     fprintf('Plotting measures around exacerbation\n');
-    visualiseExacerbationForPaperFcn2(amDatacube, amInterventions, measures, nmeasures, npatients, study);
+    visualiseExacerbationForPaperFcn3(amDatacube, amInterventions, measures, nmeasures, npatients, study);
 elseif runfunction == 3
     run_type = 'Best Alignment';
     fprintf('Plotting superimposed alignment curves - mean shift - all on one page\n');

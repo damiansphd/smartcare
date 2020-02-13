@@ -39,6 +39,10 @@ elseif measuresmask == 7
     idx = ismember(measures.DisplayName, {'Cough', 'FEV1', 'MinsAwake', 'O2Saturation', ...
         'RestingHR', 'Temperature', 'Wellness'});
     measures.Mask(idx) = 1;
+elseif measuresmask == 8
+    idx = ismember(measures.DisplayName, {'Cough', 'FEF2575', 'MinsAsleep', 'O2Saturation', ...
+        'RestingHR', 'Temperature', 'Wellness'});
+    measures.Mask(idx) = 1;
 else
     % shouldn't ever get here - but default to just cough if it ever
     % happens
