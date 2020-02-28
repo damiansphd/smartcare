@@ -134,10 +134,11 @@ if nlatentcurves >= 5
     return;
 end
 
-plottitle = sprintf('%s - Variables vs Latent Curve Set For Paper Page %d of %d', plotname, page, npages);
+plottitle = sprintf('%s - Vars vs LC Set FP Pg %d of %d', plotname, page, npages);
 
 widthinch = 8.5;
 heightinch = 11;
+fontname = 'Arial';
 
 [f, p] = createFigureAndPanelForPaper('', widthinch, heightinch);
 
@@ -168,6 +169,7 @@ for v = 1:nscattervars
         return
     end
     ax.FontSize = 6;
+    ax.FontName = fontname;
     title(ax, scattervartext{v, 1}, 'FontSize', 8);
     xlim(ax, [0.5 nlatentcurves + 0.5]);
     xlabel(ax, 'Latent Curve Set', 'FontSize', 8);
@@ -352,6 +354,7 @@ for v = 1:nbarvars
     ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
     bar(ax, barvardata, 'Stacked');
     ax.FontSize = 6;
+    ax.FontName = fontname;
     title(ax, barvartext{v}, 'FontSize', 6);
     legend(ax, legendtext, 'FontSize', 6);
     xlim(ax, [0.5 nlatentcurves + 0.5]);
@@ -436,6 +439,7 @@ for v = 1:npolarvars
     pax.RGrid             = 'off';
     pax.RTickLabel        = {};
     pax.FontSize          = 6;
+    pax.FontName          = fontname;
     pax.ThetaTick         = [0 90 180 270];
     title(pax, polarvartext{v}, 'FontSize', 8);
     

@@ -17,9 +17,10 @@ fprintf('5: Paper Figure 5a - <n/a - done in illustrator>\n');
 fprintf('6: Paper Figure 5b - p-Values of correlations\n');
 fprintf('7: Paper Figure 5c - Interventions over time\n');
 fprintf('8: Slides - histogram of variable time to treatment\n');
+fprintf('9: Paper Figure 1B - Number of interventions histogram\n');
 
 fprintf('\n');
-npaperplots = 8;
+npaperplots = 9;
 srunfunction = input(sprintf('Choose function (0-%d): ', npaperplots), 's');
 runfunction = str2double(srunfunction);
 
@@ -34,7 +35,7 @@ fprintf('\n');
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 [studynbr, study, studyfullname] = selectStudy();
-if runfunction == 0 || runfunction == 1 || runfunction == 2 || runfunction == 6
+if runfunction == 0 || runfunction == 1 || runfunction == 2 || runfunction == 6 || runfunction == 9
     fprintf('Loading raw data for study\n');
     chosentreatgap = selectTreatmentGap();
     tic
@@ -45,19 +46,22 @@ if runfunction == 0 || runfunction == 1 || runfunction == 2 || runfunction == 6
     alignmentmodelinputsfile = sprintf('%salignmentmodelinputs_gap%d.mat', study, chosentreatgap);
     fprintf('Loading alignment model inputs\n');
     load(fullfile(basedir, subfolder, alignmentmodelinputsfile), 'amInterventions','amDatacube', 'measures', 'npatients','ndays', 'nmeasures', 'ninterventions');
+    ivandmeasuresfile = sprintf('%sivandmeasures_gap%d.mat', study, chosentreatgap);
+    fprintf('Loading Treatment and Measures Prior info\n');
+    load(fullfile(basedir, subfolder, ivandmeasuresfile), 'ivandmeasurestable');
     toc
     fprintf('\n');
 end
 
-if runfunction >= 6
+if runfunction >= 3 && runfunction < 9
     [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('',      '', 'IntrFilt', 'TGap',       '');
     tic
     fprintf('Loading output from model run\n');
     load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun)));
     predictivemodelinputsfile = sprintf('%spredictivemodelinputs.mat', study);
-    ivandmeasuresfile = sprintf('%sivandmeasures_gap%d.mat', study, treatgap);
     fprintf('Loading Predictive Model Patient Measures Stats\n');
     load(fullfile(basedir, subfolder, predictivemodelinputsfile), 'pmPatients', 'pmPatientMeasStats', 'npatients', 'maxdays');
+    ivandmeasuresfile = sprintf('%sivandmeasures_gap%d.mat', study, treatgap);
     fprintf('Loading Treatment and Measures Prior info\n');
     load(fullfile(basedir, subfolder, ivandmeasuresfile), 'ivandmeasurestable');
     % default some variables for backward compatibility with prior versions
@@ -125,6 +129,9 @@ elseif runfunction == 8
     run_type = 'Best Alignment';
     fprintf('Plotting histogram of variable time to treatment\n');
     amEMMCPlotHistogramOfTimeToTreatForPaper(amInterventions, plotname, plotsubfolder, nlatentcurves, study);
+elseif runfunction == 9
+    fprintf('Plotting histogram of mnumber of interventions\n');
+    plotNbrIntrByPatient(physdata, offset, ivandmeasurestable, cdPatient, study);
 else
     fprintf('Should not get here....\n');
 end

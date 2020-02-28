@@ -15,6 +15,7 @@ labelfontsize = 10;
 footerfontsize = 8;
 axisfontsize = 6;
 unitfontsize = 8;
+fontname = 'Arial';
 
 widthinch = 3;
 heightinch = 5.5;
@@ -105,6 +106,7 @@ for i = 1:(ntitles + nlabels + nplots + npads + nfooters)
                         'Color', tcolor, ...
                         'FontSize', titlefontsize, ...
                         'FontWeight', tweight, ...
+                        'FontName', fontname, ...
                         'FontAngle', tangle);
     elseif type == 3 || type == 5 || type == 9 || type == 11
         % label
@@ -129,6 +131,7 @@ for i = 1:(ntitles + nlabels + nplots + npads + nfooters)
                         'VerticalAlignment', 'middle', ...
                         'LineStyle', 'none', ...
                         'FontSize', labelfontsize, ...
+                        'FontName', fontname, ...
                         'FontWeight', 'bold');
     elseif type == 4 || type == 6 || type == 10 || type == 12
         if type == 4 || type == 6
@@ -180,6 +183,7 @@ for i = 1:(ntitles + nlabels + nplots + npads + nfooters)
         %units          = getUnitsForMeasure(displaymeasure);
         [smcolour, rwcolour] = getColourForMeasure(displaymeasure);
         ax.FontSize = axisfontsize;
+        ax.FontName = fontname;
         yticks = setTicks(yl(1), yl(2), 3);
         ax.YTick = yticks;
         ax.TickDir = 'out';
@@ -266,6 +270,7 @@ for i = 1:(ntitles + nlabels + nplots + npads + nfooters)
                         'HorizontalAlignment', 'center', ...
                         'VerticalAlignment', 'top', ...
                         'LineStyle', 'none', ...
+                        'FontName', fontname, ...
                         'FontSize', footerfontsize);
     elseif type == 16 || type == 17
         afrom  = labelwidth + plotwidth;

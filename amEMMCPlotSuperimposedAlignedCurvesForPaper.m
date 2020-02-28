@@ -26,7 +26,7 @@ else
     fprintf('**** Unknown shift mode ****\n');
 end
 
-plottitle   = sprintf('%s - %s Superimposed %s For Paper', plotname, run_type, shifttext);
+plottitle   = sprintf('%s - %s S-imp %s FP', plotname, run_type, shifttext);
 
 plotsacross = nlatentcurves;
 plotsdown   = 1;
@@ -42,6 +42,7 @@ panelsacross = ((plotpanels + paddingpanels) * nlatentcurves) + legendpanels;
 nplotrows = 1 + size(lcexamples, 1);
 
 labelfontsize = 8;
+fontname = 'Arial';
 pghght = 3 * nplotrows;
 pgwdth = 0.5 * (panelsacross + 3);
 labelwidth = 0.15;
@@ -69,6 +70,7 @@ annotation(sp(1), 'textbox',  ...
                 'HorizontalAlignment', 'center', ...
                 'VerticalAlignment', 'middle', ...
                 'LineStyle', 'none', ...
+                'FontName', fontname, ...
                 'FontSize', labelfontsize);
             
 sp(2) = uipanel('Parent', p, ...
@@ -130,6 +132,7 @@ for n = 1:nlatentcurves
         end
         ax = subplot(nplotrows, panelsacross, panels, 'Parent',sp(2));
         ax.FontSize = 8;
+        ax.FontName = 'Arial';
         ax.TickDir = 'out';
         % comment out/uncomment out one of these depending on whether all measures
         % wanted or just those used for alignment
@@ -237,6 +240,7 @@ for row = 1:size(lcexamples, 1)
         % plot all measures superimposed
         ax = subplot(nplotrows, panelsacross, panels, 'Parent',p);
         ax.FontSize = 8;
+        ax.FontName = fontname;
         ax.TickDir = 'out';
         % comment out/uncomment out one of these depending on whether all measures
         % wanted or just those used for alignment
@@ -266,10 +270,10 @@ for row = 1:size(lcexamples, 1)
             ax.YColor = 'white';
         end
         if n == nlatentcurves
-            legend(ax, legendtext, 'Location', 'eastoutside', 'FontSize', 6);
+            legend(ax, legendtext, 'Location', 'eastoutside', 'FontName', fontname, 'FontSize', 6);
         end
         if nlatentcurves > 1
-            title(ax, sprintf('Example %d', n), 'Units', 'normalized', 'Position', [titlexpos, titleypos, 0]);
+            title(ax, sprintf('Example %d', n), 'Units', 'normalized', 'FontName', fontname, 'Position', [titlexpos, titleypos, 0]);
         end
     end
 end

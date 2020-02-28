@@ -20,6 +20,8 @@ titlefontsize = 14;
 labelfontsize = 12;
 axisfontsize = 10;
 unitfontsize = 10;
+smallfontsize = 8;
+fontname = 'Arial';
 
 widthinch = 8.25;
 heightinch = 11.75;
@@ -102,6 +104,7 @@ for pat = 1:size(patientlist,1)
                                 'HorizontalAlignment', 'left', ...
                                 'VerticalAlignment', 'middle', ...
                                 'LineStyle', 'none', ...
+                                'FontName', fontname, ...
                                 'FontSize', titlefontsize);
             elseif type == 2 || type == 3
                 % label
@@ -119,6 +122,7 @@ for pat = 1:size(patientlist,1)
                                 'HorizontalAlignment', 'center', ...
                                 'VerticalAlignment', 'middle', ...
                                 'LineStyle', 'none', ...
+                                'FontName', fontname, ...
                                 'FontSize', labelfontsize);
             elseif type == 4 || type == 5
                 % plot
@@ -140,6 +144,7 @@ for pat = 1:size(patientlist,1)
                     ax = subplot(1, 1, 1,'Parent', sp(i));
                     displaymeasure = 'Clinical CRP';
                     ax.FontSize = axisfontsize;
+                    ax.FontName = fontname;
                     ax.XTickLabel = '';
                     ax.XColor = 'white';
                     yticks = setTicks(yl(1), yl(2), 3);
@@ -203,6 +208,7 @@ for pat = 1:size(patientlist,1)
                     ax = subplot(1, 1, 1, 'Parent', sp(i));
                     displaymeasure = 'Clinical FEV1';
                     ax.FontSize = axisfontsize;
+                    ax.FontName = fontname;
                     yticks = setTicks(yl(1), yl(2), 3);
                     ax.YTick = yticks;
                     ax.YTickLabel = addCommaFormat(yticks);
@@ -258,6 +264,7 @@ for pat = 1:size(patientlist,1)
                     displaymeasure = measures.DisplayName{m};
                     [smcolour, rwcolour] = getColourForMeasure(displaymeasure);
                     ax.FontSize = axisfontsize;
+                    ax.FontName = fontname;
                     yticks = setTicks(yl(1), yl(2), 3);
                     ax.YTick = yticks;
                     ax.YTickLabel = addCommaFormat(yticks);
@@ -370,7 +377,8 @@ for pat = 1:size(patientlist,1)
                                     'HorizontalAlignment', 'center', ...
                                     'VerticalAlignment', 'bottom', ...
                                     'LineStyle', 'none', ...
-                                    'FontSize', axisfontsize);
+                                    'FontName', fontname, ...
+                                    'FontSize', smallfontsize);
                 end
                 if size(orkstartdn, 1) ~= 0
                     displaytext1 = sprintf('\\bf %s\\rm', 'Initiation of');
@@ -385,7 +393,8 @@ for pat = 1:size(patientlist,1)
                                     'HorizontalAlignment', 'center', ...
                                     'VerticalAlignment', 'bottom', ...
                                     'LineStyle', 'none', ...
-                                    'FontSize', axisfontsize);
+                                    'FontName', fontname, ...
+                                    'FontSize', smallfontsize);
                 end
             end
         end

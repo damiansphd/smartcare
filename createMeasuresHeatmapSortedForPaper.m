@@ -12,6 +12,7 @@ subfolder = sprintf('Plots/%s', study);
 
 temp = hsv;
 brightness = .9;
+fontname = 'Arial';
 
 if ismember(study, {'SC', 'TM'})
     %colors(1,:)  = [0 0 0];     % black for no measures
@@ -132,13 +133,15 @@ f = figure('Units', 'inches', 'Position', [2, 4, fullwidthinch, fullheightinch],
 p1 = uipanel('Parent', f, 'BorderType', bordertype, 'BackgroundColor', 'white', 'Units', 'Inches', 'OuterPosition', [0, 0, p1widthinch, fullheightinch]);
 p1.Title = 'A.';
 p1.TitlePosition = 'lefttop';
-p1.FontSize = 16;
-p1.FontWeight = 'normal'; 
+p1.FontSize      = 16;
+p1.FontWeight    = 'normal';
+p1.FontName      = fontname;
 
 h = heatmap(p1, pdcountmtable, 'ScaledDateNum', 'SmartCareID', 'Colormap', colors, 'MissingDataColor', 'black', ...
     'ColorVariable','GroupCount','ColorMethod','max', 'MissingDataLabel', 'No data');
 h.Title = ' ';
 h.FontSize = 13;
+h.FontName = fontname;
 h.XLabel = 'Time (days)';
 h.YLabel = 'Participants';
 h.YDisplayData = ysortmaxdays;
@@ -175,6 +178,7 @@ sp3 = uicontrol('Parent', p3, ...
                     'Units', 'normalized', ...
                     'Position', [0, 0, 1, 1], ...
                     'HorizontalAlignment', 'Center', ...
+                    'FontName', fontname, ...
                     'String', sprintf('Nbr different \nmeasurements'));
 
 % save results

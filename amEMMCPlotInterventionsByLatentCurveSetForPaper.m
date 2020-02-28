@@ -157,6 +157,7 @@ else
     pghght = 11;
 end
 pgwdth = 8.5;
+fontname = 'Arial';
 
 [f, p] = createFigureAndPanelForPaper('', pgwdth, pghght);
 
@@ -166,6 +167,8 @@ sp(1)    = uipanel('Parent', p, ...
 
 h = heatmap(sp(1), intrarray(lc.PatientNbr,:), 'Colormap', colors);
 h.Title = ' ';
+h.FontName = fontname;
+h.FontSize = 8;
 h.XLabel = 'Days';
 h.YLabel = 'Patients';
 h.CellLabelColor = 'none';
