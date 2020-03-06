@@ -6,6 +6,8 @@ function amEMMCPlotSuperimposedAlignedCurvesForPaper3(meancurvemean, meancurveco
 % plotSuperimposedAlignedCurves to plot for each set of latent curves along
 % with examples below
 
+invmeasarray = getInvertedMeasures(study);
+
 if examplemode ~= 0
     if (size(lcexamples, 2) ~= nlatentcurves)
         fprintf('**** Number of latent curve examples in each set does not match the number of latent curve sets ****\n');
@@ -36,7 +38,7 @@ smoothwdth = 4;
 % 4) apply a vertical shift (by the average of the points to the left of
 % ex_start)
 for n = 1:nlatentcurves
-    pridx = measures.Index(ismember(measures.DisplayName, {'PulseRate'}));
+    pridx = measures.Index(ismember(measures.DisplayName, invmeasarray));
     meancurvemean(n, :, pridx) = meancurvemean(n, :, pridx) * -1;
     for m = 1:nmeasures
         meancurvemean(n, meancurvecount(n, :, m) < countthreshold, m) = NaN;
@@ -241,8 +243,14 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
                     for m = 1:tmpnmeasures
                         legendtext{m} = formatDisplayMeasure(legendtext{m});
                     end
-                    pridx = ismember(tmpmeasures.DisplayName, {'PulseRate'});
-                    legendtext{pridx} = sprintf('%s %s', legendtext{pridx}, '(Inverted)');
+                    pridx = ismember(tmpmeasures.DisplayName, invmeasarray);
+                    if sum(pridx) > 0
+                        for i = 1:size(legendtext, 1)
+                            if pridx(i) == 1
+                                legendtext{i} = sprintf('%s %s', legendtext{i}, '(Inverted)');
+                            end
+                        end
+                    end
 
                     plotSuperimposedAlignedCurvesForPaper(ax, tmp_meancurvemean, xl, yl, ...
                             tmpmeasures, tmpnmeasures, min_offset, max_offset, align_wind, ex_start(lc), study);
@@ -305,7 +313,7 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
             % Preprocess the measures :-
             % 1) invert pulse rate
             % 2) apply a vertical shift (using methodology selected)
-            pridx = find(ismember(tmpsubsetmeasures.DisplayName, {'PulseRate'}));
+            pridx = find(ismember(tmpsubsetmeasures.DisplayName, invmeasarray));
             if currmeas == pridx
                 amnormcubesingleintr(1, :, 1) = amnormcubesingleintr(1, :, 1) * -1;
             end

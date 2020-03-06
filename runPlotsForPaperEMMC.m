@@ -59,8 +59,10 @@ if runfunction >= 3 && runfunction < 9
     fprintf('Loading output from model run\n');
     load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun)));
     predictivemodelinputsfile = sprintf('%spredictivemodelinputs.mat', study);
-    fprintf('Loading Predictive Model Patient Measures Stats\n');
-    load(fullfile(basedir, subfolder, predictivemodelinputsfile), 'pmPatients', 'pmPatientMeasStats', 'npatients', 'maxdays');
+    if runfunction == 6 || runfunction == 7
+        fprintf('Loading Predictive Model Patient Measures Stats\n');
+        load(fullfile(basedir, subfolder, predictivemodelinputsfile), 'pmPatients', 'pmPatientMeasStats', 'npatients', 'maxdays');
+    end
     ivandmeasuresfile = sprintf('%sivandmeasures_gap%d.mat', study, treatgap);
     fprintf('Loading Treatment and Measures Prior info\n');
     load(fullfile(basedir, subfolder, ivandmeasuresfile), 'ivandmeasurestable');

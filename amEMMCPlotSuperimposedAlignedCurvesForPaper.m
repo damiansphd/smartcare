@@ -5,6 +5,8 @@ function amEMMCPlotSuperimposedAlignedCurvesForPaper(meancurvemean, meancurvecou
 % amEMMCPlotSuperimposedAlignedCurves - wrapper around the
 % plotSuperimposedAlignedCurves to plot for each set of latent curves
 
+invmeasarray = getInvertedMeasures(study);
+
 % latest format changes have broken examplemode ~= 0
 if examplemode ~= 0
     if (size(lcexamples, 2) ~= nlatentcurves)
@@ -90,7 +92,7 @@ smoothwdth = 4;
 
 
 for n = 1:nlatentcurves
-    pridx = measures.Index(ismember(measures.DisplayName, {'PulseRate'}));
+    pridx = measures.Index(ismember(measures.DisplayName, invmeasarray));
     meancurvemean(n, :, pridx) = meancurvemean(n, :, pridx) * -1;
     for m = 1:nmeasures
         meancurvemean(n, meancurvecount(n, :, m) < countthreshold, m) = NaN;
@@ -146,8 +148,15 @@ for n = 1:nlatentcurves
         for m = 1:tmpnmeasures
             legendtext{m} = formatDisplayMeasure(legendtext{m});
         end
-        pridx = ismember(tmp.DisplayName, {'PulseRate'});
-        legendtext{pridx} = sprintf('%s %s', legendtext{pridx}, '(Inverted)');
+        pridx = ismember(tmpmeasures.DisplayName, invmeasarray);
+        if sum(pridx) > 0
+            % need to edit this now there are multiple inverted measures
+            for i = 1:size(legendtext, 1)
+                if pridx(i) == 1
+                    legendtext{i} = sprintf('%s %s', legendtext{i}, '(Inverted)');
+                end
+            end
+        end
         
         plotSuperimposedAlignedCurvesForPaper(ax, tmp_meancurvemean, xl, yl, ...
                 tmpmeasures, tmpnmeasures, min_offset, max_offset, align_wind, ex_start(lc), study);

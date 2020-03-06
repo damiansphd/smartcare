@@ -3,6 +3,8 @@ function visualiseExacerbationForPaperFcn3(amDatacube, amInterventions, measures
 % visualiseExacerbationForPaperFcn3 - plots measures around an exacerbation
 % time
 
+invmeasarray = getInvertedMeasures(study);
+
 basedir = setBaseDir();
 subfolder = sprintf('Plots/%s', study);
 if ~exist(strcat(basedir, subfolder), 'dir')
@@ -232,7 +234,7 @@ for i = 1:(ntitles + nlabels + nplots + npads + nfooters)
                     
             % use exclude upper quartile mean/std for pulse rate,
             % otherwise use exclude bottom quartile mean/std
-            if ismember(displaymeasure, {'PulseRate'})
+            if ismember(displaymeasure, invmeasarray)
                 mmean = xu25mean(allpatdata(~isnan(allpatdata)));
                 mstd  = xu25std(allpatdata(~isnan(allpatdata)));
             else

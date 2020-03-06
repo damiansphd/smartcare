@@ -68,7 +68,7 @@ normstd = calculateSigmaNormalisation(amInterventions, measures, demographicstab
 % and then create normalised data cube.
 
 normmean = calculateMuNormalisation(amDatacube, amInterventions, measures, demographicstable, ...
-    dataoutliers, align_wind, ninterventions, nmeasures, mumethod);
+    dataoutliers, align_wind, ninterventions, nmeasures, mumethod, study);
 
 % populate normalised data cube by intervention
 [amIntrNormcube] = createNormalisedIntrDatacube(amIntrDatacube, normmean, normstd, ...

@@ -93,7 +93,7 @@ idx  = idx1 & idx2;
 fprintf('Scaling %2d degC Temperature measurements down by factor of 10\n', sum(idx));
 physdata.Temp_degC_(idx) = physdata.Temp_degC_(idx) / 10;
 
-% Temperature Recording - convert 4 readings taken in degF to degC
+% Temperature Recording - convert readings taken in degF to degC
 idx1 = ismember(physdata.RecordingType, 'TemperatureRecording');
 idx2 = physdata.Temp_degC_ > 95 & physdata.Temp_degC_ < 102;
 idx  = idx1 & idx2;

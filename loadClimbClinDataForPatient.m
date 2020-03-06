@@ -1,5 +1,6 @@
 function [cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, cdPFT, cdMicrobiology, cdHghtWght] = ...
-            loadClimbClinDataForPatient(cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, cdPFT, cdMicrobiology, cdHghtWght, patfile, basedir, subfolder, userid)
+            loadClimbClinDataForPatient(cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, cdPFT, cdMicrobiology, ...
+                                cdHghtWght, clABNameTable, patfile, basedir, subfolder, userid)
         
 % loadClimbClinDataForPatient - populate the clinical data tables for a given
 % patient's information
@@ -159,6 +160,10 @@ end
 tmpadm = readtable(fullfile(basedir, subfolder, patfile), 'Sheet', cdadmsheet);
 fprintf('Hospital Admissions - %2d rows\n', size(tmpadm, 1));
 fprintf('-----------------------------\n');
+if ~ismember('Exacerbation', tmpadm.Properties.VariableNames)
+    fprintf('Adding missing Exacerbation column to admission/iv data\n');
+    tmpadm.Exacerbation(:) = cellstr('');
+end
 for i = 1:size(tmpadm, 1)
     cdadmrow.ID          = userid;
     cdadmrow.StudyNumber = cdpatrow.StudyNumber;
@@ -188,29 +193,37 @@ for i = 1:size(tmpadm, 1)
         isValid = tmpisValid;
     end
     if isValid
-        if strlength(tmpadm.AntibioticUse_Name_preparation_{i}) ~= 0
-            allabstr  = tmpadm.AntibioticUse_Name_preparation_{i};
-            diffabidx = strfind(allabstr, ',');
-            diffabidx(1, size(diffabidx, 2) + 1) = strlength(allabstr) + 1;
-            for s = 1:size(diffabidx, 2)
-                if s == 1
-                    fromidx = 1;
-                else
-                    fromidx = diffabidx(s - 1) + 1;
-                end
-                oneabstr = extractBetween(allabstr, fromidx, diffabidx(s) - 1);
-                oneabstr = strrep(oneabstr, ' ', '');
-                dividx   = strfind(oneabstr{1}, '/');
-                if size(dividx, 2) == 0
-                    cdabrow.AntibioticName = oneabstr;
-                    cdabrow.Route = 'IV';
-                    cdAntibiotics = [cdAntibiotics; cdabrow];
-                elseif size(dividx, 2) == 1
-                    cdabrow.AntibioticName = extractBefore(oneabstr, dividx);
-                    cdabrow.Route          = extractAfter(oneabstr, dividx);
-                    cdAntibiotics = [cdAntibiotics; cdabrow];
-                else
-                    fprintf('**** Invalid Antibiotic format %s ****\n', oneabstr);
+        if ismember(tmpadm.Exacerbation(i), 'X')
+            fprintf('%3d: **** Found an exacerbation related IV treatment ****\n', i);
+            if strlength(tmpadm.AntibioticUse_Name_preparation_{i}) ~= 0
+                allabstr  = tmpadm.AntibioticUse_Name_preparation_{i};
+                diffabidx = strfind(allabstr, ',');
+                diffabidx(1, size(diffabidx, 2) + 1) = strlength(allabstr) + 1;
+                for s = 1:size(diffabidx, 2)
+                    if s == 1
+                        fromidx = 1;
+                    else
+                        fromidx = diffabidx(s - 1) + 1;
+                    end
+                    oneabstr = extractBetween(allabstr, fromidx, diffabidx(s) - 1);
+                    oneabstr = strrep(oneabstr, ' ', '');
+                    dividx   = strfind(oneabstr{1}, '/');
+                    if size(dividx, 2) == 0
+                        cdabrow.AntibioticName = getABNameFromCode(oneabstr, clABNameTable);
+                        cdabrow.Route = 'IV';
+                        cdabrow.HomeIV_s = 'No';
+                        cdAntibiotics = [cdAntibiotics; cdabrow];
+                    elseif size(dividx, 2) == 1
+                        cdabrow.AntibioticName = getABNameFromCode(extractBefore(oneabstr, dividx), clABNameTable);
+                        cdabrow.Route          = extractAfter(oneabstr, dividx);
+                        cdabrow.HomeIV_s = 'No';
+                        if ismember(cdabrow.Route, 'PO')
+                            cdabrow.Route = 'Oral';
+                        end
+                        cdAntibiotics = [cdAntibiotics; cdabrow];
+                    else
+                        fprintf('**** Invalid Antibiotic format %s ****\n', oneabstr);
+                    end
                 end
             end
         end
@@ -236,8 +249,9 @@ for i = 1:size(tmporal, 1)
             isValid = tmpisValid;
         end
         if isValid
-            cdabrow.AntibioticName = tmporal.Medication{i};
+            cdabrow.AntibioticName = getABNameFromCode(tmporal.Medication{i}, clABNameTable);
             cdabrow.Route = 'Oral';
+            cdabrow.HomeIV_s = 'No';
             cdAntibiotics = [cdAntibiotics; cdabrow];  
         end
     end

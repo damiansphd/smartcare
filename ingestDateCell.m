@@ -37,7 +37,7 @@ if ismember(class(inputcell), 'double')
             isValid = false;
         end
     else
-        fprintf('%3d: **** Invalid date format ****\n');
+        fprintf('%3d: **** Invalid date format ****\n', row);
         isValid = false;
 end
 

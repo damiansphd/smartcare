@@ -28,7 +28,7 @@ cdAntibiotics = sortrows(cdAntibiotics, {'ID', 'StartDate', 'Route'}, 'ascend');
 cdAdmissions = sortrows(cdAdmissions, {'ID', 'Admitted'}, 'ascend');
 % add column to admissions to capture event type (for antibiotics, use
 % Route as event type
-cdAdmissions.EventType = cdAdmissions.Hospital;
+%cdAdmissions.EventType = cdAdmissions.Hospital;
 cdAdmissions.EventType(:) = {'Admission'};
 
 % create set of antibiotic treatments
@@ -50,6 +50,11 @@ plotsdown = ceil((1 + size(measures, 1)) / plotsacross);
 plotsperpage = plotsacross * plotsdown;
 subfolder = sprintf('Plots/%s', study);
 
+% colours
+admcol  = [0.694 0.627 0.78];
+ivcol   = [1     0     0   ];
+oralcol = [1     0.85  0   ];
+
 % treat all antibiotic treatments within a -7/+25 day window as being part of
 % the same event
 abpriorwindow = days(-7);
@@ -65,13 +70,17 @@ for i = 1:size(abTreatments,1)
     
     fprintf('Patient: %3d  Hospital: %8s  EventDate: %10s - plotting timeline\n', scid, hospital, datestr(eventstartdate, 29));
     % get antibiotics treatments for this event
-    antibset = cdAntibiotics(cdAntibiotics.ID == scid & cdAntibiotics.StartDate >= (eventstartdate + abpriorwindow) ...
+    %antibset = cdAntibiotics(cdAntibiotics.ID == scid & cdAntibiotics.StartDate >= (eventstartdate + abpriorwindow) ...
+    %    & cdAntibiotics.StartDate < (eventstartdate + abpostwindow), ...
+    antibset = cdAntibiotics(cdAntibiotics.ID == scid & cdAntibiotics.StopDate >= (eventstartdate + measuresstartdn) ...
         & cdAntibiotics.StartDate < (eventstartdate + abpostwindow), ...
         {'ID', 'Hospital', 'StartDate', 'StopDate', 'Route'});
     antibset.Properties.VariableNames{'ID'} = 'SmartCareID';
     antibset.Properties.VariableNames{'Route'} = 'EventType';
     % get hospital admission for this event
-    admset = cdAdmissions(cdAdmissions.ID == scid & cdAdmissions.Admitted >= (eventstartdate + abpriorwindow) ...
+    %admset = cdAdmissions(cdAdmissions.ID == scid & cdAdmissions.Admitted >= (eventstartdate + abpriorwindow) ...
+    %    & cdAdmissions.Admitted < (eventstartdate + abpostwindow), ...
+    admset = cdAdmissions(cdAdmissions.ID == scid & cdAdmissions.Discharge >= (eventstartdate + measuresstartdn) ...
         & cdAdmissions.Admitted < (eventstartdate + abpostwindow), ...
         {'ID', 'Hospital', 'Admitted', 'Discharge', 'EventType'});
     admset.Properties.VariableNames{'ID'} = 'SmartCareID';
@@ -90,8 +99,11 @@ for i = 1:size(abTreatments,1)
     % max stop date of all rows for this event (with a minimum of 20)
     xplotstartdn = measuresstartdn;
     xplotstopdn = max(eventtable.StopDateNum);
-    xplotstopdn = max(20, xplotstopdn);
-        
+    %xplotstopdn = max(20, xplotstopdn);
+    if xplotstopdn > 20
+        xplotstopdn = 20;
+    end
+    
     f = figure('Name',sprintf('%s-Patient: %d  Hospital: %s  EventDate: %s', study, scid, hospital, datestr(eventstartdate, 29)));
     set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
     %set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8, 0.8], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
@@ -116,11 +128,11 @@ for i = 1:size(abTreatments,1)
         yval = size(eventtable,1) - a + 1;
         switch eventtable.EventType{a}
             case 'Oral'
-                colour = 'c';
+                colour = oralcol;
             case 'IV'
-                colour = 'm';
+                colour = ivcol;
             case 'Admission'
-                colour = 'r';
+                colour = admcol;
             otherwise
                 colour = 'b';
         end
@@ -179,15 +191,29 @@ for i = 1:size(abTreatments,1)
             
             % add vertical line to mark event date & IV antibiotics,
             % & admissions, 
-            admdates = unique([eventtable.StartDateNum(ismember(eventtable.EventType, 'Admission')) ; eventtable.StopDateNum(ismember(eventtable.EventType, 'Admission'))]);
-            ivdates = unique([eventtable.StartDateNum(ismember(eventtable.EventType, 'IV')) ; eventtable.StopDateNum(ismember(eventtable.EventType, 'IV'))]);
-            ivdates = setdiff(ivdates, admdates);
-            line( [0 0], yl, 'Color', 'black', 'LineStyle', ':', 'LineWidth', 1)
-            for c = 1:size(admdates,1)
-                line(ax, [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
-            end
-            for c = 1:size(ivdates,1)
-                line(ax, [ivdates(c) ivdates(c)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
+            %admdates = unique([eventtable.StartDateNum(ismember(eventtable.EventType, 'Admission')) ; eventtable.StopDateNum(ismember(eventtable.EventType, 'Admission'))]);
+            %ivdates = unique([eventtable.StartDateNum(ismember(eventtable.EventType, 'IV')) ; eventtable.StopDateNum(ismember(eventtable.EventType, 'IV'))]);
+            %ivdates = setdiff(ivdates, admdates);
+            %line( [0 0], yl, 'Color', 'black', 'LineStyle', ':', 'LineWidth', 1)
+            %for c = 1:size(admdates,1)
+            %    line(ax, [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
+            %end
+            %for c = 1:size(ivdates,1)
+            %    line(ax, [ivdates(c) ivdates(c)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
+            %end
+            for a = 1:size(eventtable,1)
+                switch eventtable.EventType{a}
+                case 'Oral'
+                    colour = oralcol;
+                case 'IV'
+                    colour = ivcol;
+                case 'Admission'
+                    colour = admcol;
+                otherwise
+                    colour = 'b';
+                end
+                fill(ax, [eventtable.StartDateNum(a) eventtable.StopDateNum(a) eventtable.StopDateNum(a) eventtable.StartDateNum(a)], ...
+                          [yl(1) yl(1) yl(2) yl(2)], colour, 'FaceAlpha', '0.1', 'EdgeColor', 'none');
             end
             % add horizontal lines for mid50mean and mid50 min/max
             ddcolumn = sprintf('Fun_%s',column);

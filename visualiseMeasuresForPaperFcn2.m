@@ -3,6 +3,13 @@ function visualiseMeasuresForPaperFcn2(physdata, offset, amDatacube, cdPatient, 
 
 % visualiseMeasuresForPaperFcn2 - plots clinical and home measures
 
+invmeasarray = getInvertedMeasures(study);
+if ismember(study,'SC')
+    expat = 133;
+elseif ismember(study, 'CL')
+    expat = 359;
+end
+
 basedir = setBaseDir();
 subfolder = sprintf('Plots/%s', study);
 if ~exist(strcat(basedir, subfolder), 'dir')
@@ -51,7 +58,7 @@ end
 for pat = 1:size(patientlist,1)
     scid       = patientlist(pat);
     %if ismember(scid, [23, 24, 78, 133])
-    if ismember(scid, [133])
+    if ismember(scid, expat)
         tic
 
         fprintf('Visualising measures for patient %d\n', scid);
@@ -62,11 +69,16 @@ for pat = 1:size(patientlist,1)
         spenddn    = spstartdn + 183;
         %hmstartdn  = min(physdata.ScaledDateNum(physdata.SmartCareID == scid));
         hmenddn    = max(physdata.ScaledDateNum(physdata.SmartCareID == scid));
-        orkstart   = cdNewMeds.StartDate(cdNewMeds.ID == scid & ismember(lower(cdNewMeds.Drugs), {'orkambi'}));
-        orkstartdn = datenum(orkstart) - offset - poffset + 1;
-        ivastart   = cdNewMeds.StartDate(cdNewMeds.ID == scid & ismember(lower(cdNewMeds.Drugs), {'ivacaftor'}));
-        ivastartdn = datenum(ivastart) - offset - poffset + 1;
-
+        if size(cdNewMeds, 1) > 0
+            orkstart   = cdNewMeds.StartDate(cdNewMeds.ID == scid & ismember(lower(cdNewMeds.Drugs), {'orkambi'}));
+            orkstartdn = datenum(orkstart) - offset - poffset + 1;
+            ivastart   = cdNewMeds.StartDate(cdNewMeds.ID == scid & ismember(lower(cdNewMeds.Drugs), {'ivacaftor'}));
+            ivastartdn = datenum(ivastart) - offset - poffset + 1;
+        else
+            orkstartdn = -100;
+            ivastartdn = -100;
+        end
+        
         % events
         ivabset   = cdAntibiotics(cdAntibiotics.ID == scid & ismember(cdAntibiotics.Route, {'IV'}),:);
         ivabset.Startdn = datenum(ivabset.StartDate) - offset - poffset + 1;
@@ -339,7 +351,7 @@ for pat = 1:size(patientlist,1)
 
                         % use exclude upper quartile mean/std for pulse rate,
                         % otherwise use exclude bottom quartile mean/std
-                        if ismember(displaymeasure, {'PulseRate'})
+                        if ismember(displaymeasure, invmeasarray)
                             %mmean = xu25mean(scdata.Measurement(~isnan(scdata.Measurement)));
                             %mstd  = xu25std(scdata.Measurement(~isnan(scdata.Measurement)));
                             mmean = xu25mean(measrow(~isnan(measrow)));

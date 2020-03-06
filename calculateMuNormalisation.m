@@ -1,8 +1,10 @@
 function [normmean] = calculateMuNormalisation(amDatacube, amInterventions, measures, demographicstable, ...
-    dataoutliers, align_wind, ninterventions, nmeasures, mumethod)
+    dataoutliers, align_wind, ninterventions, nmeasures, mumethod, study)
 
 % calculateMuNormalisation - - populates an array of ninterventions by
 % nmeasures with the additive normalisation (mu) values
+
+invmeasarray = getInvertedMeasures(study);
 
 normmean = zeros(ninterventions, nmeasures);
 for i = 1:ninterventions
@@ -37,7 +39,7 @@ for i = 1:ninterventions
                 end
             end
         end
-        if ~isequal(measures.DisplayName(m), cellstr('PulseRate'))
+        if ~ismember(measures.DisplayName(m), invmeasarray)
             meanwindowdata = sort(meanwindowdata(~isnan(meanwindowdata)), 'ascend');
         else
             meanwindowdata = sort(meanwindowdata(~isnan(meanwindowdata)), 'descend');
@@ -61,7 +63,7 @@ for i = 1:ninterventions
             % over all patient/measurement data
             if mumethod == 5
                 if (amInterventions.SequentialIntervention(i) == 'Y')
-                    if ~isequal(measures.DisplayName(m), cellstr('PulseRate'))
+                    if ~ismember(measures.DisplayName(m), invmeasarray)
                         alldata = sort(amDatacube(scid, ~isnan(amDatacube(scid, :, m)), m),'ascend');
                         percentile50 = round(size(alldata,2) * .5) + 1;
                         upper50mean = mean(alldata(percentile50:end));
@@ -88,7 +90,7 @@ for i = 1:ninterventions
                 % patient/measurement data
                 if mumethod == 5
                     fprintf('Using upper 50%% mean for intervention %d, measure %d\n', i, m);
-                    if ~isequal(measures.DisplayName(m), cellstr('PulseRate'))
+                    if ~ismember(measures.DisplayName(m), invmeasarray)
                         alldata = sort(amDatacube(scid, ~isnan(amDatacube(scid, :, m)), m),'ascend');
                     else
                         alldata = sort(amDatacube(scid, ~isnan(amDatacube(scid, :, m)), m),'descend');

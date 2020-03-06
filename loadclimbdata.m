@@ -15,7 +15,7 @@ fprintf('\n');
 study = 'CL';
 
 basedir = setBaseDir();
-subfolder = 'DataFiles/ProjectClimb/MeasurementData';
+subfolder = 'DataFiles/ProjectClimb/MeasurementDataFinal';
 
 clphysdata = createClimbMeasuresTable(0);
 clphysdata_deleted = clphysdata;
@@ -38,6 +38,7 @@ fprintf('---------------------------\n');
 fprintf('\n');
 
 measdatasheetname = 'CFRemoteMonitoring-from-2017-01';
+canadalungdsname = 'Canada data';
 
 for i = 1:nmeasfile
     tic
@@ -54,6 +55,25 @@ for i = 1:nmeasfile
         [tmpmeasdata, sputumcolouridx] = convertSputumColourToNumeric(tmpmeasdata);
     end 
     tmpmeasdata.UserID = upper(tmpmeasdata.UserID);
+    
+    
+    % special processing for lung function file (canada data on separate
+    % file)
+    if startsWith(MeasFiles{i}, 'Lung')
+        idx = startsWith(tmpmeasdata.UserID, {'IWK', 'LON'});
+        fprintf('Deleting %d rows of canada data from main data sheet\n', sum(idx));
+        tmpmeasdata(idx, :) = [];
+        fprintf('Loading canadiana lung function data from %s sheet\n', canadalungdsname);
+        mfopts = detectImportOptions(fullfile(basedir, subfolder, MeasFiles{i}), 'Sheet', canadalungdsname);
+        mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'StartDate', 'EndDate', 'DateRecorded', 'CorrectedCanadaDate'})) = {'datetime'};
+        mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'TimeRecorded', 'CorrectedCanadaTime'})) = {'datetime'};
+        mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'BreathsPerMinute', 'FEV1', 'NumberOfDisturbances', 'O2Saturation', 'Pulse_BPM_', 'Rating', 'Temp_degC_'})) = {'double'};
+    
+        tmplfdata = readtable(fullfile(basedir, subfolder, MeasFiles{i}), mfopts, 'Sheet', canadalungdsname);
+        fprintf('Loaded %d rows\n', size(tmplfdata, 1));
+        tmpmeasdata = [tmpmeasdata; tmplfdata];
+    end
+    
     nmeasurements = size(tmpmeasdata, 1);
     if nmeasurements > 0
         mclphysdata = createClimbMeasuresTable(nmeasurements);
@@ -69,7 +89,8 @@ for i = 1:nmeasfile
         mclphysdata.Date_TimeRecorded.Second = tmps;
         % override with the timezone corrected columns for the 2 canada
         % hospitals
-        canidx = ismember(extractBefore(tmpmeasdata.UserID,4), {'IWK', 'LON'});
+        canidx = startsWith(tmpmeasdata.UserID, {'IWK', 'LON'});
+        %canidx = ismember(extractBefore(tmpmeasdata.UserID,4), {'IWK', 'LON'});
         mclphysdata.Date_TimeRecorded(canidx) = tmpmeasdata.CorrectedCanadaDate(canidx);
         [tmph, tmpm, tmps] = hms(tmpmeasdata.CorrectedCanadaTime);
         mclphysdata.Date_TimeRecorded.Hour(canidx)   = tmph(canidx);

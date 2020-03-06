@@ -34,6 +34,11 @@ elseif runmode == 2
 end
 
 patientoffsets = getPatientOffsets(physdata);
+cvcol   = [0     1     0   ];
+admcol  = [0.694 0.627 0.78]; 
+ivcol   = [1     0     0   ];
+oralcol = [1     0.85  0   ];
+
 
 for i = 1:size(patientlist,1)
 %for i = 59:59
@@ -48,7 +53,7 @@ for i = 1:size(patientlist,1)
     spstartdn  = datenum(spstart) - offset - poffset + 1;
     spend      = cdPatient.StudyDate(cdPatient.ID == scid)+days(183);
     spenddn    = spstartdn + 183;
-    if studynbr == 4
+    if studynbr == 3 || studynbr == 4
         spendstatus = ' ';
     else
         spendstatus = cdEndStudy.EndOfStudyReason{cdEndStudy.ID == scid};
@@ -250,31 +255,27 @@ for i = 1:size(patientlist,1)
     
     cvset     = cdClinicVisits(cdClinicVisits.ID == scid,:);
     cvset.AttendanceDatedn = datenum(cvset.AttendanceDate) - offset - poffset + 1;
-    for m = 1:size(cvset,1)
-        line(ax, [cvset.AttendanceDatedn(m) cvset.AttendanceDatedn(m) + 1], [3.5, 3.5], 'Color', 'g', 'LineStyle', '-', 'LineWidth', linewidth);
+    for a = 1:size(cvset,1)
+        line(ax, [cvset.AttendanceDatedn(a) cvset.AttendanceDatedn(a) + 1], [3.5, 3.5], 'Color', cvcol, 'LineStyle', '-', 'LineWidth', linewidth);
     end
     admset    = cdAdmissions(cdAdmissions.ID == scid,:);
     admset.Admitteddn = datenum(admset.Admitted) - offset - poffset + 1;
     admset.Dischargedn = datenum(admset.Discharge) - offset - poffset + 1;
     admdates = unique([admset.Admitteddn ; admset.Dischargedn]);
-    for m = 1:size(admset,1)
-        line(ax, [admset.Admitteddn(m) admset.Dischargedn(m)], [2.5, 2.5], 'Color', 'r', 'LineStyle', '-', 'LineWidth', linewidth);
+    for a = 1:size(admset,1)
+        line(ax, [admset.Admitteddn(a) admset.Dischargedn(a)], [2.5, 2.5], 'Color', admcol, 'LineStyle', '-', 'LineWidth', linewidth);
     end
     ivabset   = cdAntibiotics(cdAntibiotics.ID == scid & ismember(cdAntibiotics.Route, {'IV'}),:);
     ivabset.Startdn = datenum(ivabset.StartDate) - offset - poffset + 1;
     ivabset.Stopdn = datenum(ivabset.StopDate) - offset - poffset + 1;
-    ivabgroupeddates = getGroupedIVTreatmentDates(ivabset);
-    ivabgroupeddates.Startdn = datenum(ivabgroupeddates.StartDate) - offset - poffset + 1;
-    ivabgroupeddates.Stopdn = datenum(ivabgroupeddates.StopDate) - offset - poffset + 1;
-    ivabdates = unique([ivabgroupeddates.Startdn ; ivabgroupeddates.Stopdn]);
-    for m = 1:size(ivabset,1)
-        line(ax, [ivabset.Startdn(m) ivabset.Stopdn(m)], [1.5, 1.5], 'Color', 'm', 'LineStyle', '-', 'LineWidth', linewidth);
+    for a = 1:size(ivabset,1)
+        line(ax, [ivabset.Startdn(a) ivabset.Stopdn(a)], [1.5, 1.5], 'Color', ivcol, 'LineStyle', '-', 'LineWidth', linewidth);
     end
     oralabset = cdAntibiotics(cdAntibiotics.ID == scid & ismember(cdAntibiotics.Route, {'Oral'}),:);
     oralabset.Startdn = datenum(oralabset.StartDate) - offset - poffset + 1;
     oralabset.Stopdn = datenum(oralabset.StopDate) - offset - poffset + 1;
-    for m = 1:size(oralabset,1)
-        line(ax, [oralabset.Startdn(m) oralabset.Stopdn(m)], [0.5, 0.5], 'Color', 'c', 'LineStyle', '-', 'LineWidth', linewidth);
+    for a = 1:size(oralabset,1)
+        line(ax, [oralabset.Startdn(a) oralabset.Stopdn(a)], [0.5, 0.5], 'Color', oralcol, 'LineStyle', '-', 'LineWidth', linewidth);
     end
     hold off;
     
@@ -299,11 +300,13 @@ for i = 1:size(patientlist,1)
         rangelimit = setMinYDisplayRangeForMeasure('ClinicalCRP');
         yl = setYDisplayRange(min(pcrp.NumericLevel), max(pcrp.NumericLevel), rangelimit);
         ylim(yl);
-        for m = 1:size(ivabdates,1)
-            line(ax, [ivabdates(m) ivabdates(m)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
+        for a = 1:size(ivabset,1)
+            fill(ax, [ivabset.Startdn(a) ivabset.Stopdn(a) ivabset.Stopdn(a) ivabset.Startdn(a)], ...
+                      [yl(1) yl(1) yl(2) yl(2)], ivcol, 'FaceAlpha', '0.1', 'EdgeColor', 'none');
         end
-        for c = 1:size(admdates,1)
-            line(ax, [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
+        for a = 1:size(oralabset,1)
+            fill(ax, [oralabset.Startdn(a) oralabset.Stopdn(a) oralabset.Stopdn(a) oralabset.Startdn(a)], ...
+                      [yl(1) yl(1) yl(2) yl(2)], oralcol, 'FaceAlpha', '0.1', 'EdgeColor', 'none');
         end
         hold off;
     end
@@ -328,11 +331,13 @@ for i = 1:size(patientlist,1)
         rangelimit = setMinYDisplayRangeForMeasure('ClinicalFEV1');
         yl = setYDisplayRange(min(ppft.CalcFEV1_), max(ppft.CalcFEV1_), rangelimit);
         ylim(yl);
-        for m = 1:size(ivabdates,1)
-            line(ax, [ivabdates(m) ivabdates(m)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
+        for a = 1:size(ivabset,1)
+            fill(ax, [ivabset.Startdn(a) ivabset.Stopdn(a) ivabset.Stopdn(a) ivabset.Startdn(a)], ...
+                      [yl(1) yl(1) yl(2) yl(2)], ivcol, 'FaceAlpha', '0.1', 'EdgeColor', 'none');
         end
-        for c = 1:size(admdates,1)
-            line(ax, [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
+        for a = 1:size(oralabset,1)
+            fill(ax, [oralabset.Startdn(a) oralabset.Stopdn(a) oralabset.Stopdn(a) oralabset.Startdn(a)], ...
+                      [yl(1) yl(1) yl(2) yl(2)], oralcol, 'FaceAlpha', '0.1', 'EdgeColor', 'none');
         end
         hold off;
     end
@@ -390,11 +395,14 @@ for i = 1:size(patientlist,1)
             line( xl, [mid50mean mid50mean] , 'Color', 'black', 'LineStyle', '--', 'LineWidth', 1)
             line( xl, [mid50mean-mid50std mid50mean-mid50std] , 'Color', 'black', 'LineStyle', ':', 'LineWidth', 1)
             line( xl, [mid50mean+mid50std mid50mean+mid50std] , 'Color', 'black', 'LineStyle', ':', 'LineWidth', 1)
-            for a = 1:size(ivabdates,1)
-                line( [ivabdates(a) ivabdates(a)], yl, 'Color', 'm', 'LineStyle', ':', 'LineWidth', 1)
+            
+            for a = 1:size(ivabset,1)
+                fill(ax, [ivabset.Startdn(a) ivabset.Stopdn(a) ivabset.Stopdn(a) ivabset.Startdn(a)], ...
+                          [yl(1) yl(1) yl(2) yl(2)], ivcol, 'FaceAlpha', '0.1', 'EdgeColor', 'none');
             end
-            for c = 1:size(admdates,1)
-                line( [admdates(c) admdates(c)], yl, 'Color', 'r', 'LineStyle', ':', 'LineWidth', 1)
+            for a = 1:size(oralabset,1)
+                fill(ax, [oralabset.Startdn(a) oralabset.Stopdn(a) oralabset.Stopdn(a) oralabset.Startdn(a)], ...
+                          [yl(1) yl(1) yl(2) yl(2)], oralcol, 'FaceAlpha', '0.1', 'EdgeColor', 'none');
             end
             hold off;
         end

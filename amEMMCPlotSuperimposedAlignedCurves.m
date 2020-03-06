@@ -1,8 +1,10 @@
 function amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-    measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode)
+    measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode, study)
 
 % amEMMCPlotSuperimposedAlignedCurves - wrapper around the
 % plotSuperimposedAlignedCurves to plot for each set of latent curves
+
+invmeasarray = getInvertedMeasures(study);
 
 if shiftmode == 1
     shifttext = 'MeanShift';
@@ -23,9 +25,11 @@ if compactplot
     plotsacross = 2;
     plotsdown   = 2;
     [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
+    posarray = [0.7, 0.1, 0.2, 0.2];
 else
     plotsacross = 1;
     plotsdown   = 1;
+    posarray    = [0.2, 0.2, 0.2, 0.2]
 end
 
 smoothwdth = 4;
@@ -38,7 +42,7 @@ smoothwdth = 4;
 % 4) apply a vertical shift (by the average of the points to the left of
 % ex_start)
 for n = 1:nlatentcurves
-    pridx = ismember(measures.DisplayName, {'PulseRate'});
+    pridx = ismember(measures.DisplayName, invmeasarray);
     meancurvemean(n, :, pridx) = meancurvemean(n, :, pridx) * -1;
     for m = 1:nmeasures
         meancurvemean(n, meancurvecount(n, :, m) < countthreshold, m) = NaN;
@@ -83,7 +87,7 @@ for n = 1:nlatentcurves
             ax = subplot(plotsdown, plotsacross, 1, 'Parent',p);
         end
         plotSuperimposedAlignedCurves(ax, tmp_meancurvemean, xl, yl, ...
-                measures, min_offset, max_offset, align_wind, ex_start(n), n, sum(amInterventions.LatentCurve == n));
+                measures, min_offset, max_offset, align_wind, ex_start(n), n, sum(amInterventions.LatentCurve == n), invmeasarray, posarray);
         if ~compactplot
             % save plot
             savePlotInDir(f, plottitle, plotsubfolder);

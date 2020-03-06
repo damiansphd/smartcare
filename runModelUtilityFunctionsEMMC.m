@@ -369,14 +369,14 @@ elseif runfunction == 24
     compactplot = false;
     shiftmode = 1; % shift by mean to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode, study);
 elseif runfunction == 25
     run_type = 'Best Alignment';
     fprintf('Plotting superimposed alignment curves - mean shift - all on one page\n');
     compactplot = true;
     shiftmode = 1; % shift by mean to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode, study);
 elseif runfunction == 26
     fprintf('Comparing results of multiple model runs to the labelled test data by latent curve set\n');
     fprintf('\n');
@@ -446,14 +446,14 @@ elseif runfunction == 27
     compactplot = false;
     shiftmode = 1; % shift by mean to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode, study);
     % run plot 25
     run_type = 'Best Alignment';
     fprintf('Plotting superimposed alignment curves - mean shift - all on one page\n');
     compactplot = true;
     shiftmode = 1; % shift by mean to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode, study);
     % run plot 29
     fprintf('Loading Predictive Model Patient info\n');
     basedir = setBaseDir();
@@ -512,14 +512,14 @@ elseif runfunction == 31
     compactplot = false;
     shiftmode = 2; % shift by max to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode, study);
 elseif runfunction == 32
     run_type = 'Best Alignment';
     fprintf('Plotting superimposed alignment curves - max shift - all on one page\n');
     compactplot = true;
     shiftmode = 2; % shift by max to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode, study);
 elseif runfunction == 33
     fprintf('Plotting histogram of vertical shifts\n');
     amEMMCPlotHistogramOfVShifts(amInterventions, vshift, measures, nmeasures, ninterventions, nlatentcurves, plotname, plotsubfolder, vshiftmode, vshiftmax);
@@ -540,14 +540,14 @@ elseif runfunction == 35
     compactplot = false;
     shiftmode = 3; % shift to be zero at ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode, study);
 elseif runfunction == 36
     run_type = 'Best Alignment';
     fprintf('Plotting superimposed alignment curves - exzero shift - all on one page\n');
     compactplot = true;
     shiftmode = 3; % shift to be zero at ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode, study);
 elseif runfunction == 37
     fprintf('Plotting superimposed measures - mean shift - one intervention per page\n');
     shiftmode = 1; % shift by mean to left of ex_start
@@ -569,14 +569,14 @@ elseif runfunction == 40
     compactplot = false;
     shiftmode = 4; % shift by 7d mean to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode, study);
 elseif runfunction == 41
     run_type = 'Best Alignment';
     fprintf('Plotting superimposed alignment curves - mean shift - all on one page\n');
     compactplot = true;
     shiftmode = 4; % shift by 7d mean to left of ex_start
     amEMMCPlotSuperimposedAlignedCurves(meancurvemean, meancurvecount, amInterventions, ...
-        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode);
+        measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, nlatentcurves, countthreshold, compactplot, shiftmode, study);
 elseif runfunction == 42
     fprintf('Plotting superimposed measures - 5d mean shift - one intervention per page\n');
     shiftmode = 4; % shift by 7d mean to left of ex_start

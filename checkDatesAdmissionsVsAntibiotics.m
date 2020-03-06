@@ -98,7 +98,7 @@ iptable(1,:) = [];
 for i = 1:size(residualidx,1)
     scid = cdAntibiotics.ID(residualidx(i));
     route = cdAntibiotics.Route{residualidx(i)};
-    if studynbr == 4
+    if studynbr == 3 | studynbr == 4
         homeiv = cdAntibiotics.HomeIV_s{residualidx(i)};
     else
         homeiv = cdAntibiotics.HomeIV_s_{residualidx(i)};

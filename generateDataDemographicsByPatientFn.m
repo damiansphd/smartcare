@@ -51,13 +51,13 @@ outputfilename = sprintf('%sdatademographicsbypatient.mat', study);
 fprintf('Saving output variables to matlab file %s\n', outputfilename);
 save(fullfile(basedir, subfolder, outputfilename), 'measurecounttable', 'demographicstable', 'overalltable');
 
-%basedir = setBaseDir();
-%subfolder = 'ExcelFiles';
-%outputfilename = sprintf('%sDataDemographicsByPatient-%s.xlsx',study, timenow);
-%fprintf('Saving results to excel file %s\n', outputfilename);
-%writetable(measurecounttable, fullfile(basedir, subfolder, outputfilename), 'Sheet', 'MeasureCountByPatient');
-%writetable(demographicstable, fullfile(basedir, subfolder, outputfilename), 'Sheet', 'DataDemographicsByPatient');
-%writetable(overalltable, fullfile(basedir, subfolder, outputfilename), 'Sheet', 'OverallDataDemographics');
+basedir = setBaseDir();
+subfolder = 'ExcelFiles';
+outputfilename = sprintf('%sDataDemographicsByPatient-%s.xlsx',study, timenow);
+fprintf('Saving results to excel file %s\n', outputfilename);
+writetable(measurecounttable, fullfile(basedir, subfolder, outputfilename), 'Sheet', 'MeasureCountByPatient');
+writetable(demographicstable, fullfile(basedir, subfolder, outputfilename), 'Sheet', 'DataDemographicsByPatient');
+writetable(overalltable, fullfile(basedir, subfolder, outputfilename), 'Sheet', 'OverallDataDemographics');
 toc
 fprintf('\n');
 

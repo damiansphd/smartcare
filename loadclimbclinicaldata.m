@@ -1,14 +1,17 @@
 clear; clc; close all;
 
 basedir = setBaseDir();
-subfolder = 'DataFiles/ProjectClimb/Proformas checked for PEX';
+subfolder = 'DataFiles/ProjectClimb/Proformas final';
 
+[clABNameTable] = getClimbAntibioticNameTable();
 [clPatient, clAdmissions, clAntibiotics, clClinicVisits, clOtherVisits, clCRP, clPFT, clMicrobiology, clHghtWght, clEndStudy] = createClimbClinicalTables(0);
 userid = 301;
 
 tic
 % get list of Project Climb hospitals
 cbhosp = getListOfClimbHospitals();
+
+
 
 % for each hospital, get the list of patient files
 for i = 1:size(cbhosp, 1)
@@ -17,7 +20,7 @@ for i = 1:size(cbhosp, 1)
     for p = 1:size(patfilelist, 1)
         % for each patient file, extract the data and store in the clinical
         % data tables
-        [clPatient, clAdmissions, clAntibiotics, clClinicVisits, clPFT, clMicrobiology, clHghtWght] = loadClimbClinDataForPatient(clPatient, clAdmissions, clAntibiotics, clClinicVisits, clPFT, clMicrobiology, clHghtWght, patfilelist{p}, basedir, tmpfolder, userid);
+        [clPatient, clAdmissions, clAntibiotics, clClinicVisits, clPFT, clMicrobiology, clHghtWght] = loadClimbClinDataForPatient(clPatient, clAdmissions, clAntibiotics, clClinicVisits, clPFT, clMicrobiology, clHghtWght, clABNameTable, patfilelist{p}, basedir, tmpfolder, userid);
         userid = userid + 1;
     end 
 end
@@ -57,16 +60,66 @@ idx =  clPFT.FEV1 > 4;
 fprintf('Removing %d Anomalous PFT Clinical Measurements (>4l)\n', sum(idx));
 clPFT(idx,:) = [];
 
+% admission data
+idx = isnat(clAdmissions.Admitted) | isnat(clAdmissions.Discharge);
+fprintf('Found %d Admissions with blank dates\n', sum(idx));
+if sum(idx) > 0
+    clAdmissions(idx,:)
+    %clAdmissions(idx, :) = [];
+end
+
 idx = clAdmissions.Discharge < clAdmissions.Admitted;
 fprintf('Found %d Admissions with Discharge before Admission\n', sum(idx));
 if sum(idx) > 0
     clAdmissions(idx,:)
 end
+
+idx = days(clAdmissions.Discharge - clAdmissions.Admitted) > 30;
+fprintf('Found %d Admissions > 1 month duration\n', sum(idx));
+if sum(idx) > 0
+    clAdmissions(idx,:)
+    %clAdmissions(idx, :) = [];
+end
+
+% antibiotics data
+idx = isnat(clAntibiotics.StartDate) | isnat(clAntibiotics.StopDate);
+fprintf('Found %d Antibiotics with blank dates\n', sum(idx));
+if sum(idx) > 0
+    clAntibiotics(idx,:)
+    %clAntibiotics(idx, :) = [];
+end
+
 idx = clAntibiotics.StopDate < clAntibiotics.StartDate;
 fprintf('Found %d Antibiotic Treatments with Stop Date before Start Date\n', sum(idx));
 if sum(idx) > 0
     clAntibiotics(idx,:)
 end
+
+idx = days(clAntibiotics.StopDate - clAntibiotics.StartDate) > 30;
+fprintf('Found %d Antibiotics > 1 month duration\n', sum(idx));
+if sum(idx) > 0
+    clAntibiotics(idx,:)
+    %clAntibiotics(idx, :) = [];
+end
+
+% find any treatments that finished before the study start date for each
+% patient
+tempab = join(clAntibiotics, clPatient, 'LeftKeys', 'ID', 'RightKeys', 'ID', 'RightVariables', {'StudyNumber', 'StudyDate'});
+idx = tempab.StopDate < tempab.StudyDate;
+fprintf('\n');
+fprintf('Deleting %d antibiotic treatments before study start', sum(idx));
+clAntibiotics(idx,:) = [];
+
+tic
+subfolder = 'ExcelFiles';
+outputfilename = 'CLantibiotictreatments.xlsx';
+fprintf('\n');
+fprintf('Saving antibiotics treatments to excel file %s\n', outputfilename);
+writetable(clAntibiotics(~ismember(clAntibiotics.Route, 'IV'), :), fullfile(basedir, subfolder,outputfilename), 'Sheet', 'Oral');
+writetable(clAntibiotics(ismember(clAntibiotics.Route, 'IV'), :), fullfile(basedir, subfolder,outputfilename), 'Sheet', 'IV');
+writetable(tempab(idx,:), fullfile(basedir, subfolder,outputfilename), 'Sheet', 'ABbeforeStudyStart');
+
+toc
 
 tic
 fprintf('\n');
@@ -75,5 +128,6 @@ subfolder = 'MatlabSavedVariables';
 outputfilename = 'climbclinicaldata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
 save(fullfile(basedir, subfolder,outputfilename), 'clPatient', 'clMicrobiology', 'clClinicVisits', ...
-    'clOtherVisits','clPFT', 'clHghtWght', 'clAdmissions', 'clAntibiotics', 'clCRP', 'clEndStudy');
+    'clOtherVisits','clPFT', 'clHghtWght', 'clAdmissions', 'clAntibiotics', 'clCRP', 'clEndStudy', 'clABNameTable');
 toc
+

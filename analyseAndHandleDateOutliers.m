@@ -33,7 +33,7 @@ physdata = sortrows(physdata, {'SmartCareID', 'DateNum', 'RecordingType'}, 'asce
 %physdata(idx, :) = [];
 
 % create colormap
-temp = hsv;
+temp = hsv(64);
 if ismember(study, {'SC', 'TM'})
     colors(1,:)  = [0 0 0];     % black for no measures
     colors(2,:)  = temp(4,:);
@@ -79,7 +79,6 @@ elseif ismember(study, {'BR'})
     colors(16,:)  = temp(18,:);
     colors(17,:)  = temp(19,:);
     colors(18,:)  = temp(20,:);
-    nmeasures = 17;
 else
     fprintf('**** Unknown Study ****');
     return;

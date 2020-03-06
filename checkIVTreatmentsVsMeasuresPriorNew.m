@@ -121,7 +121,9 @@ rowtoadd.TotalMeasures     = sum(pdcountmtable.GroupCount);
 rowtoadd.AvgMeasuresPerDay = rowtoadd.TotalMeasures/numdays;
 rowtoadd.Route             = ivTreatments.Route(i);
 rowtoadd.Type              = ivTreatments.Type(i);
-rowtoadd.ExRelated         = checkTreatmentExRelated(ivTreatments.Reason(i), exacerbationreasons);
+%rowtoadd.ExRelated         = checkTreatmentExRelated(ivTreatments.Reason(i), exacerbationreasons);
+rowtoadd.ExRelated         = 1;
+
 if rowtoadd.ExRelated
     exreltxt = '(*)';
 else
@@ -131,7 +133,7 @@ end
 for a = 1:numdays
     colname = sprintf('IVminus%d', a);
     dayidx = (pdcountmtable.SmartCareID == ivTreatments.ID(i)) & (pdcountmtable.DateNum == ivTreatments.IVDateNum(i) - numdays - 1 + a);
-    if size(dayidx,1) > 0
+    if sum(dayidx,1) > 0
         daymeasures = pdcountmtable.GroupCount(dayidx);
         rowtoadd{1,colname} = daymeasures;
     else
@@ -192,13 +194,9 @@ for i = 2:size(ivTreatments,1)
         for a = 1:numdays
             colname = sprintf('IVminus%d', a);
             dayidx = (pdcountmtable.SmartCareID == ivTreatments.ID(i)) & (pdcountmtable.DateNum == ivTreatments.IVDateNum(i) - numdays - 1 + a);
-            if size(dayidx,1) > 0
+            if sum(dayidx,1) > 0
                 daymeasures = pdcountmtable.GroupCount(dayidx);
-                if size(daymeasures, 1) >= 1
-                    rowtoadd{1,colname} = daymeasures;
-                else
-                    rowtoadd{1,colname} = 0;
-                end
+                rowtoadd{1,colname} = daymeasures;
             else
                 rowtoadd{1,colname} = 0;
             end
