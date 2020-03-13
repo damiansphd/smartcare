@@ -4,10 +4,33 @@ tic
 
 %setenv MW_WASB_SAS_TOKEN '?st=2019-11-18T10%3A30%3A12Z&se=2020-01-31T10%3A30%3A00Z&sp=rl&sv=2018-03-28&sr=c&sig=K2eIs8G3%2FCYtVlH0WoL2i0hbipfspb55XtY6NLEQNXA%3D';
 setenv MW_WASB_SAS_TOKEN '?st=2020-02-10T13%3A58%3A17Z&se=2020-10-01T14%3A58%3A00Z&sp=rl&sv=2018-03-28&sr=c&sig=2rckL4bC5zqtSvtaYIaTsbkibfFN5gqAaqxWBAYPQdc%3D';
- 
-[clinicaldate, measdate, guidmapdate] = getLatestBreatheDates();
 [basedir] = setBaseDir();
 subfolder = 'DataFiles/ProjectBreathe';
+
+mdir = 'wasbs://avatardatadropprod@breatheprodstorageavatar.blob.core.windows.net/';
+
+folderstruct = dir(mdir);
+diridx = [folderstruct.isdir];
+folderstruct = folderstruct(diridx);
+ndates = size(folderstruct, 1);
+
+fprintf('List of available dates is :-\n');
+for i = 1:ndates
+    fprintf('%3d: Date %s\n', i, folderstruct(i).name);
+end
+
+fprintf('\n');
+sdnum = input('Choose date for measurement data ? ', 's');
+
+dnum = str2double(sdnum);
+
+if (isnan(dnum) || dnum < 1 || dnum > ndates)
+    fprintf('Invalid choice\n');
+    dnum = -1;
+    return;
+end
+
+measdate = folderstruct(dnum).name;
 
 fprintf('Getting list of measurement files from Azure for date %s\n', measdate)
 mdir = sprintf('wasbs://avatardatadropprod@breatheprodstorageavatar.blob.core.windows.net/%s', measdate);

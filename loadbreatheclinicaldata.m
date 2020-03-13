@@ -56,6 +56,7 @@ tic
 fprintf('Loading Project Breathe admission data\n');
 fprintf('--------------------------------------\n');
 opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'Admissions');
+opts.DataRange = 'A3';
 admdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'Admissions');
 nadm = size(admdata, 1);
 for i = 1:nadm
@@ -83,10 +84,12 @@ opts.DataRange = 'A3';
 abdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'Antibiotics');
 nab = size(abdata, 1);
 for i = 1:nab
-    if size(brPatient.ID(ismember(brPatient.StudyNumber, abdata.StudyID(i))), 1) == 0
+    %if size(brPatient.ID(ismember(brPatient.StudyNumber, abdata.StudyID(i))), 1) == 0
+    if size(brPatient.ID(ismember(brPatient.StudyEmail, abdata.StudyID(i))), 1) == 0
         fprintf('Row %d (spreadsheet row %d): Invalid StudyID %s\n',  i, i + 2, abdata.StudyID{i});
     else
-        brabrow.ID          = brPatient.ID(ismember(brPatient.StudyNumber, abdata.StudyID(i)));
+        %brabrow.ID          = brPatient.ID(ismember(brPatient.StudyNumber, abdata.StudyID(i)));
+        brabrow.ID          = brPatient.ID(ismember(brPatient.StudyEmail, abdata.StudyID(i)));
         brabrow.Hospital    = hospital;
         brabrow.StudyNumber = abdata.StudyID(i);
         brabrow.AntibioticName = abdata.AntibioticName(i);
@@ -154,6 +157,7 @@ tic
 fprintf('Loading Project Breathe other visits data\n');
 fprintf('-----------------------------------------\n');
 opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'Other Visits');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'})) = {'char'};
 ovdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'Other Visits');
 nov = size(ovdata, 1);
 for i = 1:nov

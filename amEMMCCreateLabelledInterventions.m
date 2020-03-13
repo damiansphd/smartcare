@@ -5,8 +5,19 @@ function [amLabelledInterventions] = amEMMCCreateLabelledInterventions(amIntrDat
 % and upper bounds for predicted exacerbation start in order to create a
 % test data set that can be compared to model results going forward
 
-plotsdown = 4;
-plotsacross = 2;
+if nmeasures <= 8
+    plotsdown   = 4;
+    plotsacross = 2;
+elseif nmeasures <= 15
+    plotsdown   = 5;
+    plotsacross = 3;
+elseif nmeasures <= 18
+    plotsdown   = 6;
+    plotsacross = 3;
+else
+    fprintf('Function cannot handle more than 18 measurement types\n');
+    return;
+end
 days = [-1 * (max_offset + align_wind - 1): -1];
 xl  = zeros(nmeasures + 1, 2);
 yl  = zeros(nmeasures + 1, 2);
@@ -169,7 +180,8 @@ while i <= interto
     end
     
     if temp == 1
-        plotsubfolder = 'Plots';
+        % save plot
+        plotsubfolder = sprintf('Plots/%s', study);
         savePlotInDir(f, name, plotsubfolder);
         close(f);
         i = i + 1;
