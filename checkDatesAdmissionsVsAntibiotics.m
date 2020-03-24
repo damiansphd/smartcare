@@ -58,8 +58,8 @@ for i = 1:size(cdAdmissions,1)
     
     if (size(idx,1) == 0)
         rowtoadd.RowType = '*** Admission with no treatment ***';
-        fprintf('%3d: %35s  :  Hospital %8s  Patient ID %3d Admitted  %11s  Discharge  %11s\n', ... 
-            i, rowtoadd.RowType, string(rowtoadd.Hospital), scid, datestr(admitted,1), datestr(discharge,1)); 
+        fprintf('%3d: %35s  :  Hospital %8s  Patient ID %3d Admitted  %11s  Discharge  %11s (Study Nbr %s)\n', ... 
+            i, rowtoadd.RowType, string(rowtoadd.Hospital), scid, datestr(admitted,1), datestr(discharge,1), string(rowtoadd.StudyNumber)); 
         exceptiontable = [exceptiontable;rowtoadd(1,{'RowType','Hospital', 'SmartCareID', 'StudyNumber', 'AdmissionID', 'Admitted', 'Discharge'})];  
     else
         for t = 1:size(idx,1)
@@ -71,9 +71,9 @@ for i = 1:size(cdAdmissions,1)
             rowtoadd.Start = cdAntibiotics.StartDate(idx(t));
             rowtoadd.Stop = cdAntibiotics.StopDate(idx(t));
         
-            fprintf('%3d: %35s  :  Hospital %8s  Patient ID %3d  Admitted  %11s  Discharge  %11s  : %15s %5s Start  %11s  End  %11s\n', ... 
+            fprintf('%3d: %35s  :  Hospital %8s  Patient ID %3d  Admitted  %11s  Discharge  %11s  : %15s %5s Start  %11s  End  %11s (Study Nbr %s)\n', ... 
                 i, rowtoadd.RowType, string(rowtoadd.Hospital), scid, datestr(admitted,1), datestr(discharge,1), ...
-                string(rowtoadd.AntibioticName), string(rowtoadd.Route), datestr(rowtoadd.Start,1), datestr(rowtoadd.Stop,1)); 
+                string(rowtoadd.AntibioticName), string(rowtoadd.Route), datestr(rowtoadd.Start,1), datestr(rowtoadd.Stop,1), string(rowtoadd.StudyNumber)); 
         
             matchtable = [matchtable;rowtoadd];  
         end
@@ -105,7 +105,7 @@ for i = 1:size(residualidx,1)
     end
     
     rowtoadd.SmartCareID = scid;
-    rowtoadd.StudyNumber = cdAntibiotics.StudyNumber(i);
+    rowtoadd.StudyNumber = cdAntibiotics.StudyNumber(residualidx(i));
     rowtoadd.Hospital = cdAntibiotics.Hospital{residualidx(i)};
     rowtoadd.Route = route;
     rowtoadd.HomeIV = homeiv;
@@ -118,9 +118,9 @@ for i = 1:size(residualidx,1)
         rowtoadd.Start = cdAntibiotics.StartDate(residualidx(i));
         rowtoadd.Stop = cdAntibiotics.StopDate(residualidx(i));
         
-        fprintf('%38s  :  Hospital %8s  Patient ID %3d  : %15s %5s Start  %11s  End  %11s\n', ... 
+        fprintf('%38s  :  Hospital %8s  Patient ID %3d  : %15s %5s Start  %11s  End  %11s (Study Nbr %s)\n', ... 
                 rowtoadd.RowType, rowtoadd.Hospital, scid, rowtoadd.AntibioticName, route, ...
-                datestr(rowtoadd.Start,1), datestr(rowtoadd.Stop,1)); 
+                datestr(rowtoadd.Start,1), datestr(rowtoadd.Stop,1), string(rowtoadd.StudyNumber)); 
         
         iptable = [iptable; rowtoadd];
     else
@@ -130,9 +130,9 @@ for i = 1:size(residualidx,1)
         rowtoadd.Start = cdAntibiotics.StartDate(residualidx(i));
         rowtoadd.Stop = cdAntibiotics.StopDate(residualidx(i));
         
-        fprintf('%38s  :  Hospital %8s  Patient ID %3d  : %15s %5s Start  %11s  End  %11s\n', ... 
+        fprintf('%38s  :  Hospital %8s  Patient ID %3d  : %15s %5s Start  %11s  End  %11s (Study Nbr %s)\n', ... 
                 rowtoadd.RowType, rowtoadd.Hospital, scid, rowtoadd.AntibioticName, route, ...
-                datestr(rowtoadd.Start,1), datestr(rowtoadd.Stop,1)); 
+                datestr(rowtoadd.Start,1), datestr(rowtoadd.Stop,1), string(rowtoadd.StudyNumber)); 
         
         residualtable = [residualtable; rowtoadd];
     end

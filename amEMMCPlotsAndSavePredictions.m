@@ -84,7 +84,7 @@ for m = 1:nmeasures
     if yl(1) == yl(2)
         rangelimit = setMinYDisplayRangeForMeasure(measures.Name{m});
         yl(1) = yl(1) - rangelimit * 0.5;
-        yl(2) = yl(1) + rangelimit * 0.5;
+        yl(2) = yl(2) + rangelimit * 0.5;
     end
     
     % create subplot and plot required data arrays

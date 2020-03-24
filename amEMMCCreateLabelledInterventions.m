@@ -40,6 +40,11 @@ while i <= interto
         xl(m,:) = [min(days) max(days)];
         yl(m,:) = [min(amIntrDatacube(i, 1:max_offset + align_wind - 1, m) * 0.99) ...
               max(amIntrDatacube(i, 1:max_offset + align_wind - 1, m) * 1.01)];
+        if yl(m, 1) == yl(m, 2)
+            rangelimit = setMinYDisplayRangeForMeasure(measures.Name{m});
+            yl(m, 1) = yl(m, 1) - rangelimit * 0.5;
+            yl(m, 2) = yl(m, 2) + rangelimit * 0.5;
+        end
                     
         % create subplot and plot required data arrays
         ax(m) = subplot(plotsdown, plotsacross, m, 'Parent',p);

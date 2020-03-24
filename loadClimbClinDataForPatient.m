@@ -1,6 +1,6 @@
-function [cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, cdPFT, cdMicrobiology, cdHghtWght] = ...
+function [cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, cdPFT, cdMicrobiology, cdHghtWght, cdOthClinMeas] = ...
             loadClimbClinDataForPatient(cdPatient, cdAdmissions, cdAntibiotics, cdClinicVisits, cdPFT, cdMicrobiology, ...
-                                cdHghtWght, clABNameTable, patfile, basedir, subfolder, userid)
+                                cdHghtWght, cdOthClinMeas, clABNameTable, patfile, basedir, subfolder, userid)
         
 % loadClimbClinDataForPatient - populate the clinical data tables for a given
 % patient's information
@@ -10,7 +10,7 @@ idlength = 3;
 matlabexcelserialdatediff = datenum(datetime(1899,12,31)) - 1;
 notime = true;
 
-[cdpatrow, cdadmrow, cdabrow, cdcvrow, ~, ~, cdpftrow, cdmicrorow, cdhwrow, ~] = createClimbClinicalTables(1);
+[cdpatrow, cdadmrow, cdabrow, cdcvrow, ~, ~, cdpftrow, cdmicrorow, cdhwrow, cdocmrow, ~] = createClimbClinicalTables(1);
 
 cdpatientsheet = '(1) Enrolment Visit Worksheet';
 cdmicrosheet = '(1) Positive bacterial growth i';
@@ -127,7 +127,7 @@ for i = 1:size(tmppft, 1)
     isValid = true;
     cdpftrow.ID          = userid;
     cdpftrow.StudyNumber = cdpatrow.StudyNumber;
-    cdpftrow.Hospital   = cdpatrow.Hospital;
+    cdpftrow.Hospital    = cdpatrow.Hospital;
     [cdpftrow.LungFunctionDate, isValid] = ingestDateCell(tmppft.Date(i), matlabexcelserialdatediff, i, notime);
     cdpftrow.FEV1 = tmppft.FEV1_litresPredicted_(i);
     if isnan(cdpftrow.FEV1)
@@ -295,6 +295,81 @@ for i = 1:size(tmphw, 1)
     end
     if isValid
         cdHghtWght = [cdHghtWght; cdhwrow];
+    end
+end
+
+fprintf('Other Clinical Measures\n');
+fprintf('-----------------------\n');
+[~, sheetlist] = xlsfinfo(fullfile(basedir, subfolder, patfile));
+sheetlist = sheetlist';
+sheetlist = sheetlist(contains(sheetlist, 'Subsequent Visit - Clinical'));
+fprintf('Found %d subsequent visits\n', size(sheetlist, 1));
+for a = 1:size(sheetlist, 1)
+    fprintf('Processing visit %d\n', a);
+    svopts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', sheetlist{a}, 'ReadVariableNames', false);
+    svopts.DataRange = 'A1';
+    tmpsv = readtable(fullfile(basedir, subfolder, patfile), svopts, 'Sheet', sheetlist{a});
+    cdocmrow.ID          = userid;
+    cdocmrow.StudyNumber = cdpatrow.StudyNumber;
+    cdocmrow.Hospital    = cdpatrow.Hospital;
+    [cdocmrow.MeasDate, isValid] = ingestDateCell(tmpsv.Var2(ismember(tmpsv.Var1, 'Date')), matlabexcelserialdatediff, a, notime);
+    
+    tmphr = str2double(tmpsv.Var2(ismember(tmpsv.Var1, 'HR')));
+    if size(tmphr, 1) == 1
+        cdocmrow.HR = tmphr;
+    else
+        if sum(~isnan(tmphr)) == 0
+            cdocmrow.HR = nan;
+        elseif sum(~isnan(tmphr)) == 1
+            cdocmrow.HR = tmphr(~isnan(tmphr));
+        else
+            fprintf('Duplicate values for HR\n');
+            cdocmrow.HR = nan;
+        end
+    end
+    tmprr = str2double(tmpsv.Var2(ismember(tmpsv.Var1, 'RR')));
+    if size(tmprr, 1) == 1
+        cdocmrow.RR = tmprr;
+    else
+        if sum(~isnan(tmprr)) == 0
+            cdocmrow.RR = nan;
+        elseif sum(~isnan(tmprr)) == 1
+            cdocmrow.RR = tmprr(~isnan(tmprr));
+        else
+            fprintf('Duplicate values for RR\n');
+            cdocmrow.RR = nan;
+        end
+    end
+    tmpTemp = str2double(tmpsv.Var2(ismember(tmpsv.Var1, 'Temp')));
+    if size(tmpTemp, 1) == 1
+        cdocmrow.Temp = tmpTemp;
+    else
+        if sum(~isnan(tmpTemp)) == 0
+            cdocmrow.Temp = nan;
+        elseif sum(~isnan(tmpTemp)) == 1
+            cdocmrow.Temp = tmpTemp(~isnan(tmpTemp));
+        else
+            fprintf('Duplicate values for Temperature\n');
+            cdocmrow.Temp = nan;
+        end
+    end
+    tmpO2 = str2double(tmpsv.Var2(ismember(tmpsv.Var1, 'O2 Sats')));
+    if size(tmpO2, 1) == 1
+        cdocmrow.O2_Sat  = tmpO2;
+    else
+        if sum(~isnan(tmpO2)) == 0
+            cdocmrow.O2_Sat = nan;
+        elseif sum(~isnan(tmpO2)) == 1
+            cdocmrow.O2_Sat = tmpO2(~isnan(tmpO2));
+        else
+            fprintf('Duplicate values for O2 Sat\n');
+            cdocmrow.O2_Sat = nan;
+        end
+    end
+    if (~isnan(cdocmrow.HR) || ~isnan(cdocmrow.RR) || ~isnan(cdocmrow.Temp) || ~isnan(cdocmrow.O2_Sat))
+        cdOthClinMeas = [cdOthClinMeas; cdocmrow];
+    else
+        fprintf('Skipping as all measures are blank\n');
     end
 end
 

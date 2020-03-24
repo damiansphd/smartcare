@@ -47,6 +47,7 @@ for i = 1:size(patientlist,1)
     scid       = patientlist(i);
     fprintf('Creating patient summary for patient %d\n', scid);
     poffset    = patientoffsets.PatientOffset(patientoffsets.SmartCareID == scid);
+    studyid   = cdPatient.StudyNumber{cdPatient.ID == scid};
     hospital   = cdPatient.Hospital{cdPatient.ID == scid};
     sex        = cdPatient.Sex{cdPatient.ID == scid};
     spstart    = cdPatient.StudyDate(cdPatient.ID == scid);
@@ -106,6 +107,7 @@ for i = 1:size(patientlist,1)
     leftstring = [  {sprintf('                Study Info')}                                                               ; ...
                     {sprintf('------------------------------------------')}                                               ; ...
                     {sprintf('Patient ID       :  %d', scid)}                                                             ; ...
+                    {sprintf('Study ID         :  %s', studyid)}                                                         ; ...
                     {sprintf('Hospital         :  %s', hospital)}                                                         ; ...
                     {sprintf('Study Start Date :  %s', datestr(spstart,1))}                                               ; ...
                     {sprintf('Study End Date   :  %s', datestr((spend),1))}                                               ; ...
@@ -208,7 +210,7 @@ for i = 1:size(patientlist,1)
     measures = unique(physdata.RecordingType);
     npages = ceil(size(measures, 1) / mplotsperpage) + 1;
     page = 1;
-    filenameprefix = sprintf('%s-Patient Summary - ID %d Hosp %s', study, scid, hospital);
+    filenameprefix = sprintf('%s-Patient Summary - ID %s (%d) Hosp %s', study, studyid, scid, hospital);
     imagefilename = sprintf('%s - Page %d of %d', filenameprefix, page, npages);
     [f, p] = createFigureAndPanel(imagefilename, 'Portrait', 'a4');
     
@@ -245,7 +247,8 @@ for i = 1:size(patientlist,1)
     
     ax = subplot(cplotsdown, cplotsacross, 1,'Parent',sp3);
     hold on;
-    title(ax, 'Clinic Visits ({\color{green}g}), Admissions ({\color{red}r}), IV Antibiotics ({\color{magenta}m}) and Oral Antibiotics ({\color{cyan}c})');
+    title(ax, 'Clinic Visits ({\color[rgb]{0 1 0}g}), Admissions ({\color[rgb]{0.694 0.627 0.78}p}), IV Antibiotics ({\color[rgb]{1 0 0}r}) and Oral Antibiotics ({\color[rgb]{1 0.85 0}y})');
+    %title(ax, 'Clinic Visits ({\color{green}g}), Admissions ({\color{red}r}), IV Antibiotics ({\color{magenta}m}) and Oral Antibiotics ({\color{cyan}c})');
     xlabel(ax, 'Days');
     ylabel(ax, 'Event');
     xlim(xl);

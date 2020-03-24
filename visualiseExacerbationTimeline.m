@@ -35,7 +35,7 @@ cdAdmissions.EventType(:) = {'Admission'};
 %abTreatments = unique(cdAntibiotics(:,{'ID', 'Hospital', 'StartDate'}));
 %abTreatments.Properties.VariableNames{'ID'} = 'SmartCareID';
 %abTreatments.IVDateNum = datenum(abTreatments.StartDate) - offset + 1;
-abTreatments = ivandmeasurestable(ivandmeasurestable.DaysWithMeasures >= 15 & ivandmeasurestable.AvgMeasuresPerDay >= 2, {'SmartCareID', 'Hospital', 'IVStartDate', 'IVDateNum'});
+abTreatments = ivandmeasurestable(ivandmeasurestable.DaysWithMeasures >= 15 & ivandmeasurestable.AvgMeasuresPerDay >= 2, {'SmartCareID', 'StudyNumber', 'Hospital', 'IVStartDate', 'IVDateNum'});
 
 % get the date scaling offset for each patient
 patientoffsets = getPatientOffsets(physdata);
@@ -63,6 +63,7 @@ measuresstartdn = -40;
 for i = 1:size(abTreatments,1)
 %for i = 41:43       
     scid = abTreatments.SmartCareID(i);
+    studyid = abTreatments.StudyNumber{i};
     hospital = abTreatments.Hospital{i};
     eventstartdate = abTreatments.IVStartDate(i);
     eventstartdn = datenum(abTreatments.IVStartDate(i)) - offset + 1;
@@ -104,15 +105,16 @@ for i = 1:size(abTreatments,1)
         xplotstopdn = 20;
     end
     
-    f = figure('Name',sprintf('%s-Patient: %d  Hospital: %s  EventDate: %s', study, scid, hospital, datestr(eventstartdate, 29)));
+    f = figure('Name',sprintf('%s-Patient: %s (%d) Hospital: %s  EventDate: %s', study, studyid, scid, hospital, datestr(eventstartdate, 29)));
     set(gcf, 'Units', 'normalized', 'OuterPosition', [0.45, 0, 0.35, 0.92], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
     %set(gcf, 'Units', 'normalized', 'OuterPosition', [0.2, 0.2, 0.8, 0.8], 'PaperOrientation', 'portrait', 'PaperUnits', 'normalized','PaperPosition',[0, 0, 1, 1], 'PaperType', 'a4');
     p = uipanel('Parent', f, 'BorderType', 'none'); 
-    p.Title = sprintf('%s-Patient: %d  Hospital: %s  EventDate: %s', study, scid, hospital, datestr(eventstartdate, 29)); 
+    p.Title = sprintf('%s-Patient: %s (%d)  Hospital: %s  EventDate: %s', study, studyid, scid, hospital, datestr(eventstartdate, 29)); 
     p.TitlePosition = 'centertop';
-    p.FontSize = 20;
+    p.FontSize = 14;
     p.FontWeight = 'bold';
-    subplot(plotsdown, plotsacross, 1,'Parent',p);
+    ax = subplot(plotsdown, plotsacross, 1,'Parent',p);
+    ax.FontSize = 8;
     hold on;
     xl = [xplotstartdn xplotstopdn];
     xlim(xl);
@@ -120,8 +122,8 @@ for i = 1:size(abTreatments,1)
     % minimum of 8 if less than this
     yl = [0 max(8,size(eventtable,1))];
     ylim(yl);
-    title('Admissions and Treatments');
-    xlabel('Days');
+    title(ax, 'Admissions and Treatments', 'FontSize', 10);
+    xlabel(ax, 'Days', 'FontSize', 8);
     % plot a horizontal bar for each row in the event table, coloured
     % according to the type of event.
     for a = 1:size(eventtable,1)
@@ -136,13 +138,13 @@ for i = 1:size(abTreatments,1)
             otherwise
                 colour = 'b';
         end
-        l(a) = line( [eventtable.StartDateNum(a) eventtable.StopDateNum(a)], [yval, yval], 'Color', colour, 'LineStyle', '-', 'LineWidth', 6);
+        l(a) = line(ax, [eventtable.StartDateNum(a) eventtable.StopDateNum(a)], [yval, yval], 'Color', colour, 'LineStyle', '-', 'LineWidth', 6);
     end  
     % add vertical line to mark event date
-    line( [0 0], yl, 'Color', 'black', 'LineStyle', ':', 'LineWidth', 1)
+    line(ax, [0 0], yl, 'Color', 'black', 'LineStyle', ':', 'LineWidth', 1)
     % add legend for plot with one of each type of event listed
     [dummy, legendidx] = unique(eventtable.EventType, 'stable');
-    legend(l(legendidx), eventtable.EventType(legendidx), 'Location', 'west', 'FontSize', 8);
+    legend(ax, l(legendidx), eventtable.EventType(legendidx), 'Location', 'west', 'FontSize', 8);
     hold off    
         
     % add plots of measures here
@@ -157,6 +159,7 @@ for i = 1:size(abTreatments,1)
         scdata.DateNum = scdata.DateNum - eventstartdn;
         if size(scdata,1) > 0
             ax = subplot(plotsdown,plotsacross,b+1,'Parent',p);
+            ax.FontSize = 8;
             hold on;
             xl = [xplotstartdn xplotstopdn];
             xlim(xl);
@@ -171,9 +174,9 @@ for i = 1:size(abTreatments,1)
             %end
             %yl = [ydisplaymin ydisplaymax];
             ylim(yl);
-            title(ax, measure);
-            xlabel(ax, 'Days');
-            ylabel(ax, 'Measure');
+            title(ax, strrep(measure, 'Recording', ''), 'FontSize', 10);
+            xlabel(ax, 'Days', 'FontSize', 8);
+            ylabel(ax, 'Measure', 'FontSize', 8);
             plot(ax, scdata.DateNum, scdata.Measurement, ...
                 'Color', [0, 0.65, 1], ...
                 'LineStyle', ':', ...
@@ -227,7 +230,7 @@ for i = 1:size(abTreatments,1)
         end
     end
     % save plot
-    imagefilename = sprintf('%s-ExacerbationTimeline_ID%d_%s_%11s', study, scid, hospital, datestr(eventstartdate, 29));
+    imagefilename = sprintf('%s-ExacerbationTimeline_ID_%s_%d_%s_%11s', study, studyid, scid, hospital, datestr(eventstartdate, 29));
     savePlotInDir(f, imagefilename, subfolder);
     close(f);
 end

@@ -8,7 +8,8 @@ switch measure
         range = 5000;
     case 'CalorieRecording'
         range = 1000;
-    case {'CoughRecording','SleepActivityRecording','WellnessRecording'}
+    case {'AppetiteRecording', 'BreathlessnessRecording', 'CoughRecording','SleepActivityRecording', ...
+            'SleepDisturbanceRecording', 'SputumVolumeRecording', 'TirednessRecording', 'WellnessRecording'}
         range = 50;
     case {'FEV1Recording', 'FEF2575Recording', 'FEV075Recording', 'FEV6Recording'}
         range = 0.2;
@@ -26,6 +27,8 @@ switch measure
         range = 30;
     case {'RestingHRRecording'}
         range = 10;
+    case {'RespiratoryRateRecording'}
+        range = 20;    
     case 'O2SaturationRecording'
         range = 4;
     case 'TemperatureRecording'

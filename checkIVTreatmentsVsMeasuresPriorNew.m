@@ -24,9 +24,9 @@ tic
 %idx = find(ismember(cdAntibiotics.Route, {'Oral'}));
 %cdAntibiotics(idx,:) = [];
 if studynbr == 3
-    ivTreatments               = unique(cdAntibiotics(:,{'ID', 'Hospital', 'StartDate', 'StopDate', 'Route', 'Reason'}));
+    ivTreatments               = unique(cdAntibiotics(:,{'ID', 'StudyNumber', 'Hospital', 'StartDate', 'StopDate', 'Route', 'Reason'}));
 else
-    ivTreatments               = unique(cdAntibiotics(:,{'ID', 'Hospital', 'StartDate', 'StopDate', 'Route'}));
+    ivTreatments               = unique(cdAntibiotics(:,{'ID', 'StudyNumber', 'Hospital', 'StartDate', 'StopDate', 'Route'}));
     ivTreatments.Reason(:)     = {'PE'};
 end
 %ivTreatments.IVDateNum     = datenum(ivTreatments.StartDate) - offset*(ivTreatments.ID >= 16) - tmoffset*(ivTreatments.ID < 16) + 1;
@@ -89,14 +89,14 @@ numdays = 40;
 nkeycols = 13;
 Day = zeros(1,numdays);
 Day = array2table(Day);
-ivandmeasurestable = table('Size',[1 nkeycols-1], ...
-    'VariableTypes', {'double',      'cell',     'datetime',    'double',    'datetime',   'double',        'double',           'double',        'double',            'cell',  'double', 'logical'     }, ...
-    'VariableNames', {'SmartCareID', 'Hospital', 'IVStartDate', 'IVDateNum', 'IVStopDate', 'IVStopDateNum', 'DaysWithMeasures', 'TotalMeasures', 'AvgMeasuresPerDay', 'Route', 'Type',   'ExRelated'});
+ivandmeasurestable = table('Size',[1 nkeycols], ...
+    'VariableTypes', {'double',      'cell',        'cell',     'datetime',    'double',    'datetime',   'double',        'double',           'double',        'double',            'cell',  'double', 'logical'     }, ...
+    'VariableNames', {'SmartCareID', 'StudyNumber', 'Hospital', 'IVStartDate', 'IVDateNum', 'IVStopDate', 'IVStopDateNum', 'DaysWithMeasures', 'TotalMeasures', 'AvgMeasuresPerDay', 'Route', 'Type',   'ExRelated'});
 % have to do it this way to get the column type to be a char
 ivandmeasurestable.SequentialIntervention(:) = ' ';
 ivandmeasurestable = [ivandmeasurestable Day];
 for i = 1:40
-    ivandmeasurestable.Properties.VariableNames{i+nkeycols} = sprintf('IVminus%d',abs(i-41));
+    ivandmeasurestable.Properties.VariableNames{i + nkeycols + 1} = sprintf('IVminus%d',abs(i-41));
 end
 rowtoadd = ivandmeasurestable;
 ivandmeasurestable(1,:) = [];
@@ -111,6 +111,7 @@ i = 1;
 idx = find(physdata.SmartCareID == ivTreatments.ID(i) & physdata.DateNum < ivTreatments.IVDateNum(i) & physdata.DateNum >= (ivTreatments.IVDateNum(i) - numdays));
 pdcountmtable = varfun(@max, physdata(idx, {'SmartCareID','DateNum'}), 'GroupingVariables', {'SmartCareID', 'DateNum'});
 rowtoadd.SmartCareID       = ivTreatments.ID(i);
+rowtoadd.StudyNumber       = ivTreatments.StudyNumber(i);
 rowtoadd.Hospital          = ivTreatments.Hospital(i);
 rowtoadd.IVStartDate       = ivTreatments.StartDate(i);
 rowtoadd.IVDateNum         = ivTreatments.IVDateNum(i);
@@ -175,6 +176,7 @@ for i = 2:size(ivTreatments,1)
         idx = find(physdata.SmartCareID == ivTreatments.ID(i) & physdata.DateNum < ivTreatments.IVDateNum(i) & physdata.DateNum >= (ivTreatments.IVDateNum(i) - numdays));
         pdcountmtable = varfun(@max, physdata(idx, {'SmartCareID','DateNum'}), 'GroupingVariables', {'SmartCareID', 'DateNum'});
         rowtoadd.SmartCareID       = ivTreatments.ID(i);
+        rowtoadd.StudyNumber       = ivTreatments.StudyNumber(i);
         rowtoadd.Hospital          = ivTreatments.Hospital(i);
         rowtoadd.IVStartDate       = ivTreatments.StartDate(i);
         rowtoadd.IVDateNum         = ivTreatments.IVDateNum(i);

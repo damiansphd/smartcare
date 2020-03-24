@@ -28,7 +28,7 @@ pclinicalfev.ScaledDateNum = datenum(pclinicalfev.LungFunctionDate) - offset - p
 
 % extract study date and join with offsets to keep only those patients who
 % have enough data (ie the patients left after outlier date handling
-pstudydate = sortrows(cdPatient(:,{'ID', 'Hospital', 'StudyDate'}), 'ID', 'ascend');
+pstudydate = sortrows(cdPatient(:,{'ID', 'Hospital', 'StudyNumber', 'StudyDate'}), 'ID', 'ascend');
 pstudydate.Properties.VariableNames{'ID'} = 'SmartCareID';
 pstudydate = innerjoin(patientoffsets, pstudydate);
 

@@ -13,6 +13,7 @@ imagefilename = sprintf('%s - Page %2d of %2d', filenameprefix, page, npages);
 for i = 1:size(patientlist, 1)
     scid = patientlist(i);
     hospital = pstudydate.Hospital{pstudydate.SmartCareID == scid};
+    studyid  = pstudydate.StudyNumber{pstudydate.SmartCareID == scid};
     % get home weight measures just for current patient
     pmeasures = pmeasuresfev(pmeasuresfev.SmartCareID == scid,:);
     % get clinical weight measures just for current patient
@@ -57,7 +58,7 @@ for i = 1:size(patientlist, 1)
     rangelimit = 0.5;
     yl = setYDisplayRange(0, max(maxpcfev, maxpmfev), rangelimit);
     ylim(yl);
-    title(ax, sprintf('Patient %3d (%s)',scid, hospital));
+    title(ax, sprintf('ID%3d (%s %s)',scid, hospital, studyid), 'fontsize', 10);
     % add study start and end as vertical lines
     line(ax, [studystart studystart], yl, 'Color', 'g', 'LineStyle', '-', 'LineWidth', 1);
     line(ax,  [studyend studyend],     yl, 'Color', 'g', 'LineStyle', '-', 'LineWidth', 1);

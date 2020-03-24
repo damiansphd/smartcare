@@ -4,7 +4,7 @@ basedir = setBaseDir();
 subfolder = 'DataFiles/ProjectClimb/Proformas final';
 
 [clABNameTable] = getClimbAntibioticNameTable();
-[clPatient, clAdmissions, clAntibiotics, clClinicVisits, clOtherVisits, clCRP, clPFT, clMicrobiology, clHghtWght, clEndStudy] = createClimbClinicalTables(0);
+[clPatient, clAdmissions, clAntibiotics, clClinicVisits, clOtherVisits, clCRP, clPFT, clMicrobiology, clHghtWght, clOthClinMeas, clEndStudy] = createClimbClinicalTables(0);
 userid = 301;
 
 tic
@@ -20,7 +20,7 @@ for i = 1:size(cbhosp, 1)
     for p = 1:size(patfilelist, 1)
         % for each patient file, extract the data and store in the clinical
         % data tables
-        [clPatient, clAdmissions, clAntibiotics, clClinicVisits, clPFT, clMicrobiology, clHghtWght] = loadClimbClinDataForPatient(clPatient, clAdmissions, clAntibiotics, clClinicVisits, clPFT, clMicrobiology, clHghtWght, clABNameTable, patfilelist{p}, basedir, tmpfolder, userid);
+        [clPatient, clAdmissions, clAntibiotics, clClinicVisits, clPFT, clMicrobiology, clHghtWght, clOthClinMeas] = loadClimbClinDataForPatient(clPatient, clAdmissions, clAntibiotics, clClinicVisits, clPFT, clMicrobiology, clHghtWght, clOthClinMeas, clABNameTable, patfilelist{p}, basedir, tmpfolder, userid);
         userid = userid + 1;
     end 
 end
@@ -128,6 +128,6 @@ subfolder = 'MatlabSavedVariables';
 outputfilename = 'climbclinicaldata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
 save(fullfile(basedir, subfolder,outputfilename), 'clPatient', 'clMicrobiology', 'clClinicVisits', ...
-    'clOtherVisits','clPFT', 'clHghtWght', 'clAdmissions', 'clAntibiotics', 'clCRP', 'clEndStudy', 'clABNameTable');
+    'clOtherVisits','clPFT', 'clHghtWght', 'clAdmissions', 'clAntibiotics', 'clCRP', 'clOthClinMeas', 'clEndStudy', 'clABNameTable');
 toc
 

@@ -40,7 +40,7 @@ if runfunction == 0 || runfunction == 1 || runfunction == 2 || runfunction == 6 
     chosentreatgap = selectTreatmentGap();
     tic
     [datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
-    [physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+    [physdata, offset, physdata_predateoutlierhandling] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
     [cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
         cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
     alignmentmodelinputsfile = sprintf('%salignmentmodelinputs_gap%d.mat', study, chosentreatgap);

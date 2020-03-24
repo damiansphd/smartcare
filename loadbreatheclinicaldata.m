@@ -4,17 +4,21 @@ basedir = setBaseDir();
 subfolder = 'DataFiles/ProjectBreathe';
 [clinicaldate, ~, ~] = getLatestBreatheDates();
 
-clinicalfile = sprintf('ProjectBreathe - ClinicalData %s.xlsx', clinicaldate);
+clinicalfile1 = sprintf('PB Data Sheet - Moh %s.xlsx', clinicaldate);
+clinicalfile2 = sprintf('PB Data Sheet - Rachel %s.xlsx', clinicaldate);
 
-[brPatient, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brCRP, brPFT, brMicrobiology, brHghtWght, brEndStudy] = createBreatheClinicalTables(0);
-[brpatrow, bradmrow, brabrow, brcvrow, brovrow, brcrprow, brpftrow, brmicrorow, ~, ~] = createBreatheClinicalTables(1);
+[brPatient, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brUnplannedContact, ...
+    brCRP, brPFT, brMicrobiology, brHghtWght, brEndStudy] = createBreatheClinicalTables(0);
+[brpatrow, bradmrow, brabrow, brcvrow, brovrow, brucrow, ...
+    brcrprow, brpftrow, brmicrorow, ~, ~] = createBreatheClinicalTables(1);
 
 % patient sheet
 tic
 fprintf('Loading Project Breathe patient data\n');
 fprintf('------------------------------------\n');
-opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'Patients');
-patientdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'Patients');
+opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile1), 'Sheet', 'Patients');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'})) = {'char'};
+patientdata = readtable(fullfile(basedir, subfolder, clinicalfile1), opts, 'Sheet', 'Patients');
 npatients = size(patientdata, 1);
 userid = 501;
 hospital = 'PAP';
@@ -51,13 +55,19 @@ end
 toc
 fprintf('\n');
 
+fprintf('Inconsitent Study Numbers and Emails\n');
+fprintf('------------------------------------\n');
+brPatient(~ismember(brPatient.StudyNumber, strrep(strrep(brPatient.StudyEmail, 'projectb', ''), '@gmail.com', '')), :)
+
+
 % admission data
 tic
 fprintf('Loading Project Breathe admission data\n');
 fprintf('--------------------------------------\n');
-opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'Admissions');
+opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile1), 'Sheet', 'Admissions');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'})) = {'char'};
 opts.DataRange = 'A3';
-admdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'Admissions');
+admdata = readtable(fullfile(basedir, subfolder, clinicalfile1), opts, 'Sheet', 'Admissions');
 nadm = size(admdata, 1);
 for i = 1:nadm
     if size(brPatient.ID(ismember(brPatient.StudyNumber, admdata.StudyID(i))), 1) == 0
@@ -79,22 +89,31 @@ fprintf('\n');
 tic
 fprintf('Loading Project Breathe antibiotic data\n');
 fprintf('---------------------------------------\n');
-opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'Antibiotics');
+opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile2), 'Sheet', 'Antibiotics');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'})) = {'char'};
 opts.DataRange = 'A3';
-abdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'Antibiotics');
+abdata = readtable(fullfile(basedir, subfolder, clinicalfile2), opts, 'Sheet', 'Antibiotics');
 nab = size(abdata, 1);
 for i = 1:nab
-    %if size(brPatient.ID(ismember(brPatient.StudyNumber, abdata.StudyID(i))), 1) == 0
-    if size(brPatient.ID(ismember(brPatient.StudyEmail, abdata.StudyID(i))), 1) == 0
+    if size(brPatient.ID(ismember(brPatient.StudyNumber, abdata.StudyID(i))), 1) == 0
+    %if size(brPatient.ID(ismember(brPatient.StudyEmail, abdata.StudyID(i))), 1) == 0
         fprintf('Row %d (spreadsheet row %d): Invalid StudyID %s\n',  i, i + 2, abdata.StudyID{i});
     else
-        %brabrow.ID          = brPatient.ID(ismember(brPatient.StudyNumber, abdata.StudyID(i)));
-        brabrow.ID          = brPatient.ID(ismember(brPatient.StudyEmail, abdata.StudyID(i)));
+        brabrow.ID          = brPatient.ID(ismember(brPatient.StudyNumber, abdata.StudyID(i)));
+        %brabrow.ID          = brPatient.ID(ismember(brPatient.StudyEmail, abdata.StudyID(i)));
         brabrow.Hospital    = hospital;
         brabrow.StudyNumber = abdata.StudyID(i);
         brabrow.AntibioticName = abdata.AntibioticName(i);
         brabrow.Route          = abdata.Route(i);
-        brabrow.HomeIV_s       = abdata.HomeIV_s(i);
+        if size(abdata.HomeIV_s{i}, 1) == 0
+            if ismember(brabrow.Route, 'Oral')
+                brabrow.HomeIV_s = 'No';
+            elseif ismember(brabrow.Route, 'IV')
+                fprintf('Row %d (spreadsheet row %d): IV Treatment with blank Home IV field\n', i, i + 2);
+            end
+        else
+            brabrow.HomeIV_s       = abdata.HomeIV_s(i);
+        end
         brabrow.StartDate      = abdata.StartDate(i);
         brabrow.StopDate       = abdata.StopDate(i);
         brabrow.Comments       = abdata.Comments(i);
@@ -109,9 +128,10 @@ fprintf('\n');
 tic
 fprintf('Loading Project Breathe microbiology data\n');
 fprintf('-----------------------------------------\n');
-opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'Microbiology');
+opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile2), 'Sheet', 'Microbiology');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'})) = {'char'};
 opts.DataRange = 'A3';
-microdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'Microbiology');
+microdata = readtable(fullfile(basedir, subfolder, clinicalfile2), opts, 'Sheet', 'Microbiology');
 nmicro = size(microdata, 1);
 for i = 1:nmicro
     if size(brPatient.ID(ismember(brPatient.StudyNumber, microdata.StudyID(i))), 1) == 0
@@ -133,9 +153,10 @@ fprintf('\n');
 tic
 fprintf('Loading Project Breathe clinic visits data\n');
 fprintf('------------------------------------------\n');
-opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'Clinic Visits');
+opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile1), 'Sheet', 'Clinic Visits');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'})) = {'char'};
 opts.DataRange = 'A3';
-cvdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'Clinic Visits');
+cvdata = readtable(fullfile(basedir, subfolder, clinicalfile1), opts, 'Sheet', 'Clinic Visits');
 ncv = size(cvdata, 1);
 for i = 1:ncv
     % fprintf('%d\n', i);
@@ -156,9 +177,10 @@ fprintf('\n');
 tic
 fprintf('Loading Project Breathe other visits data\n');
 fprintf('-----------------------------------------\n');
-opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'Other Visits');
+opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile1), 'Sheet', 'Other Visits');
 opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'})) = {'char'};
-ovdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'Other Visits');
+opts.DataRange = 'A3';
+ovdata = readtable(fullfile(basedir, subfolder, clinicalfile1), opts, 'Sheet', 'Other Visits');
 nov = size(ovdata, 1);
 for i = 1:nov
     if size(brPatient.ID(ismember(brPatient.StudyNumber, ovdata.StudyID(i))), 1) == 0
@@ -177,10 +199,36 @@ toc
 fprintf('\n');
 
 tic
+fprintf('Loading Project Breathe unplanned contact data\n');
+fprintf('----------------------------------------------\n');
+opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile2), 'Sheet', 'Unplanned Contacts');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'})) = {'char'};
+opts.DataRange = 'A3';
+ucdata = readtable(fullfile(basedir, subfolder, clinicalfile2), opts, 'Sheet', 'Unplanned Contacts');
+nuc = size(ucdata, 1);
+for i = 1:nuc
+    if size(brPatient.ID(ismember(brPatient.StudyNumber, ucdata.StudyID(i))), 1) == 0
+        fprintf('Row %d (spreadsheet row %d): Invalid StudyID %s\n',  i, i + 2, ucdata.StudyID{i});
+    else
+        brucrow.ID               = brPatient.ID(ismember(brPatient.StudyNumber, ucdata.StudyID(i)));
+        brucrow.Hospital         = hospital;
+        brucrow.StudyNumber      = ucdata.StudyID(i);
+        brucrow.ContactDate      = ucdata.Date(i);
+        brucrow.TypeOfContact    = ucdata.TypeOfContact(i);
+
+        brUnplannedContact = [brUnplannedContact; brucrow];
+    end
+end
+toc
+fprintf('\n');
+
+tic
 fprintf('Loading Project Breathe PFT data\n');
 fprintf('--------------------------------\n');
-opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'PFT');
-pftdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'PFT');
+opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile1), 'Sheet', 'PFTs');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'})) = {'char'};
+opts.DataRange = 'A3';
+pftdata = readtable(fullfile(basedir, subfolder, clinicalfile1), opts, 'Sheet', 'PFTs');
 npft = size(pftdata, 1);
 for i = 1:npft
     if size(brPatient.ID(ismember(brPatient.StudyNumber, pftdata.StudyID(i))), 1) == 0
@@ -191,6 +239,7 @@ for i = 1:npft
         brpftrow.StudyNumber        = pftdata.StudyID(i);
         brpftrow.LungFunctionDate   = pftdata.LungFunctionDate(i);
         brpftrow.FEV1               = pftdata.FEV1(i);
+        brpftrow.Units              = {'L'};
         fev1setas                   = brPatient.FEV1SetAs(ismember(brPatient.StudyNumber, pftdata.StudyID(i)));
         calcfev1setas               = brPatient.CalcFEV1SetAs(ismember(brPatient.StudyNumber, pftdata.StudyID(i)));
         brpftrow.FEV1_              = 100 * brpftrow.FEV1 / fev1setas;
@@ -205,8 +254,10 @@ fprintf('\n');
 tic
 fprintf('Loading Project Breathe CRP data\n');
 fprintf('--------------------------------\n');
-opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile), 'Sheet', 'CRP Levels');
-crpdata = readtable(fullfile(basedir, subfolder, clinicalfile), opts, 'Sheet', 'CRP Levels');
+opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile2), 'Sheet', 'CRPs');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'})) = {'char'};
+opts.DataRange = 'A3';
+crpdata = readtable(fullfile(basedir, subfolder, clinicalfile2), opts, 'Sheet', 'CRPs');
 ncrp = size(crpdata, 1);
 for i = 1:ncrp
     if size(brPatient.ID(ismember(brPatient.StudyNumber, crpdata.StudyID(i))), 1) == 0
@@ -228,14 +279,14 @@ toc
 fprintf('\n');
 
 % sort rows
-brAdmissions   = sortrows(brAdmissions,   {'ID', 'Admitted'});
-brAntibiotics  = sortrows(brAntibiotics,  {'ID', 'StartDate', 'AntibioticName'});
-brClinicVisits = sortrows(brClinicVisits, {'ID', 'AttendanceDate'});
-brOtherVisits  = sortrows(brOtherVisits,  {'ID', 'AttendanceDate'});
-brPFT          = sortrows(brPFT,          {'ID', 'LungFunctionDate'});
-brCRP          = sortrows(brCRP,          {'ID', 'CRPDate'});
-brMicrobiology = sortrows(brMicrobiology, {'ID', 'DateMicrobiology'});
-
+brAdmissions        = sortrows(brAdmissions,       {'ID', 'Admitted'});
+brAntibiotics       = sortrows(brAntibiotics,      {'ID', 'StartDate', 'AntibioticName'});
+brClinicVisits      = sortrows(brClinicVisits,     {'ID', 'AttendanceDate'});
+brOtherVisits       = sortrows(brOtherVisits,      {'ID', 'AttendanceDate'});
+brUnplannedContact  = sortrows(brUnplannedContact, {'ID', 'ContactDate'});
+brPFT               = sortrows(brPFT,              {'ID', 'LungFunctionDate'});
+brCRP               = sortrows(brCRP,              {'ID', 'CRPDate'});
+brMicrobiology      = sortrows(brMicrobiology,     {'ID', 'DateMicrobiology'});
 
 % data integrity checks
 tic
@@ -295,8 +346,14 @@ if sum(idx) > 0
 end
 
 % antibiotics data
-idx = isnat(brAntibiotics.StartDate) | isnat(brAntibiotics.StopDate);
-fprintf('Found %d Antibiotics with blank dates\n', sum(idx));
+idx = isnat(brAntibiotics.StartDate) & isnat(brAntibiotics.StopDate);
+fprintf('Found %d Antibiotics with both blank dates\n', sum(idx));
+if sum(idx) > 0
+    brAntibiotics(idx,:)
+    brAntibiotics(idx, :) = [];
+end
+idx = ~isnat(brAntibiotics.StartDate) & isnat(brAntibiotics.StopDate);
+fprintf('Found %d Antibiotics with blank stop dates\n', sum(idx));
 if sum(idx) > 0
     brAntibiotics(idx,:)
     brAntibiotics(idx, :) = [];
@@ -335,6 +392,14 @@ fprintf('Found %d Other Visits with blank dates\n', sum(idx));
 if sum(idx) > 0
     brOtherVisits(idx,:)
     brOtherVisits(idx, :) = [];
+end
+
+% unplanned contacts
+idx = isnat(brUnplannedContact.ContactDate);
+fprintf('Found %d Unplanned Contacts with blank dates\n', sum(idx));
+if sum(idx) > 0
+    brUnplannedContact(idx,:)
+    brUnplannedContact(idx, :) = [];
 end
 
 % pft
@@ -379,8 +444,9 @@ basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 outputfilename = 'breatheclinicaldata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
-save(fullfile(basedir, subfolder,outputfilename), 'brPatient', 'brMicrobiology', 'brClinicVisits', ...
-    'brOtherVisits','brPFT', 'brHghtWght', 'brAdmissions', 'brAntibiotics', 'brCRP', 'brEndStudy');
+save(fullfile(basedir, subfolder,outputfilename), 'brPatient', 'brMicrobiology', ...
+    'brClinicVisits', 'brOtherVisits', 'brUnplannedContact', 'brPFT', 'brHghtWght', ...
+    'brAdmissions', 'brAntibiotics', 'brCRP', 'brEndStudy');
 toc
 
 

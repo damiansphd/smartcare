@@ -98,93 +98,94 @@ close(f1);
 toc
 fprintf('\n');
 
-tic
-% handle outlier measurements
-fprintf('Handling outlier date measurements across all patients\n');
-pdcountmtable = varfun(@max, physdata(:, {'SmartCareID','ScaledDateNum'}), 'GroupingVariables', {'SmartCareID', 'ScaledDateNum'});
-fdeltable = physdata(1:1,{'SmartCareID','ScaledDateNum'});
-ldeltable = physdata(1:1,{'SmartCareID','ScaledDateNum'});
-rowtoadd = fdeltable;
-rowtoadd.SmartCareID = 0;
-rowtoadd.ScaledDateNum = 0;
-fdeltable = [];
-ldeltable = [];
+if ismember(study, {'SC', 'TM'}) 
+    tic
+    % handle outlier measurements
+    fprintf('Handling outlier date measurements across all patients\n');
+    pdcountmtable = varfun(@max, physdata(:, {'SmartCareID','ScaledDateNum'}), 'GroupingVariables', {'SmartCareID', 'ScaledDateNum'});
+    fdeltable = physdata(1:1,{'SmartCareID','ScaledDateNum'});
+    ldeltable = physdata(1:1,{'SmartCareID','ScaledDateNum'});
+    rowtoadd = fdeltable;
+    rowtoadd.SmartCareID = 0;
+    rowtoadd.ScaledDateNum = 0;
+    fdeltable = [];
+    ldeltable = [];
 
-allpatients = unique(physdata.SmartCareID);
-for i = 1:size(allpatients,1)
-    scid = allpatients(i);
-    idx = find(pdcountmtable.SmartCareID == scid);
-    outlier = true;
-    a = 1;
-    while (outlier == true & (a+8) < size(idx,1))
-        firstdate = pdcountmtable.ScaledDateNum(idx(a));
-        firstcount = pdcountmtable.GroupCount(idx(a));
-        next5date = pdcountmtable.ScaledDateNum(idx(a+8));
-        if (next5date - firstdate > 12 | firstcount == 1)
-            rowtoadd.SmartCareID = scid;
-            rowtoadd.ScaledDateNum = firstdate;
-            fdeltable = [fdeltable;rowtoadd];
-            a = a+1;
-        else
-            outlier = false;
+    allpatients = unique(physdata.SmartCareID);
+    for i = 1:size(allpatients,1)
+        scid = allpatients(i);
+        idx = find(pdcountmtable.SmartCareID == scid);
+        outlier = true;
+        a = 1;
+        while (outlier == true & (a+8) < size(idx,1))
+            firstdate = pdcountmtable.ScaledDateNum(idx(a));
+            firstcount = pdcountmtable.GroupCount(idx(a));
+            next5date = pdcountmtable.ScaledDateNum(idx(a+8));
+            if (next5date - firstdate > 12 | firstcount == 1)
+                rowtoadd.SmartCareID = scid;
+                rowtoadd.ScaledDateNum = firstdate;
+                fdeltable = [fdeltable;rowtoadd];
+                a = a+1;
+            else
+                outlier = false;
+            end
         end
+        outlier = true;
+        a = size(idx,1);
+        while (outlier == true & a-10 > 0)
+            lastdate = pdcountmtable.ScaledDateNum(idx(a));
+            lastcount = pdcountmtable.GroupCount(idx(a));
+            prev10date = pdcountmtable.ScaledDateNum(idx(a-10));
+            if (lastdate - prev10date > 16 | lastcount == 1)
+                rowtoadd.SmartCareID = scid;
+                rowtoadd.ScaledDateNum = lastdate;
+                ldeltable = [ldeltable;rowtoadd];
+                a = a-1;
+            else
+                outlier = false;
+            end
+        end        
     end
-    outlier = true;
-    a = size(idx,1);
-    while (outlier == true & a-10 > 0)
-        lastdate = pdcountmtable.ScaledDateNum(idx(a));
-        lastcount = pdcountmtable.GroupCount(idx(a));
-        prev10date = pdcountmtable.ScaledDateNum(idx(a-10));
-        if (lastdate - prev10date > 16 | lastcount == 1)
-            rowtoadd.SmartCareID = scid;
-            rowtoadd.ScaledDateNum = lastdate;
-            ldeltable = [ldeltable;rowtoadd];
-            a = a-1;
-        else
-            outlier = false;
+
+    if doupdates
+        fidx = [];
+        lidx = [];
+        for i = 1:size(fdeltable,1)
+            idx = find(physdata.SmartCareID == fdeltable.SmartCareID(i) & physdata.ScaledDateNum == fdeltable.ScaledDateNum(i));
+            fidx = [fidx;idx];
         end
-    end        
-end
- 
-if doupdates
-    fidx = [];
-    lidx = [];
-    for i = 1:size(fdeltable,1)
-        idx = find(physdata.SmartCareID == fdeltable.SmartCareID(i) & physdata.ScaledDateNum == fdeltable.ScaledDateNum(i));
-        fidx = [fidx;idx];
+        for i = 1:size(ldeltable,1)
+            idx = find(physdata.SmartCareID == ldeltable.SmartCareID(i) & physdata.ScaledDateNum == ldeltable.ScaledDateNum(i));
+            lidx = [lidx;idx];
+        end
+        fprintf('Removing %4d outlier first measures for %2d patients\n', size(fidx,1), size(unique(fdeltable.SmartCareID),1));
+        fprintf('Removing %4d outlier last  measures for %2d patients\n', size(lidx,1), size(unique(ldeltable.SmartCareID),1));
+        idx = [fidx;lidx];
+        physdata(idx,:) = [];
+        fprintf('%s data now has %d rows\n', study, size(physdata, 1));
+        fprintf('Data for %d patients\n', size(unique(physdata.SmartCareID), 1));
     end
-    for i = 1:size(ldeltable,1)
-        idx = find(physdata.SmartCareID == ldeltable.SmartCareID(i) & physdata.ScaledDateNum == ldeltable.ScaledDateNum(i));
-        lidx = [lidx;idx];
-    end
-    fprintf('Removing %4d outlier first measures for %2d patients\n', size(fidx,1), size(unique(fdeltable.SmartCareID),1));
-    fprintf('Removing %4d outlier last  measures for %2d patients\n', size(lidx,1), size(unique(ldeltable.SmartCareID),1));
-    idx = [fidx;lidx];
-    physdata(idx,:) = [];
-    fprintf('%s data now has %d rows\n', study, size(physdata, 1));
-    fprintf('Data for %d patients\n', size(unique(physdata.SmartCareID), 1));
+    toc
+    fprintf('\n');
+    
+    tic
+    % recalc ScaledDateNum with the days from first measurement (by patient)
+    physdata = scaleDaysByPatient(physdata, doupdates);
+
+    filenameappend = 'PostOutlierDateHandling';
+    fullfilename = sprintf('%s-HeatmapAllPatients-%s', study, filenameappend);
+    %fullfilename = strcat('HeatmapAllPatients', filenameappend);
+    plottitle = sprintf('%s - Post Date Outliers', baseplottitle);
+
+    % re-create heatmap for all patients and measures
+    fprintf('Re-creating heatmap for all patients\n');
+    f2 = createHeatmapOfPatientsAndMeasures(physdata(:,{'SmartCareID','ScaledDateNum'}), colors, plottitle);
+    savePlotInDir(f2, fullfilename, subfolder);
+    close(f2);
+    
+    toc
+    fprintf('\n');
 end
-toc
-fprintf('\n');
-
-tic
-% recalc ScaledDateNum with the days from first measurement (by patient)
-physdata = scaleDaysByPatient(physdata, doupdates);
-
-filenameappend = 'PostOutlierDateHandling';
-fullfilename = sprintf('%s-HeatmapAllPatients-%s', study, filenameappend);
-%fullfilename = strcat('HeatmapAllPatients', filenameappend);
-plottitle = sprintf('%s - Post Date Outliers', baseplottitle);
-
-% re-create heatmap for all patients and measures
-fprintf('Re-creating heatmap for all patients\n');
-f2 = createHeatmapOfPatientsAndMeasures(physdata(:,{'SmartCareID','ScaledDateNum'}), colors, plottitle);
-savePlotInDir(f2, fullfilename, subfolder);
-close(f2);
-
-
-toc
-fprintf('\n');
 
 tic
 % handling short duration patients (< 40 day duration of measures
@@ -242,50 +243,50 @@ close(f4);
 toc
 fprintf('\n');
 
-tic
-% add handling for 'sparse' patients here
-fprintf('Handline patients with sparse measurements\n');
-pdcountmtable = varfun(@max, physdata(:, {'SmartCareID','ScaledDateNum'}), 'GroupingVariables', {'SmartCareID', 'ScaledDateNum'});
-pcountdtable = varfun(@max, pdcountmtable(:, {'SmartCareID'}), 'GroupingVariables', {'SmartCareID'});
-pcountdtable.Properties.VariableNames{'GroupCount'} = 'DayCount';
-pmaxdtable = varfun(@max, physdata(:,{'SmartCareID', 'ScaledDateNum'}), 'GroupingVariables', {'SmartCareID'});
-pmaxdtable.Properties.VariableNames{'GroupCount'} = 'MeasureCount';
-pdensitymtable = innerjoin(pmaxdtable,pcountdtable);
+if ismember(study, {'SC', 'TM'}) 
+    tic
+    % add handling for 'sparse' patients here
+    fprintf('Handline patients with sparse measurements\n');
+    pdcountmtable = varfun(@max, physdata(:, {'SmartCareID','ScaledDateNum'}), 'GroupingVariables', {'SmartCareID', 'ScaledDateNum'});
+    pcountdtable = varfun(@max, pdcountmtable(:, {'SmartCareID'}), 'GroupingVariables', {'SmartCareID'});
+    pcountdtable.Properties.VariableNames{'GroupCount'} = 'DayCount';
+    pmaxdtable = varfun(@max, physdata(:,{'SmartCareID', 'ScaledDateNum'}), 'GroupingVariables', {'SmartCareID'});
+    pmaxdtable.Properties.VariableNames{'GroupCount'} = 'MeasureCount';
+    pdensitymtable = innerjoin(pmaxdtable,pcountdtable);
 
-pcountdtable2m = varfun(@max, pdcountmtable(pdcountmtable.GroupCount>1, {'SmartCareID'}), 'GroupingVariables', {'SmartCareID'});
-pcountdtable2m.Properties.VariableNames{'GroupCount'} = 'MultipleMeasuresDayCount';
-pdensitymtable = innerjoin(pdensitymtable,pcountdtable2m);
+    pcountdtable2m = varfun(@max, pdcountmtable(pdcountmtable.GroupCount>1, {'SmartCareID'}), 'GroupingVariables', {'SmartCareID'});
+    pcountdtable2m.Properties.VariableNames{'GroupCount'} = 'MultipleMeasuresDayCount';
+    pdensitymtable = innerjoin(pdensitymtable,pcountdtable2m);
 
-pdensitymtable.Density = pdensitymtable.DayCount./pdensitymtable.max_ScaledDateNum;
-pdensitymtable.MultipleMeasuresDensity = pdensitymtable.MultipleMeasuresDayCount./pdensitymtable.max_ScaledDateNum;
+    pdensitymtable.Density = pdensitymtable.DayCount./pdensitymtable.max_ScaledDateNum;
+    pdensitymtable.MultipleMeasuresDensity = pdensitymtable.MultipleMeasuresDayCount./pdensitymtable.max_ScaledDateNum;
 
-lowdensityidx = find(pdensitymtable.MultipleMeasuresDensity < 0.5);
-lowdensitypatients = pdensitymtable.SmartCareID(lowdensityidx);
-delidx = find(ismember(physdata.SmartCareID, lowdensitypatients));
+    lowdensityidx = find(pdensitymtable.MultipleMeasuresDensity < 0.5);
+    lowdensitypatients = pdensitymtable.SmartCareID(lowdensityidx);
+    delidx = find(ismember(physdata.SmartCareID, lowdensitypatients));
 
-if doupdates
-    % remove all measures for patients with low density of multiple measurement days
-    fprintf('Removing %4d measures for %2d patients with low density of multiple measurement days\n', ...
-        size(delidx,1), size(lowdensitypatients,1));
-    physdata(delidx,:) = [];
-    fprintf('%s data now has %d rows\n', study, size(physdata, 1));
-    fprintf('Data for %d patients\n', size(unique(physdata.SmartCareID), 1));
+    if doupdates
+        % remove all measures for patients with low density of multiple measurement days
+        fprintf('Removing %4d measures for %2d patients with low density of multiple measurement days\n', ...
+            size(delidx,1), size(lowdensitypatients,1));
+        physdata(delidx,:) = [];
+        fprintf('%s data now has %d rows\n', study, size(physdata, 1));
+        fprintf('Data for %d patients\n', size(unique(physdata.SmartCareID), 1));
+    end
+    toc
+    fprintf('\n');
+    
 end
-toc
-fprintf('\n');
 
-tic
-filenameappend = 'PostSparsePatientHandling';
-fullfilename = sprintf('%s-HeatmapAllPatients-%s', study, filenameappend);
-%fullfilename = strcat('HeatmapAllPatients', filenameappend);
-plottitle = sprintf('%s - Final', baseplottitle);
 
 % re-create heatmap for all patients and measures
+tic
+fullfilename = sprintf('%s-HeatmapAllPatients-Final', study);
+plottitle = sprintf('%s - Final', baseplottitle);
 fprintf('Re-creating heatmap for all patients\n');
 f5 = createHeatmapOfPatientsAndMeasures(physdata(:,{'SmartCareID','ScaledDateNum'}), colors, plottitle);
 savePlotInDir(f5, fullfilename, subfolder);
 close(f5);
-
 
 toc
 fprintf('\n');

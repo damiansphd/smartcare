@@ -14,7 +14,7 @@ patientoffsets = getPatientOffsets(physdata);
 
 % extract study date and join with offsets to keep only those patients who
 % have enough data (ie the patients left after outlier date handling
-pstudydateweight = sortrows(cdPatient(:,{'ID', 'Hospital', 'StudyDate', 'Weight'}), 'ID', 'ascend');
+pstudydateweight = sortrows(cdPatient(:,{'ID', 'Hospital', 'StudyNumber', 'StudyDate', 'Weight'}), 'ID', 'ascend');
 pstudydateweight.Properties.VariableNames{'ID'} = 'SmartCareID';
 pstudydateweight = innerjoin(patientoffsets, pstudydateweight);
 

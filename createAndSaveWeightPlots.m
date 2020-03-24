@@ -11,9 +11,10 @@ imagefilename = sprintf('%s - Page %2d of %2d', filenameprefix, page, npages);
 [f, p] = createFigureAndPanel(imagefilename, 'Portrait', 'a4');
 
 for i = 1:size(pstudydateweight,1)
-    scid = pstudydateweight.SmartCareID(i);
+    scid     = pstudydateweight.SmartCareID(i);
+    studyid  = pstudydateweight.StudyNumber{i};
     hospital = pstudydateweight.Hospital{i};
-    pweight = pstudydateweight.Weight(i);
+    pweight  = pstudydateweight.Weight(i);
     % get weight measures just for current patient
     pmeasures = pmeasuresweight(pmeasuresweight.SmartCareID == scid,:);
     % store min and max for patient
@@ -43,7 +44,7 @@ for i = 1:size(pstudydateweight,1)
     yl = setYDisplayRange(min(pweight, minpmweight), max(pweight, maxpmweight), rangelimit);
     %yl = [min(pweight, minpmweight)*.9 max(pweight, maxpmweight)*1.1];
     ylim(yl);
-    title(ax, sprintf('Patient %3d (%s)',scid, hospital));
+    title(ax, sprintf('ID%3d (%s %s)',scid, hospital, studyid), 'fontsize', 10);
     
     % add clinical weight as a horizontal line
     line(ax, xl, [pweight pweight], 'Color', 'r', 'LineStyle','--', 'LineWidth',1);

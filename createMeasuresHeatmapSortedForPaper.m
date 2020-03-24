@@ -10,7 +10,7 @@ tic
 basedir = setBaseDir();
 subfolder = sprintf('Plots/%s', study);
 
-temp = hsv;
+temp = hsv(64);
 brightness = .9;
 fontname = 'Arial';
 
@@ -46,6 +46,26 @@ elseif ismember(study, {'CL'})
     colors(15,:)  = temp(20,:);
     %colors(16,:)  = [1 0 1];
     nmeasures = 15;
+elseif ismember(study, {'BR'})
+    colors(1,:)  = temp(4,:);
+    colors(2,:)  = temp(5,:);
+    colors(3,:)  = temp(6,:);
+    colors(4,:)  = temp(7,:);
+    colors(5,:)  = temp(8,:);
+    colors(6,:)  = temp(9,:);
+    colors(7,:)  = temp(10,:);
+    colors(8,:)  = temp(11,:);
+    colors(9,:)  = temp(12,:);
+    colors(10,:)  = temp(13,:);
+    colors(11,:)  = temp(14,:);
+    colors(12,:)  = temp(15,:);
+    colors(13,:)  = temp(16,:);
+    colors(14,:)  = temp(17,:);
+    colors(15,:)  = temp(18,:);
+    colors(16,:)  = temp(19,:);
+    colors(17,:)  = temp(20,:);
+    colors(18,:)  = [1 0 1];
+    nmeasures = 17;
 else
     fprintf('**** Unknown Study ****');
     return;
@@ -182,7 +202,7 @@ sp3 = uicontrol('Parent', p3, ...
                     'String', sprintf('Nbr different \nmeasurements'));
 
 % save results
-filename = sprintf('%s-Heatmap - RecordedMeasuresByParticipantForStudyPeriod', study);
+filename = sprintf('%s-Heatmap - RecordedMeasuresByParticipantForPaper', study);
 savePlotInDir(f, filename, subfolder);
 savePlotInDirAsSVG(f, filename, subfolder);
 close(f);
