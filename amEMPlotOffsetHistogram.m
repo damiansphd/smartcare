@@ -5,7 +5,7 @@ function amEMPlotOffsetHistogram(ax, offsets, max_offset)
 
 nsamples = size(offsets, 1);
 if nsamples <= 100
-    ymax = 25;
+    ymax = 30;
 else
     ymax = 100;
 end

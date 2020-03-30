@@ -15,10 +15,14 @@ for i = 1:ninterventions
             column = getColumnForMeasure(measures.Name{m});
             ddcolumn = sprintf('Fun_%s',column);
             if size(find(demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m})),1) == 0
-                fprintf('Could not find std for patient %d and measure %d so using overall std for measure instead\n', scid, m);
+                fprintf('Intervention %d: Could not find std for patient %d and measure %d so using overall std for measure instead\n', i, scid, m);
                 normstd(i,m) = measures.OverallStd(m);
             else
                 normstd(i,m) = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measures.Name{m}),{ddcolumn}}(2);
+                if normstd(i,m) == 0
+                    fprintf('Intervention %d: Zero std for patient %d and measure %d so using overall std for measure instead\n', i, scid, m);
+                    normstd(i,m) = measures.OverallStd(m);
+                end
             end
         else 
             %shouldn't get here...

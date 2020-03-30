@@ -150,7 +150,8 @@ for i = 2:size(ivTreatments,1)
         if ivTreatments.IVStopDateNum(i) > rowtoadd.IVStopDateNum
             rowtoadd.IVStopDate        = ivTreatments.StopDate(i);
             rowtoadd.IVStopDateNum     = ivTreatments.IVStopDateNum(i);
-            rowtoadd.ExRelated         = rowtoadd.ExRelated || checkTreatmentExRelated(ivTreatments.Reason(i), exacerbationreasons);
+            %rowtoadd.ExRelated         = rowtoadd.ExRelated || checkTreatmentExRelated(ivTreatments.Reason(i), exacerbationreasons);
+            rowtoadd.ExRelated         = 1;
             if rowtoadd.ExRelated
                 exreltxt = '(*)';
             else
@@ -187,7 +188,8 @@ for i = 2:size(ivTreatments,1)
         rowtoadd.AvgMeasuresPerDay = rowtoadd.TotalMeasures/numdays;
         rowtoadd.Route             = ivTreatments.Route(i);
         rowtoadd.Type              = ivTreatments.Type(i);
-        rowtoadd.ExRelated         = checkTreatmentExRelated(ivTreatments.Reason(i), exacerbationreasons);
+        %rowtoadd.ExRelated         = checkTreatmentExRelated(ivTreatments.Reason(i), exacerbationreasons);
+        rowtoadd.ExRelated         = 1;
         if rowtoadd.ExRelated
             exreltxt = '(*)';
         else

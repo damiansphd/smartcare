@@ -4,15 +4,19 @@ function amEMPlotAndSaveAlignedCurves(profile_pre, meancurvemean, meancurvecount
 % amEMPlotAndSaveAlignedCurves - plots the curves pre and post alignment for
 % each measure, and the histogram of offsets
 
-plotsacross = 3;
-plotsdown = round((nmeasures + 1) / plotsacross);
+if (nmeasures + 1) <= 9
+    plotsacross = 3;
+else
+    plotsacross = 4;
+end
+plotsdown = ceil((nmeasures + 1) / plotsacross);
+
 plottitle = sprintf('%s - %s', plotname, run_type);
 anchor = 1; % latent curve is to be anchored on the plot (right side at min_offset)
 
 [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 
-for m = 1:nmeasures
-    
+for m = 1:nmeasures    
     subplottitle = measures.DisplayName{m};
     ax = subplot(plotsdown,plotsacross,m,'Parent',p);
     amEMPlotAlignedCurve(ax, profile_pre(:, m), meancurvemean(:, m), meancurvecount(:, m), meancurvestd(:, m), ...

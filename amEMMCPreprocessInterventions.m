@@ -29,7 +29,7 @@ amInterventions(isnan(amInterventions.SmartCareID), :) = [];
 
 % remove any interventions where insufficient data in the data window
 
-idx = find(amInterventions.DataWindowCompleteness < 35);
+idx = find(amInterventions.DataWindowCompleteness < 33);
 amInterventions(idx,:) = [];
 amIntrDatacube(idx,:,:) = [];
 ninterventions = size(amInterventions,1);

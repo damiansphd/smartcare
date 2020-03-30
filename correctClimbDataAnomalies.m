@@ -108,6 +108,13 @@ fprintf('Removing %4d Temperature measurements < 30 or > 45\n', sum(idx));
 physdata_deleted = appendDeletedRows(physdata(idx, :), physdata_deleted, {'Anomalous Value'});
 physdata(idx, :) = [];
 
+% Weight < 10 or > 100
+idx1 = ismember(physdata.RecordingType, 'WeightRecording');
+idx2 = physdata.WeightInKg < 9 | physdata.WeightInKg > 80;
+idx  = idx1 & idx2;
+fprintf('Removing %4d Weight measurements < 9 or > 80\n', sum(idx));
+physdata_deleted = appendDeletedRows(physdata(idx, :), physdata_deleted, {'Anomalous Value'});
+physdata(idx, :) = [];
 
 fprintf('Climb data now has %d rows\n', size(physdata,1));
 toc

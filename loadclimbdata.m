@@ -46,7 +46,8 @@ for i = 1:nmeasfile
     mfopts = detectImportOptions(fullfile(basedir, subfolder, MeasFiles{i}), 'Sheet', measdatasheetname);
     mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'StartDate', 'EndDate', 'DateRecorded', 'CorrectedCanadaDate'})) = {'datetime'};
     mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'TimeRecorded', 'CorrectedCanadaTime'})) = {'datetime'};
-    mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'BreathsPerMinute', 'FEV1', 'NumberOfDisturbances', 'O2Saturation', 'Pulse_BPM_', 'Rating', 'Temp_degC_'})) = {'double'};
+    mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'BreathsPerMinute', 'FEV1', 'NumberOfDisturbances', ...
+        'O2Saturation', 'Pulse_BPM_', 'Rating', 'Temp_degC_', 'WeightInKg'})) = {'double'};
     
     tmpmeasdata = readtable(fullfile(basedir, subfolder, MeasFiles{i}), mfopts, 'Sheet', measdatasheetname);
     % special processing for sputum colour recordings to convert from text
@@ -67,7 +68,8 @@ for i = 1:nmeasfile
         mfopts = detectImportOptions(fullfile(basedir, subfolder, MeasFiles{i}), 'Sheet', canadalungdsname);
         mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'StartDate', 'EndDate', 'DateRecorded', 'CorrectedCanadaDate'})) = {'datetime'};
         mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'TimeRecorded', 'CorrectedCanadaTime'})) = {'datetime'};
-        mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'BreathsPerMinute', 'FEV1', 'NumberOfDisturbances', 'O2Saturation', 'Pulse_BPM_', 'Rating', 'Temp_degC_'})) = {'double'};
+        mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'BreathsPerMinute', 'FEV1', 'NumberOfDisturbances', ...
+            'O2Saturation', 'Pulse_BPM_', 'Rating', 'Temp_degC_', 'WeightInKg'})) = {'double'};
     
         tmplfdata = readtable(fullfile(basedir, subfolder, MeasFiles{i}), mfopts, 'Sheet', canadalungdsname);
         fprintf('Loaded %d rows\n', size(tmplfdata, 1));
@@ -233,6 +235,14 @@ idx2 = isnan(clphysdata.Temp_degC_);
 idx3 = clphysdata.Temp_degC_ == 0;
 idx = idx1 & (idx2 | idx3);
 fprintf('Removing %4d blank or zero Temperature measurements\n', sum(idx));
+clphysdata_deleted = appendDeletedRows(clphysdata(idx,:), clphysdata_deleted, {'Zero Value'});
+clphysdata(idx,:) = [];
+
+idx1 = ismember(clphysdata.RecordingType, {'WeightRecording'});
+idx2 = isnan(clphysdata.WeightInKg);
+idx3 = clphysdata.WeightInKg == 0;
+idx = idx1 & (idx2 | idx3);
+fprintf('Removing %4d blank or zero Weight measurements\n', sum(idx));
 clphysdata_deleted = appendDeletedRows(clphysdata(idx,:), clphysdata_deleted, {'Zero Value'});
 clphysdata(idx,:) = [];
 
