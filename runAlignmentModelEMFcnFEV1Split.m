@@ -52,7 +52,7 @@ for t = 1:ntiles
     tic
     fprintf('Preparing input data\n');
     sversion = sprintf('FEV1Split%d', t);
-    baseplotname = sprintf('%s%s_sig%d_mu%d_ca%d_sm%d_rm%d_ob%d_im%d_cm%d_mm%d_mo%d_dw%d', study, sversion, sigmamethod, mumethod, curveaveragingmethod, ...
+    baseplotname = sprintf('%s%s_sig%d_mu%d_ca%d_sm%d_rm%d_ob%d_im%d_cm%d_mm%d_mo%d_dw%d', study, mversion, sigmamethod, mumethod, curveaveragingmethod, ...
         smoothingmethod, runmode, offsetblockingmethod, imputationmode, confidencemode, measuresmask, max_offset, align_wind);
     detaillog = true;
 

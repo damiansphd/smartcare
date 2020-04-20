@@ -16,6 +16,10 @@ elseif ismember(displaymeasure, {'PulseRate'})
     displaynameformatted = 'Pulse rate';
 elseif ismember(displaymeasure, {'SleepActivity'})
     displaynameformatted = 'Sleep';
+elseif ismember(displaymeasure, {'SputumVolume'})
+    displaynameformatted = 'Sputum vol';
+elseif ismember(displaymeasure, {'Temperature'})
+    displaynameformatted = 'Temp';
 else
     displaynameformatted = displaymeasure;
 end

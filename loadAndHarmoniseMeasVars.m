@@ -1,4 +1,4 @@
-function [physdata, offset, physdata_predateoutlierhandling] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study)
+function [physdata, offset, physdata_predateoutlierhandling] = loadAndHarmoniseMeasVars(datamatfile, subfolder, study)
 
 % loadAndHarmoniseMeasVars - loads raw measurement variables and standardises
 % their naming
@@ -6,21 +6,21 @@ function [physdata, offset, physdata_predateoutlierhandling] = loadAndHarmoniseM
 tic
 basedir = setBaseDir();
 fprintf('Loading %s Study Measurement data\n', study);
-physdata_original = [];
+%physdata_original = [];
 
-if studynbr == 1
+if ismember(study, 'SC')
     load(fullfile(basedir, subfolder, datamatfile), 'physdata', 'physdata_predateoutlierhandling', 'offset');
-elseif studynbr == 2
+elseif ismember(study, 'TM')
     load(fullfile(basedir, subfolder, datamatfile), 'tmphysdata', 'tmoffset', 'tmphysdata_predateoutlierhandling');
     physdata       = tmphysdata;
     offset         = tmoffset;
     physdata_predateoutlierhandling = tmphysdata_predateoutlierhandling;
-elseif studynbr == 3
+elseif ismember(study, 'CL')
     load(fullfile(basedir, subfolder, datamatfile), 'clphysdata', 'cloffset', 'clphysdata_predateoutlierhandling');
     physdata       = clphysdata;
     offset         = cloffset;
     physdata_predateoutlierhandling = clphysdata_predateoutlierhandling;
-elseif studynbr == 4
+elseif ismember(study, 'BR')
     load(fullfile(basedir, subfolder, datamatfile), 'brphysdata', 'broffset', 'brphysdata_predateoutlierhandling');
     physdata       = brphysdata;
     offset         = broffset;

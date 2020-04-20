@@ -5,6 +5,14 @@ function [amLabelledInterventions] = amEMMCCreateLabelledInterventions(amIntrDat
 % and upper bounds for predicted exacerbation start in order to create a
 % test data set that can be compared to model results going forward
 
+if ismember(study, 'CL')
+    boundwindow = 10;
+    datacomp    = 50;
+else
+    boundwindow = 9;
+    datacomp    = 60;
+end
+    
 if nmeasures <= 8
     plotsdown   = 4;
     plotsacross = 2;
@@ -167,8 +175,8 @@ while i <= interto
     lb1 = amLabelledInterventions.LowerBound1(i);
     lb2 = amLabelledInterventions.LowerBound2(i);
     
-    if ((amLabelledInterventions.DataWindowCompleteness(i) >= 60) ...
-            && (((ub1 - lb1) + (ub2 - lb2)) <= 9))
+    if ((amLabelledInterventions.DataWindowCompleteness(i) >= datacomp) ...
+            && (((ub1 - lb1) + (ub2 - lb2)) <= boundwindow))
         amLabelledInterventions.IncludeInTestSet(i) = 'Y';
     else
         amLabelledInterventions.IncludeInTestSet(i) = 'N';

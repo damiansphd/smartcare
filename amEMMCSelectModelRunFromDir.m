@@ -1,8 +1,9 @@
-function [modelrun, modelidx, ModelResultFiles] = amEMMCSelectModelRunFromDir(loadtype, lcmode, intrfilt, tgapmode, tstlabelmode)
+function [modelrun, modelidx, ModelResultFiles] = amEMMCSelectModelRunFromDir(study, loadtype, lcmode, intrfilt, tgapmode, tstlabelmode)
 
 % amEMMCSelectModelRunFromDir- allows you to load the saved variables from a
 % historical model run. 
 
+studystring         = sprintf('%s*', study);
 
 modelstring = amEMMCSelectModelVersion();
 modelstring = sprintf('%s*', modelstring);
@@ -38,7 +39,7 @@ end
 
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-modelresultlisting = dir(fullfile(basedir, subfolder, sprintf('*%s%s%s%s%s.mat', modelstring, tgapstring, lblmthdstring, intrstring, lcstring)));
+modelresultlisting = dir(fullfile(basedir, subfolder, sprintf('%s%s%s%s%s%s.mat', studystring, modelstring, tgapstring, lblmthdstring, intrstring, lcstring)));
 ModelResultFiles = cell(size(modelresultlisting,1),1);
 for a = 1:size(ModelResultFiles,1)
     ModelResultFiles{a} = strrep(modelresultlisting(a).name, '.mat', '');

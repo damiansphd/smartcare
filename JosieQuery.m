@@ -6,13 +6,13 @@ subfolder = 'MatlabSavedVariables';
 
 fprintf('Loading raw data for study\n');
 chosentreatgap = selectTreatmentGap();
-[modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('',      '', 'IntrFilt', 'TGap',       '');
+[modelrun, modelidx, models] = amEMMCSelectModelRunFromDir(study, '',      '', 'IntrFilt', 'TGap',       '');
     
 tic
-[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
-[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(study);
+[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, study);
 [cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
-    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
 alignmentmodelinputsfile = sprintf('%salignmentmodelinputs_gap%d.mat', study, chosentreatgap);
 fprintf('Loading alignment model inputs\n');
 load(fullfile(basedir, subfolder, alignmentmodelinputsfile), 'amInterventions','amDatacube', 'measures', 'npatients','ndays', 'nmeasures', 'ninterventions');

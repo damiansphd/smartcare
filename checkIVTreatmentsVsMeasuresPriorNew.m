@@ -5,10 +5,10 @@ basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 
 [studynbr, study, studyfullname] = selectStudy();
-[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
-[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(study);
+[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, study);
 [cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
-    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
 
 % can use this for studies without reasons as the reason is defaulted to PE
 % for them

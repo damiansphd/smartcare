@@ -136,15 +136,15 @@ for n = 1:nlatentcurves
         ax.FontSize = 8;
         ax.FontName = 'Arial';
         ax.TickDir = 'out';
+        
         % comment out/uncomment out one of these depending on whether all measures
         % wanted or just those used for alignment
         %tmpmeasures = measures;
-        tmpmeasures = measures(logical(measures.Mask), :);
+        tmpmeasures = sortMeasuresForPaper(study, measures(logical(measures.Mask), :));
         tmpnmeasures = size(tmpmeasures, 1);
 
-        % add legend text cell array
-        tmp = sortMeasuresForPaper(study, tmpmeasures);
-        legendtext = tmp.DisplayName;
+         % add legend text cell array
+        legendtext = tmpmeasures.DisplayName;
         for m = 1:tmpnmeasures
             legendtext{m} = formatDisplayMeasure(legendtext{m});
         end
@@ -251,19 +251,27 @@ for row = 1:size(lcexamples, 1)
         ax.FontSize = 8;
         ax.FontName = fontname;
         ax.TickDir = 'out';
+        
         % comment out/uncomment out one of these depending on whether all measures
         % wanted or just those used for alignment
         %tmpmeasures = measures;
-        tmpmeasures = measures(logical(measures.Mask), :);
+        tmpmeasures = sortMeasuresForPaper(study, measures(logical(measures.Mask), :));
         tmpnmeasures = size(tmpmeasures, 1);
 
-        % add legend text cell array
+         % add legend text cell array
         legendtext = tmpmeasures.DisplayName;
         for m = 1:tmpnmeasures
             legendtext{m} = formatDisplayMeasure(legendtext{m});
         end
-        pridx = ismember(tmpmeasures.DisplayName, {'PulseRate'});
-        legendtext{pridx} = sprintf('%s %s', legendtext{pridx}, '(Inverted)');
+        pridx = ismember(tmpmeasures.DisplayName, invmeasarray);
+        if sum(pridx) > 0
+            % need to edit this now there are multiple inverted measures
+            for i = 1:size(legendtext, 1)
+                if pridx(i) == 1
+                    legendtext{i} = sprintf('%s %s', legendtext{i}, '(Inverted)');
+                end
+            end
+        end
         
         hold on;
         plotSuperimposedMeasuresB4IntrForPaper(ax, tmp_amnormcubesingleintr, tmp_amnormcubesingleintrsmth, xl, yl, ...

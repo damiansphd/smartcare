@@ -17,14 +17,26 @@ modelpreds = amInterventions.Pred(testidx);
 amintrtst  = amInterventions(testidx, :);
         
 matchidx   = (modelpreds >= (testset.IVScaledDateNum + testset.LowerBound1) & modelpreds <= (testset.IVScaledDateNum + testset.UpperBound1)) | ...
-                     (modelpreds >= (testset.IVScaledDateNum + testset.LowerBound2) & modelpreds <= (testset.IVScaledDateNum + testset.UpperBound2));
+             (modelpreds >= (testset.IVScaledDateNum + testset.LowerBound2) & modelpreds <= (testset.IVScaledDateNum + testset.UpperBound2));
         
 dist = 0;
+distArr = zeros(1,4);
+
 for i = 1:size(testset,1)
     if ~matchidx(i)
-        dist1 = min(abs(testset.IVScaledDateNum(i) + testset.LowerBound1(i) - modelpreds(i)), abs(testset.IVScaledDateNum(i) + testset.LowerBound2(i) - modelpreds(i)));
-        dist2 = min(abs(testset.IVScaledDateNum(i) + testset.UpperBound1(i) - modelpreds(i)), abs(testset.IVScaledDateNum(i) + testset.UpperBound2(i) - modelpreds(i)));
-        dist = dist + min(dist1, dist2);
+        %dist1 = min(abs(testset.IVScaledDateNum(i) + testset.LowerBound1(i) - modelpreds(i)), abs(testset.IVScaledDateNum(i) + testset.LowerBound2(i) - modelpreds(i)));
+        %dist2 = min(abs(testset.IVScaledDateNum(i) + testset.UpperBound1(i) - modelpreds(i)), abs(testset.IVScaledDateNum(i) + testset.UpperBound2(i) - modelpreds(i)));
+        %dist = dist + min(dist1, dist2);
+        distArr(1) = abs(testset.IVScaledDateNum(i) + testset.LowerBound1(i) - modelpreds(i));
+        distArr(2) = abs(testset.IVScaledDateNum(i) + testset.UpperBound1(i) - modelpreds(i));
+        if testset.LowerBound2(i) ~= 0
+            distArr(3) = abs(testset.IVScaledDateNum(i) + testset.LowerBound2(i) - modelpreds(i));
+            distArr(4) = abs(testset.IVScaledDateNum(i) + testset.UpperBound2(i) - modelpreds(i));
+        else
+            distArr(3) = 100;
+            distArr(4) = 100;
+        end
+        dist = dist + min(distArr);
     end
 end
 
@@ -39,9 +51,38 @@ mkdir(strcat(basedir, plotsubfolder));
 
 plotsdown = 9;
 if nlatentcurves == 1
-    plotsacross = 5;
-    mpos = [ 1 2 6 7 ; 3 4 8 9 ; 11 12 16 17 ; 13 14 18 19 ; 21 22 26 27 ; 23 24 28 29 ; 31 32 36 37 ; 33 34 38 39];
-    hpos(1, :) = [ 5 ; 10 ; 15 ; 20 ; 25 ; 30 ; 35 ; 40 ; 45 ; 44 ; 43 ; 42 ; 41 ];
+    if nmeasures <= 8
+        plotsdown = 9;
+        plotsacross = 5;
+        mpos = [ 1  2  6  7 ;  3  4  8  9 ; 
+                11 12 16 17 ; 13 14 18 19 ; 
+                21 22 26 27 ; 23 24 28 29 ; 
+                31 32 36 37 ; 33 34 38 39 ];
+        hpos(1,:) = [ 5 ; 10 ; 
+                     15 ; 20 ; 
+                     25 ; 30 ; 
+                     35 ; 40 ; 
+                     45      ];
+    elseif nmeasures > 8 && nmeasures <= 18
+        plotsdown = 14;
+        plotsacross = 8;
+        mpos = [ 1  2  9 10 ;  3  4 11 12 ;  5  6 13 14 ; 
+                17 18 25 26 ; 19 20 27 28 ; 21 22 29 30 ; 
+                33 34 41 42 ; 35 36 43 44 ; 37 38 45 46 ; 
+                49 50 57 58 ; 51 52 59 60 ; 53 54 61 62 ;
+                65 66 73 74 ; 67 68 75 76 ; 69 70 77 78 ; 
+                81 82 89 90 ; 83 84 91 92 ; 85 86 93 94 ];
+        hpos(1,:) = [  7 ;  8 ; 15 ; 
+                      23 ; 24 ; 31 ;  
+                      39 ; 40 ; 47 ; 
+                      55 ; 56 ; 63 ; 
+                      71 ; 72 ; 79 ;
+                      87 ; 88 ; 95 ;
+                      103          ];
+    end
+    %plotsacross = 5;
+    %mpos = [ 1 2 6 7 ; 3 4 8 9 ; 11 12 16 17 ; 13 14 18 19 ; 21 22 26 27 ; 23 24 28 29 ; 31 32 36 37 ; 33 34 38 39];
+    %hpos(1, :) = [ 5 ; 10 ; 15 ; 20 ; 25 ; 30 ; 35 ; 40 ; 45 ; 44 ; 43 ; 42 ; 41 ];
 elseif nlatentcurves == 2
     plotsacross = 6;
     mpos       = [ 1 2 7 8 ; 3 4 9 10 ; 13 14 19 20 ; 15 16 21 22 ; 25 26 31 32 ; 27 28 33 34 ; 37 38 43 44 ; 39 40 45 46 ];

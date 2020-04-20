@@ -68,12 +68,14 @@ if isequal(runfunction,'')
     return;
 end
 
+[~, studytmp, ~] = selectStudy();
+
 if ismember(runfunction, [10, 26])
-    [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('', 'LCSet', 'IntrFilt', 'TGap', 'TstLbl');
+    [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir(studytmp, '', 'LCSet', 'IntrFilt', 'TGap', 'TstLbl');
 elseif ismember(runfunction, [28, 30])
-    [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('', 'LCSet', 'IntrFilt', 'TGap',       '');
+    [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir(studytmp, '', 'LCSet', 'IntrFilt', 'TGap',       '');
 else
-    [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('',      '', 'IntrFilt', 'TGap',       '');
+    [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir(studytmp, '',      '', 'IntrFilt', 'TGap',       '');
 end
 
 basedir = setBaseDir();
@@ -233,7 +235,7 @@ elseif runfunction == 7
     fprintf('\n');
     fprintf('Select second model to compare\n');
     fprintf('\n');
-    [modelrun2, modelidx2] = amEMMCSelectModelRunFromDir('', '', 'IntrFilt', 'TGap', '');
+    [modelrun2, modelidx2] = amEMMCSelectModelRunFromDir(studytmp, '', '', 'IntrFilt', 'TGap', '');
     amEMMCCompareModelRuns(modelrun, modelidx, modelrun2, modelidx2);
 elseif runfunction == 8
     fprintf('Comparing results to the labelled test data\n');
@@ -307,31 +309,35 @@ elseif runfunction == 19
     fprintf('Loading Treatment and Measures Prior info\n');
     basedir = setBaseDir();
     subfolder = 'MatlabSavedVariables';
+    fprintf('Loading clinical microbiology, antibiotic, admissions, and CRP data\n');
     load(fullfile(basedir, subfolder, ivandmeasuresfile), 'ivandmeasurestable');
-    if ismember(study, 'SC')
-        clinicalmatfile   = 'clinicaldata.mat';
-        microbiologytable = 'cdMicrobiology';
-        abtable           = 'cdAntibiotics';
-        admtable          = 'cdAdmissions';
-        crptable          = 'cdCRP';
-    elseif ismember(study, 'TM')
-        clinicalmatfile   = 'telemedclinicaldata.mat';
-        microbiologytable = 'tmMicrobiology';
-        abtable           = 'tmAntibiotics';
-        admtable          = 'tmAdmissions';
-        crptable          = 'tmCRP';
-    else
-        fprintf('Invalid study\n');
-        return;
-    end
-    fprintf('Loading clinical microbiology and CRP data\n');
-    load(fullfile(basedir, subfolder, clinicalmatfile), microbiologytable, abtable, admtable, crptable);
-    if ismember(study, 'TM')
-        cdMicrobiology = tmMicrobiology;
-        cdAntibiotics  = tmAntibiotics;
-        cdAdmissions   = tmAdmissions;
-        cdCRP          = tmCRP;
-    end
+    [~, clinicalmatfile, ~] = getRawDataFilenamesForStudy(study);
+    [~, cdMicrobiology, cdAntibiotics, cdAdmissions, ~, cdCRP, ~, ~, ~, ~] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
+
+    %if ismember(study, 'SC')
+    %    clinicalmatfile   = 'clinicaldata.mat';
+    %    microbiologytable = 'cdMicrobiology';
+    %    abtable           = 'cdAntibiotics';
+    %    admtable          = 'cdAdmissions';
+    %    crptable          = 'cdCRP';
+    %elseif ismember(study, 'TM')
+    %    clinicalmatfile   = 'telemedclinicaldata.mat';
+    %    microbiologytable = 'tmMicrobiology';
+    %    abtable           = 'tmAntibiotics';
+    %    admtable          = 'tmAdmissions';
+    %    crptable          = 'tmCRP';
+    %else
+    %    fprintf('Invalid study\n');
+    %    return;
+    %end
+    
+    %load(fullfile(basedir, subfolder, clinicalmatfile), microbiologytable, abtable, admtable, crptable);
+    %if ismember(study, 'TM')
+    %    cdMicrobiology = tmMicrobiology;
+    %    cdAntibiotics  = tmAntibiotics;
+    %    cdAdmissions   = tmAdmissions;
+    %    cdCRP          = tmCRP;
+    %end
     fprintf('Plotting Variables vs latent curve allocation\n');
     amEMMCPlotVariablesVsLatentCurveSet(amInterventions, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
         cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves);
@@ -361,7 +367,7 @@ elseif runfunction == 23
     fprintf('\n');
     fprintf('Select second model to compare\n');
     fprintf('\n');
-    [modelrun2, modelidx2] = amEMMCSelectModelRunFromDir('', '', 'IntrFilt', 'TGap', '');
+    [modelrun2, modelidx2] = amEMMCSelectModelRunFromDir(studytmp, '', '', 'IntrFilt', 'TGap', '');
     amEMMCCompareModelRunsByLCSets(modelrun, modelidx, modelrun2, modelidx2);
 elseif runfunction == 24
     run_type = 'Best Alignment';

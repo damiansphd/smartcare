@@ -87,6 +87,15 @@ elseif measuresmask == 15
     idx = ismember(measures.DisplayName, {'Appetite', 'Cough', 'LungFunction', 'O2Saturation', 'PulseRate', ...
         'SleepActivity', 'SputumVolume', 'Temperature', 'Tiredness', 'Weight', 'Wellness'});
     measures.Mask(idx) = 1;
+elseif measuresmask == 16
+    % project climb
+    idx = ismember(measures.DisplayName, {'SputumVolume'});
+    measures.Mask(idx) = 1;
+elseif measuresmask == 17
+    % project climb
+    idx = ismember(measures.DisplayName, {'Appetite', 'Cough', 'O2Saturation', 'PulseRate', ...
+        'SleepActivity', 'SputumVolume', 'Temperature', 'Tiredness', 'Weight', 'Wellness'});
+    measures.Mask(idx) = 1;
 else
     % shouldn't ever get here - but default to just cough if it ever
     % happens

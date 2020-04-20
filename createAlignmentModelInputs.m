@@ -5,10 +5,10 @@ chosentreatgap = selectTreatmentGap();
 
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
-[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(study);
+[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, study);
 [cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
-    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
 
 tic
 fprintf('Loading datademographics by patient\n');

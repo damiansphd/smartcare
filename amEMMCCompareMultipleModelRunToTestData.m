@@ -62,7 +62,7 @@ for midx = modelidx:size(models,1)
                 vshiftmax = 0.3;
             end
         end
-        temp = hsv;
+        temp = hsv(64);
         brightness = .9;
         colors(1,:) = temp(20,:) .* brightness;
         
@@ -89,15 +89,26 @@ for midx = modelidx:size(models,1)
         fprintf('%2d of %2d results match labelled test data, ', sum(matchidx), testsetsize); 
         rowtoadd.ModelRun = midx;
         
+        distArr = zeros(1,4);
         for i = 1:size(testset,1)
             rowtoadd.TestSetNbr = testset.InterNbr(i);
             rowtoadd.LatentCurve = modellcs(i);
             if matchidx(i)
                 rowtoadd.Count = 0;
             else
-                dist1 = min(abs(testset.IVScaledDateNum(i) + testset.LowerBound1(i) - modelpreds(i)), abs(testset.IVScaledDateNum(i) + testset.LowerBound2(i) - modelpreds(i)));
-                dist2 = min(abs(testset.IVScaledDateNum(i) + testset.UpperBound1(i) - modelpreds(i)), abs(testset.IVScaledDateNum(i) + testset.UpperBound2(i) - modelpreds(i)));
-                dist = min(dist1, dist2);
+                %dist1 = min(abs(testset.IVScaledDateNum(i) + testset.LowerBound1(i) - modelpreds(i)), abs(testset.IVScaledDateNum(i) + testset.LowerBound2(i) - modelpreds(i)));
+                %dist2 = min(abs(testset.IVScaledDateNum(i) + testset.UpperBound1(i) - modelpreds(i)), abs(testset.IVScaledDateNum(i) + testset.UpperBound2(i) - modelpreds(i)));
+                %dist = min(dist1, dist2);
+                distArr(1) = abs(testset.IVScaledDateNum(i) + testset.LowerBound1(i) - modelpreds(i));
+                distArr(2) = abs(testset.IVScaledDateNum(i) + testset.UpperBound1(i) - modelpreds(i));
+                if testset.LowerBound2(i) ~= 0
+                    distArr(3) = abs(testset.IVScaledDateNum(i) + testset.LowerBound2(i) - modelpreds(i));
+                    distArr(4) = abs(testset.IVScaledDateNum(i) + testset.UpperBound2(i) - modelpreds(i));
+                else
+                    distArr(3) = 100;
+                    distArr(4) = 100;
+                end
+                dist = min(distArr);
                 if dist > (max_offset - 1)
                     dist = max_offset - 1;
                 end

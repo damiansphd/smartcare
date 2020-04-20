@@ -51,7 +51,9 @@ end
 % 1) Robust Max FEV1
 mfev1idx  = measures.Index(ismember(measures.DisplayName, 'LungFunction'));
 fev1max  = pmPatientMeasStats(pmPatientMeasStats.MeasureIndex == mfev1idx, {'PatientNbr', 'Study', 'ID', 'RobustMax'});
-lc = innerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'LeftVariables', {'SmartCareID', 'IVStartDate', 'IVScaledDateNum', 'LatentCurve'}, 'RightVariables', {'RobustMax'});
+%lc = innerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'LeftVariables', {'SmartCareID', 'IVStartDate', 'IVScaledDateNum', 'LatentCurve'}, 'RightVariables', {'RobustMax'});
+lc = outerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'LeftVariables', {'SmartCareID', 'IVStartDate', 'IVScaledDateNum', 'LatentCurve'}, 'RightVariables', {'RobustMax'});
+lc(isnan(lc.SmartCareID), :) = [];
 scattervardata(:, 1) = lc.RobustMax;
 
 % 2 & 3) BMI, Age

@@ -50,7 +50,12 @@ for n = 1:nlatentcurves
         elseif shiftmode == 3
             vertshift = meancurvemean(n, (align_wind + max_offset + ex_start(n)), m);
         elseif shiftmode == 4
-            vertshift = mean(meancurvemean(n, (align_wind + max_offset + ex_start(n) - meanwindow):(align_wind + max_offset + ex_start(n)), m));
+            if (align_wind + max_offset + ex_start(n) - meanwindow) < 1
+                shiftfrom = 1;
+            else
+                shiftfrom = (align_wind + max_offset + ex_start(n) - meanwindow);
+            end 
+            vertshift = mean(meancurvemean(n, shiftfrom:(align_wind + max_offset + ex_start(n)), m));
         end
         meancurvemean(n, :, m) = meancurvemean(n, :, m) - vertshift;
         fprintf('For curve %d and measure %13s, vertical shift is %.3f\n', n, measures.DisplayName{m}, -vertshift);
@@ -149,36 +154,60 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
             txt = 'Example';
         end
         if type == 1 || type == 10
-            annotation(sp(i), 'textbox',  ...
-                            'String', sprintf('%s 1', txt), ...
-                            'Interpreter', 'tex', ...
-                            'Units', 'normalized', ...
-                            'Position', [0.28, 0, 0.1, 1], ...
-                            'HorizontalAlignment', 'center', ...
-                            'VerticalAlignment', 'bottom', ...
-                            'LineStyle', 'none', ...
-                            'FontName', fontname, ...
-                            'FontSize', labelfontsize);
-            annotation(sp(i), 'textbox',  ...
-                            'String', sprintf('%s 2', txt), ...
-                            'Interpreter', 'tex', ...
-                            'Units', 'normalized', ...
-                            'Position', [0.47, 0, 0.1, 1], ...
-                            'HorizontalAlignment', 'center', ...
-                            'VerticalAlignment', 'bottom', ...
-                            'LineStyle', 'none', ...
-                            'FontName', fontname, ...
-                            'FontSize', labelfontsize);
-            annotation(sp(i), 'textbox',  ...
-                            'String', sprintf('%s 3', txt), ...
-                            'Interpreter', 'tex', ...
-                            'Units', 'normalized', ...
-                            'Position', [0.65, 0, 0.1, 1], ...
-                            'HorizontalAlignment', 'center', ...
-                            'VerticalAlignment', 'bottom', ...
-                            'LineStyle', 'none', ...
-                            'FontName', fontname, ...
-                            'FontSize', labelfontsize);
+            if nlatentcurves == 3
+                annotation(sp(i), 'textbox',  ...
+                                'String', sprintf('%s 1', txt), ...
+                                'Interpreter', 'tex', ...
+                                'Units', 'normalized', ...
+                                'Position', [0.28, 0, 0.1, 1], ...
+                                'HorizontalAlignment', 'center', ...
+                                'VerticalAlignment', 'bottom', ...
+                                'LineStyle', 'none', ...
+                                'FontName', fontname, ...
+                                'FontSize', labelfontsize);
+                annotation(sp(i), 'textbox',  ...
+                                'String', sprintf('%s 2', txt), ...
+                                'Interpreter', 'tex', ...
+                                'Units', 'normalized', ...
+                                'Position', [0.47, 0, 0.1, 1], ...
+                                'HorizontalAlignment', 'center', ...
+                                'VerticalAlignment', 'bottom', ...
+                                'LineStyle', 'none', ...
+                                'FontName', fontname, ...
+                                'FontSize', labelfontsize);
+                annotation(sp(i), 'textbox',  ...
+                                'String', sprintf('%s 3', txt), ...
+                                'Interpreter', 'tex', ...
+                                'Units', 'normalized', ...
+                                'Position', [0.65, 0, 0.1, 1], ...
+                                'HorizontalAlignment', 'center', ...
+                                'VerticalAlignment', 'bottom', ...
+                                'LineStyle', 'none', ...
+                                'FontName', fontname, ...
+                                'FontSize', labelfontsize);
+            elseif nlatentcurves == 2
+                annotation(sp(i), 'textbox',  ...
+                                'String', sprintf('%s 1', txt), ...
+                                'Interpreter', 'tex', ...
+                                'Units', 'normalized', ...
+                                'Position', [0.31, 0, 0.1, 1], ...
+                                'HorizontalAlignment', 'center', ...
+                                'VerticalAlignment', 'bottom', ...
+                                'LineStyle', 'none', ...
+                                'FontName', fontname, ...
+                                'FontSize', labelfontsize);
+                annotation(sp(i), 'textbox',  ...
+                                'String', sprintf('%s 2', txt), ...
+                                'Interpreter', 'tex', ...
+                                'Units', 'normalized', ...
+                                'Position', [0.57, 0, 0.1, 1], ...
+                                'HorizontalAlignment', 'center', ...
+                                'VerticalAlignment', 'bottom', ...
+                                'LineStyle', 'none', ...
+                                'FontName', fontname, ...
+                                'FontSize', labelfontsize);
+                
+            end
         end
     elseif type == 2 || type == 3 || type == 4
         % label
@@ -245,9 +274,9 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
                     end
                     pridx = ismember(tmpmeasures.DisplayName, invmeasarray);
                     if sum(pridx) > 0
-                        for i = 1:size(legendtext, 1)
-                            if pridx(i) == 1
-                                legendtext{i} = sprintf('%s %s', legendtext{i}, '(Inverted)');
+                        for a = 1:size(legendtext, 1)
+                            if pridx(a) == 1
+                                legendtext{a} = sprintf('%s %s', legendtext{i}, '(Inverted)');
                             end
                         end
                     end
@@ -288,121 +317,128 @@ for i = 1:(ntitles + nlcrow + nmeasrows + nlabels)
             end
         end
     elseif type == 5 || type == 7
-        % now plot examples for each latent curve set
-        sp(i) = uipanel('Parent', p, ...
-                        'BorderType', 'none', ...
-                        'BackgroundColor', 'white', ...
-                        'OuterPosition', [labelwidth, currhght, plotwidth, typehght(type)]);
-        
-        lcexrow = lcexamples(lcsort);
+        if (examplemode ~= 0)
+            % now plot examples for each latent curve set
+            sp(i) = uipanel('Parent', p, ...
+                            'BorderType', 'none', ...
+                            'BackgroundColor', 'white', ...
+                            'OuterPosition', [labelwidth, currhght, plotwidth, typehght(type)]);
 
-        for n = 1:nlatentcurves
-            a = lcexrow(n);
-            amnormcubesingleintr = amIntrNormcube(a, :, tmpsubsetmeasures.Index(currmeas));
-            aminterventionsrow   = amInterventions(a, :);
-            lc = aminterventionsrow.LatentCurve;
-            if lc ~= lcsort(n)
-                fprintf('**** Example is from a different sub-population than the latent curve ****');
-                return;
-            end
-            amnormcubesingleintrsmth = amnormcubesingleintr;
-            tmp_ex_start = ex_start(lc);
-            tmp_offset   = aminterventionsrow.Offset;
+            lcexrow = lcexamples(lcsort);
 
-
-            % Preprocess the measures :-
-            % 1) invert pulse rate
-            % 2) apply a vertical shift (using methodology selected)
-            pridx = find(ismember(tmpsubsetmeasures.DisplayName, invmeasarray));
-            if currmeas == pridx
-                amnormcubesingleintr(1, :, 1) = amnormcubesingleintr(1, :, 1) * -1;
-            end
-            actx = find(~isnan(amnormcubesingleintr(1, :, 1)));
-            acty = amnormcubesingleintr(1, ~isnan(amnormcubesingleintr(1, :, 1)), 1);
-            fullx = (1:size(amnormcubesingleintr(1, :, 1), 2));
-            amnormcubesingleintr(1, :, 1) = interp1(actx, acty, fullx, 'linear');
-            amnormcubesingleintrsmth(1, :, 1) = movmean(amnormcubesingleintr(1, :, 1), smoothwdth, 'omitnan');
-
-            if all(isnan(amnormcubesingleintrsmth(1, 1:(align_wind + max_offset + tmp_ex_start + tmp_offset), 1)))
-                    vertshift = 0;
-            else
-                if shiftmode == 1
-                    vertshift = mean(amnormcubesingleintrsmth(1, 1:(align_wind + max_offset + tmp_ex_start + tmp_offset), 1), 'omitnan');
-                elseif shiftmode == 2
-                    vertshift = max(amnormcubesingleintrsmth(1, 1:(align_wind + max_offset + tmp_ex_start + tmp_offset), 1), 'omitnan');
-                elseif shiftmode == 3
-                    vertshift = amnormcubesingleintrsmth(1, find(~isnan(amnormcubesingleintrsmth(1, 1:(align_wind + max_offset + tmp_ex_start + tmp_offset), 1)), 1, 'last'), 1);
-                elseif shiftmode == 4
-                    vertshift = mean(amnormcubesingleintrsmth(1, (align_wind + max_offset + tmp_ex_start + tmp_offset - meanwindow):(align_wind + max_offset + tmp_ex_start + tmp_offset), 1), 'omitnan');
+            for n = 1:nlatentcurves
+                a = lcexrow(n);
+                amnormcubesingleintr = amIntrNormcube(a, :, tmpsubsetmeasures.Index(currmeas));
+                aminterventionsrow   = amInterventions(a, :);
+                lc = aminterventionsrow.LatentCurve;
+                if lc ~= lcsort(n)
+                    fprintf('**** Example is from a different sub-population than the latent curve ****');
+                    return;
                 end
+                amnormcubesingleintrsmth = amnormcubesingleintr;
+                tmp_ex_start = ex_start(lc);
+                tmp_offset   = aminterventionsrow.Offset;
+
+
+                % Preprocess the measures :-
+                % 1) invert pulse rate
+                % 2) apply a vertical shift (using methodology selected)
+                pridx = find(ismember(tmpsubsetmeasures.DisplayName, invmeasarray));
+                if currmeas == pridx
+                    amnormcubesingleintr(1, :, 1) = amnormcubesingleintr(1, :, 1) * -1;
+                end
+                actx = find(~isnan(amnormcubesingleintr(1, :, 1)));
+                acty = amnormcubesingleintr(1, ~isnan(amnormcubesingleintr(1, :, 1)), 1);
+                fullx = (1:size(amnormcubesingleintr(1, :, 1), 2));
+                amnormcubesingleintr(1, :, 1) = interp1(actx, acty, fullx, 'linear');
+                amnormcubesingleintrsmth(1, :, 1) = movmean(amnormcubesingleintr(1, :, 1), smoothwdth, 'omitnan');
+
+                if all(isnan(amnormcubesingleintrsmth(1, 1:(align_wind + max_offset + tmp_ex_start + tmp_offset), 1)))
+                        vertshift = 0;
+                else
+                    if shiftmode == 1
+                        vertshift = mean(amnormcubesingleintrsmth(1, 1:(align_wind + max_offset + tmp_ex_start + tmp_offset), 1), 'omitnan');
+                    elseif shiftmode == 2
+                        vertshift = max(amnormcubesingleintrsmth(1, 1:(align_wind + max_offset + tmp_ex_start + tmp_offset), 1), 'omitnan');
+                    elseif shiftmode == 3
+                        vertshift = amnormcubesingleintrsmth(1, find(~isnan(amnormcubesingleintrsmth(1, 1:(align_wind + max_offset + tmp_ex_start + tmp_offset), 1)), 1, 'last'), 1);
+                    elseif shiftmode == 4
+                        if (align_wind + max_offset + tmp_ex_start + tmp_offset - meanwindow) < 1
+                            shiftfrom = 1;
+                        else
+                            shiftfrom = (align_wind + max_offset + tmp_ex_start + tmp_offset - meanwindow);
+                        end 
+                        vertshift = mean(amnormcubesingleintrsmth(1, shiftfrom:(align_wind + max_offset + tmp_ex_start + tmp_offset), 1), 'omitnan');
+                    end
+                end
+                amnormcubesingleintr(1, :, 1) = amnormcubesingleintr(1, :, 1) - vertshift;
+                amnormcubesingleintrsmth(1, :, 1) = amnormcubesingleintrsmth(1, :, 1) - vertshift;
+                fprintf('For intervention %3d, measure %13s, vertical shift is %.3f\n', a, tmpsubsetmeasures.DisplayName{1}, -vertshift);
+
+                xfrom = -1 * (align_wind + max_offset - 1 + ex_start(lc));
+                xto   = -1 * (1 + ex_start(lc));
+                xl = [xfrom, xto];
+
+                %yl = [min(min(amnormcubesingleintrsmth(1, :, logical(measures.Mask)))) ...
+                %      max(max(amnormcubesingleintrsmth(1, :, logical(measures.Mask))))];
+                yl = [-3, 2];
+
+                panels = (((n - 1) * (plotpanels + paddingpanels)) + 1): (((n - 1) * (plotpanels + paddingpanels)) + plotpanels);
+
+                % plot all measures superimposed
+                ax = subplot(1, panelsacross, panels, 'Parent', sp(i));
+                ax.FontSize = axisfontsize;
+                ax.FontName = fontname;
+
+                hold on;
+                [smcolour, rwcolour] = getColourForMeasure(tmpsubsetmeasures.DisplayName{currmeas});
+                lstyle = '-';
+                lwidth = 1.5;
+                days = xl(1):xl(2);
+                dfrom = 1; 
+                dto   = max_offset + align_wind - 1 - tmp_offset;
+                mfrom = 1 + tmp_offset; 
+                mto   = max_offset + align_wind - 1;
+                plot(ax, days(dfrom:dto), amnormcubesingleintr(1, mfrom:mto, 1), ...
+                    'Color', rwcolour, ...
+                    'LineStyle', '-', ...
+                    'Marker', 'o', ...
+                    'LineWidth',1, ...
+                    'MarkerSize',2, ...
+                    'MarkerEdgeColor', rwcolour, ...
+                    'MarkerFaceColor', rwcolour);
+
+                plot(ax, days(dfrom:dto), amnormcubesingleintrsmth(1, mfrom:mto, 1), ...
+                    'Color', smcolour, ...
+                    'LineStyle', lstyle, ...
+                    'Marker', 'none', ...
+                    'LineWidth', lwidth);
+                if tmp_ex_start ~= 0
+                    [~, ~] = plotVerticalLine(ax, 0, xl, yl, 'black', '-', 0.5); % plot ex_start
+                end
+
+                mmean = 0;
+                mstd = 1;
+
+                plotFillArea(ax, xl(1), xl(2), ...
+                    mmean - (0.5 * mstd), mmean + (0.5 * mstd), [0.4, 0.4, 0.4], '0.2', 'none');
+                line(xl, [mmean mmean] , 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', .5)
+
+                hold off;
+                if currmeas == tmpnsubsetmeasures
+                    xlabel(ax, 'Days from exacerbation start');
+                else
+                    ax.XTickLabel = '';
+                    ax.XColor = 'white';
+                end
+                if n ~= 1
+                    ax.YTickLabel = '';
+                    ax.YColor = 'white';
+                end
+                ylim(yl);
             end
-            amnormcubesingleintr(1, :, 1) = amnormcubesingleintr(1, :, 1) - vertshift;
-            amnormcubesingleintrsmth(1, :, 1) = amnormcubesingleintrsmth(1, :, 1) - vertshift;
-            fprintf('For intervention %3d, measure %13s, vertical shift is %.3f\n', a, tmpsubsetmeasures.DisplayName{1}, -vertshift);
-
-            xfrom = -1 * (align_wind + max_offset - 1 + ex_start(lc));
-            xto   = -1 * (1 + ex_start(lc));
-            xl = [xfrom, xto];
-
-            %yl = [min(min(amnormcubesingleintrsmth(1, :, logical(measures.Mask)))) ...
-            %      max(max(amnormcubesingleintrsmth(1, :, logical(measures.Mask))))];
-            yl = [-3, 2];
-            
-            panels = (((n - 1) * (plotpanels + paddingpanels)) + 1): (((n - 1) * (plotpanels + paddingpanels)) + plotpanels);
-
-            % plot all measures superimposed
-            ax = subplot(1, panelsacross, panels, 'Parent', sp(i));
-            ax.FontSize = axisfontsize;
-            ax.FontName = fontname;
-
-            hold on;
-            [smcolour, rwcolour] = getColourForMeasure(tmpsubsetmeasures.DisplayName{currmeas});
-            lstyle = '-';
-            lwidth = 1.5;
-            days = xl(1):xl(2);
-            dfrom = 1; 
-            dto   = max_offset + align_wind - 1 - tmp_offset;
-            mfrom = 1 + tmp_offset; 
-            mto   = max_offset + align_wind - 1;
-            plot(ax, days(dfrom:dto), amnormcubesingleintr(1, mfrom:mto, 1), ...
-                'Color', rwcolour, ...
-                'LineStyle', '-', ...
-                'Marker', 'o', ...
-                'LineWidth',1, ...
-                'MarkerSize',2, ...
-                'MarkerEdgeColor', rwcolour, ...
-                'MarkerFaceColor', rwcolour);
-
-            plot(ax, days(dfrom:dto), amnormcubesingleintrsmth(1, mfrom:mto, 1), ...
-                'Color', smcolour, ...
-                'LineStyle', lstyle, ...
-                'Marker', 'none', ...
-                'LineWidth', lwidth);
-            if tmp_ex_start ~= 0
-                [~, ~] = plotVerticalLine(ax, 0, xl, yl, 'black', '-', 0.5); % plot ex_start
-            end
-            
-            mmean = 0;
-            mstd = 1;
-           
-            plotFillArea(ax, xl(1), xl(2), ...
-                mmean - (0.5 * mstd), mmean + (0.5 * mstd), [0.4, 0.4, 0.4], '0.2', 'none');
-            line(xl, [mmean mmean] , 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', .5)
-
-            hold off;
-            if currmeas == tmpnsubsetmeasures
-                xlabel(ax, 'Days from exacerbation start');
-            else
-                ax.XTickLabel = '';
-                ax.XColor = 'white';
-            end
-            if n ~= 1
-                ax.YTickLabel = '';
-                ax.YColor = 'white';
-            end
-            ylim(yl);
+            currmeas = currmeas + 1;
         end
-        currmeas = currmeas + 1;
     end
 end
 

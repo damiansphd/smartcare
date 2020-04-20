@@ -3,12 +3,12 @@ clear; close all; clc;
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 [studynbr1, study1, studyfullname1] = selectStudy();
-[modelrun1, modelidx1, models1] = amEMMCSelectModelRunFromDir('',      '', 'IntrFilt', 'TGap',       '');
+[modelrun1, modelidx1, models1] = amEMMCSelectModelRunFromDir(study1, '',      '', 'IntrFilt', 'TGap',       '');
 
 fprintf('\n');
 
 [studynbr2, study2, studyfullname2] = selectStudy();
-[modelrun2, modelidx2, models2] = amEMMCSelectModelRunFromDir('',      '', 'IntrFilt', 'TGap',       '');
+[modelrun2, modelidx2, models2] = amEMMCSelectModelRunFromDir(study2, '',      '', 'IntrFilt', 'TGap',       '');
 
 [meancurvemean1, meancurvecount1, measures1, min_offset1, max_offset1, ...
     align_wind1, nmeasures1, ex_start1, countthreshold1] = loadModelRunVariables(basedir, subfolder, modelrun1);
@@ -31,6 +31,12 @@ plottitle   = sprintf('%svs%s Typical Profile Comparison %s', study1, study2, sh
 if ismember(study1, {'SC'}) && ismember(study2, {'CL'})
     commonmeas = {'Cough'; 'LungFunction'; 'O2Saturation'; 'PulseRate'; 'SleepActivity'; 'Wellness'};
     ncommonmeas = size(commonmeas, 1);
+elseif ismember(study1, {'CL'}) && ismember(study2, {'CL'})
+    commonmeas = {'Activity'; 'Appetite'; 'Breathlessness'; 'Cough'; 'LungFunction'; ...
+                  'O2Saturation'; 'PulseRate'; 'RespiratoryRate'; 'SleepActivity'; ...
+                  'SleepDisturbance'; 'SputumVolume'; 'Temperature'; 'Tiredness'; ...
+                  'Weight';'Wellness'};
+    ncommonmeas = size(commonmeas, 1);
 end
 
 meancurvemean1(1, :, pridx1) = meancurvemean1(1, :, pridx1) * -1;
@@ -51,7 +57,13 @@ for m = 1:nmeasures2
     fprintf('For curve %d and measure %13s, vertical shift is %.3f\n', 1, measures2.DisplayName{m}, -vertshift2);
 end
 
-plotsacross = 3;
+if ncommonmeas <= 9
+    plotsacross = 3;
+elseif ncommonmeas <= 16
+    plotsacross = 4;
+else
+    plotsacross = 5;
+end
 plotsdown   = ceil(ncommonmeas/plotsacross);
 pghght = 11;
 pgwdth = 8.5;

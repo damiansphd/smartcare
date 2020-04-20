@@ -8,7 +8,7 @@ if ismember(study, {'SC'})
 elseif ismember(study, {'BR'})
     invmeasarray = {'PulseRate'};
 elseif ismember(study, {'CL'})
-    invmeasarray = {'PulseRate', 'RespiratoryRate', 'SleepDisturbance'};
+    invmeasarray = {'PulseRate', 'RespiratoryRate', 'SleepDisturbance', 'Temperature'};
 else
     invmeasarray = {'PulseRate'};
 end

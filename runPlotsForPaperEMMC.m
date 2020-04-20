@@ -39,10 +39,10 @@ if runfunction == 0 || runfunction == 1 || runfunction == 2 || runfunction == 6 
     fprintf('Loading raw data for study\n');
     chosentreatgap = selectTreatmentGap();
     tic
-    [datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(studynbr, study);
-    [physdata, offset, physdata_predateoutlierhandling] = loadAndHarmoniseMeasVars(datamatfile, subfolder, studynbr, study);
+    [datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(study);
+    [physdata, offset, physdata_predateoutlierhandling] = loadAndHarmoniseMeasVars(datamatfile, subfolder, study);
     [cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
-        cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study);
+        cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
     alignmentmodelinputsfile = sprintf('%salignmentmodelinputs_gap%d.mat', study, chosentreatgap);
     fprintf('Loading alignment model inputs\n');
     load(fullfile(basedir, subfolder, alignmentmodelinputsfile), 'amInterventions','amDatacube', 'measures', 'npatients','ndays', 'nmeasures', 'ninterventions');
@@ -54,7 +54,7 @@ if runfunction == 0 || runfunction == 1 || runfunction == 2 || runfunction == 6 
 end
 
 if runfunction >= 3 && runfunction < 9
-    [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('',      '', 'IntrFilt', 'TGap',       '');
+    [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir(study, '',      '', 'IntrFilt', 'TGap',       '');
     tic
     fprintf('Loading output from model run\n');
     load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun)));
@@ -108,8 +108,13 @@ elseif runfunction == 4
     fprintf('Plotting superimposed alignment curves - mean shift - all on one page\n');
     compactplot = true;
     shiftmode = 4; % shift by 7d mean to left of ex_start
-    examplemode = 1; % include examples
-    lcexamples = [41, 67, 6];
+    if ismember(study, {'SC'})
+        examplemode = 1; % include examples
+        lcexamples = [41, 67, 6];
+    else
+        examplemode = 0;
+        lcexamples = [];
+    end
     amEMMCPlotSuperimposedAlignedCurvesForPaper3(meancurvemean, meancurvecount, amIntrNormcube, amInterventions, normmean, normstd, ...
         measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, ...
         nlatentcurves, countthreshold, shiftmode, study, examplemode, lcexamples);

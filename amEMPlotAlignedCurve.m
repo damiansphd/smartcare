@@ -48,10 +48,10 @@ ax.YAxis(2).Color = 'black';
 ax.YAxis(2).FontSize = 6;
 ylabel('Count of Data points');
 if isequal(run_type,'Best Alignment')
-    bar((-1 * (max_offset + align_wind - 1): -1), max_points, 0.5, 'FaceColor', 'white', 'FaceAlpha', 0.1);
+    bar((-1 * (max_offset + align_wind - 1): -1), max_points, 1.0, 'EdgeColor', 'none', 'FaceColor', [0.3, 0.3, 0.3], 'FaceAlpha', 0.4);
 end
 hold on;
-bar((-1 * (max_offset + align_wind - 1): -1), mmeancurvecount, 0.5, 'FaceColor', 'black', 'FaceAlpha', 0.25, 'LineWidth', 0.2);
+bar((-1 * (max_offset + align_wind - 1): -1), mmeancurvecount, 1.0, 'EdgeColor', 'none', 'FaceColor', 'black', 'FaceAlpha', 0.5, 'LineWidth', 0.2);
 hold off;
 
 if isequal(run_type,'Best Alignment')

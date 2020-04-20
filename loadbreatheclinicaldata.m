@@ -4,8 +4,8 @@ basedir = setBaseDir();
 subfolder = 'DataFiles/ProjectBreathe';
 [clinicaldate, ~, ~] = getLatestBreatheDates();
 
-clinicalfile1 = sprintf('PB Data Sheet - Moh %s.xlsx', clinicaldate);
-clinicalfile2 = sprintf('PB Data Sheet - Rachel %s.xlsx', clinicaldate);
+clinicalfile1 = sprintf('PB Data sheet - Patient_Admissions_PFTs_1yrPFT_Clinics_Other-%s.xlsx', clinicaldate);
+clinicalfile2 = sprintf('PB Data sheet - Antibiotics_CRP_MicroBiology_Unplanned-%s.xlsx', clinicaldate);
 
 [brPatient, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brUnplannedContact, ...
     brCRP, brPFT, brMicrobiology, brHghtWght, brEndStudy] = createBreatheClinicalTables(0);
@@ -342,7 +342,8 @@ idx = days(brAdmissions.Discharge - brAdmissions.Admitted) > 30;
 fprintf('Found %d Admissions > 1 month duration\n', sum(idx));
 if sum(idx) > 0
     brAdmissions(idx,:)
-    brAdmissions(idx, :) = [];
+    % do not delete this as they may be legitimate
+    % brAdmissions(idx, :) = [];
 end
 
 % antibiotics data
@@ -368,7 +369,8 @@ idx = days(brAntibiotics.StopDate - brAntibiotics.StartDate) > 30;
 fprintf('Found %d Antibiotics > 1 month duration\n', sum(idx));
 if sum(idx) > 0
     brAntibiotics(idx,:)
-    brAntibiotics(idx, :) = [];
+    % do not delete this as they may be legitimate
+    %brAntibiotics(idx, :) = [];
 end
 
 % microbiology data
@@ -415,8 +417,8 @@ if sum(idx) > 0
     brPFT(idx,:)
     brPFT(idx, :) = [];
 end
-idx = brPFT.FEV1 > 4 | brPFT.FEV1 < 0.5;
-fprintf('Found %d < 0.5l or > 4l PFT Clinical Measurements\n', sum(idx));
+idx = brPFT.FEV1 > 6 | brPFT.FEV1 < 0.5;
+fprintf('Found %d < 0.5l or > 6l PFT Clinical Measurements\n', sum(idx));
 if sum(idx) > 0
     brPFT(idx,:)
     brPFT(idx, :) = [];
@@ -434,6 +436,20 @@ fprintf('Found %d > 200mg/L CRP measurements\n', sum(idx));
 if sum(idx) > 0
     brCRP(idx,:)
 end
+toc
+fprintf('\n');
+
+tic
+fprintf('Checking for dates in the future\n');
+brAdmissions(brAdmissions.Admitted > datetime("today"),:)
+brAdmissions(brAdmissions.Discharge > datetime("today"),:)
+brAntibiotics(brAntibiotics.StartDate > datetime("today"), :)
+brAntibiotics(brAntibiotics.StopDate > datetime("today"),:)
+brClinicVisits(brClinicVisits.AttendanceDate > datetime("today"),:)
+brOtherVisits(brOtherVisits.AttendanceDate > datetime("today"),:)
+brUnplannedContact(brUnplannedContact.ContactDate > datetime("today"),:)
+brCRP(brCRP.CRPDate > datetime("today"),:)
+brPFT(brPFT.LungFunctionDate > datetime("today"),:)
 toc
 fprintf('\n');
 

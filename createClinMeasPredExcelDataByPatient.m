@@ -1,54 +1,25 @@
 clear; close all; clc;
 
-studynbr = input('Enter Study to run for (1 = SmartCare, 2 = TeleMed): ');
+[studynbr, study, studyfullname] = selectStudy();
 
-if studynbr == 1
-    study = 'SC';
-    clinicalmatfile = 'clinicaldata.mat';
-    datamatfile = 'smartcaredata.mat';
-    outputfilename = 'SmartCareResults.xlsx';
-    
-elseif studynbr == 2
-    study = 'TM';
-    clinicalmatfile = 'telemedclinicaldata.mat';
-    datamatfile = 'telemeddata.mat';
-    outputfilename = 'TeleMedResults.xlsx';
-else
-    fprintf('Invalid study\n');
-    return;
-end
-
-tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-fprintf('Loading clinical data\n');
-load(fullfile(basedir, subfolder, clinicalmatfile));
-fprintf('Loading measurement data\n');
-load(fullfile(basedir, subfolder, datamatfile));
-toc
+[datamatfile, clinicalmatfile, ~] = getRawDataFilenamesForStudy(study);
+[physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, study);
+[cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
 
-if studynbr == 2
-    physdata = tmphysdata;
-    cdPatient = tmPatient;
-    cdMicrobiology = tmMicrobiology;
-    cdAntibiotics = tmAntibiotics;
-    cdAdmissions = tmAdmissions;
-    cdPFT = tmPFT;
-    cdCRP = tmCRP;
-    cdClinicVisits = tmClinicVisits;
-    cdEndStudy = tmEndStudy;
-    offset = tmoffset;
-end
+outputfilename = sprintf('%sResults.xlsx', studyfullname);
 
 if studynbr == 1
     patlist = [23, 24, 123, 132, 133];
 elseif studynbr == 2
     patlist = cdPatient.ID';
+else
+    fprintf('Need to add patient list for other studies\n');
 end
 
-[modelrun, modelidx, models] = amEMMCSelectModelRunFromDir('',      '', 'IntrFilt', 'TGap',       '');
-
-%[modelrun, modelidx, models] = selectModelRunFromList('');
+[modelrun, modelidx, models] = amEMMCSelectModelRunFromDir(study, '',      '', 'IntrFilt', 'TGap',       '');
 
 fprintf('Loading model run results data\n');
 load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun)));

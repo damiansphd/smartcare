@@ -1,5 +1,5 @@
 function [cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
-    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, studynbr, study)
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study)
 
 % loadAndHarmoniseClinVars - loads clinical variables and standardises
 % their naming
@@ -8,11 +8,11 @@ tic
 basedir = setBaseDir();
 fprintf('Loading %s Clinical data\n', study);
 
-if studynbr == 1
+if ismember(study, 'SC')
     load(fullfile(basedir, subfolder, clinicalmatfile), 'cdPatient', 'cdMicrobiology', 'cdClinicVisits', 'cdPFT', 'cdAdmissions', ...
         'cdAntibiotics', 'cdCRP', 'cdEndStudy', 'cdOtherVisits', 'cdMedications', 'cdNewMeds');
     cdHghtWght = [];
-elseif studynbr == 2
+elseif ismember(study, 'TM')
     load(fullfile(basedir, subfolder, clinicalmatfile), 'tmPatient', 'tmMicrobiology', 'tmClinicVisits', 'tmPFT', 'tmAdmissions', ...
         'tmAntibiotics', 'tmCRP', 'tmEndStudy');
     cdPatient      = tmPatient;
@@ -27,7 +27,7 @@ elseif studynbr == 2
     cdHghtWght     = [];
     cdMedications  = [];
     cdNewMeds      = [];
-elseif studynbr == 3
+elseif ismember(study, 'CL')
     load(fullfile(basedir, subfolder, clinicalmatfile), 'clPatient', 'clMicrobiology', 'clClinicVisits', 'clPFT', 'clAdmissions', ...
         'clAntibiotics', 'clCRP', 'clEndStudy', 'clOtherVisits', 'clHghtWght');
     cdPatient      = clPatient;
@@ -42,7 +42,7 @@ elseif studynbr == 3
     cdHghtWght     = clHghtWght;
     cdMedications  = [];
     cdNewMeds      = [];
-elseif studynbr == 4
+elseif ismember(study, 'BR')
     load(fullfile(basedir, subfolder, clinicalmatfile), 'brPatient', 'brMicrobiology', 'brClinicVisits', 'brPFT', 'brAdmissions', ...
         'brAntibiotics', 'brCRP', 'brEndStudy', 'brOtherVisits', 'brHghtWght');
     cdPatient      = brPatient;
