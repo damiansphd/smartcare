@@ -12,10 +12,12 @@ cdPatient = sortrows(cdPatient, {'ID'}, 'ascend');
 fprintf('Calculating data demographics by patient\n');
 tempdata = physdata;
 tempdata(:,{'UserName', 'ScaledDateNum', 'DateNum', 'Date_TimeRecorded'}) = [];
-if ismember(study, {'SC', 'CL'})
+if ismember(study, {'SC'})
     tempdata(:,{'FEV1', 'PredictedFEV', 'ScalingRatio', 'CalcFEV1SetAs'}) = [];
 elseif ismember(study, {'BR'})
     tempdata(:,{'CaptureType'}) = [];
+elseif ismember(study, {'CL'})
+    % no need to remove any columns for climb;
 end
 
 %if any(ismember(tempdata.Properties.VariableNames', {'SputumColour'}))

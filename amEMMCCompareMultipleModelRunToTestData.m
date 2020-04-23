@@ -81,6 +81,8 @@ for midx = modelidx:size(models,1)
 
         modelpreds = amInterventions.Pred(testidx);
         modellcs   = amInterventions.LatentCurve(testidx);
+        modelscids = amInterventions.SmartCareID(testidx);
+        modelivdn  = amInterventions.IVDateNum(testidx);
         
         matchidx   = (modelpreds >= (testset.IVScaledDateNum + testset.LowerBound1) & modelpreds <= (testset.IVScaledDateNum + testset.UpperBound1)) | ...
                      (modelpreds >= (testset.IVScaledDateNum + testset.LowerBound2) & modelpreds <= (testset.IVScaledDateNum + testset.UpperBound2));
@@ -91,6 +93,9 @@ for midx = modelidx:size(models,1)
         
         distArr = zeros(1,4);
         for i = 1:size(testset,1)
+            if (testset.SmartCareID(i) ~= modelscids(i) || testset.IVDateNum(i) ~= modelivdn(i))
+                fprintf('**** WARNING - Mismatch between Labelled test data and Model Interventions for intrnbr %d ****\n', testset.InterNbr(i));
+            end
             rowtoadd.TestSetNbr = testset.InterNbr(i);
             rowtoadd.LatentCurve = modellcs(i);
             if matchidx(i)

@@ -69,7 +69,7 @@ elseif measuresmask == 11
     measures.Mask(idx) = 1;
 elseif measuresmask == 12
     % project climb
-    idx = ismember(measures.DisplayName, {'Appetite', 'Cough', 'LungFunction', 'O2Saturation', 'PulseRate', ...
+    idx = ismember(measures.DisplayName, {'Appetite', 'Cough', 'FEV1', 'O2Saturation', 'PulseRate', ...
         'SleepActivity', 'SputumVolume', 'Tiredness', 'Wellness'});
     measures.Mask(idx) = 1;
 elseif measuresmask == 13
@@ -79,12 +79,12 @@ elseif measuresmask == 13
     measures.Mask(idx) = 1;
 elseif measuresmask == 14
     % project climb
-    idx = ismember(measures.DisplayName, {'Appetite', 'Cough', 'LungFunction', 'O2Saturation', 'PulseRate', ...
+    idx = ismember(measures.DisplayName, {'Appetite', 'Cough', 'FEV1', 'O2Saturation', 'PulseRate', ...
         'SleepActivity', 'SputumVolume', 'Temperature', 'Tiredness', 'Wellness'});
     measures.Mask(idx) = 1;
 elseif measuresmask == 15
     % project climb
-    idx = ismember(measures.DisplayName, {'Appetite', 'Cough', 'LungFunction', 'O2Saturation', 'PulseRate', ...
+    idx = ismember(measures.DisplayName, {'Appetite', 'Cough', 'FEV1', 'O2Saturation', 'PulseRate', ...
         'SleepActivity', 'SputumVolume', 'Temperature', 'Tiredness', 'Weight', 'Wellness'});
     measures.Mask(idx) = 1;
 elseif measuresmask == 16
@@ -95,6 +95,21 @@ elseif measuresmask == 17
     % project climb
     idx = ismember(measures.DisplayName, {'Appetite', 'Cough', 'O2Saturation', 'PulseRate', ...
         'SleepActivity', 'SputumVolume', 'Temperature', 'Tiredness', 'Weight', 'Wellness'});
+    measures.Mask(idx) = 1;
+elseif measuresmask == 18
+    % project climb
+    idx = ismember(measures.DisplayName, {'Appetite', 'Cough', 'InterpFEV1', 'O2Saturation', 'PulseRate', ...
+        'SleepActivity', 'SputumVolume', 'Temperature', 'Tiredness', 'Wellness'});
+    measures.Mask(idx) = 1;
+elseif measuresmask == 19
+    % project climb
+    idx = ismember(measures.DisplayName, {'Appetite', 'Cough', 'InterpFEV1', 'O2Saturation', 'PulseRate', ...
+        'SleepActivity', 'SputumVolume', 'Temperature', 'Tiredness', 'InterpWeight', 'Wellness'});
+    measures.Mask(idx) = 1;
+elseif measuresmask == 20
+    % project climb
+    idx = ismember(measures.DisplayName, {'Appetite', 'Cough', 'O2Saturation', 'PulseRate', ...
+        'SleepActivity', 'SputumVolume', 'Temperature', 'Tiredness', 'InterpWeight', 'Wellness'});
     measures.Mask(idx) = 1;
 else
     % shouldn't ever get here - but default to just cough if it ever

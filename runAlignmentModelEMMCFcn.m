@@ -60,7 +60,7 @@ detaillog = true;
 
 % pre-process intervention table and associated measurement data
 [amInterventions, amIntrDatacube, ninterventions, intrkeepidx] = amEMMCPreprocessInterventions(amInterventions, ...
-    amIntrDatacube, amElectiveTreatments, max_offset, align_wind, ninterventions, nmeasures, intrmode);
+    amIntrDatacube, amElectiveTreatments, measures, nmeasures, max_offset, align_wind, ninterventions, intrmode, study);
 
 % populate multiplicative normalisation (sigma) values based on methodology
 % selected

@@ -84,6 +84,10 @@ oo = ooandivpbo - ivpbo/2 ;
 % ivTreatments(idx,:) = [];
 % ivTreatments = sortrows(ivTreatments,{'Type'});
 
+% first remove all interpolated measures as these aren't part of the raw
+% data set
+physdata(startsWith(physdata.RecordingType, 'Interp'), :) = [];
+
 physdata = sortrows(physdata, {'SmartCareID', 'DateNum', 'RecordingType'}, 'ascend');
 numdays = 40;
 nkeycols = 13;

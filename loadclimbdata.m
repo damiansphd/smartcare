@@ -74,6 +74,9 @@ for i = 1:nmeasfile
         tmplfdata = readtable(fullfile(basedir, subfolder, MeasFiles{i}), mfopts, 'Sheet', canadalungdsname);
         fprintf('Loaded %d rows\n', size(tmplfdata, 1));
         tmpmeasdata = [tmpmeasdata; tmplfdata];
+        
+        fprintf('Updating recording type to be FEV1Recording\n');
+        tmpmeasdata.RecordingType(:) = {'FEV1Recording'};
     end
     
     nmeasurements = size(tmpmeasdata, 1);
@@ -191,9 +194,9 @@ fprintf('Removing %4d blank Rating measurements\n', sum(idx));
 clphysdata_deleted = appendDeletedRows(clphysdata(idx,:), clphysdata_deleted, {'Zero Value'});
 clphysdata(idx,:) = [];
 
-idx1 = ismember(clphysdata.RecordingType, {'LungFunctionRecording'});
-idx2 = isnan(clphysdata.CalcFEV1_);
-idx3 = clphysdata.CalcFEV1_ == 0;
+idx1 = ismember(clphysdata.RecordingType, {'FEV1Recording'});
+idx2 = isnan(clphysdata.FEV);
+idx3 = clphysdata.FEV == 0;
 idx = idx1 & (idx2 | idx3);
 fprintf('Removing %4d blank or zero FEV1 measurements\n', sum(idx));
 clphysdata_deleted = appendDeletedRows(clphysdata(idx,:), clphysdata_deleted, {'Zero Value'});
@@ -292,6 +295,10 @@ clphysdata_predateoutlierhandling = clphysdata;
 clphysdata = analyseAndHandleDateOutliers(clphysdata, study, doupdates);
 
 createMeasuresHeatmapWithStudyPeriod(clphysdata, cloffset, clPatient, study);
+
+% create interpolated measures for FEV1 and Weight
+clphysdata = createInterpMeasure(clphysdata, 'FEV1Recording', detaillog);
+clphysdata = createInterpMeasure(clphysdata, 'WeightRecording', detaillog);
 
 % calc and print overall data demographics after data anomaly fixes
 printDataDemographics(clphysdata, 0);

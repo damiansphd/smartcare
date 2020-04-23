@@ -231,10 +231,16 @@ for i = 1:size(nasimidx,1)
     end
     if (scid ~= priorscid | ~ismember(rectype, priorrectype) | startdtr > priorenddtr)
         ntidx = find(physdata.SmartCareID == scid & ismember(physdata.RecordingType,rectype) & physdata.Date_TimeRecorded >= startdtr & physdata.Date_TimeRecorded < enddtr);
-        if ismember(rectype, 'LungFunctionRecording')
+        if ismember(rectype, {'LungFunctionRecording', 'FEV1Recording'})
             % for Lung Function, some patients mirror clinical procedure
             % so take the best of 3 measures for this
-            [fevmax fevmaxidx] = max(physdata.FEV1_(ntidx));
+            if ismember(study, {'SC', 'TM'})
+                [fevmax fevmaxidx] = max(physdata.FEV1_(ntidx));
+            elseif ismember(study, {'CL'})
+                [fevmax fevmaxidx] = max(physdata.FEV1(ntidx));
+            else
+                fprintf('Unknown study\n');
+            end
             rowtoadd = physdata(ntidx(fevmaxidx),:);
             addsimrows = [addsimrows ; rowtoadd];
             nasimpairidx = [nasimpairidx; ntidx];
@@ -398,18 +404,21 @@ for i = 1:size(nasamedayidx,1)
             fprintf('Multiple rows returned from mean calc !! dupe %3d, scid %3d, dtnum %3d dupe set size = %d\n', i, scid, dtnum, size(ntidx,1));
         end
         rowtoadd = physdata(ntidx(end),:);
-        rowtoadd.FEV1 = meantable.mean_FEV1;
-        rowtoadd.PredictedFEV = meantable.mean_PredictedFEV;
-        rowtoadd.FEV1_ = meantable.mean_FEV1_;
         rowtoadd.WeightInKg = meantable.mean_WeightInKg;
         rowtoadd.O2Saturation = meantable.mean_O2Saturation;
         rowtoadd.Pulse_BPM_ = meantable.mean_Pulse_BPM_;
         rowtoadd.Rating = meantable.mean_Rating;
         rowtoadd.Temp_degC_ = meantable.mean_Temp_degC_;
-        rowtoadd.CalcFEV1SetAs = meantable.mean_CalcFEV1SetAs;
-        rowtoadd.ScalingRatio = meantable.mean_ScalingRatio;
-        rowtoadd.CalcFEV1_ = meantable.mean_CalcFEV1_;
+        if ismember(study, {'SC', 'TM'})
+            rowtoadd.FEV1 = meantable.mean_FEV1;
+            rowtoadd.PredictedFEV = meantable.mean_PredictedFEV;
+            rowtoadd.FEV1_ = meantable.mean_FEV1_;
+            rowtoadd.CalcFEV1SetAs = meantable.mean_CalcFEV1SetAs;
+            rowtoadd.ScalingRatio = meantable.mean_ScalingRatio;
+            rowtoadd.CalcFEV1_ = meantable.mean_CalcFEV1_;
+        end
         if ismember(study, 'CL')
+            rowtoadd.FEV = meantable.mean_FEV;
             rowtoadd.NumSleepDisturb = meantable.mean_NumSleepDisturb;
             rowtoadd.BreathsPerMin = meantable.mean_BreathsPerMin;
         end

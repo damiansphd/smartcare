@@ -17,8 +17,8 @@ physdata_deleted = appendDeletedRows(physdata(idx, :), physdata_deleted, {'Anoma
 physdata(idx, :) = [];
 
 % Lung Function - FEV1 < 0.25l or > 4l
-idx1 = ismember(physdata.RecordingType, 'LungFunctionRecording');
-idx2 = physdata.CalcFEV1_ < 0.25 | physdata.CalcFEV1_ > 4;
+idx1 = ismember(physdata.RecordingType, 'FEV1Recording');
+idx2 = physdata.FEV < 0.25 | physdata.FEV > 4;
 idx  = idx1 & idx2;
 fprintf('Removing %4d Lung Function measurements < 0.25l or > 4.0l\n', sum(idx));
 physdata_deleted = appendDeletedRows(physdata(idx, :), physdata_deleted, {'Anomalous Value'});

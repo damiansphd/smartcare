@@ -10,7 +10,7 @@ switch measure
         column = 'Rating';
     case 'CalorieRecording'
         column = 'Calories';
-    case {'FEV1Recording', 'FEF2575Recording', 'FEV075Recording', 'FEV1DivFEV6Recording', 'FEV6Recording'}
+    case {'FEV1Recording', 'FEF2575Recording', 'FEV075Recording', 'FEV1DivFEV6Recording', 'FEV6Recording', 'InterpFEV1Recording'}
         column = 'FEV';
     case {'HasColdOrFluRecording', 'HasHayFeverRecording'}
         column = 'HasCondition';
@@ -32,7 +32,7 @@ switch measure
         column = 'SputumSampleTaken_';
     case 'TemperatureRecording'
         column = 'Temp_degC_';
-    case 'WeightRecording'
+    case {'WeightRecording', 'InterpWeightRecording'}
         column = 'WeightInKg';
     otherwise
         fprintf('*** Unknown measure %s ***\n', measure);

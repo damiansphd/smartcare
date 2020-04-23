@@ -1,18 +1,30 @@
 function [amInterventions, amIntrDatacube, ninterventions, intrkeepidx] = amEMMCPreprocessInterventions(amInterventions, ...
-    amIntrDatacube, amElectiveTreatments, max_offset, align_wind, ninterventions, nmeasures, intrmode)
+    amIntrDatacube, amElectiveTreatments, measures, nmeasures, max_offset, align_wind, ninterventions,  intrmode, study)
 
 % amEMMCPreprocessInterventions - preprocess intervention data and associated
 % measurement data
 
 meanwindow = 10;
 
+if ismember(study, {'SC', 'TM'})
+    compthresh = 35;
+elseif ismember(study, {'CL'})
+    compthresh = 33;
+else
+    compthresh = 40;
+end
+
 % add columns for Data Window Completeness
 for i = 1:ninterventions
     actualpoints = 0;
     maxpoints = 0;
     for m = 1:nmeasures
-        actualpoints = actualpoints + sum(~isnan(amIntrDatacube(i, max_offset:max_offset+align_wind-1, m)));
-        maxpoints = maxpoints + align_wind;
+        % exclude interpolated measures from calculation of data window
+        % completeness
+        if ~startsWith(measures.DisplayName(m), 'Interp')
+            actualpoints = actualpoints + sum(~isnan(amIntrDatacube(i, max_offset:max_offset+align_wind-1, m)));
+            maxpoints = maxpoints + align_wind;
+        end
     end
     amInterventions.DataWindowCompleteness(i) = 100 * actualpoints/maxpoints;
     %if i >= 2
@@ -28,8 +40,7 @@ amInterventions = outerjoin(amInterventions, amElectiveTreatments, 'LeftKeys', {
 amInterventions(isnan(amInterventions.SmartCareID), :) = [];
 
 % remove any interventions where insufficient data in the data window
-
-idx = find(amInterventions.DataWindowCompleteness < 33);
+idx = find(amInterventions.DataWindowCompleteness < compthresh);
 amInterventions(idx,:) = [];
 amIntrDatacube(idx,:,:) = [];
 ninterventions = size(amInterventions,1);

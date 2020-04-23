@@ -8,7 +8,7 @@ switch measure
         column = 'Steps';
     case {'AppetiteRecording', 'BreathlessnessRecording', 'CoughRecording','SleepActivityRecording', 'SputumVolumeRecording', 'TirednessRecording', 'WellnessRecording'}
         column = 'Rating';
-    case 'LungFunctionRecording'
+    case {'FEV1Recording', 'LungFunctionRecording'}
         column = 'FEV1';
     case 'O2SaturationRecording'
         column = 'O2Saturation';
