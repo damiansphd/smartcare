@@ -376,9 +376,9 @@ end
 % microbiology data
 idx = isnat(brMicrobiology.DateMicrobiology);
 fprintf('Found %d Microbiology records with blank dates\n', sum(idx));
-if sum(idx) > 0
-    brMicrobiology(idx,:)
-end
+%if sum(idx) > 0
+%    brMicrobiology(idx,:)
+%end
 
 % clinic visits
 idx = isnat(brClinicVisits.AttendanceDate);

@@ -32,10 +32,12 @@ for i = 1:ninterventions
         % remove data outliers for mumethod 4 or 5
         if mumethod == 4 || mumethod == 5
             tmpdataoutliers = dataoutliers(dataoutliers.NStdDevOutlier==5 & dataoutliers.SmartCareID == scid & dataoutliers.MeasureID == m,:);
+            ndel = 0;
             for d = 1:size(tmpdataoutliers,1)
-                if (start - align_wind - meanwindow) <= tmpdataoutliers.Day(d) & (start - 1 - align_wind) >= tmpdataoutliers.Day(d)
+                if (start - align_wind - meanwindow) <= tmpdataoutliers.Day(d) && (start - 1 - align_wind) >= tmpdataoutliers.Day(d)
                     fprintf('For Invervention %d, excluding Data outlier (ID %d, Measure %d, Day %d) from meanwindow\n', i, scid, m, tmpdataoutliers.Day(d));
-                    meanwindowdata(tmpdataoutliers.Day(d) - (start - align_wind - meanwindow) + 1) = [];
+                    meanwindowdata(tmpdataoutliers.Day(d) - (start - align_wind - meanwindow) + 1 - ndel) = [];
+                    ndel = ndel + 1;
                 end
             end
         end

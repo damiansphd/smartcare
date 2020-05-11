@@ -11,7 +11,7 @@ if ismember(study, {'SC', 'TM'})
 elseif ismember(study, {'CL'})
     compthresh = 33;
 else
-    compthresh = 40;
+    compthresh = 35;
 end
 
 % add columns for Data Window Completeness

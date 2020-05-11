@@ -29,13 +29,13 @@ shifttext = sprintf('%ddMeanShift', meanwindow);
 plottitle   = sprintf('%svs%s Typical Profile Comparison %s', study1, study2, shifttext);
 
 if ismember(study1, {'SC'}) && ismember(study2, {'CL'})
-    commonmeas = {'Cough'; 'LungFunction'; 'O2Saturation'; 'PulseRate'; 'SleepActivity'; 'Wellness'};
+    commonmeas = {'Cough'; 'O2Saturation'; 'PulseRate'; 'SleepActivity'; 'Wellness'};
     ncommonmeas = size(commonmeas, 1);
 elseif ismember(study1, {'CL'}) && ismember(study2, {'CL'})
-    commonmeas = {'Activity'; 'Appetite'; 'Breathlessness'; 'Cough'; 'LungFunction'; ...
+    commonmeas = {'Activity'; 'Appetite'; 'Breathlessness'; 'Cough'; ...
                   'O2Saturation'; 'PulseRate'; 'RespiratoryRate'; 'SleepActivity'; ...
                   'SleepDisturbance'; 'SputumVolume'; 'Temperature'; 'Tiredness'; ...
-                  'Weight';'Wellness'};
+                  'Weight'; 'Wellness'};
     ncommonmeas = size(commonmeas, 1);
 end
 
@@ -54,7 +54,7 @@ for m = 1:nmeasures2
     meancurvemean2(1, :, m) = movmean(meancurvemean2(1, :, m), smoothwdth, 'omitnan');
     vertshift2 = mean(meancurvemean2(1, (align_wind2 + max_offset2 + ex_start2 - meanwindow):(align_wind2 + max_offset2 + ex_start2), m));
     meancurvemean2(1, :, m) = meancurvemean2(1, :, m) - vertshift2;
-    fprintf('For curve %d and measure %13s, vertical shift is %.3f\n', 1, measures2.DisplayName{m}, -vertshift2);
+    fprintf('For curve %d and measure %13s, vertical shift is %.3f\n', 2, measures2.DisplayName{m}, -vertshift2);
 end
 
 if ncommonmeas <= 9

@@ -154,82 +154,81 @@ elseif runfunction == 6
     [testlabelmthd, testlabeltxt] = selectLabelMethodology();
     
     basetestlabelfilename = sprintf('%s_LabelledInterventions_gap%d%s', study, treatgap, testlabeltxt);
-    
-    fprintf('1: Run from scratch\n');
-    fprintf('2: Continue from partway through\n');
-    fprintf('3: Update a single intervention\n');
-    
-    labelmode = input('Select mode to run (1-3) ? ');
-    
-    if labelmode > 3
-        fprintf('Invalid choice\n');
-        return;
-    end
-    if isequal(labelmode,'')
-        fprintf('Invalid choice\n');
-        return;
-    end
-    
-    if labelmode == 1
-        fprintf('Creating new labelled test data file\n');
-        amLabelledInterventions = amInterventions;
-        amLabelledInterventions.LowerBound1 = [];
-        amLabelledInterventions.UpperBound1 = [];
-        amLabelledInterventions.LowerBound2 = [];
-        amLabelledInterventions.UpperBound2 = [];
-        amLabelledInterventions.ConfidenceProb = [];
-        amLabelledInterventions.Ex_Start    = [];
-        amLabelledInterventions.Pred        = [];
-        amLabelledInterventions.RelLB1      = [];
-        amLabelledInterventions.RelUB1      = [];
-        amLabelledInterventions.RelLB2      = [];
-        amLabelledInterventions.RelUB2      = [];
-        
-        %amLabelledInterventions.Offset(:)            = 0;
-        amLabelledInterventions.IncludeInTestSet(:)  = 'N';
-        amLabelledInterventions.LowerBound1(:)       = 0;
-        amLabelledInterventions.UpperBound1(:)       = 0;
-        amLabelledInterventions.LowerBound2(:)       = 0;
-        amLabelledInterventions.UpperBound2(:)       = 0;
-        interfrom = 1;
-        interto = ninterventions;
-    elseif labelmode == 2
-        fprintf('Loading latest labelled test data file %s\n', basetestlabelfilename);
-        load(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)));
-        interfrom = input('Enter intervention to restart from ? ');
-        if interfrom < 2 || interfrom > ninterventions 
-            fprintf('Invalid choice\n');
-            return;
-        end
-        if isequal(interfrom,'')
-            fprintf('Invalid choice\n');
-            return;
-        end
-        interto = ninterventions;
-    else
-        fprintf('Loading latest labelled test data file %s\n', basetestlabelfilename);
-        load(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)));
-        interfrom = input('Enter intervention to update ? ');
-        if interfrom < 1 || interfrom > ninterventions 
-            fprintf('Invalid choice\n');
-            return;
-        end
-        if isequal(interfrom,'')
-            fprintf('Invalid choice\n');
-            return;
-        end
-        interto = interfrom;
-    end
 
-    [amLabelledInterventions] = amEMMCCreateLabelledInterventions(amIntrDatacube, amLabelledInterventions, ...
-        interfrom, interto, measures, normmean, max_offset, align_wind, study, nmeasures);
+            
+        end
+    else
     
-    fprintf('Saving labelled interventions to a separate matlab file\n');
-    subfolder = 'MatlabSavedVariables';
-    outputfilename = sprintf('%s%s.mat', basetestlabelfilename, datestr(clock(),30));
-    save(fullfile(basedir, subfolder, outputfilename), 'amLabelledInterventions');
-    outputfilename = sprintf('%s.mat', basetestlabelfilename);
-    save(fullfile(basedir, subfolder, outputfilename), 'amLabelledInterventions');
+        fprintf('1: Run from scratch\n');
+        fprintf('2: Continue from partway through\n');
+        fprintf('3: Update a single intervention\n');
+        fprintf('4: Run for additional examples\n');
+
+        labelmode = input('Select mode to run (1-4) ? ');
+
+        if labelmode > 3
+            fprintf('Invalid choice\n');
+            return;
+        end
+        if isequal(labelmode,'')
+            fprintf('Invalid choice\n');
+            return;
+        end
+
+        if labelmode == 1
+            if ~exist(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)), 'file')
+                fprintf('Creating new labelled test data file\n');
+                [amLabelledInterventions] = createInitialLabelledIntr(amInterventions);
+                interfrom = 1;
+                interto = ninterventions;
+            else
+                fprintf('Labelled test file %s already exists\n', sprintf('%s.mat', basetestlabelfilename));
+            end
+        elseif labelmode == 2
+            fprintf('Loading latest labelled test data file %s\n', basetestlabelfilename);
+            load(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)));
+            interfrom = input('Enter intervention to restart from ? ');
+            if interfrom < 2 || interfrom > ninterventions 
+                fprintf('Invalid choice\n');
+                return;
+            end
+            if isequal(interfrom,'')
+                fprintf('Invalid choice\n');
+                return;
+            end
+            interto = ninterventions;
+        elseif labelmode == 3
+            fprintf('Loading latest labelled test data file %s\n', basetestlabelfilename);
+            load(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)));
+            interfrom = input('Enter intervention to update ? ');
+            if interfrom < 1 || interfrom > ninterventions 
+                fprintf('Invalid choice\n');
+                return;
+            end
+            if isequal(interfrom,'')
+                fprintf('Invalid choice\n');
+                return;
+            end
+            interto = interfrom;
+        elseif labelmode == 4
+            fprintf('Loading latest labelled test data file %s\n', basetestlabelfilename);
+            load(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)));
+            [amLabelledInterventions] = updateListOfLabelledIntr(amInterventions, amLabelledInterventions);
+            interfrom = 1;
+            interto = ninterventions;
+        end
+
+        [amLabelledInterventions] = amEMMCCreateLabelledInterventions(amIntrDatacube, amLabelledInterventions, ...
+            interfrom, interto, measures, normmean, max_offset, align_wind, study, nmeasures, labelmode);
+    
+        fprintf('Saving labelled interventions to a separate matlab file\n');
+        subfolder = 'MatlabSavedVariables';
+        outputfilename = sprintf('%s%s.mat', basetestlabelfilename, datestr(clock(),30));
+        save(fullfile(basedir, subfolder, outputfilename), 'amLabelledInterventions');
+        outputfilename = sprintf('%s.mat', basetestlabelfilename);
+        save(fullfile(basedir, subfolder, outputfilename), 'amLabelledInterventions');
+    end
+    
 elseif runfunction == 7
     fprintf('Comparing results to another model run\n');
     fprintf('\n');
@@ -313,31 +312,6 @@ elseif runfunction == 19
     load(fullfile(basedir, subfolder, ivandmeasuresfile), 'ivandmeasurestable');
     [~, clinicalmatfile, ~] = getRawDataFilenamesForStudy(study);
     [~, cdMicrobiology, cdAntibiotics, cdAdmissions, ~, cdCRP, ~, ~, ~, ~] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
-
-    %if ismember(study, 'SC')
-    %    clinicalmatfile   = 'clinicaldata.mat';
-    %    microbiologytable = 'cdMicrobiology';
-    %    abtable           = 'cdAntibiotics';
-    %    admtable          = 'cdAdmissions';
-    %    crptable          = 'cdCRP';
-    %elseif ismember(study, 'TM')
-    %    clinicalmatfile   = 'telemedclinicaldata.mat';
-    %    microbiologytable = 'tmMicrobiology';
-    %    abtable           = 'tmAntibiotics';
-    %    admtable          = 'tmAdmissions';
-    %    crptable          = 'tmCRP';
-    %else
-    %    fprintf('Invalid study\n');
-    %    return;
-    %end
-    
-    %load(fullfile(basedir, subfolder, clinicalmatfile), microbiologytable, abtable, admtable, crptable);
-    %if ismember(study, 'TM')
-    %    cdMicrobiology = tmMicrobiology;
-    %    cdAntibiotics  = tmAntibiotics;
-    %    cdAdmissions   = tmAdmissions;
-    %    cdCRP          = tmCRP;
-    %end
     fprintf('Plotting Variables vs latent curve allocation\n');
     amEMMCPlotVariablesVsLatentCurveSet(amInterventions, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
         cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves);
