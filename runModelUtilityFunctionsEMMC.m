@@ -53,20 +53,9 @@ fprintf('42: Plot superimposed measures - 7d mean shift - one intervention per p
 fprintf('43: Plot histogram of time since last exacerbation\n');
 
 noptions = 43;
-
 fprintf('\n');
-runfunction = input(sprintf('Choose function (1-%d): ', noptions));
-
+runfunction = selectValFromRange('Choose function', 1, noptions);
 fprintf('\n');
-
-if runfunction > noptions
-    fprintf('Invalid choice\n');
-    return;
-end
-if isequal(runfunction,'')
-    fprintf('Invalid choice\n');
-    return;
-end
 
 [~, studytmp, ~] = selectStudy();
 
@@ -154,81 +143,45 @@ elseif runfunction == 6
     [testlabelmthd, testlabeltxt] = selectLabelMethodology();
     
     basetestlabelfilename = sprintf('%s_LabelledInterventions_gap%d%s', study, treatgap, testlabeltxt);
-
-            
-        end
-    else
     
-        fprintf('1: Run from scratch\n');
-        fprintf('2: Continue from partway through\n');
-        fprintf('3: Update a single intervention\n');
-        fprintf('4: Run for additional examples\n');
+    fprintf('1: Run from scratch\n');
+    fprintf('2: Continue from partway through\n');
+    fprintf('3: Update a single intervention\n');
+    fprintf('4: Run for additional examples\n');
 
-        labelmode = input('Select mode to run (1-4) ? ');
+    labelmode = selectValFromRange('Select mode to run', 1, 4);
 
-        if labelmode > 3
-            fprintf('Invalid choice\n');
-            return;
-        end
-        if isequal(labelmode,'')
-            fprintf('Invalid choice\n');
-            return;
-        end
-
-        if labelmode == 1
-            if ~exist(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)), 'file')
-                fprintf('Creating new labelled test data file\n');
-                [amLabelledInterventions] = createInitialLabelledIntr(amInterventions);
-                interfrom = 1;
-                interto = ninterventions;
-            else
-                fprintf('Labelled test file %s already exists\n', sprintf('%s.mat', basetestlabelfilename));
-            end
-        elseif labelmode == 2
-            fprintf('Loading latest labelled test data file %s\n', basetestlabelfilename);
-            load(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)));
-            interfrom = input('Enter intervention to restart from ? ');
-            if interfrom < 2 || interfrom > ninterventions 
-                fprintf('Invalid choice\n');
-                return;
-            end
-            if isequal(interfrom,'')
-                fprintf('Invalid choice\n');
-                return;
-            end
-            interto = ninterventions;
-        elseif labelmode == 3
-            fprintf('Loading latest labelled test data file %s\n', basetestlabelfilename);
-            load(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)));
-            interfrom = input('Enter intervention to update ? ');
-            if interfrom < 1 || interfrom > ninterventions 
-                fprintf('Invalid choice\n');
-                return;
-            end
-            if isequal(interfrom,'')
-                fprintf('Invalid choice\n');
-                return;
-            end
-            interto = interfrom;
-        elseif labelmode == 4
-            fprintf('Loading latest labelled test data file %s\n', basetestlabelfilename);
-            load(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)));
-            [amLabelledInterventions] = updateListOfLabelledIntr(amInterventions, amLabelledInterventions);
+    if labelmode == 1
+        if ~exist(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)), 'file')
+            fprintf('Creating new labelled test data file\n');
+            [amLabelledInterventions] = createInitialLabelledIntr(amInterventions);
             interfrom = 1;
             interto = ninterventions;
+        else
+            fprintf('Labelled test file %s already exists\n', sprintf('%s.mat', basetestlabelfilename));
+            return;
         end
-
-        [amLabelledInterventions] = amEMMCCreateLabelledInterventions(amIntrDatacube, amLabelledInterventions, ...
-            interfrom, interto, measures, normmean, max_offset, align_wind, study, nmeasures, labelmode);
-    
-        fprintf('Saving labelled interventions to a separate matlab file\n');
-        subfolder = 'MatlabSavedVariables';
-        outputfilename = sprintf('%s%s.mat', basetestlabelfilename, datestr(clock(),30));
-        save(fullfile(basedir, subfolder, outputfilename), 'amLabelledInterventions');
-        outputfilename = sprintf('%s.mat', basetestlabelfilename);
-        save(fullfile(basedir, subfolder, outputfilename), 'amLabelledInterventions');
+    elseif labelmode == 2
+        fprintf('Loading latest labelled test data file %s\n', basetestlabelfilename);
+        load(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)));
+        interfrom = selectValFromRange('Enter intervention to restart from', 2, ninterventions);
+        interto   = ninterventions;
+    elseif labelmode == 3
+        fprintf('Loading latest labelled test data file %s\n', basetestlabelfilename);
+        load(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)));
+        interfrom = selectValFromRange('Enter intervention to update', 1, ninterventions);
+        interto = interfrom;
+    elseif labelmode == 4
+        fprintf('Loading latest labelled test data file %s\n', basetestlabelfilename);
+        load(fullfile(basedir, subfolder, sprintf('%s.mat', basetestlabelfilename)));
+        [amLabelledInterventions] = updateListOfLabelledIntr(amInterventions, amLabelledInterventions);
+        interfrom = 1;
+        interto = ninterventions;
     end
-    
+
+    [amLabelledInterventions] = amEMMCCreateLabelledInterventions(amIntrDatacube, amLabelledInterventions, ...
+        interfrom, interto, measures, normmean, max_offset, align_wind, study, nmeasures, labelmode, basetestlabelfilename);
+
 elseif runfunction == 7
     fprintf('Comparing results to another model run\n');
     fprintf('\n');
@@ -251,7 +204,7 @@ elseif runfunction == 10
     subfolder = 'MatlabSavedVariables';
     load(fullfile(basedir, subfolder, labelledinterventionsfile));
     plotmode = 'Overall'; 
-    [lcbymodelrun, offsetbymodelrun] = amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions(intrkeepidx, :), modelrun, modelidx, models, plotmode);
+    [lcbymodelrun, offsetbymodelrun] = amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions(intrkeepidx, :), modelrun, modelidx, models, plotmode, study);
 elseif runfunction == 11
     fprintf('Comparing results of multiple model runs\n');
     fprintf('\n');

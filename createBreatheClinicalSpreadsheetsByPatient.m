@@ -26,13 +26,13 @@ for i = 1:npatients
     hospital = brPatient.Hospital{i};
     studyid  = brPatient.StudyNumber{i};
     filename = sprintf('PBClinicalData-%3d-%s%s-%s.xlsx', scid, hospital, studyid, clindate);
-    fprintf('Creating file %s\n', filename);
+    fprintf('Creating file %s\n', filename);    
+
+    %{'ID', 'StudyNumber', 'StudyEmail', 'StudyDate', 'Prior6Mnth', 'Post6Mnth', 'DOB', 'Age', 'Sex', ...
+    %                                              'Height', 'Weight', 'PredictedFEV1', 'CFGene1', 'CFGene2', 'GeneralComments', ...
+    %                                              'DrugTherapyStartDate', 'DrugTherapyType', 'DrugTherapyComment'});
     
-    % need to add comments, drug therapy type, drug therapy start date when
-    % available
-    tmpPatient = brPatient(brPatient.ID == scid, {'ID', 'StudyNumber', 'StudyEmail', 'StudyDate', 'DOB', 'Age', 'Sex', 'Height', 'Weight', ...
-                                                  'PredictedFEV1', 'CFGene1', 'CFGene2'});
-                  
+    tmpPatient = brPatient(brPatient.ID == scid, :);              
     tmpAntibiotics      = brAntibiotics(brAntibiotics.ID == scid, :);
     tmpAdmissions       = brAdmissions(brAdmissions.ID == scid, :);
     tmpClinicVisits     = brClinicVisits(brClinicVisits.ID == scid, :);
@@ -41,8 +41,11 @@ for i = 1:npatients
     tmpCRP              = brCRP(brCRP.ID == scid, :);
     tmpPFT              = brPFT(brPFT.ID == scid, :);
     tmpMicrobiology     = brMicrobiology(brMicrobiology.ID == scid, :);
+    tmpHghtWght         = brHghtWght(brHghtWght.ID == scid, :);
     
-    % remove ID and Hospital columns
+    % remove unwanted columns
+    tmpPatient(:, {'FEV1SetAs', 'CalcAge', 'CalcAgeExact', 'CalcPredictedFEV1', ...
+        'CalcPredictedFEV1OrigAge', 'CalcFEV1SetAs', 'CalcFEV1SetAsOrigAge'}) = [];
     tmpAntibiotics(:, {'ID', 'StudyNumber', 'Hospital'})               = [];
     tmpAdmissions(:, {'ID', 'StudyNumber', 'Hospital'})                = [];
     tmpClinicVisits(:, {'ID', 'StudyNumber', 'Hospital'})              = [];
@@ -51,6 +54,7 @@ for i = 1:npatients
     tmpCRP(:, {'ID', 'StudyNumber', 'Hospital', 'NumericLevel'})       = [];
     tmpPFT(:, {'ID', 'StudyNumber', 'Hospital', 'FEV1_', 'CalcFEV1_'}) = [];
     tmpMicrobiology(:, {'ID', 'StudyNumber', 'Hospital'})              = [];
+    tmpHghtWght(:, {'ID', 'StudyNumber', 'Hospital'})                  = [];
         
     writetable(tmpPatient          , fullfile(basedir, subfolder, filename), 'Sheet', 'Patient'           );
     writetable(tmpAntibiotics      , fullfile(basedir, subfolder, filename), 'Sheet', 'Antibiotics'       );
@@ -61,6 +65,7 @@ for i = 1:npatients
     writetable(tmpCRP              , fullfile(basedir, subfolder, filename), 'Sheet', 'CRPs'              );
     writetable(tmpPFT              , fullfile(basedir, subfolder, filename), 'Sheet', 'PFTs'              );
     writetable(tmpMicrobiology     , fullfile(basedir, subfolder, filename), 'Sheet', 'Microbiology'      );
+    writetable(tmpHghtWght         , fullfile(basedir, subfolder, filename), 'Sheet', 'HeightWeight'      );
 
 end
 

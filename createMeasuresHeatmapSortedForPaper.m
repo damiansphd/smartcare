@@ -26,7 +26,8 @@ if ismember(study, {'SC', 'TM'})
     colors(8,:)  = temp(18,:);
     colors(9,:)  = temp(20,:);
     %colors(10,:)  = [1 0 1];
-    nmeasures = 9;
+    nmeasures     = 9;
+    studyduration = 184;
 elseif ismember(study, {'CL'})
     %colors(1,:)  = [0 0 0];     % black for no measures
     colors(1,:)  = temp(4,:);
@@ -46,6 +47,7 @@ elseif ismember(study, {'CL'})
     colors(15,:)  = temp(20,:);
     %colors(16,:)  = [1 0 1];
     nmeasures = 15;
+    studyduration = 184;
 elseif ismember(study, {'BR'})
     colors(1,:)  = temp(4,:);
     colors(2,:)  = temp(5,:);
@@ -64,14 +66,13 @@ elseif ismember(study, {'BR'})
     colors(15,:)  = temp(18,:);
     colors(16,:)  = temp(19,:);
     colors(17,:)  = temp(20,:);
-    colors(18,:)  = [1 0 1];
+    %colors(18,:)  = [1 0 1];
     nmeasures = 17;
+    studyduration = max(physdata.ScaledDateNum);
 else
     fprintf('**** Unknown Study ****');
     return;
 end
-
-studyduration = 184;
 
 % get the date scaling offset for each patient
 patientoffsets = getPatientOffsets(physdata);

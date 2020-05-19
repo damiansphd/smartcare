@@ -6,7 +6,7 @@ function ex_start = calcExStartFromTestLabels(amLabelledInterventions, amInterve
 
 plotsacross = 1;
 plotsdown = 6;
-countthresh = 5;
+%countthresh = 5;
 
 name1 = sprintf('%s - Ex_Start from TestLabels', modelrun);
 [f1, p1] = createFigureAndPanel(name1, 'Portrait', 'A4');
@@ -18,7 +18,9 @@ name1 = sprintf('%s - Ex_Start from TestLabels', modelrun);
                             
 sumtrue = sum(truevotes);
 sumfalse = sum(falsevotes);
-sumtrue((sumtrue + sumfalse) < countthresh) = 0;
+%sumtrue((sumtrue + sumfalse) < countthresh) = 0;
+countthresh = max(sumtrue) * 0.2;
+sumtrue(sumtrue < countthresh) = 0;
 
 days = (-1 * (size(truevotes,2)):-1);
 thisplot = 1;
@@ -42,7 +44,9 @@ idx = amLabelledInterventions.IncludeInTestSet == 'Y';
                                 overall_pdoffset(idx, :), max_offset);
 sumtrue = sum(truevotes);
 sumfalse = sum(falsevotes);
-sumtrue((sumtrue + sumfalse) < countthresh) = 0;
+%sumtrue((sumtrue + sumfalse) < countthresh) = 0;
+countthresh = max(sumtrue) * 0.2;
+sumtrue(sumtrue < countthresh) = 0;
                             
 days = (-1 * (size(truevotes,2)):-1);
 thisplot = thisplot + 1;

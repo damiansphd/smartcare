@@ -26,7 +26,7 @@ fprintf('Loading datademographics by patient %s\n', datademographicsfile);
 load(fullfile(basedir, subfolder, datademographicsfile));
 fprintf('Loading data outliers %s\n', dataoutliersfile);
 load(fullfile(basedir, subfolder, dataoutliersfile));
-if ismember(study, {'SC', 'CL'})
+if ismember(study, {'SC', 'CL', 'BR'})
     fprintf('Loading latest labelled test data file %s\n', labelledinterventionsfile);
     load(fullfile(basedir, subfolder, labelledinterventionsfile), 'amLabelledInterventions');
 end
@@ -192,9 +192,7 @@ amEMMCPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount,
 toc
 fprintf('\n');
 
-%ex_start = input('Look at best start and enter exacerbation start: ');
-%fprintf('\n');
-if ismember(study, {'SC', 'CL'})
+if ismember(study, {'SC', 'CL', 'BR'})
     ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions(intrkeepidx, :), amInterventions, ...
                 overall_pdoffset, max_offset, 'Plots', plotname, ninterventions, nlatentcurves);
 else
@@ -202,7 +200,6 @@ else
    fprintf('\n'); 
 end
 
-   
 tic
 run_type = 'Best Alignment';
 ex_text = sprintf('%d', ex_start);

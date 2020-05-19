@@ -122,8 +122,9 @@ elseif runfunction == 5
     fprintf('Plot being generated from Adobe Illustrator\n');
 elseif runfunction == 6
     fprintf('Plotting Variables vs latent curve allocation\n');
-    [pvaltable] = amEMMCPlotVariablesVsLatentCurveSetForPaper(amInterventions, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
-        cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves, scenario, randomseed);
+    [pvaltable] = amEMMCPlotVariablesVsLatentCurveSetForPaper(amInterventions, pmPatients, pmPatientMeasStats, ...
+        ivandmeasurestable, cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ...
+        ninterventions, nlatentcurves, scenario, randomseed, study);
 elseif runfunction == 7
     fprintf('Loading Predictive Model Patient info\n');
     fprintf('Plotting interventions over time by latent curve set\n');

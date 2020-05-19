@@ -11,7 +11,7 @@ if ismember(displaymeasure, {'Clinical CRP'})
 elseif ismember(displaymeasure, {'Clinical FEV1'})
     rwcolour = [0.000, 0.650, 1.000];
     smcolour = [0.000, 0.650, 1.000];
-elseif ismember(displaymeasure, {'Activity'})
+elseif ismember(displaymeasure, {'Activity', 'Calorie'})
     rwcolour = [0.935, 0.378, 0.484];
     smcolour = [0.635, 0.078, 0.184];
 elseif ismember(displaymeasure, {'Appetite'})
@@ -20,7 +20,7 @@ elseif ismember(displaymeasure, {'Appetite'})
 elseif ismember(displaymeasure, {'Cough'})
     rwcolour = [0.000, 0.647, 0.941];
     smcolour = [0.000, 0.447, 0.741];
-elseif ismember(displaymeasure, {'LungFunction'})
+elseif ismember(displaymeasure, {'LungFunction', 'FEV1'})
     rwcolour = [0.95 , 0.525, 0.298];
     smcolour = [0.85 , 0.325, 0.098];
 elseif ismember(displaymeasure, {'O2Saturation'})
@@ -29,10 +29,10 @@ elseif ismember(displaymeasure, {'O2Saturation'})
 elseif ismember(displaymeasure, {'PulseRate'})
     rwcolour = [0.794, 0.484, 0.856];
     smcolour = [0.494, 0.184, 0.556];
-elseif ismember(displaymeasure, {'SleepActivity'})
+elseif ismember(displaymeasure, {'SleepActivity', 'MinsAsleep'})
     rwcolour = [0.666, 0.874, 0.388];
     smcolour = [0.466, 0.674, 0.188];
-elseif ismember(displaymeasure, {'SputumVolume'})
+elseif ismember(displaymeasure, {'SputumVolume', 'RestingHR'})
     rwcolour = [0.867, 0.719, 0.523];
     smcolour = [0.767, 0.619, 0.423];
 elseif ismember(displaymeasure, {'Temperature'})

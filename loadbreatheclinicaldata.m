@@ -24,20 +24,27 @@ userid = 501;
 hospital = 'PAP';
 for i = 1:npatients
     if ~ismember(patientdata.StudyID{i}, '')
-        brpatrow.ID            = userid;
-        brpatrow.Hospital      = hospital;
-        brpatrow.StudyNumber   = patientdata.StudyID(i);
-        brpatrow.StudyDate     = patientdata.StudyDate(i);
-        brpatrow.DOB           = patientdata.DOB(i);
-        brpatrow.Age           = patientdata.Age(i);
-        brpatrow.Sex           = patientdata.Sex(i);
-        brpatrow.Height        = patientdata.Height(i);
-        brpatrow.Weight        = patientdata.Weight(i);
-        brpatrow.PredictedFEV1 = patientdata.PredictedFEV1(i);
-        brpatrow.FEV1SetAs     = round(patientdata.PredictedFEV1(i), 1);
-        brpatrow.StudyEmail    = patientdata.StudyEmail(i);
-        brpatrow.CFGene1       = patientdata.CFGene1(i);
-        brpatrow.CFGene2       = patientdata.CFGene2(i);
+        brpatrow.ID                   = userid;
+        brpatrow.Hospital             = hospital;
+        brpatrow.StudyNumber          = patientdata.StudyID(i);
+        brpatrow.StudyDate            = patientdata.StudyDate(i);
+        brpatrow.Prior6Mnth           = brpatrow.StudyDate - calmonths(6);
+        brpatrow.Post6Mnth            = brpatrow.StudyDate + calmonths(6);
+        brpatrow.DOB                  = patientdata.DOB(i);
+        brpatrow.Age                  = patientdata.Age(i);
+        brpatrow.Sex                  = patientdata.Sex(i);
+        brpatrow.Height               = patientdata.Height(i);
+        brpatrow.Weight               = patientdata.Weight(i);
+        brpatrow.PredictedFEV1        = patientdata.PredictedFEV1(i);
+        brpatrow.FEV1SetAs            = round(patientdata.PredictedFEV1(i), 1);
+        brpatrow.StudyEmail           = patientdata.StudyEmail(i);
+        brpatrow.CFGene1              = patientdata.CFGene1(i);
+        brpatrow.CFGene2              = patientdata.CFGene2(i);
+        brpatrow.GeneralComments      = patientdata.Comments(i);
+        brpatrow.DrugTherapyStartDate = patientdata.DrugTherapyStartDate(i);
+        brpatrow.DrugTherapyType      = patientdata.DrugType(i);
+        brpatrow.DrugTherapyComment   = patientdata.Comment(i);
+        
 
         brpatrow.CalcAge                  = floor(years(brpatrow.StudyDate - brpatrow.DOB));
         brpatrow.CalcAgeExact             = years(brpatrow.StudyDate - brpatrow.DOB);
@@ -167,6 +174,7 @@ for i = 1:ncv
         brcvrow.Hospital         = hospital;
         brcvrow.StudyNumber      = cvdata.StudyID(i);
         brcvrow.AttendanceDate   = cvdata.AttendanceDate(i);
+        brcvrow.Location         = cvdata.Location(i);
     
         brClinicVisits = [brClinicVisits; brcvrow];
     end
@@ -229,6 +237,14 @@ opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile1), 'Sheet',
 opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'})) = {'char'};
 opts.DataRange = 'A3';
 pftdata = readtable(fullfile(basedir, subfolder, clinicalfile1), opts, 'Sheet', 'PFTs');
+
+opts = detectImportOptions(fullfile(basedir, subfolder, clinicalfile1), 'Sheet', '1yr PFTs');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'})) = {'char'};
+opts.DataRange = 'A3';
+pft1Ydata = readtable(fullfile(basedir, subfolder, clinicalfile1), opts, 'Sheet', '1yr PFTs');
+
+pftdata = [pftdata; pft1Ydata];
+
 npft = size(pftdata, 1);
 for i = 1:npft
     if size(brPatient.ID(ismember(brPatient.StudyNumber, pftdata.StudyID(i))), 1) == 0

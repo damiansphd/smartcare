@@ -1,5 +1,5 @@
 function [wcxpvaltable] = amEMMCPlotVariablesVsLatentCurveSetForPaper(amInterventions, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
-        cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves, scenario, randomseed)
+        cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves, scenario, randomseed, study)
     
 % amEMMCPlotVariablesVsLatentCurveSet - compact plots of various variables
 % against latent curve set assigned to try and observe correlations
@@ -24,7 +24,8 @@ barvartext = {%'Gender'; ...
               'Time Since Last Ex'; ...
               'Pct Time Since Last Ex'; ...
               'Time Since Last Ex or Study Start'; ...
-              'Pct Time Since Last Ex or Study Start'};
+              'Pct Time Since Last Ex or Study Start'; ...
+              'Pct Has Cold or Flu'};
           
 polarvartext = {'Day of Year'};
 
@@ -75,7 +76,14 @@ amInterventions.Properties.VariableNames{'SortedLatentCurve'} = 'LatentCurve';
 
 % Scatter plot variables
 % 1) Robust Max FEV1
-mfev1idx  = measures.Index(ismember(measures.DisplayName, 'LungFunction'));
+if ismember(study, {'SC', 'TM'})
+    mfev1idx  = measures.Index(ismember(measures.DisplayName, 'LungFunction'));
+elseif ismember(study, {'CL', 'BR'})
+    mfev1idx  = measures.Index(ismember(measures.DisplayName, 'FEV1'));
+else
+    fprintf('**** Unknown Study ****\n');
+    return
+end
 fev1max  = pmPatientMeasStats(pmPatientMeasStats.MeasureIndex == mfev1idx, {'PatientNbr', 'Study', 'ID', 'RobustMax'});
 lc = innerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'LeftVariables', {'SmartCareID', 'IVStartDate', 'IVScaledDateNum', 'LatentCurve'}, 'RightVariables', {'RobustMax'});
 scattervardata(:, 1) = lc.RobustMax;
@@ -348,6 +356,20 @@ for v = 1:nbarvars
 
         legendtext = {'< 4wks', '>= 4wks'};
         blc.PValCol = blc.Bucket;
+    elseif ismember(barvartext(v), {'Pct Has Cold or Flu'})
+        nbarsplits = 2;
+        barvardata = zeros(nlatentcurves, nbarsplits);
+        for n = 1:nlatentcurves
+            barvardata(n, 1) = sum(lc.LatentCurve == n & ismember(lc.Sex, 'Male'));
+            barvardata(n, 2) = sum(lc.LatentCurve == n & ismember(lc.Sex, 'Female'));
+        end
+        if ismember(barvartext(v), 'Pct Gender')
+            barvardata = 100 * (barvardata ./ sum(barvardata, 2));
+        end
+        legendtext = {'M', 'F'};
+        blc = lc;
+        blc.PValCol(:) = 1;
+        blc.PValCol(ismember(blc.Sex, 'Female')) = 2; 
         
     end
     

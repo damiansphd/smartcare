@@ -1,4 +1,4 @@
-function [lcbymodelrun, offsetbymodelrun] = amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models, plotmode)
+function [lcbymodelrun, offsetbymodelrun] = amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions, modelrun, modelidx, models, plotmode, study)
 
 % amEMMCCompareMultipleModelRunToTestData - compares the output of multiple model runs to
 % the labelled test data. Able to handle multiple latent curve sets.
@@ -166,7 +166,7 @@ resulttable = sortrows(resulttable, {'NumLCSets', 'Measures', 'MaxOffset', 'Data
 if ismember(plotmode, {'Overall'})
     plotsacross = 1;
     plotsdown = 1;
-    plottitle = sprintf('Model Run Results %s_gp%d_lm%d_in%d_nl%d(%d-%d) vs Labelled Test Data', mversion, treatgap, testlabelmthd, intrmode, nlatentcurves,  modelidx, size(models,1));
+    plottitle = sprintf('%s Model Run Results %s_gp%d_lm%d_in%d_nl%d(%d-%d) vs Labelled Test Data', study, mversion, treatgap, testlabelmthd, intrmode, nlatentcurves,  modelidx, size(models,1));
 
     [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 
@@ -184,7 +184,7 @@ if ismember(plotmode, {'Overall'})
     h.GridVisible = 'on';
 
     plotsubfolder = 'Plots';
-    savePlotInDir(f, plottitle, plotsubfolder);
+    savePlotInDir(f, sprintf('%s %s', plottitle, datestr(clock(),30)), plotsubfolder);
     close(f);
 
     writetable(resulttable, fullfile(basedir, 'ExcelFiles', sprintf('%s.xlsx', plottitle)));
@@ -206,7 +206,7 @@ elseif ismember(plotmode, {'ByLCSet'})
     for n = 1:nlatentcurves
         plotsacross = 1;
         plotsdown = 1;
-        plottitle = sprintf('Model Run Results %s_in%d_nl%d_tg%d(%d-%d) vs Labelled Test Data C%d', mversion, intrmode, nlatentcurves, treatgap, modelidx, size(models,1), n);
+        plottitle = sprintf('%s Model Run Results %s_in%d_nl%d_tg%d(%d-%d) vs Labelled Test Data C%d', study, mversion, intrmode, nlatentcurves, treatgap, modelidx, size(models,1), n);
 
         [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
 
@@ -225,7 +225,7 @@ elseif ismember(plotmode, {'ByLCSet'})
         h.GridVisible = 'on';
 
         plotsubfolder = 'Plots';
-        savePlotInDir(f, plottitle, plotsubfolder);
+        savePlotInDir(f, sprintf('%s %s', plottitle, datestr(clock(),30)), plotsubfolder);
         close(f);
     end
 else

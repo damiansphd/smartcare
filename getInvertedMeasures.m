@@ -6,7 +6,7 @@ function [invmeasarray] = getInvertedMeasures(study)
 if ismember(study, {'SC'})
     invmeasarray = {'PulseRate'};
 elseif ismember(study, {'BR'})
-    invmeasarray = {'PulseRate'};
+    invmeasarray = {'PulseRate', 'MinsAsleep', 'MinsAwake', 'RestingHR', 'Temperature'};
 elseif ismember(study, {'CL'})
     invmeasarray = {'PulseRate', 'RespiratoryRate', 'SleepDisturbance', 'Temperature'};
 else
