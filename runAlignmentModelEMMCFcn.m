@@ -66,7 +66,7 @@ detaillog = true;
 
 % populate multiplicative normalisation (sigma) values based on methodology
 % selected
-normstd = calculateSigmaNormalisation(amInterventions, measures, demographicstable, ninterventions, nmeasures, sigmamethod);
+normstd = calculateSigmaNormalisation(amInterventions, measures, demographicstable, ninterventions, nmeasures, sigmamethod, study);
 
 % calculate additive normalisation (mu) based on methodology
 % and then create normalised data cube.

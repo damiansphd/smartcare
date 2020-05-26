@@ -6,6 +6,11 @@ function ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions, am
 % latent curves
 
 ex_start = zeros(1, nlatentcurves);
+if nlatentcurves > 1
+    countthresh = 3;
+else
+    countthresh = 5;
+end
 
 for n = 1:nlatentcurves
     tmp_overall_pdoffset = reshape(overall_pdoffset(n,:,:), [ninterventions, max_offset]);
@@ -13,7 +18,7 @@ for n = 1:nlatentcurves
     tmp_plotname = sprintf('%s C%d', plotname, n);
     
     ex_start(n) = calcExStartFromTestLabels(amLabelledInterventions, amInterventions, ...
-        tmp_overall_pdoffset, max_offset, plotsubfolder, tmp_plotname);
+        tmp_overall_pdoffset, max_offset, plotsubfolder, tmp_plotname, countthresh);
 end
 
 end

@@ -196,7 +196,7 @@ brphysdata_predateoutlierhandling = brphysdata;
 
 % don't do this for project breathe
 % analyse measurement date outliers and handle as appropriate
-%brphysdata = analyseAndHandleDateOutliers(brphysdata, study, doupdates);
+brphysdata = analyseAndHandleDateOutliers(brphysdata, study, doupdates);
 
 createMeasuresHeatmapWithStudyPeriod(brphysdata, broffset, brPatient, study);
 

@@ -243,7 +243,7 @@ close(f4);
 toc
 fprintf('\n');
 
-if ismember(study, {'SC', 'TM'}) 
+if ismember(study, {'SC', 'TM', 'BR'}) 
     tic
     % add handling for 'sparse' patients here
     fprintf('Handline patients with sparse measurements\n');
