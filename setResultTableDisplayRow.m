@@ -92,9 +92,15 @@ if sum(measures.Mask) == 0
 elseif sum(measures.Mask) == nmeasures
     rawtext = 'All';
 elseif (sum(measures.Mask) > 0)
-    temp = extractBefore(measures.DisplayName(logical(measures.Mask)),3);
-    rawtext = strcat(temp{:});
-    rawtext = strrep(rawtext, 'WeWe', 'WtWe');
+    rawtext = '';
+    for m = 1:nmeasures
+        if logical(measures.Mask(m))
+            rawtext = sprintf('%s%s', rawtext, getShortNameForMeasure(measures.Name{m}));
+        end
+    end
+    %temp = extractBefore(measures.DisplayName(logical(measures.Mask)),3);
+    %rawtext = strcat(temp{:});
+    %rawtext = strrep(rawtext, 'WeWe', 'WtWe');
 end
 resultrow.Measures = {sprintf('%d:%s', measuresmask, rawtext)};
 
