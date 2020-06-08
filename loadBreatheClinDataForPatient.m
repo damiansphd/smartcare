@@ -6,7 +6,7 @@ function [brPatient, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits,
 % patient
 
 [brpatrow, bradmrow, brabrow, brcvrow, brovrow, brucrow, ...
-    brcrprow, brpftrow, brmicrorow, ~, ~] = createBreatheClinicalTables(1);
+    brcrprow, brpftrow, brmicrorow, brhwrow, ~] = createBreatheClinicalTables(1);
 
 % patient sheet
 opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'Patient');
@@ -212,6 +212,26 @@ for i = 1:ncrp
     brcrprow.PatientAntibiotics = crpdata.PatientAntibiotics(i);
 
     brCRP = [brCRP; brcrprow];
+end
+
+fprintf('HeightWeight       ');
+opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'HeightWeight');
+opts.DataRange = 'A2';
+hwdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'HeightWeight');
+nhw = size(hwdata, 1);
+fprintf('%2d rows\n', nhw);
+for i = 1:nhw
+    brhwrow.ID                 = scid;
+    brhwrow.Hospital           = hospital;
+    brhwrow.StudyNumber        = studynbr;
+    brhwrow.MeasDate           = hwdata.MeasDate(i);
+    brhwrow.Height             = hwdata.Height(i);
+    brhwrow.H_ZScore           = hwdata.H_ZScore(i);
+    brhwrow.Weight             = hwdata.Weight(i);
+    brhwrow.W_ZScore           = hwdata.W_ZScore(i);
+    brhwrow.BMI                = hwdata.BMI(i);
+    
+    brHghtWght = [brHghtWght; brhwrow];
 end
 
 end

@@ -32,7 +32,7 @@ for i = 1:npatients
     %                                              'Height', 'Weight', 'PredictedFEV1', 'CFGene1', 'CFGene2', 'GeneralComments', ...
     %                                              'DrugTherapyStartDate', 'DrugTherapyType', 'DrugTherapyComment'});
     
-    tmpPatient = brPatient(brPatient.ID == scid, :);              
+    tmpPatient          = brPatient(brPatient.ID == scid, :);              
     tmpAntibiotics      = brAntibiotics(brAntibiotics.ID == scid, :);
     tmpAdmissions       = brAdmissions(brAdmissions.ID == scid, :);
     tmpClinicVisits     = brClinicVisits(brClinicVisits.ID == scid, :);

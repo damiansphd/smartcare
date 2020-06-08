@@ -39,6 +39,7 @@ brUnplannedContact  = sortrows(brUnplannedContact, {'ID', 'ContactDate'});
 brPFT               = sortrows(brPFT,              {'ID', 'LungFunctionDate'});
 brCRP               = sortrows(brCRP,              {'ID', 'CRPDate'});
 brMicrobiology      = sortrows(brMicrobiology,     {'ID', 'DateMicrobiology'});
+brHghtWght          = sortrows(brHghtWght,         {'ID', 'MeasDate'});
 
 % data integrity checks
 tic
@@ -188,8 +189,23 @@ fprintf('Found %d > 200mg/L CRP measurements\n', sum(idx));
 if sum(idx) > 0
     brCRP(idx,:)
 end
+
+% crp
+idx = isnat(brHghtWght.MeasDate);
+fprintf('Found %d Height Weight measurements with blank dates\n', sum(idx));
+if sum(idx) > 0
+    brHghtWght(idx,:)
+    brHghtWght(idx, :) = [];
+end
+idx = brHghtWght.Weight < 35 | brHghtWght.Weight > 120;
+fprintf('Found %d < 35kg or > 120kg Weight measurements\n', sum(idx));
+if sum(idx) > 0
+    brHghtWght(idx,:)
+end
 toc
 fprintf('\n');
+
+
 
 tic
 fprintf('Checking for dates in the future\n');
@@ -202,6 +218,7 @@ brOtherVisits(brOtherVisits.AttendanceDate > datetime("today"),:)
 brUnplannedContact(brUnplannedContact.ContactDate > datetime("today"),:)
 brCRP(brCRP.CRPDate > datetime("today"),:)
 brPFT(brPFT.LungFunctionDate > datetime("today"),:)
+brHghtWght(brHghtWght.MeasDate > datetime("today"),:)
 toc
 fprintf('\n');
 
@@ -212,9 +229,9 @@ basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 outputfilename = 'breatheclinicaldata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
-save(fullfile(basedir, subfolder,outputfilename), 'brPatient', 'brMicrobiology', ...
-    'brClinicVisits', 'brOtherVisits', 'brUnplannedContact', 'brPFT', 'brHghtWght', ...
-    'brAdmissions', 'brAntibiotics', 'brCRP', 'brEndStudy');
+save(fullfile(basedir, subfolder,outputfilename), 'brPatient', 'brAdmissions', 'brAntibiotics', ...
+    'brClinicVisits', 'brOtherVisits', 'brUnplannedContact', ...
+    'brPFT', 'brCRP', 'brHghtWght', 'brMicrobiology', 'brEndStudy');
 toc
 
 
