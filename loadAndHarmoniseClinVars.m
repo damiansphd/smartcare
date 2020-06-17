@@ -1,5 +1,6 @@
 function [cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
-    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study)
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds, cdUnplannedContact] ...
+            = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study)
 
 % loadAndHarmoniseClinVars - loads clinical variables and standardises
 % their naming
@@ -12,6 +13,7 @@ if ismember(study, 'SC')
     load(fullfile(basedir, subfolder, clinicalmatfile), 'cdPatient', 'cdMicrobiology', 'cdClinicVisits', 'cdPFT', 'cdAdmissions', ...
         'cdAntibiotics', 'cdCRP', 'cdEndStudy', 'cdOtherVisits', 'cdMedications', 'cdNewMeds');
     cdHghtWght = [];
+    cdUnplannedContact = [];
 elseif ismember(study, 'TM')
     load(fullfile(basedir, subfolder, clinicalmatfile), 'tmPatient', 'tmMicrobiology', 'tmClinicVisits', 'tmPFT', 'tmAdmissions', ...
         'tmAntibiotics', 'tmCRP', 'tmEndStudy');
@@ -27,6 +29,7 @@ elseif ismember(study, 'TM')
     cdHghtWght     = [];
     cdMedications  = [];
     cdNewMeds      = [];
+    cdUnplannedContact = [];
 elseif ismember(study, 'CL')
     load(fullfile(basedir, subfolder, clinicalmatfile), 'clPatient', 'clMicrobiology', 'clClinicVisits', 'clPFT', 'clAdmissions', ...
         'clAntibiotics', 'clCRP', 'clEndStudy', 'clOtherVisits', 'clHghtWght');
@@ -42,9 +45,10 @@ elseif ismember(study, 'CL')
     cdHghtWght     = clHghtWght;
     cdMedications  = [];
     cdNewMeds      = [];
+    cdUnplannedContact = [];
 elseif ismember(study, 'BR')
     load(fullfile(basedir, subfolder, clinicalmatfile), 'brPatient', 'brMicrobiology', 'brClinicVisits', 'brPFT', 'brAdmissions', ...
-        'brAntibiotics', 'brCRP', 'brEndStudy', 'brOtherVisits', 'brHghtWght');
+        'brAntibiotics', 'brCRP', 'brEndStudy', 'brOtherVisits', 'brHghtWght', 'brUnplannedContact');
     cdPatient      = brPatient;
     cdMicrobiology = brMicrobiology;
     cdClinicVisits = brClinicVisits;
@@ -57,6 +61,7 @@ elseif ismember(study, 'BR')
     cdHghtWght     = brHghtWght;
     cdMedications  = [];
     cdNewMeds      = [];
+    cdUnplannedContact = brUnplannedContact;
 end
 
 toc
