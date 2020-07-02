@@ -30,13 +30,13 @@ if ismember(study, {'SC', 'CL', 'BR'})
     fprintf('Loading latest labelled test data file %s\n', labelledinterventionsfile);
     load(fullfile(basedir, subfolder, labelledinterventionsfile), 'amLabelledInterventions');
 end
-if ismember(study, 'BR')
-    subfolder = 'DataFiles/ProjectBreathe';
-elseif ismember(study, 'CL')
-    subfolder = 'DataFiles/ProjectClimb';
+
+if ismember(study, {'BR', 'CL'})
+    subfolder = sprintf('DataFiles/%s', study);
 else
     subfolder = 'DataFiles';
 end
+
 fprintf('Loading elective treatment file %s\n', electivefile);
 elopts = detectImportOptions(fullfile(basedir, subfolder, electivefile));
 elopts.VariableTypes(:, ismember(elopts.VariableNames, {'Hospital'})) = {'char'};

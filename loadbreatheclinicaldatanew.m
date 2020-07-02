@@ -1,7 +1,9 @@
 clear; clc; close all;
 
+study = 'BR';
+
 basedir = setBaseDir();
-subfolder = 'DataFiles/ProjectBreathe/ClinicalData';
+subfolder = sprintf('DataFiles/%s/ClinicalData', study);
 
 [brPatient, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brUnplannedContact, ...
     brCRP, brPFT, brMicrobiology, brHghtWght, brEndStudy] = createBreatheClinicalTables(0);

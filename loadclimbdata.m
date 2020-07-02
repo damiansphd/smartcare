@@ -15,7 +15,7 @@ fprintf('\n');
 study = 'CL';
 
 basedir = setBaseDir();
-subfolder = 'DataFiles/ProjectClimb/MeasurementDataFinal';
+subfolder = sprintf('DataFiles/%s/MeasurementDataFinal', study);
 
 clphysdata = createClimbMeasuresTable(0);
 clphysdata_deleted = clphysdata;

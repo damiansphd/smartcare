@@ -18,7 +18,7 @@ study = 'BR';
 measfileprefix = 'Breathe_';
 measfilesuffix = '.csv';
 basedir   = setBaseDir();
-subfolder = 'DataFiles/ProjectBreathe';
+subfolder = sprintf('DataFiles/%s', study);
 
 tic
 fprintf('Loading Breathe GUID Mapping info\n');

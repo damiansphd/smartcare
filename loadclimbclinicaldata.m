@@ -1,7 +1,9 @@
 clear; clc; close all;
 
+study = 'CL';
+
 basedir = setBaseDir();
-subfolder = 'DataFiles/ProjectClimb/Proformas final';
+subfolder = sprintf('DataFiles/%s/Proformas final', study);
 
 [clABNameTable] = getClimbAntibioticNameTable();
 [clPatient, clAdmissions, clAntibiotics, clClinicVisits, clOtherVisits, clCRP, clPFT, clMicrobiology, clHghtWght, clOthClinMeas, clEndStudy] = createClimbClinicalTables(0);

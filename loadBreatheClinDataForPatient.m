@@ -10,7 +10,11 @@ function [brPatient, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits,
 
 % patient sheet
 opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'Patient');
-opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'})) = {'char'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'}))    = {'char'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyDate'}))  = {'datetime'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'Prior6Mnth'})) = {'datetime'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'Post6Mnth'}))  = {'datetime'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'DOB'}))        = {'datetime'};
 patientdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'Patient');
 npatients = size(patientdata, 1); % NB should always be 1 as sheets are per patient
 
@@ -19,7 +23,7 @@ if npatients ~= 1
     return;
 end
 if ismember(patientdata.ID(1), '')
-    fprintf('**** More than one patient in this single patient file ****\n');
+    fprintf('**** Blank patient id in this file ****\n');
     return;
 end
 i = 1;
@@ -58,7 +62,8 @@ brpatrow.CalcFEV1SetAsOrigAge     = round(calcPredictedFEV1(brpatrow.Age, brpatr
 
 brPatient = [brPatient; brpatrow];
 
-if ~ismember(brPatient.StudyNumber, strrep(strrep(brPatient.StudyEmail, 'projectb', ''), '@gmail.com', ''))
+%if ~ismember(brPatient.StudyNumber, strrep(strrep(brPatient.StudyEmail, 'projectb', ''), '@gmail.com', ''))
+if ~ismember(brpatrow.StudyNumber, brpatrow.StudyEmail)
     fprintf('**** Study Number is inconsistent with Study Email ****\n');
 end
 

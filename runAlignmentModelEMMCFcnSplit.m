@@ -31,13 +31,12 @@ load(fullfile(basedir, subfolder, labelledinterventionsfile), 'amLabelledInterve
 fprintf('Loading Predictive Model Patient Measures Stats\n');
 load(fullfile(basedir, subfolder, sprintf('%spredictivemodelinputs.mat', study)), 'pmPatients', 'pmPatientMeasStats');
 
-if ismember(study, 'BR')
-    subfolder = 'DataFiles/ProjectBreathe';
-elseif ismember(study, 'CL')
-    subfolder = 'DataFiles/ProjectClimb';
+if ismember(study, {'BR', 'CL'})
+    subfolder = sprintf('DataFiles/%s', study);
 else
     subfolder = 'DataFiles';
 end
+
 fprintf('Loading elective treatment file %s\n', electivefile);
 elopts = detectImportOptions(fullfile(basedir, subfolder, electivefile));
 elopts.VariableTypes(:, ismember(elopts.VariableNames, {'Hospital'})) = {'char'};
