@@ -51,8 +51,9 @@ fprintf('40: Plot superimposed alignment curves - 7d mean shift - one per page\n
 fprintf('41: Plot superimposed alignment curves - 7d mean shift - all on one page\n');
 fprintf('42: Plot superimposed measures - 7d mean shift - one intervention per page\n');
 fprintf('43: Plot histogram of time since last exacerbation\n');
+fprintf('44: Plotting histogram of lc set by hospital\n');
 
-noptions = 43;
+noptions = 44;
 fprintf('\n');
 runfunction = selectValFromRange('Choose function', 1, noptions);
 fprintf('\n');
@@ -523,6 +524,16 @@ elseif runfunction == 43
     load(fullfile(basedir, subfolder, ivandmeasuresfile), 'ivandmeasurestable');
     amEMMCPlotHistOfTimeSinceLastExacerbation(pmPatients, amInterventions, ivandmeasurestable, ...
         npatients, maxdays, plotname, plotsubfolder, nlatentcurves);
+elseif runfunction == 44
+    fprintf('Plotting histogram of lc set by hospital\n');
+    if contains(modelrun, {'Age', 'Gender'})
+        % call function to combine both files
+        [tmpInterventions, tmpnlc] = combineSplitClassResults(study, modelrun, basedir, subfolder);
+    else
+        tmpInterventions = amInterventions;
+        tmpnlc           = nlatentcurves;
+    end
+    plotLCSetByHospital(tmpInterventions, plotname, plotsubfolder, tmpnlc);
 else
     fprintf('Should not get here....\n');
 end

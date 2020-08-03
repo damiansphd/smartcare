@@ -80,7 +80,7 @@ for t = 1:ntiles
 
     % populate multiplicative normalisation (sigma) values based on methodology
     % selected
-    normstd = calculateSigmaNormalisation(amInterventions, measures, demographicstable, ninterventions, nmeasures, sigmamethod);
+    normstd = calculateSigmaNormalisation(amInterventions, measures, demographicstable, ninterventions, nmeasures, sigmamethod, study);
 
     % calculate additive normalisation (mu) based on methodology
     % and then create normalised data cube.
@@ -206,11 +206,11 @@ for t = 1:ntiles
     toc
     fprintf('\n');
 
-    %ex_start = input('Look at best start and enter exacerbation start: ');
-    %fprintf('\n');
+    ex_start = input('Look at best start and enter exacerbation start: ');
+    fprintf('\n');
 
-    ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions(intrkeepidx, :), amInterventions, ...
-                 overall_pdoffset, max_offset, 'Plots', plotname, ninterventions, nlatentcurves);
+    %ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions(intrkeepidx, :), amInterventions, ...
+    %             overall_pdoffset, max_offset, 'Plots', plotname, ninterventions, nlatentcurves);
 
     tic
     run_type = 'Best Alignment';

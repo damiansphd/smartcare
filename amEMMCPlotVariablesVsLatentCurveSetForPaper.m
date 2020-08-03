@@ -357,6 +357,8 @@ for v = 1:nbarvars
         legendtext = {'< 4wks', '>= 4wks'};
         blc.PValCol = blc.Bucket;
     elseif ismember(barvartext(v), {'Pct Has Cold or Flu'})
+        % < needs to be finished - at the moment just cut and pasted from
+        % gender >
         nbarsplits = 2;
         barvardata = zeros(nlatentcurves, nbarsplits);
         for n = 1:nlatentcurves

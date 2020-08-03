@@ -29,7 +29,7 @@ shifttext = sprintf('%ddMeanShift', meanwindow);
 plottitle   = sprintf('%svs%s Typical Profile Comparison %s', study1, study2, shifttext);
 
 if ismember(study1, {'SC'}) && ismember(study2, {'CL'})
-    commonmeas = {'Cough'; 'O2Saturation'; 'PulseRate'; 'SleepActivity'; 'Wellness'};
+    commonmeas = {'Cough'; 'O2Saturation'; 'PulseRate'; 'SleepActivity'; 'Weight'; 'Wellness'};
     ncommonmeas = size(commonmeas, 1);
 elseif ismember(study1, {'CL'}) && ismember(study2, {'CL'})
     commonmeas = {'Activity'; 'Appetite'; 'Breathlessness'; 'Cough'; ...

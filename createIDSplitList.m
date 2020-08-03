@@ -21,9 +21,11 @@ if splitmthd == 1
     splittbl  = pmPatients(:, {'PatientNbr', 'Study', 'ID', 'Age'});
     splittbl = sortrows(splittbl, {'Age'}, 'ascend');
     splittbl.NTile(:) = 0;
-    medage = median(splittbl.Age);
-    splittbl.NTile(splittbl.Age <= medage) = 1;
-    splittbl.NTile(splittbl.Age >  medage) = 2;
+    %medage = median(splittbl.Age);
+    %splittbl.NTile(splittbl.Age <= medage) = 1;
+    %splittbl.NTile(splittbl.Age >  medage) = 2;
+    splittbl.NTile(splittbl.Age < 6) = 1;
+    splittbl.NTile(splittbl.Age >=  6) = 2;
     splittbl = sortrows(splittbl, {'Study', 'ID'}, 'ascend');
     splittxt = 'Age';
     ntiles = 2;

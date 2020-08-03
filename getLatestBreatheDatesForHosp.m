@@ -9,7 +9,7 @@ isValid = true;
 if (ismember(hosp, 'PAP'))
     clinicaldate = '20200410';
     measdate     = '20200413';
-    guidmapdate  = '20200625';
+    guidmapdate  = '20200720';
 else
     fprintf('**** Unknown Hospital ****/n');
     isValid      = false;
