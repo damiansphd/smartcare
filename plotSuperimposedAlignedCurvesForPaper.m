@@ -1,4 +1,4 @@
-nMfunction plotSuperimposedAlignedCurvesForPaper(ax, meancurvemean, xl, yl, ...
+function plotSuperimposedAlignedCurvesForPaper(ax, meancurvemean, xl, yl, ...
     tmpmeasures, tmpnmeasures, min_offset, max_offset, align_wind, ex_start, study)
 
 % plotSuperimposedAlignedCurves - plots the aligned curves for each of the
@@ -7,7 +7,7 @@ nMfunction plotSuperimposedAlignedCurvesForPaper(ax, meancurvemean, xl, yl, ...
 
 anchor = 1; % latent curve is to be anchored on the plot (right side at min_offset)
 
-o[tmpmeasures] = sortMeasuresForPaper(study, tmpmeasures);
+[tmpmeasures] = sortMeasuresForPaper(study, tmpmeasures);
 
 for m = 1:tmpnmeasures
     thiscolour = getColourForMeasure(tmpmeasures.DisplayName{m});
