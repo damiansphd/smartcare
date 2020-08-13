@@ -6,10 +6,14 @@ function [clinicaldate, measdate, guidmapdate, isValid] = getLatestBreatheDatesF
 
 isValid = true;
 
+guidmapdate  = '20200807';
+
 if (ismember(hosp, 'PAP'))
     clinicaldate = '20200410';
     measdate     = '20200413';
-    guidmapdate  = '20200720';
+elseif (ismember(hosp, 'CDF'))
+    clinicaldate = '20200701';
+    measdate     = '20200701';
 else
     fprintf('**** Unknown Hospital ****/n');
     isValid      = false;

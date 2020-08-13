@@ -14,13 +14,20 @@ fprintf('\n');
 study = 'BR';
 
 % get list of Project Breathe hospitals
-brhosp = getListOfBreatheHospitals();
+%brhosp = getListOfBreatheHospitals();
 
-for i = 1:size(brhosp, 1)
+% select hospital to run for
+[hosprow, isValid] = selectHospital();
+
+if ~isValid
+    return
+end
+
+for i = 1:size(hosprow, 1)
     tic
-    fprintf('Creating patient clinical files for %s\n', brhosp.Name{i});
-    [clindate, ~, guidmapdate] = getLatestBreatheDatesForHosp(brhosp.Acronym{i});
-    outputfolder = sprintf('DataFiles/%s/ClinicalData/%s/%s', study, brhosp.Acronym{i}, clindate);
+    fprintf('Creating patient clinical files for %s\n', hosprow.Name{i});
+    [clindate, ~, guidmapdate] = getLatestBreatheDatesForHosp(hosprow.Acronym{i});
+    outputfolder = sprintf('DataFiles/%s/ClinicalData/%s/%s', study, hosprow.Acronym{i}, clindate);
     if ~exist(fullfile(basedir, outputfolder), 'dir')
         mkdir(fullfile(basedir, outputfolder));
     end
@@ -30,14 +37,14 @@ for i = 1:size(brhosp, 1)
     fprintf('---------------------------------\n');
     guidfile  = sprintf('Project Breathe GUID to email address map %s.xlsx', guidmapdate);
     dfsubfolder = sprintf('DataFiles/%s', study);
-    guidmap = readtable(fullfile(basedir, dfsubfolder, guidfile), 'Sheet', brhosp.Name{i});
+    guidmap = readtable(fullfile(basedir, dfsubfolder, guidfile), 'Sheet', hosprow.Name{i});
     guidmap.Properties.VariableNames{1} = 'StudyNumber';
     toc
     fprintf('\n');
 
     % filter brPatient for records by hospital
     
-    hospPatient = brPatient(ismember(brPatient.Hospital, brhosp.Acronym{i}), :);
+    hospPatient = brPatient(ismember(brPatient.Hospital, hosprow.Acronym{i}), :);
     npatients = size(hospPatient, 1);
 
     tic
@@ -85,6 +92,8 @@ for i = 1:size(brhosp, 1)
         writetable(tmpHghtWght         , fullfile(basedir, outputfolder, filename), 'Sheet', 'HeightWeight'      );
 
     end
+    
+    
 
     % now create stub spreadsheets for any new patients.
     newpats = guidmap(~ismember(guidmap.StudyNumber, hospPatient.StudyNumber), :);
@@ -109,9 +118,15 @@ for i = 1:size(brhosp, 1)
     tmpCRP(1, :)      = [];
     tmpHghtWght(1, :) = [];
     
-    for p = 1:size(newpats, 1)
+    if npatients == 0
+        scid = hosprow.StartID;
+    else 
         scid = scid + 1;
-        hospital = hospPatient.Hospital{i};
+    end
+    
+    hospital = hosprow.Acronym{1};
+    
+    for p = 1:size(newpats, 1)
         studynbr = newpats.StudyNumber{p};
         filename = sprintf('PBClinData-%3d-%s-%s-%s.xlsx', scid, hospital, studynbr, clindate);
         fprintf('Creating file %s\n', filename);
@@ -131,6 +146,8 @@ for i = 1:size(brhosp, 1)
         writetable(tmpPFT              , fullfile(basedir, outputfolder, filename), 'Sheet', 'PFTs'              );
         writetable(tmpMicrobiology     , fullfile(basedir, outputfolder, filename), 'Sheet', 'Microbiology'      );
         writetable(tmpHghtWght         , fullfile(basedir, outputfolder, filename), 'Sheet', 'HeightWeight'      );
+        
+        scid = scid + 1;
     end
 
     toc
