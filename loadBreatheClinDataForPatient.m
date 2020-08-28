@@ -40,7 +40,15 @@ brpatrow.Prior6Mnth           = brpatrow.StudyDate - calmonths(6);
 brpatrow.Post6Mnth            = brpatrow.StudyDate + calmonths(6);
 brpatrow.DOB                  = patientdata.DOB(i);
 brpatrow.Age                  = patientdata.Age(i);
-brpatrow.Sex                  = patientdata.Sex(i);
+gender = patientdata.Sex{i};
+if gender(1) == 'M' || gender(1) == 'm'
+    brpatrow.Sex = {'Male'};
+elseif gender(1) == 'F' || gender(1) == 'f'
+    brpatrow.Sex = {'Female'};
+else
+    fprintf('Unknown Gender %s\n', gender);
+    return
+end
 brpatrow.Height               = patientdata.Height(i);
 brpatrow.Weight               = patientdata.Weight(i);
 brpatrow.PredictedFEV1        = patientdata.PredictedFEV1(i);
@@ -96,7 +104,14 @@ for i = 1:nab
     brabrow.Hospital    = hospital;
     brabrow.StudyNumber = studynbr;
     brabrow.AntibioticName = abdata.AntibioticName(i);
-    brabrow.Route          = abdata.Route(i);
+    route = abdata.Route{i};
+    if route(1) == 'O' || route(1) == 'o'
+        brabrow.Route = {'Oral'};
+    elseif route(1) == 'I' || route(1) == 'i'
+        brabrow.Route = {'IV'};
+    else
+        fprintf('Unknown Route %s\n', route);
+    end
     if size(abdata.HomeIV_s{i}, 1) == 0
         if ismember(brabrow.Route, 'Oral')
             brabrow.HomeIV_s = 'No';
@@ -104,7 +119,15 @@ for i = 1:nab
             fprintf('Row %d (spreadsheet row %d): IV Treatment with blank Home IV field\n', i, i + 2);
         end
     else
+        homeiv = abdata.HomeIV_s{i};
         brabrow.HomeIV_s       = abdata.HomeIV_s(i);
+        if homeiv(1) == 'N' || homeiv(1) == 'n'
+            brabrow.HomeIV_s = {'No'};
+        elseif homeiv(1) == 'Y' || homeiv(1) == 'y'
+            brabrow.HomeIV_s = {'Yes'};
+        else
+            fprintf('Unknown Home IVs %s\n', homeiv);
+        end
     end
     brabrow.StartDate      = abdata.StartDate(i);
     brabrow.StopDate       = abdata.StopDate(i);
@@ -222,6 +245,11 @@ end
 fprintf('HeightWeight       ');
 opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'HeightWeight');
 opts.DataRange = 'A2';
+opts.VariableTypes(:, ismember(opts.VariableNames, {'Height'}))   = {'double'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'H_ZScore'})) = {'double'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'Weight'}))   = {'double'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'W_ZScore'})) = {'double'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'BMI'}))       = {'double'};
 hwdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'HeightWeight');
 nhw = size(hwdata, 1);
 fprintf('%2d rows\n', nhw);

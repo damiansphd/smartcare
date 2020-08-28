@@ -12,8 +12,8 @@ if (ismember(hosp, 'PAP'))
     clinicaldate = '20200410';
     measdate     = '20200413';
 elseif (ismember(hosp, 'CDF'))
-    clinicaldate = '20200701';
-    measdate     = '20200701';
+    clinicaldate = '20200731';
+    measdate     = '20200731';
 else
     fprintf('**** Unknown Hospital ****/n');
     isValid      = false;

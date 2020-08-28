@@ -8,7 +8,7 @@ if ismember(sex, 'Male') || ismember(sex, 'male')
 elseif ismember(sex, 'Female') || ismember(sex, 'female')
     predfev1 = (height * 0.01 * 3.95) - (age * 0.025) - 2.6;
 else
-    fprintf('*** Unknown gender ***');
+    fprintf('*** Unknown gender ***/n');
     predfev1 = -1;
 end
     
