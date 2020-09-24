@@ -6,7 +6,7 @@ function [clinicaldate, measdate, guidmapdate, isValid] = getLatestBreatheDatesF
 
 isValid = true;
 
-guidmapdate  = '20200807';
+guidmapdate  = '20200907';
 
 if (ismember(hosp, 'PAP'))
     clinicaldate = '20200410';

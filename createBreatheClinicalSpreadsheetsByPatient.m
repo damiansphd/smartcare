@@ -56,7 +56,7 @@ for i = 1:size(hosprow, 1)
         filename = sprintf('PBClinData-%3d-%s-%s-%s.xlsx', scid, hospital, studynbr, clindate);
         fprintf('Creating file %s\n', filename);    
 
-        tmpPatient          = hospPatient(brPatient.ID == scid, :);              
+        tmpPatient          = hospPatient(hospPatient.ID == scid, :);              
         tmpAntibiotics      = brAntibiotics(brAntibiotics.ID == scid, :);
         tmpAdmissions       = brAdmissions(brAdmissions.ID == scid, :);
         tmpClinicVisits     = brClinicVisits(brClinicVisits.ID == scid, :);
