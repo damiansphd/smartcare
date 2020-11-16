@@ -41,6 +41,10 @@ brpatrow.Post6Mnth            = brpatrow.StudyDate + calmonths(6);
 brpatrow.DOB                  = patientdata.DOB(i);
 brpatrow.Age                  = patientdata.Age(i);
 gender = patientdata.Sex{i};
+if size(gender, 2) == 0
+    fprintf('Blank Gender %s\n', gender);
+    return
+end 
 if gender(1) == 'M' || gender(1) == 'm'
     brpatrow.Sex = {'Male'};
 elseif gender(1) == 'F' || gender(1) == 'f'

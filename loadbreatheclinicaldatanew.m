@@ -18,7 +18,7 @@ fprintf('------------------------------------\n');
 % for each hospital, get the list of patient files
 for i = 1:size(brhosp, 1)
     % get latest clinical date for hospital and set correct source directory
-    fprintf('Loading for %20s\n', brhosp.Name{i});
+    fprintf('Loading for %s\n', brhosp.Name{i});
     [clinicaldate, ~, ~] = getLatestBreatheDatesForHosp(brhosp.Acronym{i});
     tmpfolder = sprintf('%s/%s/%s', subfolder, brhosp.Acronym{i}, clinicaldate);
     patfilelist = getListOfBreatheHospPatFiles(basedir, tmpfolder);
