@@ -6,7 +6,7 @@ subfolder = 'MatlabSavedVariables';
 [studynbr, study, ~] = selectStudy();
 [datamatfile, clinicalmatfile, ~] = getRawDataFilenamesForStudy(study);
 [physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, study);
-[cdPatient, ~, ~, ~, cdPFT, ~, ...
+[cdPatient, ~, ~, ~, ~, cdPFT, ~, ...
     ~, ~, ~, ~] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
 
 aminputfile = "CLalignmentmodelinputs_gap10.mat";

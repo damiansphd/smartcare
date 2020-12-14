@@ -13,25 +13,32 @@ fprintf('\n');
 
 study = 'BR';
 
-[~, measdate, guidmapdate] = getLatestBreatheDates();
-
-measfileprefix = 'Breathe_';
-measfilesuffix = '.csv';
-basedir   = setBaseDir();
-subfolder = sprintf('DataFiles/%s', study);
-
-tic
-fprintf('Loading Breathe GUID Mapping info\n');
-fprintf('---------------------------------\n');
-guidfile  = sprintf('Project Breathe GUID to email address map %s.xlsx', guidmapdate);
-guidmap = readtable(fullfile(basedir, subfolder, guidfile));
-guidmap.Properties.VariableNames{1} = 'StudyID';
-toc
-fprintf('\n');
+fprintf('Loading Project Breathe measurement data\n');
+fprintf('----------------------------------------\n');
 
 brphysdata = createBreatheMeasuresTable(0);
 brphysdata_deleted = brphysdata;
 brphysdata_deleted.Reason(:) = {''};
+
+% get list of Project Breathe hospitals
+brhosp = getListOfBreatheHospitals();
+
+% create concatenated guidmap file over all hospital
+guidmap = [];
+for h = 1:size(brhosp, 1)
+
+    fprintf('Getting GUID mappings for %s\n', brhosp.Name{h});
+    [~, guidmapdate] = getLatestBreatheDatesForHosp(brhosp.Acronym{h});
+    [hospguidmap] = loadGUIDFileForHosp(study, brhosp(h, :), guidmapdate);
+    
+    guidmap = [guidmap; hospguidmap];
+end
+
+measfileprefix = 'Breathe_';
+measdate       = getLatestBreatheMeasDate();
+measfilesuffix = '.csv';
+basedir        = setBaseDir();
+subfolder      = sprintf('DataFiles/%s/MeasurementData', study);
 
 measfilelisting = dir(fullfile(basedir, subfolder, sprintf('%s*%s%s', measfileprefix, measdate, measfilesuffix)));
 MeasFiles = cell(size(measfilelisting,1),1);
@@ -53,22 +60,22 @@ for i = 1:nmeasfile
     tic
     fprintf('Processing %2d: %s\n', i, MeasFiles{i});
     filetype = strrep(strrep(strrep(MeasFiles{i}, measfileprefix, ''), measfilesuffix, ''), sprintf('_%s', measdate), '');
-    
+
     mfopts = detectImportOptions(fullfile(basedir, subfolder, MeasFiles{i}), 'FileType', 'Text', 'Delimiter', ',');
     mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'IsDeleted'})) = {'logical'};
     mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'HasColdOrFlu'})) = {'logical'};
     mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'HasHayFever'})) = {'logical'};
-    
+
     measdata = readtable(fullfile(basedir, subfolder, MeasFiles{i}), mfopts);
     norigrows = size(measdata, 1);
     fprintf('%d measurements\n', norigrows);
-    measdata = outerjoin(measdata, guidmap, 'LeftKeys', {'PartitionKey'}, 'RightKeys', {'PartitionKey'}, 'RightVariables', {'StudyID'});
-    measdata = outerjoin(measdata, brPatient, 'LeftKeys', {'StudyID'}, 'RightKeys', {'StudyNumber'}, 'RightVariables', {'ID', 'StudyDate'});
+    measdata = outerjoin(measdata, guidmap, 'LeftKeys', {'PartitionKey'}, 'RightKeys', {'PartitionKey'}, 'RightVariables', {'StudyNumber'});
+    measdata = outerjoin(measdata, brPatient, 'LeftKeys', {'StudyNumber'}, 'RightKeys', {'StudyNumber'}, 'RightVariables', {'ID', 'StudyDate', 'PatClinDate'});
     measdata.TimestampDt = datetime(measdata.Timestamp, 'TimeZone','UTC','Format','yyyy-MM-dd HH:mm:ss.SSSSSSS Z');
     measdata.DateDt      = datetime(measdata.Date,    'TimeZone','UTC','Format','yyyy-MM-dd HH:mm:ss.SSSSSSS Z');
     measdata.TimestampDt.TimeZone = '';
     measdata.DateDt.TimeZone = '';
-    
+
     % remove rows with no measurements (added from outer join above
     idx = ismember(measdata.PartitionKey, '');
     if sum(idx) > 0
@@ -76,7 +83,7 @@ for i = 1:nmeasfile
         measdata(idx, :) = [];
     end
     % remove rows with unknown GUID
-    idx = ismember(measdata.StudyID, '');
+    idx = ismember(measdata.StudyNumber, '');
     if sum(idx) > 0
         fprintf('*** Deleting %d measures with unknown GUID ***\n', sum(idx));
         measdata(idx, :) = [];
@@ -97,6 +104,12 @@ for i = 1:nmeasfile
     idx = measdata.DateDt < measdata.StudyDate;
     if sum(idx) > 0
         fprintf('*** Deleting %d measures before study start date ***\n', sum(idx));
+        measdata(idx, :) = [];
+    end
+    % remove records after last patient clinical update date
+    idx = measdata.DateDt > measdata.PatClinDate;
+    if sum(idx) > 0
+        fprintf('*** Deleting %d measures after last clinical update by patient ***\n', sum(idx));
         measdata(idx, :) = [];
     end
     delzero = 1;
@@ -145,11 +158,11 @@ for i = 1:nmeasfile
             [brphysdata, brphysdata_deleted] = addBreatheRowsForMeasure(brphysdata, brphysdata_deleted, measdata, filetype, recordingtype, dontdelzero);
             recordingtype = 'HasHayFeverRecording';
             [brphysdata, brphysdata_deleted] = addBreatheRowsForMeasure(brphysdata, brphysdata_deleted, measdata, filetype, recordingtype, dontdelzero);
-            
+
         otherwise
             fprintf('*** Unknown file type %s ***\n', filetype)
     end
-    
+
     toc
     fprintf('\n');
 end
@@ -196,7 +209,7 @@ brphysdata_predateoutlierhandling = brphysdata;
 
 % don't do this for project breathe
 % analyse measurement date outliers and handle as appropriate
-brphysdata = analyseAndHandleDateOutliers(brphysdata, study, doupdates);
+%brphysdata = analyseAndHandleDateOutliers(brphysdata, study, doupdates);
 
 createMeasuresHeatmapWithStudyPeriod(brphysdata, broffset, brPatient, study);
 

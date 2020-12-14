@@ -5,7 +5,7 @@ study = 'BR';
 basedir = setBaseDir();
 subfolder = sprintf('DataFiles/%s/ClinicalData', study);
 
-[brPatient, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brUnplannedContact, ...
+[brPatient, brDrugTherapy, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brUnplannedContact, ...
     brCRP, brPFT, brMicrobiology, brHghtWght, brEndStudy] = createBreatheClinicalTables(0);
 
 tic
@@ -19,13 +19,13 @@ fprintf('------------------------------------\n');
 for i = 1:size(brhosp, 1)
     % get latest clinical date for hospital and set correct source directory
     fprintf('Loading for %s\n', brhosp.Name{i});
-    [clinicaldate, ~, ~] = getLatestBreatheDatesForHosp(brhosp.Acronym{i});
-    tmpfolder = sprintf('%s/%s/%s', subfolder, brhosp.Acronym{i}, clinicaldate);
+    [clinprocdate, ~] = getLatestBreatheDatesForHosp(brhosp.Acronym{i});
+    tmpfolder = sprintf('%s/%s/%s', subfolder, brhosp.Acronym{i}, clinprocdate);
     patfilelist = getListOfBreatheHospPatFiles(basedir, tmpfolder);
     for p = 1:size(patfilelist, 1)
         % for each patient file, extract the data and store in the clinical data tables
-        [brPatient, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brUnplannedContact, brCRP, brPFT, brMicrobiology, brHghtWght, brEndStudy] ...
-            = loadBreatheClinDataForPatient(brPatient, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brUnplannedContact, brCRP, brPFT, ...
+        [brPatient, brDrugTherapy, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brUnplannedContact, brCRP, brPFT, brMicrobiology, brHghtWght, brEndStudy] ...
+            = loadBreatheClinDataForPatient(brPatient, brDrugTherapy, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brUnplannedContact, brCRP, brPFT, ...
                     brMicrobiology, brHghtWght, brEndStudy, patfilelist{p}, basedir, tmpfolder);
     end 
 end
@@ -33,6 +33,7 @@ toc
 fprintf('\n');
 
 % sort rows
+brDrugTherapy       = sortrows(brDrugTherapy,      {'ID', 'DrugTherapyStartDate'});
 brAdmissions        = sortrows(brAdmissions,       {'ID', 'Admitted'});
 brAntibiotics       = sortrows(brAntibiotics,      {'ID', 'StartDate', 'AntibioticName'});
 brClinicVisits      = sortrows(brClinicVisits,     {'ID', 'AttendanceDate'});
@@ -78,6 +79,14 @@ idx = abs(brPatient.PredictedFEV1 - brPatient.CalcPredictedFEV1) > 0.05;
 fprintf('Found %d Patients with predicted FEV1 inconsistent with that calculated from age, height, gender\n', sum(idx));
 if sum(idx) > 0
     brPatient(idx,{'ID', 'Hospital', 'StudyNumber', 'Age', 'PredictedFEV1', 'CalcPredictedFEV1'})
+end
+
+% drug therapy data
+idx = isnat(brDrugTherapy.DrugTherapyStartDate);
+fprintf('Found %d Drug Therapy rows with blank dates\n', sum(idx));
+if sum(idx) > 0
+    brDrugTherapy(idx,:)
+    brDrugTherapy(idx, :) = [];
 end
 
 % admission data
@@ -207,10 +216,9 @@ end
 toc
 fprintf('\n');
 
-
-
 tic
 fprintf('Checking for dates in the future\n');
+brDrugTherapy(brDrugTherapy.DrugTherapyStartDate > datetime("today"),:)
 brAdmissions(brAdmissions.Admitted > datetime("today"),:)
 brAdmissions(brAdmissions.Discharge > datetime("today"),:)
 brAntibiotics(brAntibiotics.StartDate > datetime("today"), :)
@@ -231,13 +239,39 @@ basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 outputfilename = 'breatheclinicaldata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
-save(fullfile(basedir, subfolder,outputfilename), 'brPatient', 'brAdmissions', 'brAntibiotics', ...
-    'brClinicVisits', 'brOtherVisits', 'brUnplannedContact', ...
+save(fullfile(basedir, subfolder,outputfilename), 'brPatient', 'brDrugTherapy', 'brAdmissions', ...
+    'brAntibiotics', 'brClinicVisits', 'brOtherVisits', 'brUnplannedContact', ...
     'brPFT', 'brCRP', 'brHghtWght', 'brMicrobiology', 'brEndStudy');
 toc
 
+% plot histograms by hospital and by month of last patient clinical data
+% update
 
+plotsacross = 2;
+plotsdown   = ceil(size(brhosp, 1)/plotsacross);
 
+pghght = 3 * plotsdown;
+pgwdth = 7;
 
+plottitle = sprintf('Histogram of patient clinical data by month of last update');
+[f, p] = createFigureAndPanelForPaper(plottitle, pgwdth, pghght);
 
+for i = 1:size(brhosp, 1)
+
+    ax = subplot(plotsdown, plotsacross, i, 'Parent', p);
+
+    histogram(ax, month(brPatient.PatClinDate(ismember(brPatient.Hospital, brhosp.Acronym(i)))));
+    
+    xlabel(ax, 'Month');
+    ylabel(ax, 'Count');
+    title(ax, brhosp.Name{i});
+    xlim(ax, [1 12]);
+    
+    
+end
+
+plotsubfolder = sprintf('Plots/%s', study);
+savePlotInDir(f, plottitle, plotsubfolder);
+close(f);
+    
 

@@ -1,27 +1,40 @@
-function [brPatient, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brUnplannedContact, brCRP, brPFT, brMicrobiology, brHghtWght, brEndStudy] ...
-            = loadBreatheClinDataForPatient(brPatient, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brUnplannedContact, brCRP, brPFT, ...
-                    brMicrobiology, brHghtWght, brEndStudy, patfile, basedir, subfolder)
+function [brPatient, brDrugTherapy, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, ...
+            brUnplannedContact, brCRP, brPFT, brMicrobiology, brHghtWght, brEndStudy] ...
+            = loadBreatheClinDataForPatient(brPatient, brDrugTherapy, brAdmissions, brAntibiotics, ...
+                brClinicVisits, brOtherVisits, brUnplannedContact, brCRP, brPFT, brMicrobiology, ...
+                brHghtWght, brEndStudy, patfile, basedir, subfolder)
                 
 % loadBreatheClinDataForPatient - ingests the clinical data for a given
 % patient
 
-[brpatrow, bradmrow, brabrow, brcvrow, brovrow, brucrow, ...
+tmpstring = strrep(patfile, '.xlsx', '');
+tmplen    = strlength(tmpstring);
+
+patclindate = datetime(extractAfter(tmpstring, tmplen-8), 'InputFormat', 'yyyyMMdd');
+
+[brpatrow, brdrugtherrow, bradmrow, brabrow, brcvrow, brovrow, brucrow, ...
     brcrprow, brpftrow, brmicrorow, brhwrow, ~] = createBreatheClinicalTables(1);
 
 % patient sheet
 opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'Patient');
-opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'}))    = {'char'};
-opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyDate'}))  = {'datetime'};
-opts.VariableTypes(:, ismember(opts.VariableNames, {'Prior6Mnth'})) = {'datetime'};
-opts.VariableTypes(:, ismember(opts.VariableNames, {'Post6Mnth'}))  = {'datetime'};
-opts.VariableTypes(:, ismember(opts.VariableNames, {'DOB'}))        = {'datetime'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyID'}))     = {'char'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StudyDate'}))   = {'datetime'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'Prior6Mnth'}))  = {'datetime'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'Post6Mnth'}))   = {'datetime'};
+%opts.VariableTypes(:, ismember(opts.VariableNames, {'PatClinDate'})) = {'datetime'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'DOB'}))         = {'datetime'};
+opts = setvaropts(opts,{'StudyDate'},'InputFormat','MM/dd/yyyy');
+opts = setvaropts(opts,{'Prior6Mnth'},'InputFormat','MM/dd/yyyy');
+opts = setvaropts(opts,{'Post6Mnth'},'InputFormat','MM/dd/yyyy');
+%opts = setvaropts(opts,{'PatClinDate'},'InputFormat','MM/dd/yyyy');
+opts = setvaropts(opts,{'DOB'},'InputFormat','MM/dd/yyyy');
 patientdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'Patient');
-npatients = size(patientdata, 1); % NB should always be 1 as sheets are per patient
+npatrows = size(patientdata, 1); % NB should always be 1 as sheets are per patient
 
-if npatients ~= 1
-    fprintf('**** More than one patient in this single patient file ****\n');
-    return;
-end
+%if npatrows ~= 1
+%    fprintf('**** More than one patient in this single patient file ****\n');
+%    return;
+%end
 if ismember(patientdata.ID(1), '')
     fprintf('**** Blank patient id in this file ****\n');
     return;
@@ -38,6 +51,7 @@ brpatrow.StudyNumber          = studynbr;
 brpatrow.StudyDate            = patientdata.StudyDate(1);
 brpatrow.Prior6Mnth           = brpatrow.StudyDate - calmonths(6);
 brpatrow.Post6Mnth            = brpatrow.StudyDate + calmonths(6);
+brpatrow.PatClinDate          = patclindate;
 brpatrow.DOB                  = patientdata.DOB(i);
 brpatrow.Age                  = patientdata.Age(i);
 gender = patientdata.Sex{i};
@@ -61,9 +75,6 @@ brpatrow.StudyEmail           = patientdata.StudyEmail(i);
 brpatrow.CFGene1              = patientdata.CFGene1(i);
 brpatrow.CFGene2              = patientdata.CFGene2(i);
 brpatrow.GeneralComments      = patientdata.GeneralComments(i);
-brpatrow.DrugTherapyStartDate = patientdata.DrugTherapyStartDate(i);
-brpatrow.DrugTherapyType      = patientdata.DrugTherapyType(i);
-brpatrow.DrugTherapyComment   = patientdata.DrugTherapyComment(i);
 
 brpatrow.CalcAge                  = floor(years(brpatrow.StudyDate - brpatrow.DOB));
 brpatrow.CalcAgeExact             = years(brpatrow.StudyDate - brpatrow.DOB);
@@ -74,14 +85,61 @@ brpatrow.CalcFEV1SetAsOrigAge     = round(calcPredictedFEV1(brpatrow.Age, brpatr
 
 brPatient = [brPatient; brpatrow];
 
-%if ~ismember(brPatient.StudyNumber, strrep(strrep(brPatient.StudyEmail, 'projectb', ''), '@gmail.com', ''))
 if ~ismember(brpatrow.StudyNumber, brpatrow.StudyEmail)
     fprintf('**** Study Number is inconsistent with Study Email ****\n');
 end
 
+% temporary logic until separate table in spreadsheet
+% need to add in read from drug therapy tab once all patient s/s have been
+% recreated with the latest data
+fprintf('Drug Therapy       ');
+
+ndrthrows = 0;
+for i = 1:npatrows
+    if size(patientdata.DrugTherapyType{i}, 2) > 1
+        brdrugtherrow.ID                   = scid;
+        brdrugtherrow.Hospital             = hospital;
+        brdrugtherrow.StudyNumber          = studynbr;
+        brdrugtherrow.DrugTherapyStartDate = patientdata.DrugTherapyStartDate(i);
+        brdrugtherrow.DrugTherapyType      = patientdata.DrugTherapyType(i);
+        brdrugtherrow.DrugTherapyComment   = patientdata.DrugTherapyComment(i);
+
+        brDrugTherapy = [brDrugTherapy; brdrugtherrow];
+        ndrthrows = ndrthrows + 1;
+    end
+end
+fprintf('%2d rows\n', ndrthrows);
+
+% replace with this code after all clinical spreadsheets have been
+% recreated.
+% and all the comments fields in each table lower down
+
+% drug therapy data
+%fprintf('Drug Therapy       ');
+%opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'DrugTherapy');
+%opts.VariableTypes(:, ismember(opts.VariableNames, {'DrugTherapyStartDate'})) = {'datetime'};
+%opts.DataRange = 'A2';
+%drthdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'DrugTherapy');
+%ndrth= size(drthdata, 1);
+%fprintf('%2d rows\n', nadm);
+%for i = 1:ndrth
+%    brdrugtherrow.ID                    = scid;
+%    brdrugtherrow.Hospital              = hospital;
+%    brdrugtherrow.StudyNumber           = studynbr;
+%    brdrugtherrow.DrugTherapyStartDate  = drthdata.DrugTherapyStartDate(i);
+%    brdrugtherrow.DrugTherapyType       = drthdata.DrugTherapyType(i);
+%    brdrugtherrow.DrugTherapyComment    = drthdata.DrugTherapyComment(i);
+%    
+%    brDrugTherapy = [brDrugTherapy; brdrugtherrow];
+%end
+
 % admission data
 fprintf('Admissions         ');
 opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'Admissions');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'Admitted'}))         = {'datetime'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'Discharge'}))         = {'datetime'};
+opts = setvaropts(opts,{'Admitted'},'InputFormat','MM/dd/yyyy');
+opts = setvaropts(opts,{'Discharge'},'InputFormat','MM/dd/yyyy');
 opts.DataRange = 'A2';
 admdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'Admissions');
 nadm = size(admdata, 1);
@@ -92,6 +150,7 @@ for i = 1:nadm
     bradmrow.StudyNumber = studynbr;
     bradmrow.Admitted    = admdata.Admitted(i);
     bradmrow.Discharge   = admdata.Discharge(i);
+    %bradmrow.Comments    = admdata.Comments(i);
 
     brAdmissions = [brAdmissions; bradmrow];
 end
@@ -99,6 +158,10 @@ end
 % antibiotic data
 fprintf('Antibiotics        ');
 opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'Antibiotics');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StartDate'}))         = {'datetime'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'StopDate'}))         = {'datetime'};
+opts = setvaropts(opts,{'StartDate'},'InputFormat','MM/dd/yyyy');
+opts = setvaropts(opts,{'StopDate'},'InputFormat','MM/dd/yyyy');
 opts.DataRange = 'A2';
 abdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'Antibiotics');
 nab = size(abdata, 1);
@@ -143,6 +206,8 @@ end
 % microbiology data
 fprintf('Microbiology       ');
 opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'Microbiology');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'DateMicrobiology'}))         = {'datetime'};
+opts = setvaropts(opts,{'DateMicrobiology'},'InputFormat','MM/dd/yyyy');
 opts.DataRange = 'A2';
 microdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'Microbiology');
 nmicro = size(microdata, 1);
@@ -154,12 +219,15 @@ for i = 1:nmicro
     brmicrorow.Microbiology     = microdata.Microbiology(i);
     brmicrorow.DateMicrobiology = microdata.DateMicrobiology(i);
     brmicrorow.NameIfOther      = microdata.NameIfOther(i);
+    %brmicrorow.Comments         = microbdata.Comments(i);
 
     brMicrobiology = [brMicrobiology; brmicrorow];
 end
 
 fprintf('Clinic visits      ');
 opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'ClinicVisits');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'AttendanceDate'}))         = {'datetime'};
+opts = setvaropts(opts,{'AttendanceDate'},'InputFormat','MM/dd/yyyy');
 opts.DataRange = 'A2';
 cvdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'ClinicVisits');
 ncv = size(cvdata, 1);
@@ -170,12 +238,15 @@ for i = 1:ncv
     brcvrow.StudyNumber      = studynbr;
     brcvrow.AttendanceDate   = cvdata.AttendanceDate(i);
     brcvrow.Location         = cvdata.Location(i);
+    %brcvrow.Comments         = cvdata.Comments(i);
 
     brClinicVisits = [brClinicVisits; brcvrow];
-end
+end 
 
 fprintf('Other visits       ');
 opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'OtherVisits');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'AttendanceDate'})) = {'datetime'};
+opts = setvaropts(opts,{'AttendanceDate'},'InputFormat','MM/dd/yyyy');
 opts.DataRange = 'A2';
 ovdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'OtherVisits');
 nov = size(ovdata, 1);
@@ -186,12 +257,15 @@ for i = 1:nov
     brovrow.StudyNumber      = studynbr;
     brovrow.AttendanceDate   = ovdata.AttendanceDate(i);
     brovrow.VisitType        = ovdata.VisitType(i);
+    %brovrow.Comments         = ovdata.Comments(i);
 
     brOtherVisits = [brOtherVisits; brovrow];
 end
 
 fprintf('Unplanned contacts ');
 opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'UnplannedContacts');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'ContactDate'})) = {'datetime'};
+opts = setvaropts(opts,{'ContactDate'},'InputFormat','MM/dd/yyyy');
 opts.DataRange = 'A2';
 ucdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'UnplannedContacts');
 nuc = size(ucdata, 1);
@@ -202,12 +276,16 @@ for i = 1:nuc
     brucrow.StudyNumber      = studynbr;
     brucrow.ContactDate      = ucdata.ContactDate(i);
     brucrow.TypeOfContact    = ucdata.TypeOfContact(i);
+    %brucrow.Comments         = ucdata.Comments(i);
 
     brUnplannedContact = [brUnplannedContact; brucrow];
 end
 
 fprintf('PFTs               ');
 opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'PFTs');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'LungFunctionDate'})) = {'datetime'};
+opts = setvaropts(opts,{'LungFunctionDate'},'InputFormat','MM/dd/yyyy');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'FEV1'})) = {'double'};
 opts.DataRange = 'A2';
 pftdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'PFTs');
 npft = size(pftdata, 1);
@@ -223,37 +301,48 @@ for i = 1:npft
     calcfev1setas               = brPatient.CalcFEV1SetAs(1);
     brpftrow.FEV1_              = 100 * brpftrow.FEV1 / fev1setas;
     brpftrow.CalcFEV1_          = 100 * brpftrow.FEV1 / calcfev1setas;
+    %brpftrow.Comments           = pftdata.Comments(i);
 
     brPFT = [brPFT; brpftrow];
 end
 
 fprintf('CRPs               ');
 opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'CRPs');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'Level'})) = {'char'};
+opts.VariableTypes(:, ismember(opts.VariableNames, {'CRPDate'})) = {'datetime'};
+opts = setvaropts(opts,{'CRPDate'},'InputFormat','MM/dd/yyyy');
 opts.DataRange = 'A2';
 crpdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'CRPs');
 ncrp = size(crpdata, 1);
 fprintf('%2d rows\n', ncrp);
 for i = 1:ncrp
-    brcrprow.ID                 = scid;
-    brcrprow.Hospital           = hospital;
-    brcrprow.StudyNumber        = studynbr;
-    brcrprow.CRPDate            = crpdata.CRPDate(i);
-    brcrprow.Level              = crpdata.Level(i);
-    brcrprow.NumericLevel       = crpdata.Level(i);
-    brcrprow.Units              = {'mg/L'};
-    brcrprow.PatientAntibiotics = crpdata.PatientAntibiotics(i);
-
-    brCRP = [brCRP; brcrprow];
+    if size(crpdata.Level{i}, 2) > 0
+        brcrprow.ID                 = scid;
+        brcrprow.Hospital           = hospital;
+        brcrprow.StudyNumber        = studynbr;
+        brcrprow.CRPDate            = crpdata.CRPDate(i);
+        brcrprow.Level              = crpdata.Level(i);
+        brcrprow.NumericLevel       = str2double(regexprep(brcrprow.Level{1}, '[<>]',''));
+        brcrprow.Units              = {'mg/L'};
+        brcrprow.PatientAntibiotics = crpdata.PatientAntibiotics(i);
+        %brcrprow.Comments           = crpdata.Comments(i);
+        
+        brCRP = [brCRP; brcrprow];
+    else
+        fprintf('*** blank CRP entry ***\n');
+    end
 end
 
 fprintf('HeightWeight       ');
 opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'HeightWeight');
-opts.DataRange = 'A2';
+opts.VariableTypes(:, ismember(opts.VariableNames, {'MeasDate'})) = {'datetime'};
+opts = setvaropts(opts,{'MeasDate'},'InputFormat','MM/dd/yyyy');
 opts.VariableTypes(:, ismember(opts.VariableNames, {'Height'}))   = {'double'};
 opts.VariableTypes(:, ismember(opts.VariableNames, {'H_ZScore'})) = {'double'};
 opts.VariableTypes(:, ismember(opts.VariableNames, {'Weight'}))   = {'double'};
 opts.VariableTypes(:, ismember(opts.VariableNames, {'W_ZScore'})) = {'double'};
 opts.VariableTypes(:, ismember(opts.VariableNames, {'BMI'}))       = {'double'};
+opts.DataRange = 'A2';
 hwdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'HeightWeight');
 nhw = size(hwdata, 1);
 fprintf('%2d rows\n', nhw);
@@ -267,9 +356,12 @@ for i = 1:nhw
     brhwrow.Weight             = hwdata.Weight(i);
     brhwrow.W_ZScore           = hwdata.W_ZScore(i);
     brhwrow.BMI                = hwdata.BMI(i);
+    %brhwrow.Comments           = hwdata.Comments(i);
     
     brHghtWght = [brHghtWght; brhwrow];
 end
+
+fprintf('\n');
 
 end
 

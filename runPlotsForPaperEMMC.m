@@ -41,7 +41,7 @@ if runfunction == 0 || runfunction == 1 || runfunction == 2 || runfunction == 6 
     tic
     [datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(study);
     [physdata, offset, physdata_predateoutlierhandling] = loadAndHarmoniseMeasVars(datamatfile, subfolder, study);
-    [cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
+    [cdPatient, cdDrugTherapy, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
         cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
     alignmentmodelinputsfile = sprintf('%salignmentmodelinputs_gap%d.mat', study, chosentreatgap);
     fprintf('Loading alignment model inputs\n');

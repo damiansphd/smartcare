@@ -1,4 +1,4 @@
-function [cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
+function [cdPatient, cdDrugTherapy, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
     cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds, cdUnplannedContact] ...
             = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study)
 
@@ -12,7 +12,8 @@ fprintf('Loading %s Clinical data\n', study);
 if ismember(study, 'SC')
     load(fullfile(basedir, subfolder, clinicalmatfile), 'cdPatient', 'cdMicrobiology', 'cdClinicVisits', 'cdPFT', 'cdAdmissions', ...
         'cdAntibiotics', 'cdCRP', 'cdEndStudy', 'cdOtherVisits', 'cdMedications', 'cdNewMeds');
-    cdHghtWght = [];
+    cdDrugTherapy      = [];
+    cdHghtWght         = [];
     cdUnplannedContact = [];
 elseif ismember(study, 'TM')
     load(fullfile(basedir, subfolder, clinicalmatfile), 'tmPatient', 'tmMicrobiology', 'tmClinicVisits', 'tmPFT', 'tmAdmissions', ...
@@ -25,6 +26,7 @@ elseif ismember(study, 'TM')
     cdAntibiotics  = tmAntibiotics;
     cdCRP          = tmCRP;
     cdEndStudy     = tmEndStudy;
+    cdDrugTherapy  = [];
     cdOtherVisits  = [];
     cdHghtWght     = [];
     cdMedications  = [];
@@ -43,13 +45,15 @@ elseif ismember(study, 'CL')
     cdEndStudy     = clEndStudy;
     cdOtherVisits  = clOtherVisits;
     cdHghtWght     = clHghtWght;
+    cdDrugTherapy  = [];
     cdMedications  = [];
     cdNewMeds      = [];
     cdUnplannedContact = [];
 elseif ismember(study, 'BR')
-    load(fullfile(basedir, subfolder, clinicalmatfile), 'brPatient', 'brMicrobiology', 'brClinicVisits', 'brPFT', 'brAdmissions', ...
+    load(fullfile(basedir, subfolder, clinicalmatfile), 'brPatient', 'brDrugTherapy', 'brMicrobiology', 'brClinicVisits', 'brPFT', 'brAdmissions', ...
         'brAntibiotics', 'brCRP', 'brEndStudy', 'brOtherVisits', 'brHghtWght', 'brUnplannedContact');
     cdPatient      = brPatient;
+    cdDrugTherapy  = brDrugTherapy;
     cdMicrobiology = brMicrobiology;
     cdClinicVisits = brClinicVisits;
     cdPFT          = brPFT;

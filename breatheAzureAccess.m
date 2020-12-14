@@ -5,9 +5,11 @@ tic
 study = 'BR';
 
 %setenv MW_WASB_SAS_TOKEN '?st=2019-11-18T10%3A30%3A12Z&se=2020-01-31T10%3A30%3A00Z&sp=rl&sv=2018-03-28&sr=c&sig=K2eIs8G3%2FCYtVlH0WoL2i0hbipfspb55XtY6NLEQNXA%3D';
-setenv MW_WASB_SAS_TOKEN '?st=2020-02-10T13%3A58%3A17Z&se=2020-10-01T14%3A58%3A00Z&sp=rl&sv=2018-03-28&sr=c&sig=2rckL4bC5zqtSvtaYIaTsbkibfFN5gqAaqxWBAYPQdc%3D';
+%setenv MW_WASB_SAS_TOKEN '?st=2020-02-10T13%3A58%3A17Z&se=2020-10-01T14%3A58%3A00Z&sp=rl&sv=2018-03-28&sr=c&sig=2rckL4bC5zqtSvtaYIaTsbkibfFN5gqAaqxWBAYPQdc%3D';
+setenv MW_WASB_SAS_TOKEN '?st=2020-11-05T16%3A58%3A03Z&se=2021-06-30T16%3A58%3A00Z&sp=rl&sv=2018-03-28&sr=c&sig=MFVnZM9aJc5VqbCjL%2BmO8pjPqk%2BOq%2FWER0oZz5s5w%2Bg%3D';
+
 [basedir] = setBaseDir();
-subfolder = aprintf('DataFiles/%s', study);
+subfolder = sprintf('DataFiles/%s/MeasurementData', study);
 
 mdir = 'wasbs://avatardatadropprod@breatheprodstorageavatar.blob.core.windows.net/';
 

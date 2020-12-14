@@ -8,7 +8,7 @@ fprintf('Processing %s data\n', recordingtype);
 if nmeas > 0
     mbrphysdata                   = createBreatheMeasuresTable(nmeas);
     mbrphysdata.SmartCareID       = measdata.ID;
-    mbrphysdata.UserName          = measdata.StudyID;
+    mbrphysdata.UserName          = measdata.StudyNumber;
     mbrphysdata.Date_TimeRecorded = measdata.DateDt;
     ctcolumn = getColumnForRawBreatheCaptureType(filetype);
     mbrphysdata(:, {'CaptureType'}) = measdata(:, {ctcolumn});

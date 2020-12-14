@@ -18,32 +18,27 @@ study = 'BR';
 
 % select hospital to run for
 [hosprow, isValid] = selectHospital();
-
 if ~isValid
     return
 end
+fprintf('\n');
 
 for i = 1:size(hosprow, 1)
     tic
     fprintf('Creating patient clinical files for %s\n', hosprow.Name{i});
-    [clindate, ~, guidmapdate] = getLatestBreatheDatesForHosp(hosprow.Acronym{i});
-    outputfolder = sprintf('DataFiles/%s/ClinicalData/%s/%s', study, hosprow.Acronym{i}, clindate);
+    fprintf('\n');
+    
+    [clindate, guidmapdate] = getLatestBreatheDatesForHosp(hosprow.Acronym{i});
+    outputfolder = sprintf('DataFiles/%s/ClinicalData/%s/%sUpd', study, hosprow.Acronym{i}, clindate);
     if ~exist(fullfile(basedir, outputfolder), 'dir')
         mkdir(fullfile(basedir, outputfolder));
     end
     
-    tic
-    fprintf('Loading Breathe GUID Mapping info\n');
-    fprintf('---------------------------------\n');
-    guidfile  = sprintf('Project Breathe GUID to email address map %s.xlsx', guidmapdate);
-    dfsubfolder = sprintf('DataFiles/%s', study);
-    guidmap = readtable(fullfile(basedir, dfsubfolder, guidfile), 'Sheet', hosprow.Name{i});
-    guidmap.Properties.VariableNames{1} = 'StudyNumber';
+    [guidmap] = loadGUIDFileForHosp(study, hosprow(i, :), guidmapdate);
     toc
     fprintf('\n');
 
     % filter brPatient for records by hospital
-    
     hospPatient = brPatient(ismember(brPatient.Hospital, hosprow.Acronym{i}), :);
     npatients = size(hospPatient, 1);
 
@@ -56,7 +51,8 @@ for i = 1:size(hosprow, 1)
         filename = sprintf('PBClinData-%3d-%s-%s-%s.xlsx', scid, hospital, studynbr, clindate);
         fprintf('Creating file %s\n', filename);    
 
-        tmpPatient          = hospPatient(hospPatient.ID == scid, :);              
+        tmpPatient          = hospPatient(hospPatient.ID == scid, :);
+        tmpDrugTherapy      = brDrugTherapy(brDrugTherapy.ID == scid, :);
         tmpAntibiotics      = brAntibiotics(brAntibiotics.ID == scid, :);
         tmpAdmissions       = brAdmissions(brAdmissions.ID == scid, :);
         tmpClinicVisits     = brClinicVisits(brClinicVisits.ID == scid, :);
@@ -70,6 +66,7 @@ for i = 1:size(hosprow, 1)
         % remove unwanted columns
         tmpPatient(:, {'FEV1SetAs', 'CalcAge', 'CalcAgeExact', 'CalcPredictedFEV1', ...
             'CalcPredictedFEV1OrigAge', 'CalcFEV1SetAs', 'CalcFEV1SetAsOrigAge'}) = [];
+        tmpDrugTherapy(:, {'ID', 'StudyNumber', 'Hospital'})               = [];
         tmpAntibiotics(:, {'ID', 'StudyNumber', 'Hospital'})               = [];
         tmpAdmissions(:, {'ID', 'StudyNumber', 'Hospital'})                = [];
         tmpClinicVisits(:, {'ID', 'StudyNumber', 'Hospital'})              = [];
@@ -81,6 +78,7 @@ for i = 1:size(hosprow, 1)
         tmpHghtWght(:, {'ID', 'StudyNumber', 'Hospital'})                  = [];
 
         writetable(tmpPatient          , fullfile(basedir, outputfolder, filename), 'Sheet', 'Patient'           );
+        writetable(tmpDrugTherapy      , fullfile(basedir, outputfolder, filename), 'Sheet', 'DrugTherapy'       );
         writetable(tmpAntibiotics      , fullfile(basedir, outputfolder, filename), 'Sheet', 'Antibiotics'       );
         writetable(tmpAdmissions       , fullfile(basedir, outputfolder, filename), 'Sheet', 'Admissions'        );
         writetable(tmpClinicVisits     , fullfile(basedir, outputfolder, filename), 'Sheet', 'ClinicVisits'      );
@@ -97,13 +95,14 @@ for i = 1:size(hosprow, 1)
 
     % now create stub spreadsheets for any new patients.
     newpats = guidmap(~ismember(guidmap.StudyNumber, hospPatient.StudyNumber), :);
-    [tmpPatient, tmpAdmissions, tmpAntibiotics, tmpClinicVisits, tmpOtherVisits, tmpUnplannedContact, ...
+    [tmpPatient, tmpDrugTherapy, tmpAdmissions, tmpAntibiotics, tmpClinicVisits, tmpOtherVisits, tmpUnplannedContact, ...
         tmpCRP, tmpPFT, tmpMicrobiology, tmpHghtWght, ~] = createBreatheClinicalTables(1);
     
     % remove unwanted columns and the row where a table has a numeric
     % column
     tmpPatient(:, {'FEV1SetAs', 'CalcAge', 'CalcAgeExact', 'CalcPredictedFEV1', ...
         'CalcPredictedFEV1OrigAge', 'CalcFEV1SetAs', 'CalcFEV1SetAsOrigAge'}) = [];
+    tmpDrugTherapy(:, {'ID', 'StudyNumber', 'Hospital'})               = [];
     tmpAntibiotics(:, {'ID', 'StudyNumber', 'Hospital'})               = [];
     tmpAdmissions(:, {'ID', 'StudyNumber', 'Hospital'})                = [];
     tmpClinicVisits(:, {'ID', 'StudyNumber', 'Hospital'})              = [];
@@ -137,6 +136,7 @@ for i = 1:size(hosprow, 1)
         tmpPatient.StudyEmail  = studynbr;
 
         writetable(tmpPatient          , fullfile(basedir, outputfolder, filename), 'Sheet', 'Patient'           );
+        writetable(tmpDrugTherapy      , fullfile(basedir, outputfolder, filename), 'Sheet', 'DrugTherapy'       );
         writetable(tmpAntibiotics      , fullfile(basedir, outputfolder, filename), 'Sheet', 'Antibiotics'       );
         writetable(tmpAdmissions       , fullfile(basedir, outputfolder, filename), 'Sheet', 'Admissions'        );
         writetable(tmpClinicVisits     , fullfile(basedir, outputfolder, filename), 'Sheet', 'ClinicVisits'      );

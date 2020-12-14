@@ -2,7 +2,7 @@ clear; clc; close all;
 
 study = 'BR';
 chosentreatgap = 1;
-smode = input('Run for 1) all patients or 2) exclude 0-6m CFTR modulator therapy start ? ', 's');
+smode = input('Run for 1) all patients on study for > 6 months or 2) exclude CFTR modulator therapy start during analysis period ? ', 's');
 
 mode = str2double(smode);
 
@@ -12,7 +12,7 @@ if (isnan(mode) || mode < 1 || mode > 2)
 elseif mode == 1
     modetext = 'All Patients';
 elseif mode == 2
-    modetext = 'Excluding CFTR Patients';
+    modetext = 'Excl CFTR Patients';
 end
 
 tic
@@ -34,8 +34,8 @@ plotsubfolder = sprintf('Plots/%s/BR Interim Checkpoint/%s', study, modetext);
 if ~exist(fullfile(basedir, plotsubfolder), 'dir')
     mkdir(fullfile(basedir, plotsubfolder));
 end
-cutoffd = datetime(2020, 11, 30);
-exclwind = 20;
+cutoffd = datetime(2020, 11, 30); % cutoff date is last date the data was processed
+mintwindow = 6; % minimum time window for analysis
 clintw  = 3;
 hmtw    = 3;
 ntypes  = 15;
@@ -45,10 +45,13 @@ brIntChkptSum = table('Size',[ntypes 7], ...
     'VariableTypes', {'cell',     'double', 'double',      'double',        'double',      'double',        'double'}, ...
     'VariableNames', {'DataType', 'n',      'Period1Mean', 'Period1StdErr', 'Period2Mean', 'Period2StdErr', 'pVal'});
 
-brIntChkptPat = brPatient;
-brIntChkptPat(brIntChkptPat.StudyDate + calmonths(6) > cutoffd,:) = [];
-%brIntChkptDT = brDrugTherapy(ismember(brDrugTherapy.ID, brIntChkptPat.ID), :);
+brPrePostPat   = brPatient;
+[brPrePostPat] = filterPrePostByStudyStart(brPrePostPat, mintwindow);
+brPrePostDT    = brDrugTherapy(ismember(brDrugTherapy.ID, brPrePostPat.ID), :);
 
+if mode == 2
+    [brPrePostPat, brPrePostDT] = filterPrePostByDrugTherapy(brPrePostPat, brPrePostDT, mintwindow);
+end
 
 % set up various input tables in a standardised way
 tmpClinFEV = brPFT;
@@ -77,20 +80,11 @@ tmpIVs.Properties.VariableNames({'IVStartDate'})   = {'StartDate'};
 tmpIVs.Properties.VariableNames({'IVStopDate'})    = {'StopDate'};
 tmpIVs.Properties.VariableNames({'IVDateNum'})     = {'StartDateNum'};
 tmpIVs.Properties.VariableNames({'IVStopDateNum'}) = {'StopDateNum'};
-tmpIVs(~ismember(tmpIVs.ID, brIntChkptPat.ID), :) = [];
+tmpIVs(~ismember(tmpIVs.ID, brPrePostPat.ID), :) = [];
 
 tmpEmergCont = brUnplannedContact;
 tmpEmergCont.Properties.VariableNames({'ContactDate'}) = {'Date'};
-tmpEmergCont(~ismember(tmpEmergCont.ID, brIntChkptPat.ID), :) = [];
-
-% Plot nbr of people on drug therapy pre vs during
-meastype = 'CFTRMod';
-bestwind = 6;
-period1  = 'Pre';
-period2  = 'Dur';
-twindow  = 12;
-brIntChkptPat = calcNbrCFTRModInPeriod(brIntChkptPat, ...
-    study, meastype, period1, period2, twindow, bestwind, cutoffd, plotsubfolder);
+tmpEmergCont(~ismember(tmpEmergCont.ID, brPrePostPat.ID), :) = [];
 
 type = 1;
 
@@ -101,8 +95,8 @@ gradtype = sprintf('Best%dm', bestwind);
 period1  = 'Pre';
 period2  = 'Dur';
 comptype = 'CvC';
-twindow  = 12;
-[brIntChkptPat, brIntChkptSum] = plotPointsWithLFitLoop(brIntChkptPat, brIntChkptSum, ...
+twindow  = 6;
+[brPrePostPat, brIntChkptSum] = plotPointsWithLFitLoop(brPrePostPat, brIntChkptSum, ...
     tmpClinFEV, tmpClinFEV, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder);
 
 % 2) FEV1 decline using clinical pre and home during, best per 3months
@@ -112,19 +106,19 @@ gradtype = sprintf('Best%dm', bestwind);
 period1  = 'Pre';
 period2  = 'Dur';
 comptype = 'CvH';
-twindow  = 12;
+twindow  = 6;
 type     = type + 1;
-[brIntChkptPat, brIntChkptSum] = plotPointsWithLFitLoop(brIntChkptPat, brIntChkptSum, ...
+[brPrePostPat, brIntChkptSum] = plotPointsWithLFitLoop(brPrePostPat, brIntChkptSum, ...
     tmpClinFEV, tmpHomeFEV, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder);
 
 % 3) Weight decline using clinical pre and home during, best per 3months
-meastype = 'Weight';
-bestwind = 3;
-gradtype = sprintf('Best%dm', bestwind);
-period1  = 'Pre';
-period2  = 'Dur';
-comptype = 'CvH';
-twindow  = 6;
+%meastype = 'Weight';
+%bestwind = 3;
+%gradtype = sprintf('Best%dm', bestwind);
+%period1  = 'Pre';
+%period2  = 'Dur';
+%comptype = 'CvH';
+%twindow  = 6;
 %type     = type + 1;
 %[brIntChkptPat, brIntChkptSum] = plotPointsWithLFitLoop(brIntChkptPat, brIntChkptSum, ...
 %    tmpClinWght, tmpHomeWght, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder);
@@ -138,7 +132,7 @@ period2  = 'Dur';
 comptype = 'CvH';
 twindow  = 6;
 type     = type + 1;
-[brIntChkptPat, brIntChkptSum] = plotPointsWithLFitLoop(brIntChkptPat, brIntChkptSum, ...
+[brPrePostPat, brIntChkptSum] = plotPointsWithLFitLoop(brPrePostPat, brIntChkptSum, ...
     tmpClinWght, tmpHomeWght, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder);
 
 % 5) Weight decline using clinical pre and home during, best per 1month
@@ -150,14 +144,14 @@ period2  = 'Dur';
 comptype = 'CvH';
 twindow  = 6;
 type     = type + 1;
-[brIntChkptPat, brIntChkptSum] = plotPointsWithLFitLoop(brIntChkptPat, brIntChkptSum, ...
+[brPrePostPat, brIntChkptSum] = plotPointsWithLFitLoop(brPrePostPat, brIntChkptSum, ...
     tmpClinWght, tmpHomeWght, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder);
 
 % 6) Nbr days on IV Treatments pre vs during 12 months
-meastype = 'IVDays';
-period1  = 'Pre';
-period2  = 'Dur';
-twindow  = 12;
+%meastype = 'IVDays';
+%period1  = 'Pre';
+%period2  = 'Dur';
+%twindow  = 12;
 %type     = type + 1;
 %[brIntChkptPat, brIntChkptSum] = calcDaysInPeriodWithHistogram(brIntChkptPat, brIntChkptSum, ...
 %    tmpIVs, study, meastype, period1, period2, twindow, type, cutoffd, plotsubfolder);
@@ -168,14 +162,14 @@ period1  = 'Pre';
 period2  = 'Dur';
 twindow  = 6;
 type     = type + 1;
-[brIntChkptPat, brIntChkptSum] = calcDaysInPeriodWithHistogram(brIntChkptPat, brIntChkptSum, ...
+[brPrePostPat, brIntChkptSum] = calcDaysInPeriodWithHistogram(brPrePostPat, brIntChkptSum, ...
     tmpIVs, study, meastype, period1, period2, twindow, type, cutoffd, plotsubfolder);
 
 % 8) Nbr emergency contacts pre vs during 12  months
-meastype = 'EmergCont';
-period1  = 'Pre';
-period2  = 'Dur';
-twindow  = 12;
+%meastype = 'EmergCont';
+%period1  = 'Pre';
+%period2  = 'Dur';
+%twindow  = 12;
 %type     = type + 1;
 %[brIntChkptPat, brIntChkptSum] = calcDaysInPeriodWithHistogram(brIntChkptPat, brIntChkptSum, ...
 %    tmpEmergCont, study, meastype, period1, period2, twindow, type, cutoffd, plotsubfolder);
@@ -186,7 +180,7 @@ period1  = 'Pre';
 period2  = 'Dur';
 twindow  = 6;
 type     = type + 1;
-[brIntChkptPat, brIntChkptSum] = calcDaysInPeriodWithHistogram(brIntChkptPat, brIntChkptSum, ...
+[brPrePostPat, brIntChkptSum] = calcDaysInPeriodWithHistogram(brPrePostPat, brIntChkptSum, ...
     tmpEmergCont, study, meastype, period1, period2, twindow, type, cutoffd, plotsubfolder);
 
 for i = 1:type

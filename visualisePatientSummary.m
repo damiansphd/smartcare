@@ -6,7 +6,7 @@ subfolder = 'MatlabSavedVariables';
 [studynbr, study, ~] = selectStudy();
 [datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(study);
 [physdata, offset, physdata_predateoutlierhandling] = loadAndHarmoniseMeasVars(datamatfile, subfolder, study);
-[cdPatient, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
+[cdPatient, cdDrugTherapy, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
     cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
 
 tic
