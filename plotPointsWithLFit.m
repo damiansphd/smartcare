@@ -1,9 +1,11 @@
-function [grad] = plotPointsWithLFit(mtable, extbl, ax, yl, p, scid, fromd, tod, exclwind, periodtype, meastype, bestwind, gradtype, twindow)
+function [grad, studydateval] = plotPointsWithLFit(mtable, extbl, ax, yl, p, scid, fromd, tod, ...
+    exclwind, periodtype, meastype, bestwind, gradtype, twindow, offset)
 
 % plotPointsWithLFit - plots a set of points and dates along with linear
 % fit
 
 grad = 0;
+studydateval = 0;
 col1 = [0, 0.65, 1];
 col2 = 'red';
 col3 = [0.65 0.65 0.65];
@@ -52,6 +54,7 @@ if size(pmtbl, 1) > 1
         fmdl = fitlm(pmtbl.DateNum(~fexidx), pmtbl.Amount(~fexidx), 'linear');
         ffit = predict(fmdl, pmtbl.DateNum(~fexidx));
         grad = fmdl.Coefficients.Estimate(2);
+        studydateval = predict(fmdl, datenum(fromd) - offset);
 
         line(ax, pmtbl.Date(~fexidx), pmtbl.Amount(~fexidx), ...
                     'Color', col1, ...

@@ -23,23 +23,23 @@ if ~isValid
 end
 fprintf('\n');
 
-for i = 1:size(hosprow, 1)
+for h = 1:size(hosprow, 1)
     tic
-    fprintf('Creating patient clinical files for %s\n', hosprow.Name{i});
+    fprintf('Creating patient clinical files for %s\n', hosprow.Name{h});
     fprintf('\n');
     
-    [clindate, guidmapdate] = getLatestBreatheDatesForHosp(hosprow.Acronym{i});
-    outputfolder = sprintf('DataFiles/%s/ClinicalData/%s/%sUpd', study, hosprow.Acronym{i}, clindate);
+    [clindate, guidmapdate] = getLatestBreatheDatesForHosp(hosprow.Acronym{h});
+    outputfolder = sprintf('DataFiles/%s/ClinicalData/%s/%sUpd', study, hosprow.Acronym{h}, clindate);
     if ~exist(fullfile(basedir, outputfolder), 'dir')
         mkdir(fullfile(basedir, outputfolder));
     end
     
-    [guidmap] = loadGUIDFileForHosp(study, hosprow(i, :), guidmapdate);
+    [guidmap] = loadGUIDFileForHosp(study, hosprow(h, :), guidmapdate);
     toc
     fprintf('\n');
 
     % filter brPatient for records by hospital
-    hospPatient = brPatient(ismember(brPatient.Hospital, hosprow.Acronym{i}), :);
+    hospPatient = brPatient(ismember(brPatient.Hospital, hosprow.Acronym{h}), :);
     npatients = size(hospPatient, 1);
 
     tic
@@ -48,7 +48,8 @@ for i = 1:size(hosprow, 1)
         scid     = hospPatient.ID(i);
         hospital = hospPatient.Hospital{i};
         studynbr  = hospPatient.StudyNumber{i};
-        filename = sprintf('PBClinData-%3d-%s-%s-%s.xlsx', scid, hospital, studynbr, clindate);
+        patclindate = hospPatient.PatClinDate(i);
+        filename = sprintf('PBClinData-%3d-%s-%s-%s.xlsx', scid, hospital, studynbr, datestr(patclindate, 'yyyymmdd'));
         fprintf('Creating file %s\n', filename);    
 
         tmpPatient          = hospPatient(hospPatient.ID == scid, :);

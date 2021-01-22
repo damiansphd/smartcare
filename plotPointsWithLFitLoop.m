@@ -1,5 +1,5 @@
 function [brIntChkptPat, brIntChkptSum] = plotPointsWithLFitLoop(brIntChkptPat, brIntChkptSum, ...
-    mdata1, mdata2, excldata, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder)
+    mdata1, mdata2, excldata, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder, offset)
 
 % plotPointsWithLFitLoop loops over all relevant patients and produces
 % plots of best fit for different measures
@@ -22,6 +22,11 @@ colname1 = sprintf('%s%s%s%s', meastype, gradtype, comptype, period1);
 colname2 = sprintf('%s%s%s%s', meastype, gradtype, comptype, period2);
 brIntChkptPat{:, {colname1}} = 0.0;
 brIntChkptPat{:, {colname2}} = 0.0;
+
+if ismember(comptype, {'CvH'})
+    colname3 = sprintf('%s%s%s%s', meastype, gradtype, comptype, 'StudyDateVal');
+    brIntChkptPat{:, {colname3}} = 0.0;
+end
 
 thisplot = 1;
 for p = 1:npat
@@ -54,13 +59,18 @@ for p = 1:npat
     
     fprintf(': %s ', period1);
     ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', pan);
-    brIntChkptPat{p, {colname1}} = plotPointsWithLFit(pmdata1, pexcldata, ax, yl, p, scid, fromd, studyd, exclwind, period1, meastype, bestwind, gradtype, twindow);
+    brIntChkptPat{p, {colname1}} = plotPointsWithLFit(pmdata1, pexcldata, ax, yl, p, scid, fromd, studyd, ...
+        exclwind, period1, meastype, bestwind, gradtype, twindow, offset);
      
     thisplot = thisplot + 1;
     
     fprintf(': %s\n', period2);
     ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', pan);
-    brIntChkptPat{p, {colname2}} = plotPointsWithLFit(pmdata2, pexcldata, ax, yl, p, scid, studyd,   tod, exclwind, period2, meastype, bestwind, gradtype, twindow);
+    [brIntChkptPat{p, {colname2}}, studydateval] = plotPointsWithLFit(pmdata2, pexcldata, ax, yl, p, scid, studyd,   tod, ...
+        exclwind, period2, meastype, bestwind, gradtype, twindow, offset);
+    if ismember(comptype, {'CvH'})
+        brIntChkptPat{p, {colname3}} = studydateval;
+    end
     
     thisplot = thisplot + 1;
     if thisplot > plotsacross * plotsdown

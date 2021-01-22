@@ -34,7 +34,7 @@ plotsubfolder = sprintf('Plots/%s/BR Interim Checkpoint/%s', study, modetext);
 if ~exist(fullfile(basedir, plotsubfolder), 'dir')
     mkdir(fullfile(basedir, plotsubfolder));
 end
-cutoffd = datetime(2020, 11, 30);
+cutoffd = datetime(2020, 3, 15);
 exclwind = 20;
 clintw  = 3;
 hmtw    = 3;

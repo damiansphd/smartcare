@@ -34,7 +34,8 @@ plotsubfolder = sprintf('Plots/%s/BR Interim Checkpoint/%s', study, modetext);
 if ~exist(fullfile(basedir, plotsubfolder), 'dir')
     mkdir(fullfile(basedir, plotsubfolder));
 end
-cutoffd = datetime(2020, 11, 30); % cutoff date is last date the data was processed
+cutoffd = datetime(2020, 3, 15);
+%cutoffd = datetime(2020, 11, 30); % cutoff date is last date the data was processed
 mintwindow = 6; % minimum time window for analysis
 clintw  = 3;
 hmtw    = 3;
@@ -46,7 +47,7 @@ brIntChkptSum = table('Size',[ntypes 7], ...
     'VariableNames', {'DataType', 'n',      'Period1Mean', 'Period1StdErr', 'Period2Mean', 'Period2StdErr', 'pVal'});
 
 brPrePostPat   = brPatient;
-[brPrePostPat] = filterPrePostByStudyStart(brPrePostPat, mintwindow);
+[brPrePostPat] = filterPrePostByStudyStart(brPrePostPat, mintwindow, cutoffd);
 brPrePostDT    = brDrugTherapy(ismember(brDrugTherapy.ID, brPrePostPat.ID), :);
 
 if mode == 2
@@ -95,9 +96,9 @@ gradtype = sprintf('Best%dm', bestwind);
 period1  = 'Pre';
 period2  = 'Dur';
 comptype = 'CvC';
-twindow  = 6;
+twindow  = 12;
 [brPrePostPat, brIntChkptSum] = plotPointsWithLFitLoop(brPrePostPat, brIntChkptSum, ...
-    tmpClinFEV, tmpClinFEV, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder);
+    tmpClinFEV, tmpClinFEV, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder, offset);
 
 % 2) FEV1 decline using clinical pre and home during, best per 3months
 meastype = 'FEV1';
@@ -106,10 +107,10 @@ gradtype = sprintf('Best%dm', bestwind);
 period1  = 'Pre';
 period2  = 'Dur';
 comptype = 'CvH';
-twindow  = 6;
+twindow  = 12;
 type     = type + 1;
 [brPrePostPat, brIntChkptSum] = plotPointsWithLFitLoop(brPrePostPat, brIntChkptSum, ...
-    tmpClinFEV, tmpHomeFEV, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder);
+    tmpClinFEV, tmpHomeFEV, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder, offset);
 
 % 3) Weight decline using clinical pre and home during, best per 3months
 %meastype = 'Weight';
@@ -121,7 +122,7 @@ type     = type + 1;
 %twindow  = 6;
 %type     = type + 1;
 %[brIntChkptPat, brIntChkptSum] = plotPointsWithLFitLoop(brIntChkptPat, brIntChkptSum, ...
-%    tmpClinWght, tmpHomeWght, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder);
+%    tmpClinWght, tmpHomeWght, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder, offset);
 
 % 4) Weight decline using clinical pre and home during, best per 2months
 meastype = 'Weight';
@@ -133,7 +134,7 @@ comptype = 'CvH';
 twindow  = 6;
 type     = type + 1;
 [brPrePostPat, brIntChkptSum] = plotPointsWithLFitLoop(brPrePostPat, brIntChkptSum, ...
-    tmpClinWght, tmpHomeWght, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder);
+    tmpClinWght, tmpHomeWght, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder, offset);
 
 % 5) Weight decline using clinical pre and home during, best per 1month
 meastype = 'Weight';
@@ -145,7 +146,7 @@ comptype = 'CvH';
 twindow  = 6;
 type     = type + 1;
 [brPrePostPat, brIntChkptSum] = plotPointsWithLFitLoop(brPrePostPat, brIntChkptSum, ...
-    tmpClinWght, tmpHomeWght, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder);
+    tmpClinWght, tmpHomeWght, brAntibiotics, study, meastype, bestwind, gradtype, comptype, period1, period2, twindow, type, cutoffd, plotsubfolder, offset);
 
 % 6) Nbr days on IV Treatments pre vs during 12 months
 %meastype = 'IVDays';
@@ -191,5 +192,18 @@ for i = 1:type
                                                             brIntChkptSum.pVal(i));
 end
 
+% now use pre/post gradients to project a hypothetical gain/loss in lung
+% function (and/or weight) at 12m after study start
+brPrePostPat.StudyBenFEV1(:)    = 0;
+brPrePostPat.StudyBenFEV1Pct(:) = 0;
 
+exidx = brPrePostPat.FEV1Best3mCvHPre == 0 | brPrePostPat.FEV1Best3mCvHDur == 0;
+
+brPrePostPat.StudyBenFEV1(~exidx) = (365 * (brPrePostPat.FEV1Best3mCvHDur(~exidx) - brPrePostPat.FEV1Best3mCvHPre(~exidx)));
+brPrePostPat.StudyBenFEV1Pct(~exidx) = brPrePostPat.StudyBenFEV1(~exidx) ./ brPrePostPat.FEV1Best3mCvHStudyDateVal(~exidx);
+
+AvgStudyBenFEV1L = sum(brPrePostPat.StudyBenFEV1(~exidx)) / sum(~exidx);
+AvgStudyBenFEV1Pct = AvgStudyBenFEV1L / mean(brPrePostPat.FEV1Best3mCvHStudyDateVal(~exidx));
+    
+fprintf('Average 12month FEV1 benefit from Study = %.0fml (%.1f%%)\n', 1000 * AvgStudyBenFEV1L, 100 * AvgStudyBenFEV1Pct);
 

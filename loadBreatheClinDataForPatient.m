@@ -92,46 +92,46 @@ end
 % temporary logic until separate table in spreadsheet
 % need to add in read from drug therapy tab once all patient s/s have been
 % recreated with the latest data
-fprintf('Drug Therapy       ');
+%fprintf('Drug Therapy       ');
 
-ndrthrows = 0;
-for i = 1:npatrows
-    if size(patientdata.DrugTherapyType{i}, 2) > 1
-        brdrugtherrow.ID                   = scid;
-        brdrugtherrow.Hospital             = hospital;
-        brdrugtherrow.StudyNumber          = studynbr;
-        brdrugtherrow.DrugTherapyStartDate = patientdata.DrugTherapyStartDate(i);
-        brdrugtherrow.DrugTherapyType      = patientdata.DrugTherapyType(i);
-        brdrugtherrow.DrugTherapyComment   = patientdata.DrugTherapyComment(i);
-
-        brDrugTherapy = [brDrugTherapy; brdrugtherrow];
-        ndrthrows = ndrthrows + 1;
-    end
-end
-fprintf('%2d rows\n', ndrthrows);
+%ndrthrows = 0;
+%for i = 1:npatrows
+%    if size(patientdata.DrugTherapyType{i}, 2) > 1
+%        brdrugtherrow.ID                   = scid;
+%        brdrugtherrow.Hospital             = hospital;
+%        brdrugtherrow.StudyNumber          = studynbr;
+%        brdrugtherrow.DrugTherapyStartDate = patientdata.DrugTherapyStartDate(i);
+%        brdrugtherrow.DrugTherapyType      = patientdata.DrugTherapyType(i);
+%        brdrugtherrow.DrugTherapyComment   = patientdata.DrugTherapyComment(i);
+%
+%       brDrugTherapy = [brDrugTherapy; brdrugtherrow];
+%        ndrthrows = ndrthrows + 1;
+%    end
+%end
+%fprintf('%2d rows\n', ndrthrows);
 
 % replace with this code after all clinical spreadsheets have been
 % recreated.
 % and all the comments fields in each table lower down
 
 % drug therapy data
-%fprintf('Drug Therapy       ');
-%opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'DrugTherapy');
-%opts.VariableTypes(:, ismember(opts.VariableNames, {'DrugTherapyStartDate'})) = {'datetime'};
-%opts.DataRange = 'A2';
-%drthdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'DrugTherapy');
-%ndrth= size(drthdata, 1);
-%fprintf('%2d rows\n', nadm);
-%for i = 1:ndrth
-%    brdrugtherrow.ID                    = scid;
-%    brdrugtherrow.Hospital              = hospital;
-%    brdrugtherrow.StudyNumber           = studynbr;
-%    brdrugtherrow.DrugTherapyStartDate  = drthdata.DrugTherapyStartDate(i);
-%    brdrugtherrow.DrugTherapyType       = drthdata.DrugTherapyType(i);
-%    brdrugtherrow.DrugTherapyComment    = drthdata.DrugTherapyComment(i);
-%    
-%    brDrugTherapy = [brDrugTherapy; brdrugtherrow];
-%end
+fprintf('Drug Therapy       ');
+opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'DrugTherapy');
+opts.VariableTypes(:, ismember(opts.VariableNames, {'DrugTherapyStartDate'})) = {'datetime'};
+opts.DataRange = 'A2';
+drthdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'DrugTherapy');
+ndrth= size(drthdata, 1);
+fprintf('%2d rows\n', ndrth);
+for i = 1:ndrth
+    brdrugtherrow.ID                    = scid;
+    brdrugtherrow.Hospital              = hospital;
+    brdrugtherrow.StudyNumber           = studynbr;
+    brdrugtherrow.DrugTherapyStartDate  = drthdata.DrugTherapyStartDate(i);
+    brdrugtherrow.DrugTherapyType       = drthdata.DrugTherapyType(i);
+    brdrugtherrow.DrugTherapyComment    = drthdata.DrugTherapyComment(i);
+    
+    brDrugTherapy = [brDrugTherapy; brdrugtherrow];
+end
 
 % admission data
 fprintf('Admissions         ');
