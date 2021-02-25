@@ -2,7 +2,7 @@ function [brPatient, brDrugTherapy, brAdmissions, brAntibiotics, brClinicVisits,
             brUnplannedContact, brCRP, brPFT, brMicrobiology, brHghtWght, brEndStudy] ...
             = loadBreatheClinDataForPatient(brPatient, brDrugTherapy, brAdmissions, brAntibiotics, ...
                 brClinicVisits, brOtherVisits, brUnplannedContact, brCRP, brPFT, brMicrobiology, ...
-                brHghtWght, brEndStudy, patfile, basedir, subfolder)
+                brHghtWght, brEndStudy, patfile, patientmaster, basedir, subfolder)
                 
 % loadBreatheClinDataForPatient - ingests the clinical data for a given
 % patient
@@ -35,23 +35,48 @@ npatrows = size(patientdata, 1); % NB should always be 1 as sheets are per patie
 %    fprintf('**** More than one patient in this single patient file ****\n');
 %    return;
 %end
-if ismember(patientdata.ID(1), '')
+%if ismember(patientdata.ID(1), '')
+%    fprintf('**** Blank patient id in this file ****\n');
+%    return;
+%end
+i = 1;
+%scid                          = patientdata.ID(i);
+hospital                      = patientdata.Hospital(i);
+
+% add consistency check for study number and study email 
+% needed due to either old papworth s/s formats or an incorrect decision to update study number)
+studynbr                      = lower(patientdata.StudyNumber(i));
+if ~ismember(patientdata.StudyNumber(i), patientdata.StudyEmail(i))
+    fprintf('**** Study Number is inconsistent with Study Email - using Study Email instead\n');
+    studynbr                  = lower(patientdata.StudyEmail(i));
+end
+
+scid = patientmaster.ID(ismember(patientmaster.StudyNumber, studynbr));
+if isnan(scid)
     fprintf('**** Blank patient id in this file ****\n');
     return;
 end
-i = 1;
-scid                          = patientdata.ID(i);
-hospital                      = patientdata.Hospital(i);
-studynbr                      = patientdata.StudyNumber(i);
+
 fprintf('Patient data - ID = %d, hospital = %3s, study number = %s\n', scid, hospital{1}, studynbr{1});
 
 brpatrow.ID                   = scid;
 brpatrow.Hospital             = hospital;
 brpatrow.StudyNumber          = studynbr;
-brpatrow.StudyDate            = patientdata.StudyDate(1);
+brpatrow.StudyDate            = patientdata.StudyDate(i);
+if isnat(brpatrow.StudyDate)
+    fprintf('**** Blank study date in this file ****\n');
+    return;
+end
 brpatrow.Prior6Mnth           = brpatrow.StudyDate - calmonths(6);
 brpatrow.Post6Mnth            = brpatrow.StudyDate + calmonths(6);
 brpatrow.PatClinDate          = patclindate;
+
+% temporarily comment out this check until papworth spreadsheet format can
+% be brought up to date
+%if patclindate ~= patientdata.PatClinDate(i)
+%    fprintf ('**** Inconsistency between patient clinical update date in filename and patient tab ****\n');
+%end
+
 brpatrow.DOB                  = patientdata.DOB(i);
 brpatrow.Age                  = patientdata.Age(i);
 gender = patientdata.Sex{i};
@@ -92,45 +117,48 @@ end
 % temporary logic until separate table in spreadsheet
 % need to add in read from drug therapy tab once all patient s/s have been
 % recreated with the latest data
-%fprintf('Drug Therapy       ');
+if ismember(hospital, 'PAP')
+    fprintf('Drug Therapy       ');
 
-%ndrthrows = 0;
-%for i = 1:npatrows
-%    if size(patientdata.DrugTherapyType{i}, 2) > 1
-%        brdrugtherrow.ID                   = scid;
-%        brdrugtherrow.Hospital             = hospital;
-%        brdrugtherrow.StudyNumber          = studynbr;
-%        brdrugtherrow.DrugTherapyStartDate = patientdata.DrugTherapyStartDate(i);
-%        brdrugtherrow.DrugTherapyType      = patientdata.DrugTherapyType(i);
-%        brdrugtherrow.DrugTherapyComment   = patientdata.DrugTherapyComment(i);
-%
-%       brDrugTherapy = [brDrugTherapy; brdrugtherrow];
-%        ndrthrows = ndrthrows + 1;
-%    end
-%end
-%fprintf('%2d rows\n', ndrthrows);
+    ndrthrows = 0;
+    for i = 1:npatrows
+        if size(patientdata.DrugTherapyType{i}, 2) > 1
+            brdrugtherrow.ID                   = scid;
+            brdrugtherrow.Hospital             = hospital;
+            brdrugtherrow.StudyNumber          = studynbr;
+            brdrugtherrow.DrugTherapyStartDate = patientdata.DrugTherapyStartDate(i);
+            brdrugtherrow.DrugTherapyType      = patientdata.DrugTherapyType(i);
+            brdrugtherrow.DrugTherapyComment   = patientdata.DrugTherapyComment(i);
 
-% replace with this code after all clinical spreadsheets have been
-% recreated.
-% and all the comments fields in each table lower down
+           brDrugTherapy = [brDrugTherapy; brdrugtherrow];
+            ndrthrows = ndrthrows + 1;
+        end
+    end
+    fprintf('%2d rows\n', ndrthrows);
 
-% drug therapy data
-fprintf('Drug Therapy       ');
-opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'DrugTherapy');
-opts.VariableTypes(:, ismember(opts.VariableNames, {'DrugTherapyStartDate'})) = {'datetime'};
-opts.DataRange = 'A2';
-drthdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'DrugTherapy');
-ndrth= size(drthdata, 1);
-fprintf('%2d rows\n', ndrth);
-for i = 1:ndrth
-    brdrugtherrow.ID                    = scid;
-    brdrugtherrow.Hospital              = hospital;
-    brdrugtherrow.StudyNumber           = studynbr;
-    brdrugtherrow.DrugTherapyStartDate  = drthdata.DrugTherapyStartDate(i);
-    brdrugtherrow.DrugTherapyType       = drthdata.DrugTherapyType(i);
-    brdrugtherrow.DrugTherapyComment    = drthdata.DrugTherapyComment(i);
-    
-    brDrugTherapy = [brDrugTherapy; brdrugtherrow];
+else
+    % replace with this code after all clinical spreadsheets have been
+    % recreated.
+    % and all the comments fields in each table lower down
+
+    % drug therapy data
+    fprintf('Drug Therapy       ');
+    opts = detectImportOptions(fullfile(basedir, subfolder, patfile), 'Sheet', 'DrugTherapy');
+    opts.VariableTypes(:, ismember(opts.VariableNames, {'DrugTherapyStartDate'})) = {'datetime'};
+    opts.DataRange = 'A2';
+    drthdata = readtable(fullfile(basedir, subfolder, patfile), opts, 'Sheet', 'DrugTherapy');
+    ndrth = size(drthdata, 1);
+    fprintf('%2d rows\n', ndrth);
+    for i = 1:ndrth
+        brdrugtherrow.ID                    = scid;
+        brdrugtherrow.Hospital              = hospital;
+        brdrugtherrow.StudyNumber           = studynbr;
+        brdrugtherrow.DrugTherapyStartDate  = drthdata.DrugTherapyStartDate(i);
+        brdrugtherrow.DrugTherapyType       = drthdata.DrugTherapyType(i);
+        brdrugtherrow.DrugTherapyComment    = drthdata.DrugTherapyComment(i);
+
+        brDrugTherapy = [brDrugTherapy; brdrugtherrow];
+    end
 end
 
 % admission data
@@ -170,14 +198,19 @@ for i = 1:nab
     brabrow.ID          = scid;
     brabrow.Hospital    = hospital;
     brabrow.StudyNumber = studynbr;
+    if size(abdata.AntibioticName{i}, 2) == 0
+        fprintf('**** skipping blank row in s/s ****\n');
+        continue;
+    end
     brabrow.AntibioticName = abdata.AntibioticName(i);
     route = abdata.Route{i};
-    if route(1) == 'O' || route(1) == 'o'
+    if route(1) == 'O' || route(1) == 'o' || route(1) == 'P' || route(1) == 'p'
         brabrow.Route = {'Oral'};
     elseif route(1) == 'I' || route(1) == 'i'
         brabrow.Route = {'IV'};
     else
-        fprintf('Unknown Route %s\n', route);
+        fprintf('**** Unknown Route %s ****\n', route);
+        continue;
     end
     if size(abdata.HomeIV_s{i}, 1) == 0
         if ismember(brabrow.Route, 'Oral')

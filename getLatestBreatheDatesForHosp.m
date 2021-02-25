@@ -1,4 +1,4 @@
-function [clinprocdate, guidmapdate, isValid] = getLatestBreatheDatesForHosp(hosp)
+function [clinprocdate, patientmasterdate, isValid] = getLatestBreatheDatesForHosp(hosp)
 
 % getLatestBreatheDatesForHosp - convenience function to centralise getting the
 % latest breathe clinical and measurement filename date suffixes for a
@@ -7,16 +7,16 @@ function [clinprocdate, guidmapdate, isValid] = getLatestBreatheDatesForHosp(hos
 isValid = true;
 
 if (ismember(hosp, 'PAP'))
-    clinprocdate = '20201124';
-    guidmapdate  = '20210112';
+    clinprocdate      = '20210228';
+    patientmasterdate = '20210201';
 elseif (ismember(hosp, 'CDF'))
-    clinprocdate = '20201130';
-    guidmapdate  = '20210104';
+    clinprocdate      = '20210228';
+    patientmasterdate = '20210218';
 else
     fprintf('**** Unknown Hospital ****/n');
     isValid      = false;
     clinprocdate = '';
-    guidmapdate  = '';
+    patientmasterdate  = '';
 end
 
 end

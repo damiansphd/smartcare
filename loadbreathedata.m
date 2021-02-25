@@ -20,19 +20,22 @@ brphysdata = createBreatheMeasuresTable(0);
 brphysdata_deleted = brphysdata;
 brphysdata_deleted.Reason(:) = {''};
 
+% don't need this anymore as the patient master is loaded along with the
+% clinical data above
+
 % get list of Project Breathe hospitals
-brhosp = getListOfBreatheHospitals();
+%brhosp = getListOfBreatheHospitals();
 
 % create concatenated guidmap file over all hospital
-guidmap = [];
-for h = 1:size(brhosp, 1)
-
-    fprintf('Getting GUID mappings for %s\n', brhosp.Name{h});
-    [~, guidmapdate] = getLatestBreatheDatesForHosp(brhosp.Acronym{h});
-    [hospguidmap] = loadGUIDFileForHosp(study, brhosp(h, :), guidmapdate);
+%guidmap = [];
+%for h = 1:size(brhosp, 1)
+%
+%    fprintf('Getting GUID mappings for %s\n', brhosp.Name{h});
+%    [~, guidmapdate] = getLatestBreatheDatesForHosp(brhosp.Acronym{h});
+%    [hospguidmap] = loadGUIDFileForHosp(study, brhosp(h, :), guidmapdate);
     
-    guidmap = [guidmap; hospguidmap];
-end
+%    guidmap = [guidmap; hospguidmap];
+%end
 
 measfileprefix = 'Breathe_';
 measdate       = getLatestBreatheMeasDate();
@@ -69,7 +72,8 @@ for i = 1:nmeasfile
     measdata = readtable(fullfile(basedir, subfolder, MeasFiles{i}), mfopts);
     norigrows = size(measdata, 1);
     fprintf('%d measurements\n', norigrows);
-    measdata = outerjoin(measdata, guidmap, 'LeftKeys', {'PartitionKey'}, 'RightKeys', {'PartitionKey'}, 'RightVariables', {'StudyNumber'});
+    %measdata = outerjoin(measdata, guidmap, 'LeftKeys', {'PartitionKey'}, 'RightKeys', {'PartitionKey'}, 'RightVariables', {'StudyNumber'});
+    measdata = outerjoin(measdata, patientmaster, 'LeftKeys', {'PartitionKey'}, 'RightKeys', {'PartitionKey'}, 'RightVariables', {'StudyNumber'});
     measdata = outerjoin(measdata, brPatient, 'LeftKeys', {'StudyNumber'}, 'RightKeys', {'StudyNumber'}, 'RightVariables', {'ID', 'StudyDate', 'PatClinDate'});
     measdata.TimestampDt = datetime(measdata.Timestamp, 'TimeZone','UTC','Format','yyyy-MM-dd HH:mm:ss.SSSSSSS Z');
     measdata.DateDt      = datetime(measdata.Date,    'TimeZone','UTC','Format','yyyy-MM-dd HH:mm:ss.SSSSSSS Z');

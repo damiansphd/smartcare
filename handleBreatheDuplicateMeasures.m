@@ -1,6 +1,6 @@
 function [physdata] = handleBreatheDuplicateMeasures(physdata, study, doupdates, detaillog)
 
-% handleDuplicateMeasures -  Analyse and correct for duplicate measures
+% handleBreatheDuplicateMeasures -  Analyse and correct for duplicate measures
 % Duplicates are of three types - for a given patient ID and recordingtype :-
 %           1) multiple rows with exactly the same date/time
 %           2) multiple rows within 60 minutes
@@ -20,17 +20,84 @@ load(fullfile(basedir, subfolder, demographicsmatfile));
 toc
 fprintf('\n');
 
-% first ensure physdata is sorted correctly
-physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
+% first set cell array of all sleep measures and associated physdata column
+sleepmeas = {'MinsAsleepRecording'; 'MinsAwakeRecording'};
+sleepcol  = {'Sleep'};
 
-% 1) Fix all exact date/time dupes
+% 1 First fix exact date/time/amount dupes for sleep (need to be handled
+% separately because of the need to sum multiple genuine sleep records that
+% can be created by fitbit on any given day
 tic
-fprintf('1) Exact date/time duplicates\n');
+fprintf('1) Exact date/time/amount duplicates for sleep\n');
+
+% first ensure physdata is sorted correctly
+physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded', sleepcol{1}}, 'ascend');
+
 dupeidx = [];
 addrows = [];
 currdupeset = [];
 pair = false;
-mode = 'max';
+totsame = 0;
+totmax  = 0;
+totmean = 0;
+totsum  = 0;
+for i = 1:size(physdata, 1) - 1
+    if (physdata.SmartCareID(i)              == physdata.SmartCareID(i + 1)              && ...
+        ismember(physdata.RecordingType(i),  sleepmeas)                                  && ...
+        ismember(physdata.RecordingType(i),  physdata.RecordingType(i + 1))              && ...
+        physdata.Date_TimeRecorded(i)        == physdata.Date_TimeRecorded(i + 1)        && ...
+        table2array(physdata(i, sleepcol)) == table2array(physdata(i + 1, sleepcol)) )
+    
+        dupeidx = [dupeidx; i];
+        currdupeset = [currdupeset; i];
+        pair = true;
+    else
+        if pair == true
+            mode = 'na'; % as this section is for same value matches, mode is irrelevant
+            [dupeidx, addrows, nsame, nmax, nmean, nsum] = addDupeRows(physdata, dupeidx, currdupeset, addrows, i, mode, detaillog);
+            totsame = totsame + nsame;
+            totmax  = totmax  + nmax;
+            totmean = totmean + nmean;
+            totsum  = totsum  + nsum;
+        end
+        pair = false;
+        currdupeset = [];
+    end
+end
+if pair == true
+    i = i + 1;
+    mode = 'na'; % as this section is for same value matches, mode is irrelevant
+    [dupeidx, addrows, nsame, nmax, nmean, nsum] = addDupeRows(physdata, dupeidx, currdupeset, addrows, i, mode, detaillog);
+    totsame = totsame + nsame;
+    totmax  = totmax  + nmax;
+    totmean = totmean + nmean;
+    totsum  = totsum  + nsum;
+end
+
+writetable(physdata(dupeidx, :), fullfile(basedir, 'ExcelFiles', dupefile), 'Sheet', 'ExactTimeAmtSleepDupes');
+
+% apply necessary updates.
+if doupdates
+    fprintf('Deleting %d exact amount sleep duplicates, and adding back %d single rows\n', size(dupeidx, 1), size(addrows, 1));
+    fprintf('Same %d, diffmax %d, diffmean %d, diffsum %d, checksum %d\n', totsame, totmax, totmean, ...
+                totsum, size(dupeidx, 1) - totsame - totmax - totmean - totsum);
+    physdata(dupeidx, :) = [];
+    physdata = [physdata; addrows];
+    physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
+end
+toc
+fprintf('\n');
+
+% 2) Remaingin exact date/time dupes
+fprintf('2) Remaining exact date/time duplicates - sleep diff value, other meas same and diff value\n');
+dupeidx = [];
+addrows = [];
+currdupeset = [];
+pair = false;
+totsame = 0;
+totmax  = 0;
+totmean = 0;
+totsum  = 0;
 for i = 1:size(physdata, 1) - 1
     if (physdata.SmartCareID(i)            == physdata.SmartCareID(i + 1)        && ...
         ismember(physdata.RecordingType(i),   physdata.RecordingType(i + 1))     && ...
@@ -41,7 +108,16 @@ for i = 1:size(physdata, 1) - 1
         pair = true;
     else
         if pair == true
-            [dupeidx, addrows] = addDupeRows(physdata, dupeidx, currdupeset, addrows, i, mode, detaillog);
+            if ismember(physdata.RecordingType(i), sleepmeas)
+                mode = 'sum';
+            else
+                mode = 'max';
+            end
+            [dupeidx, addrows, nsame, nmax, nmean, nsum] = addDupeRows(physdata, dupeidx, currdupeset, addrows, i, mode, detaillog);
+            totsame = totsame + nsame;
+            totmax  = totmax  + nmax;
+            totmean = totmean + nmean;
+            totsum  = totsum  + nsum;
         end
         pair = false;
         currdupeset = [];
@@ -49,7 +125,16 @@ for i = 1:size(physdata, 1) - 1
 end
 if pair == true
     i = i + 1;
-    [dupeidx, addrows] = addDupeRows(physdata, dupeidx, currdupeset, addrows, i, mode, detaillog);
+    if ismember(physdata.RecordingType(i), sleepmeas)
+        mode = 'sum';
+    else
+        mode = 'max';
+    end
+    [dupeidx, addrows, nsame, nmax, nmean, nsum] = addDupeRows(physdata, dupeidx, currdupeset, addrows, i, mode, detaillog);
+    totsame = totsame + nsame;
+    totmax  = totmax  + nmax;
+    totmean = totmean + nmean;
+    totsum  = totsum  + nsum;
 end
 
 writetable(physdata(dupeidx, :), fullfile(basedir, 'ExcelFiles', dupefile), 'Sheet', 'ExactTimeDupes');
@@ -57,21 +142,26 @@ writetable(physdata(dupeidx, :), fullfile(basedir, 'ExcelFiles', dupefile), 'She
 % apply necessary updates.
 if doupdates
     fprintf('Deleting %d exact duplicates, and adding back %d single rows\n', size(dupeidx, 1), size(addrows, 1));
+    fprintf('Same %d, diffmax %d, diffmean %d, diffsum %d, checksum %d\n', totsame, totmax, totmean, ...
+                totsum, size(dupeidx, 1) - totsame - totmax - totmean - totsum);
     physdata(dupeidx, :) = [];
     physdata = [physdata; addrows];
     physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
 end
 toc
-fprintf('\n');
+ fprintf('\n');
 
-% 2) Fix all similar time dupes
+% 3) Fix all similar time dupes
 tic
-fprintf('2) Similar date/time duplicates\n');
+fprintf('3) Similar date/time duplicates\n');
 dupeidx = [];
 addrows = [];
 currdupeset = [];
 pair = false;
-mode = 'max';
+totsame = 0;
+totmax  = 0;
+totmean = 0;
+totsum  = 0;
 for i = 1:size(physdata, 1) - 1
     if (physdata.SmartCareID(i)            == physdata.SmartCareID(i + 1)               && ...
         ismember(physdata.RecordingType(i),   physdata.RecordingType(i + 1))            && ...
@@ -82,7 +172,16 @@ for i = 1:size(physdata, 1) - 1
         pair = true;
     else
         if pair == true
-            [dupeidx, addrows] = addDupeRows(physdata, dupeidx, currdupeset, addrows, i, mode, detaillog);
+            if ismember(physdata.RecordingType(i), sleepmeas)
+                mode = 'sum';
+            else
+                mode = 'max';
+            end
+            [dupeidx, addrows, nsame, nmax, nmean, nsum] = addDupeRows(physdata, dupeidx, currdupeset, addrows, i, mode, detaillog);
+            totsame = totsame + nsame;
+            totmax  = totmax  + nmax;
+            totmean = totmean + nmean;
+            totsum  = totsum  + nsum;
         end
         pair = false;
         currdupeset = [];
@@ -90,18 +189,25 @@ for i = 1:size(physdata, 1) - 1
 end
 if pair == true
     i = i + 1;
-    [dupeidx, addrows] = addDupeRows(physdata, dupeidx, currdupeset, addrows, i, mode, detaillog);
+    if ismember(physdata.RecordingType(i), sleepmeas)
+        mode = 'sum';
+    else
+        mode = 'max';
+    end
+    [dupeidx, addrows, nsame, nmax, nmean, nsum] = addDupeRows(physdata, dupeidx, currdupeset, addrows, i, mode, detaillog);
+    totsame = totsame + nsame;
+    totmax  = totmax  + nmax;
+    totmean = totmean + nmean;
+    totsum  = totsum  + nsum;
 end
 
 writetable(physdata(dupeidx, :), fullfile(basedir, 'ExcelFiles', dupefile), 'Sheet', 'SimilarTimeDupes');
 
-%temp = physdata(dupeidx, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded', 'DateNum'});
-%temp2 = varfun(@mean, temp, 'GroupingVariables', {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'});
-%writetable(temp2(:, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded', 'GroupCount'}), fullfile(basedir, 'ExcelFiles', dupefile), 'Sheet', 'SimilarTimeDupes');
-
 % apply necessary updates.
 if doupdates
     fprintf('Deleting %d similar time duplicates, and adding back %d single rows\n', size(dupeidx, 1), size(addrows, 1));
+    fprintf('Same %d, diffmax %d, diffmean %d, diffsum %d, checksum %d\n', totsame, totmax, totmean, ...
+                totsum, size(dupeidx, 1) - totsame - totmax - totmean - totsum);
     physdata(dupeidx, :) = [];
     physdata = [physdata; addrows];
 end
@@ -109,14 +215,18 @@ physdata = sortrows(physdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorde
 toc
 fprintf('\n');
 
-% 3) Fix all same day dupes
+% 4) Fix all same day dupes
 tic
-fprintf('3) Same day duplicates \n');
+fprintf('4) Same day duplicates \n');
 dupeidx = [];
 addrows = [];
 currdupeset = [];
 pair = false;
 mode = 'mean';
+totsame = 0;
+totmax  = 0;
+totmean = 0;
+totsum  = 0;
 for i = 1:size(physdata, 1) - 1
     if (physdata.SmartCareID(i)            == physdata.SmartCareID(i + 1)               && ...
         ismember(physdata.RecordingType(i),   physdata.RecordingType(i + 1))            && ...
@@ -127,7 +237,16 @@ for i = 1:size(physdata, 1) - 1
         pair = true;
     else
         if pair == true
-            [dupeidx, addrows] = addDupeRows(physdata, dupeidx, currdupeset, addrows, i, mode, detaillog);
+            if ismember(physdata.RecordingType(i), sleepmeas)
+                mode = 'sum';
+            else
+                mode = 'mean';
+            end
+            [dupeidx, addrows, nsame, nmax, nmean, nsum] = addDupeRows(physdata, dupeidx, currdupeset, addrows, i, mode, detaillog);
+            totsame = totsame + nsame;
+            totmax  = totmax  + nmax;
+            totmean = totmean + nmean;
+            totsum  = totsum  + nsum;
         end
         pair = false;
         currdupeset = [];
@@ -135,18 +254,25 @@ for i = 1:size(physdata, 1) - 1
 end
 if pair == true
     i = i + 1;
-    [dupeidx, addrows] = addDupeRows(physdata, dupeidx, currdupeset, addrows, i, mode, detaillog);
+    if ismember(physdata.RecordingType(i), sleepmeas)
+        mode = 'sum';
+    else
+        mode = 'mean';
+    end
+    [dupeidx, addrows, nsame, nmax, nmean, nsum] = addDupeRows(physdata, dupeidx, currdupeset, addrows, i, mode, detaillog);
+    totsame = totsame + nsame;
+    totmax  = totmax  + nmax;
+    totmean = totmean + nmean;
+    totsum  = totsum  + nsum;
 end
 
 writetable(physdata(dupeidx, :), fullfile(basedir, 'ExcelFiles', dupefile), 'Sheet', 'SameDayDupes');
 
-%temp = physdata(dupeidx, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded', 'DateNum'});
-%temp2 = varfun(@mean, temp, 'GroupingVariables', {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'});
-%writetable(temp2(:, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded', 'GroupCount'}), fullfile(basedir, 'ExcelFiles', dupefile), 'Sheet', 'SameDayDupes');
-
 % apply necessary updates.
 if doupdates
     fprintf('Deleting %d same day duplicates, and adding back %d single rows\n', size(dupeidx, 1), size(addrows, 1));
+    fprintf('Same %d, diffmax %d, diffmean %d, diffsum %d, checksum %d\n', totsame, totmax, totmean, ...
+                totsum, size(dupeidx, 1) - totsame - totmax - totmean - totsum);
     physdata(dupeidx, :) = [];
     physdata = [physdata; addrows];
 end

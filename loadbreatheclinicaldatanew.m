@@ -12,6 +12,8 @@ tic
 % get list of Project Breathe hospitals
 brhosp = getListOfBreatheHospitals();
 
+[patientmaster] = loadPatientMasterFileForAllHosp(study, brhosp);
+
 fprintf('Loading Project Breathe clinical data\n');
 fprintf('------------------------------------\n');
 
@@ -26,11 +28,13 @@ for i = 1:size(brhosp, 1)
         % for each patient file, extract the data and store in the clinical data tables
         [brPatient, brDrugTherapy, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brUnplannedContact, brCRP, brPFT, brMicrobiology, brHghtWght, brEndStudy] ...
             = loadBreatheClinDataForPatient(brPatient, brDrugTherapy, brAdmissions, brAntibiotics, brClinicVisits, brOtherVisits, brUnplannedContact, brCRP, brPFT, ...
-                    brMicrobiology, brHghtWght, brEndStudy, patfilelist{p}, basedir, tmpfolder);
+                    brMicrobiology, brHghtWght, brEndStudy, patfilelist{p}, patientmaster, basedir, tmpfolder);
     end 
 end
 toc
 fprintf('\n');
+
+checkClinDataCompleteness(patientmaster, brPatient);
 
 % sort rows
 brDrugTherapy       = sortrows(brDrugTherapy,      {'ID', 'DrugTherapyStartDate'});
@@ -113,6 +117,12 @@ end
 % antibiotics data
 idx = isnat(brAntibiotics.StartDate) & isnat(brAntibiotics.StopDate);
 fprintf('Found %d Antibiotics with both blank dates\n', sum(idx));
+if sum(idx) > 0
+    brAntibiotics(idx,:)
+    brAntibiotics(idx, :) = [];
+end
+idx = isnat(brAntibiotics.StartDate) & ~isnat(brAntibiotics.StopDate);
+fprintf('Found %d Antibiotics with blank start dates\n', sum(idx));
 if sum(idx) > 0
     brAntibiotics(idx,:)
     brAntibiotics(idx, :) = [];
@@ -241,7 +251,7 @@ outputfilename = 'breatheclinicaldata.mat';
 fprintf('Saving output variables to file %s\n', outputfilename);
 save(fullfile(basedir, subfolder,outputfilename), 'brPatient', 'brDrugTherapy', 'brAdmissions', ...
     'brAntibiotics', 'brClinicVisits', 'brOtherVisits', 'brUnplannedContact', ...
-    'brPFT', 'brCRP', 'brHghtWght', 'brMicrobiology', 'brEndStudy');
+    'brPFT', 'brCRP', 'brHghtWght', 'brMicrobiology', 'brEndStudy', 'patientmaster');
 toc
 
 % plot histograms by hospital and by month of last patient clinical data
