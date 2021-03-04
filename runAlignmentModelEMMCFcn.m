@@ -30,6 +30,7 @@ if ismember(study, {'SC', 'CL', 'BR'})
     fprintf('Loading latest labelled test data file %s\n', labelledinterventionsfile);
     load(fullfile(basedir, subfolder, labelledinterventionsfile), 'amLabelledInterventions');
 end
+    
 
 if ismember(study, {'BR', 'CL'})
     subfolder = sprintf('DataFiles/%s', study);
@@ -192,7 +193,8 @@ amEMMCPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount,
 toc
 fprintf('\n');
 
-if ismember(study, {'SC', 'CL', 'BR'})
+%if ismember(study, {'SC', 'CL', 'BR'})
+if ismember(study, {'SC', 'CL'})
     ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions(intrkeepidx, :), amInterventions, ...
                 overall_pdoffset, max_offset, 'Plots', plotname, ninterventions, nlatentcurves);
 else

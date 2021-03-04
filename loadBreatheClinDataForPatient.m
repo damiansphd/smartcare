@@ -114,10 +114,9 @@ if ~ismember(brpatrow.StudyNumber, brpatrow.StudyEmail)
     fprintf('**** Study Number is inconsistent with Study Email ****\n');
 end
 
-% temporary logic until separate table in spreadsheet
-% need to add in read from drug therapy tab once all patient s/s have been
-% recreated with the latest data
-if ismember(hospital, 'PAP')
+% temporary logic in case any spreadsheets in old format are to be
+% processed
+if ismember(hospital, 'XXX')
     fprintf('Drug Therapy       ');
 
     ndrthrows = 0;
@@ -178,7 +177,7 @@ for i = 1:nadm
     bradmrow.StudyNumber = studynbr;
     bradmrow.Admitted    = admdata.Admitted(i);
     bradmrow.Discharge   = admdata.Discharge(i);
-    %bradmrow.Comments    = admdata.Comments(i);
+    bradmrow.Comments    = admdata.Comments(i);
 
     brAdmissions = [brAdmissions; bradmrow];
 end
@@ -252,7 +251,7 @@ for i = 1:nmicro
     brmicrorow.Microbiology     = microdata.Microbiology(i);
     brmicrorow.DateMicrobiology = microdata.DateMicrobiology(i);
     brmicrorow.NameIfOther      = microdata.NameIfOther(i);
-    %brmicrorow.Comments         = microbdata.Comments(i);
+    brmicrorow.Comments         = microbdata.Comments(i);
 
     brMicrobiology = [brMicrobiology; brmicrorow];
 end
@@ -271,7 +270,7 @@ for i = 1:ncv
     brcvrow.StudyNumber      = studynbr;
     brcvrow.AttendanceDate   = cvdata.AttendanceDate(i);
     brcvrow.Location         = cvdata.Location(i);
-    %brcvrow.Comments         = cvdata.Comments(i);
+    brcvrow.Comments         = cvdata.Comments(i);
 
     brClinicVisits = [brClinicVisits; brcvrow];
 end 
@@ -290,7 +289,7 @@ for i = 1:nov
     brovrow.StudyNumber      = studynbr;
     brovrow.AttendanceDate   = ovdata.AttendanceDate(i);
     brovrow.VisitType        = ovdata.VisitType(i);
-    %brovrow.Comments         = ovdata.Comments(i);
+    brovrow.Comments         = ovdata.Comments(i);
 
     brOtherVisits = [brOtherVisits; brovrow];
 end
@@ -309,7 +308,7 @@ for i = 1:nuc
     brucrow.StudyNumber      = studynbr;
     brucrow.ContactDate      = ucdata.ContactDate(i);
     brucrow.TypeOfContact    = ucdata.TypeOfContact(i);
-    %brucrow.Comments         = ucdata.Comments(i);
+    brucrow.Comments         = ucdata.Comments(i);
 
     brUnplannedContact = [brUnplannedContact; brucrow];
 end
@@ -334,7 +333,7 @@ for i = 1:npft
     calcfev1setas               = brPatient.CalcFEV1SetAs(1);
     brpftrow.FEV1_              = 100 * brpftrow.FEV1 / fev1setas;
     brpftrow.CalcFEV1_          = 100 * brpftrow.FEV1 / calcfev1setas;
-    %brpftrow.Comments           = pftdata.Comments(i);
+    brpftrow.Comments           = pftdata.Comments(i);
 
     brPFT = [brPFT; brpftrow];
 end
@@ -358,7 +357,7 @@ for i = 1:ncrp
         brcrprow.NumericLevel       = str2double(regexprep(brcrprow.Level{1}, '[<>]',''));
         brcrprow.Units              = {'mg/L'};
         brcrprow.PatientAntibiotics = crpdata.PatientAntibiotics(i);
-        %brcrprow.Comments           = crpdata.Comments(i);
+        brcrprow.Comments           = crpdata.Comments(i);
         
         brCRP = [brCRP; brcrprow];
     else
@@ -389,7 +388,7 @@ for i = 1:nhw
     brhwrow.Weight             = hwdata.Weight(i);
     brhwrow.W_ZScore           = hwdata.W_ZScore(i);
     brhwrow.BMI                = hwdata.BMI(i);
-    %brhwrow.Comments           = hwdata.Comments(i);
+    brhwrow.Comments           = hwdata.Comments(i);
     
     brHghtWght = [brHghtWght; brhwrow];
 end

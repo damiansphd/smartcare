@@ -53,7 +53,7 @@ for h = 1:size(hosprow, 1)
         oldscid     = hospPatient.ID(i);
         scid        = hosppatmaster.ID(ismember(hosppatmaster.StudyNumber, studynbr));
         consentstatus = hosppatmaster.ConsentStatus{hosppatmaster.ID == scid};
-        if upper(consentstatus(1)) == 'Y'
+        if upper(consentstatus(1)) == 'Y' || upper(consentstatus(1)) == 'W'
             patclindate = hospPatient.PatClinDate(i);
             filename    = sprintf('PBClinData-%3d-%s-%s-%s.xlsx', scid, hospital, studynbr, datestr(patclindate, 'yyyymmdd'));
             fprintf('Creating file %s\n', filename);    
@@ -103,9 +103,6 @@ for h = 1:size(hosprow, 1)
             
         elseif upper(consentstatus(1)) == 'P' 
             fprintf('Skipping patient %d(%s) as consent not yet given\n', scid, studynbr);
-            continue;
-        elseif upper(consentstatus(1)) == 'W'
-            fprintf('Skipping patient %d(%s) as they have withdrawn\n', scid, studynbr);
             continue;
         else
             fprintf('**** Unknown consent status for patient %d(%s) ****\n', scid, studynbr);
