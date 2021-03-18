@@ -193,10 +193,14 @@ elseif runfunction == 7
 elseif runfunction == 8
     fprintf('Comparing results to the labelled test data\n');
     fprintf('\n');
+    fprintf('1: Test set only\n');
+    fprintf('2: All Interventions\n');
+
+    testsetmode = selectValFromRange('Select mode to run', 1, 2);
     subfolder = 'MatlabSavedVariables';
     load(fullfile(basedir, subfolder, labelledinterventionsfile));
     amEMMCCompareModelRunToTestData(amLabelledInterventions(intrkeepidx, :), amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, hstg, overall_hist, ...
-        meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, nlatentcurves, max_offset, align_wind, sigmamethod, study, mversion, modelrun, modelidx);
+        meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, nlatentcurves, max_offset, align_wind, sigmamethod, study, mversion, modelrun, modelidx, testsetmode);
 elseif runfunction == 9
     fprintf('<placeholder for Dragos new option>\n');
 elseif runfunction == 10

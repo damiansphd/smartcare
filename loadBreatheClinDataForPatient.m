@@ -251,7 +251,7 @@ for i = 1:nmicro
     brmicrorow.Microbiology     = microdata.Microbiology(i);
     brmicrorow.DateMicrobiology = microdata.DateMicrobiology(i);
     brmicrorow.NameIfOther      = microdata.NameIfOther(i);
-    brmicrorow.Comments         = microbdata.Comments(i);
+    brmicrorow.Comments         = microdata.Comments(i);
 
     brMicrobiology = [brMicrobiology; brmicrorow];
 end

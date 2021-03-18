@@ -210,7 +210,7 @@ for i = 1:size(patientlist,1)
     measures = unique(physdata.RecordingType);
     npages = ceil(size(measures, 1) / mplotsperpage) + 1;
     page = 1;
-    filenameprefix = sprintf('%s-Patient Summary - ID %s (%d) Hosp %s', study, studyid, scid, hospital);
+    filenameprefix = sprintf('%s-Patient Summary - ID %d (%s) Hosp %s', study, scid, studyid, hospital);
     imagefilename = sprintf('%s - Page %d of %d', filenameprefix, page, npages);
     [f, p] = createFigureAndPanel(imagefilename, 'Portrait', 'a4');
     

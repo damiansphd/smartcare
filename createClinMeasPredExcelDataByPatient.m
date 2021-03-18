@@ -9,11 +9,9 @@ subfolder = 'MatlabSavedVariables';
 [cdPatient, cdDrugTherapy, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
     cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
 
-outputfilename = sprintf('%sResults.xlsx', studyfullname);
-
-if studynbr == 1
-    patlist = [23, 24, 123, 132, 133];
-elseif studynbr == 2
+if ismember(study, 'SC')
+    patlist = [24, 30, 32, 59, 79, 115, 173, 188, 214, 215, 241];
+elseif ismember(study, 'TM')
     patlist = cdPatient.ID';
 else
     fprintf('Need to add patient list for other studies\n');
@@ -26,6 +24,7 @@ load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun)));
 
 basedir = setBaseDir();
 subfolder = 'ExcelFiles';
+outputfilename = sprintf('ClinMeasPred-%s.xlsx', modelrun);
 
 nonmeascols = 8;
 
@@ -58,11 +57,16 @@ for i = 1:size(cdPatient,1)
         fprintf('----------\n');
         outputdata(1:size(outputdata,1),:) = [];
         scid = cdPatient.ID(i);
+        
+        tmpInterventions = amInterventions(amInterventions.SmartCareID == scid,:);
 
+        patoffset = patientoffsets.PatientOffset(patientoffsets.SmartCareID == scid);
         minscdn = min(physdata.ScaledDateNum(physdata.SmartCareID == scid));
-        minscdt = min(physdata.Date_TimeRecorded(physdata.SmartCareID == scid));
-        maxscdn = max(physdata.ScaledDateNum(physdata.SmartCareID == scid));
-        maxscdt = max(physdata.Date_TimeRecorded(physdata.SmartCareID == scid));
+        %minscdt = min(physdata.Date_TimeRecorded(physdata.SmartCareID == scid));
+        minscdt = datetime(offset + patoffset + minscdn - 1, 'ConvertFrom', 'datenum');
+        maxscdn = max(max(physdata.ScaledDateNum(physdata.SmartCareID == scid)), max(tmpInterventions.IVScaledStopDateNum));
+        %maxscdt = max(physdata.Date_TimeRecorded(physdata.SmartCareID == scid));
+        maxscdt = datetime(offset + patoffset + maxscdn - 1, 'ConvertFrom', 'datenum');
 
         rowtoadd.ID                = scid;
         rowtoadd.OralAB            = nan;
@@ -76,9 +80,10 @@ for i = 1:size(cdPatient,1)
             outputdata = [outputdata; rowtoadd];
         end
 
-        outputdata.Date = [datetime(minscdt-seconds(1)):datetime(maxscdt-seconds(1))]';
+        %outputdata.Date = [datetime(minscdt-seconds(1)):datetime(maxscdt-seconds(1))]';
+        outputdata.Date = (minscdt:maxscdt)';
 
-        tmpInterventions = amInterventions(amInterventions.SmartCareID == scid,:);
+        
         for a = 1:size(tmpInterventions,1)
             outputdata.InterventionStart(tmpInterventions.IVScaledDateNum(a)) = 1;
             fprintf('Intervention Start: ScaledDataNum = %d, Date = %s\n', tmpInterventions.IVScaledDateNum(a), datestr(tmpInterventions.IVStartDate(a),1));
@@ -116,7 +121,8 @@ for i = 1:size(cdPatient,1)
                 column = sprintf('%s_Raw',measures.DisplayName{a});
                 outputdata(minscdn:maxscdn, {column}) = array2table(measurements);
                 column = sprintf('%s_Smooth',measures.DisplayName{a});
-                outputdata(minscdn:maxscdn, {column}) = array2table(smooth(measurements,5));
+                %outputdata(minscdn:maxscdn, {column}) = array2table(smooth(measurements,5));
+                outputdata(minscdn:maxscdn, {column}) = array2table(movmean(measurements,[2 2], 'omitnan'));
             %end
         end
 

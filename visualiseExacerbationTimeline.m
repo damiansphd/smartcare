@@ -230,7 +230,7 @@ for i = 1:size(abTreatments,1)
         end
     end
     % save plot
-    imagefilename = sprintf('%s-ExacerbationTimeline_ID_%s_%d_%s_%11s', study, studyid, scid, hospital, datestr(eventstartdate, 29));
+    imagefilename = sprintf('%s-ExacerbationTimeline_ID_%d_%s_%s_%11s', study, scid, studyid, hospital, datestr(eventstartdate, 29));
     savePlotInDir(f, imagefilename, subfolder);
     close(f);
 end

@@ -83,8 +83,8 @@ filteligintr = eligintr(:, {'IntrNbr', 'SmartCareID', 'Hospital', 'StudyNumber',
 basedir = setBaseDir();
 subfolder = 'ExcelFiles';
 xlfilename = sprintf('JosieQuery2 %s.xlsx', plotname);
-writetable(filteligintr(ismember(filteligintr.IntrNbr, [1, 2, 3, 33, 34, 42, 44, 45]), :), fullfile(basedir, subfolder, xlfilename), 'Sheet', 'Already Used');
-writetable(filteligintr(~ismember(filteligintr.IntrNbr, [1, 2, 3, 33, 34, 42, 44, 45]), :), fullfile(basedir, subfolder, xlfilename), 'Sheet', 'New Examples');
-
+%writetable(filteligintr(ismember(filteligintr.IntrNbr, [1, 2, 3, 33, 34, 42, 44, 45]), :), fullfile(basedir, subfolder, xlfilename), 'Sheet', 'Already Used');
+%writetable(filteligintr(~ismember(filteligintr.IntrNbr, [1, 2, 3, 33, 34, 42, 44, 45]), :), fullfile(basedir, subfolder, xlfilename), 'Sheet', 'New Examples');
+writetable(filteligintr(ismember(filteligintr.IntrNbr, [2, 3, 33, 34, 6, 21, 39, 41, 67, 72, 88, 89, 97]), :), fullfile(basedir, subfolder, xlfilename), 'Sheet', 'Requested Examples');
 
 

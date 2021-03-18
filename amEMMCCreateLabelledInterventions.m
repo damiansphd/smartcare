@@ -142,6 +142,10 @@ while i <= interto
         save(fullfile(basedir, subfolder, outputfilename), 'amLabelledInterventions');
         i = i + 1;
     else
+        amLabelledInterventions.LowerBound1(i) = 0;
+        amLabelledInterventions.UpperBound1(i) = 0;
+        amLabelledInterventions.LowerBound2(i) = 0;
+        amLabelledInterventions.UpperBound2(i) = 0;
         close(f);
     end
     if temp == 3

@@ -8,10 +8,10 @@ isValid = true;
 
 if (ismember(hosp, 'PAP'))
     clinprocdate      = '20210228';
-    patientmasterdate = '20210201';
+    patientmasterdate = '20210315';
 elseif (ismember(hosp, 'CDF'))
-    clinprocdate      = '20210228';
-    patientmasterdate = '20210218';
+    clinprocdate      = '20210305';
+    patientmasterdate = '20210305';
 else
     fprintf('**** Unknown Hospital ****/n');
     isValid      = false;

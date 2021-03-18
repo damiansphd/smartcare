@@ -1,6 +1,6 @@
 function amEMMCCompareModelRunToTestData(amLabelledInterventions, amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, ...
     hstg, overall_hist, meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, nlatentcurves, max_offset, ...
-    align_wind, sigmamethod, study, mversion, modelrun, modelidx)
+    align_wind, sigmamethod, study, mversion, modelrun, modelidx, testsetmode)
 
 % amEMMCCompareModelRunToTestData - compares the output of a chosen model run to
 % the labelled test data (able to handle multiple sets of latent curves
@@ -9,10 +9,16 @@ amLabelledInterventions = amLabelledInterventions(ismember(amLabelledInterventio
 amLabelledInterventions = [array2table((1:ninterventions)'), amLabelledInterventions];
 amLabelledInterventions.Properties.VariableNames{'Var1'} = 'InterNbr';
 
-testidx = amLabelledInterventions.IncludeInTestSet=='Y';
+if testsetmode == 1
+    testidx = amLabelledInterventions.IncludeInTestSet=='Y';
+elseif testsetmode == 2
+    testidx = true(size(amLabelledInterventions, 1), 1);
+else
+    fprintf('**** Unknown test set mode ****\n');
+    return
+end 
 testset = amLabelledInterventions(testidx,:);
-testsetsize = size(testset,1);
-
+testsetsize = size(testset,1);    
 modelpreds = amInterventions.Pred(testidx);
 amintrtst  = amInterventions(testidx, :);
         
