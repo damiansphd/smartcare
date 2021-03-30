@@ -8,7 +8,7 @@ subfolder = 'MatlabSavedVariables';
 [datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(study);
 [physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, study);
 [cdPatient, cdDrugTherapy, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
-    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
+    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds, cdUnplannedContact] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
 
 tic
 fprintf('Loading datademographics by patient\n');
