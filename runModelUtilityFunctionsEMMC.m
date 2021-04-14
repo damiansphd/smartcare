@@ -269,7 +269,7 @@ elseif runfunction == 19
     fprintf('Loading clinical microbiology, antibiotic, admissions, and CRP data\n');
     load(fullfile(basedir, subfolder, ivandmeasuresfile), 'ivandmeasurestable');
     [~, clinicalmatfile, ~] = getRawDataFilenamesForStudy(study);
-    [~, ~, cdMicrobiology, cdAntibiotics, cdAdmissions, ~, cdCRP, ~, ~, ~, ~] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
+    [~, cdDrugTherapy, cdMicrobiology, cdAntibiotics, cdAdmissions, ~, cdCRP, ~, ~, ~, ~] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
     fprintf('Plotting Variables vs latent curve allocation\n');
     amEMMCPlotVariablesVsLatentCurveSet(amInterventions, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
         cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves);

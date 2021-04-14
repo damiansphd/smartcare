@@ -34,6 +34,8 @@ amInterventions = createListOfInterventions(ivandmeasurestable, physdata, offset
 ninterventions = size(amInterventions,1);
 toc
 
+amInterventions = addDrugTherapyInfo(amInterventions, cdDrugTherapy);
+
 tic
 % create datacube - 3D array of patients/days/measures for model
 fprintf('Creating 3D data array\n');
