@@ -1,5 +1,5 @@
 function amEMMCPlotVariablesVsLatentCurveSet(amInterventions, pmPatients, pmPatientMeasStats, ivandmeasurestable, ...
-        cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves)
+        cdMicrobiology, cdAntibiotics, cdAdmissions, cdCRP, measures, plotname, plotsubfolder, ninterventions, nlatentcurves, study)
     
 % amEMMCPlotVariablesVsLatentCurveSet - compact plots of various variables
 % against latent curve set assigned to try and observe correlations
@@ -22,7 +22,8 @@ barvartext = {%'Gender'; ...
               'Pct Nbr of Interventions'; ...
               'Pct Pseudomonas'; ...
               'Pct Staphylococcus'; ...
-              'Pct One or Both'};
+              'Pct One or Both'; ...
+              'Pct Mod Therapy'};
 
 nscattervars   = size(scattervartext, 1);
 scattervardata = zeros(ninterventions, nscattervars);
@@ -49,10 +50,17 @@ end
 
 % Scatter plot variables
 % 1) Robust Max FEV1
-mfev1idx  = measures.Index(ismember(measures.DisplayName, 'LungFunction'));
+if ismember(study, {'SC', 'TM'})
+    mfev1idx  = measures.Index(ismember(measures.DisplayName, 'LungFunction'));
+elseif ismember(study, {'CL', 'BR'})
+    mfev1idx  = measures.Index(ismember(measures.DisplayName, 'FEV1'));
+else
+    fprintf('**** Unknown Study ****\n');
+    return
+end
 fev1max  = pmPatientMeasStats(pmPatientMeasStats.MeasureIndex == mfev1idx, {'PatientNbr', 'Study', 'ID', 'RobustMax'});
 %lc = innerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'LeftVariables', {'SmartCareID', 'IVStartDate', 'IVScaledDateNum', 'LatentCurve'}, 'RightVariables', {'RobustMax'});
-lc = outerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'LeftVariables', {'SmartCareID', 'IVStartDate', 'IVScaledDateNum', 'LatentCurve'}, 'RightVariables', {'RobustMax'});
+lc = outerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'LeftVariables', {'SmartCareID', 'IVStartDate', 'IVScaledDateNum', 'LatentCurve', 'DrugTherapy'}, 'RightVariables', {'RobustMax'});
 lc(isnan(lc.SmartCareID), :) = [];
 scattervardata(:, 1) = lc.RobustMax;
 
@@ -247,6 +255,27 @@ for v = 1:nbarvars
         legendtext = {'1', '2', '3', '4', '5', '6', '7'};
         blc.PValCol = blc.GroupCount;
         %lc.GroupCount = [];
+    elseif ismember(barvartext(v), {'Mod Therapy', 'Pct Mod Therapy'})
+        nbarsplits = 5;
+        barvardata = zeros(nlatentcurves, nbarsplits);
+        for n = 1:nlatentcurves
+            barvardata(n, 1) = sum(lc.LatentCurve == n & ismember(lc.DrugTherapy, 'None'));
+            barvardata(n, 2) = sum(lc.LatentCurve == n & ismember(lc.DrugTherapy, 'Orkambi'));
+            barvardata(n, 3) = sum(lc.LatentCurve == n & ismember(lc.DrugTherapy, 'Ivacaftor'));
+            barvardata(n, 4) = sum(lc.LatentCurve == n & ismember(lc.DrugTherapy, 'Symkevi'));
+            barvardata(n, 5) = sum(lc.LatentCurve == n & ismember(lc.DrugTherapy, 'Triple Therapy'));
+        end
+        if ismember(barvartext(v), {'Pct Mod Therapy'})
+            barvardata = 100 * (barvardata ./ sum(barvardata, 2));
+        end
+        legendtext = {'None', 'Orkambi', 'Ivacaftor', 'Symkevi', 'Triple'};
+        blc = lc;
+        blc.PValCol(:) = 1;
+        blc.PValCol(ismember(blc.DrugTherapy, 'Orkambi')) = 2;
+        blc.PValCol(ismember(blc.DrugTherapy, 'Ivacaftor')) = 3;
+        blc.PValCol(ismember(blc.DrugTherapy, 'Symkevi')) = 4;
+        blc.PValCol(ismember(blc.DrugTherapy, 'Triple Therapy')) = 5;
+        
     end
     
     ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
@@ -258,8 +287,8 @@ for v = 1:nbarvars
     if ismember(barvartext(v), {'Pct Gender', 'Pct Nbr of Interventions', ...
             'Pct Pseudomonas', 'Pct Staphylococcus', 'Pct One or Both'})
         ylim(ax, [0 135]);
-    elseif ismember(barvartext(v), {'Pct Nbr of IV Treatments', 'Pct Nbr of AB Treatments'})
-        ylim(ax, [0 150]);
+    elseif ismember(barvartext(v), {'Pct Nbr of IV Treatments', 'Pct Nbr of AB Treatments', 'Pct Mod Therapy'})
+        ylim(ax, [0 175]);
     end
     xlabel(ax, 'Latent Curve Set', 'FontSize', 8);
     ylabel(ax, barvartext{v}, 'FontSize', 8);

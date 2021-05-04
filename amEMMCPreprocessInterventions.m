@@ -35,15 +35,19 @@ for i = 1:ninterventions
     %end
 end
 
-amInterventions = outerjoin(amInterventions, amElectiveTreatments, 'LeftKeys', {'SmartCareID', 'Hospital', 'IVScaledDateNum'}, 'RightKeys', {'ID', 'Hospital', 'IVScaledDateNum'}, 'RightVariables', {'ElectiveTreatment'});
+amInterventions = outerjoin(amInterventions, amElectiveTreatments, 'LeftKeys', {'SmartCareID', 'Hospital', 'IVScaledDateNum'}, ...
+    'RightKeys', {'ID', 'Hospital', 'IVScaledDateNum'}, 'RightVariables', {'ElectiveTreatment'}, 'Type', 'left');
 % delete dummy row
-amInterventions(isnan(amInterventions.SmartCareID), :) = [];
+%amInterventions(isnan(amInterventions.SmartCareID), :) = [];
 
 % remove any interventions where insufficient data in the data window
-idx = find(amInterventions.DataWindowCompleteness < compthresh);
-amInterventions(idx,:) = [];
-amIntrDatacube(idx,:,:) = [];
-ninterventions = size(amInterventions,1);
+% don't do this for project breathe
+if ~ismember(study, {'BR'})
+    idx = find(amInterventions.DataWindowCompleteness < compthresh);
+    amInterventions(idx,:) = [];
+    amIntrDatacube(idx,:,:) = [];
+    ninterventions = size(amInterventions,1);
+end
 
 if intrmode == 1
     intrkeepidx = true(size(amInterventions, 1),1);

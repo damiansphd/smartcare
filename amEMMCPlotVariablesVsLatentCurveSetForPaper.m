@@ -25,7 +25,9 @@ barvartext = {%'Gender'; ...
               'Pct Time Since Last Ex'; ...
               'Time Since Last Ex or Study Start'; ...
               'Pct Time Since Last Ex or Study Start'; ...
-              'Pct Has Cold or Flu'};
+              %'Pct Has Cold or Flu'; ...
+              'Mod Therapy'; ...
+              'Pct Mod Therapy'};
           
 polarvartext = {'Day of Year'};
 
@@ -85,7 +87,7 @@ else
     return
 end
 fev1max  = pmPatientMeasStats(pmPatientMeasStats.MeasureIndex == mfev1idx, {'PatientNbr', 'Study', 'ID', 'RobustMax'});
-lc = innerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'LeftVariables', {'SmartCareID', 'IVStartDate', 'IVScaledDateNum', 'LatentCurve'}, 'RightVariables', {'RobustMax'});
+lc = innerjoin(amInterventions, fev1max, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'LeftVariables', {'SmartCareID', 'IVStartDate', 'IVScaledDateNum', 'LatentCurve', 'DrugTherapy'}, 'RightVariables', {'RobustMax'});
 scattervardata(:, 1) = lc.RobustMax;
 
 % 2 & 3) BMI, Age
@@ -356,23 +358,43 @@ for v = 1:nbarvars
 
         legendtext = {'< 4wks', '>= 4wks'};
         blc.PValCol = blc.Bucket;
-    elseif ismember(barvartext(v), {'Pct Has Cold or Flu'})
-        % < needs to be finished - at the moment just cut and pasted from
-        % gender >
-        nbarsplits = 2;
+    %elseif ismember(barvartext(v), {'Pct Has Cold or Flu'})
+    %    % < needs to be finished - at the moment just cut and pasted from
+    %    % gender >
+    %    nbarsplits = 2;
+    %    barvardata = zeros(nlatentcurves, nbarsplits);
+    %    for n = 1:nlatentcurves
+    %        barvardata(n, 1) = sum(lc.LatentCurve == n & ismember(lc.Sex, 'Male'));
+    %        barvardata(n, 2) = sum(lc.LatentCurve == n & ismember(lc.Sex, 'Female'));
+    %    end
+    %    if ismember(barvartext(v), 'Pct Gender')
+    %        barvardata = 100 * (barvardata ./ sum(barvardata, 2));
+    %    end
+    %    legendtext = {'M', 'F'};
+    %    blc = lc;
+    %    blc.PValCol(:) = 1;
+    %    blc.PValCol(ismember(blc.Sex, 'Female')) = 2; 
+    elseif ismember(barvartext(v), {'Mod Therapy', 'Pct Mod Therapy'})
+        nbarsplits = 5;
         barvardata = zeros(nlatentcurves, nbarsplits);
         for n = 1:nlatentcurves
-            barvardata(n, 1) = sum(lc.LatentCurve == n & ismember(lc.Sex, 'Male'));
-            barvardata(n, 2) = sum(lc.LatentCurve == n & ismember(lc.Sex, 'Female'));
+            barvardata(n, 1) = sum(lc.LatentCurve == n & ismember(lc.DrugTherapy, 'None'));
+            barvardata(n, 2) = sum(lc.LatentCurve == n & ismember(lc.DrugTherapy, 'Orkambi'));
+            barvardata(n, 3) = sum(lc.LatentCurve == n & ismember(lc.DrugTherapy, 'Ivacaftor'));
+            barvardata(n, 4) = sum(lc.LatentCurve == n & ismember(lc.DrugTherapy, 'Symkevi'));
+            barvardata(n, 5) = sum(lc.LatentCurve == n & ismember(lc.DrugTherapy, 'Triple Therapy'));
         end
-        if ismember(barvartext(v), 'Pct Gender')
+        if ismember(barvartext(v), {'Pct Mod Therapy'})
             barvardata = 100 * (barvardata ./ sum(barvardata, 2));
         end
-        legendtext = {'M', 'F'};
+        legendtext = {'None', 'Orkambi', 'Ivacaftor', 'Symkevi', 'Triple'};
         blc = lc;
         blc.PValCol(:) = 1;
-        blc.PValCol(ismember(blc.Sex, 'Female')) = 2; 
-        
+        blc.PValCol(ismember(blc.DrugTherapy, 'Orkambi')) = 2;
+        blc.PValCol(ismember(blc.DrugTherapy, 'Ivacaftor')) = 3;
+        blc.PValCol(ismember(blc.DrugTherapy, 'Symkevi')) = 4;
+        blc.PValCol(ismember(blc.DrugTherapy, 'Triple Therapy')) = 5;
+            
     end
     
     ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
@@ -386,9 +408,13 @@ for v = 1:nbarvars
             'Pct Pseudomonas', 'Pct Staphylococcus', 'Pct One or Both', 'Pct Time Since Last Ex', 'Pct Time Since Last Ex or Study Start'})
         ylim(ax, [0 135]);
     elseif ismember(barvartext(v), {'Pct Nbr of Interventions', 'Pct Nbr of IV Treatments', 'Pct Nbr of AB Treatments'})
-        ylim(ax, [0 160]);
+        ylim(ax, [0 175]);
+    elseif ismember(barvartext(v), {'Pct Mod Therapy'})
+        ylim(ax, [0 150]);
     elseif ismember(barvartext(v), {'Time Since Last Ex', 'Time Since Last Ex or Study Start'})
         ylim(ax, [0 60]);
+    elseif ismember(barvartext(v), {'Mod Therapy'})
+        ylim(ax, [0 100]);    
     end
     xlabel(ax, 'Latent Curve Set', 'FontSize', 8);
     ylabel(ax, barvartext{v}, 'FontSize', 8);

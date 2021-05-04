@@ -28,8 +28,10 @@ fprintf('Loading data outliers %s\n', dataoutliersfile);
 load(fullfile(basedir, subfolder, dataoutliersfile));
 fprintf('Loading latest labelled test data file %s\n', labelledinterventionsfile);
 load(fullfile(basedir, subfolder, labelledinterventionsfile), 'amLabelledInterventions');
-fprintf('Loading Predictive Model Patient Measures Stats\n');
-load(fullfile(basedir, subfolder, sprintf('%spredictivemodelinputs.mat', study)), 'pmPatients', 'pmPatientMeasStats');
+[~, clinicalmatfile, ~] = getRawDataFilenamesForStudy(study);
+[cdPatient, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
+%fprintf('Loading Predictive Model Patient Measures Stats\n');
+%load(fullfile(basedir, subfolder, sprintf('%spredictivemodelinputs.mat', study)), 'pmPatients', 'pmPatientMeasStats');
 
 if ismember(study, {'BR', 'CL'})
     subfolder = sprintf('DataFiles/%s', study);
@@ -45,7 +47,7 @@ amElectiveTreatments = readtable(fullfile(basedir, subfolder, electivefile), elo
 amElectiveTreatments.ElectiveTreatment(:) = 'Y';
 toc
 
-[splittbl, splittxt, ntiles, isValid] = createIDSplitList(pmPatients);
+[splittbl, splittxt, ntiles, isValid] = createIDSplitList(cdPatient, amInterventions);
 if ~isValid
     return;
 end
@@ -57,7 +59,7 @@ for t = 1:ntiles
     tic
     sversion = sprintf('%s%d', splittxt, t);
     fprintf('Running for %s\n', sversion);
-    amInterventions = amInterventionsKeep(ismember(amInterventionsKeep.SmartCareID, splittbl.ID(splittbl.NTile == t)),:);
+    amInterventions = amInterventionsKeep(splittbl.NTile == t, :);
     ninterventions = size(amInterventions,1);
 
     fprintf('Preparing input data\n');

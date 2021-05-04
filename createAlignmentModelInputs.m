@@ -7,8 +7,7 @@ basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 [datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(study);
 [physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, study);
-[cdPatient, cdDrugTherapy, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
-    cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght, cdMedications, cdNewMeds, cdUnplannedContact] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
+[~, cdDrugTherapy, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
 
 tic
 fprintf('Loading datademographics by patient\n');
@@ -41,9 +40,6 @@ tic
 fprintf('Creating 3D data array\n');
 [amDatacube] = createDataCube(physdata, measures, npatients, ndays, nmeasures);
 toc
-
-temp = cdPFT(:,{'ID', 'FEV1'});
-
 
 tic
 basedir = setBaseDir();

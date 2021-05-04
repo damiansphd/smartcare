@@ -28,7 +28,7 @@ else
     fprintf('**** Unknown shift mode ****\n');
 end
 
-plottitle   = sprintf('%s - %s S-imp %s FP', plotname, run_type, shifttext);
+plottitle   = sprintf('%s - %s S-imp %s FP pc%d', plotname, run_type, shifttext, countthreshold);
 
 plotsacross = nlatentcurves;
 plotsdown   = 1;
@@ -95,8 +95,10 @@ for n = 1:nlatentcurves
     pridx = measures.Index(ismember(measures.DisplayName, invmeasarray));
     meancurvemean(n, :, pridx) = meancurvemean(n, :, pridx) * -1;
     for m = 1:nmeasures
+        %meancurvemean(n, meancurvecount(n, :, m) < countthreshold, m) = NaN;
+        %meancurvemean(n, :, m) = movmean(meancurvemean(n, :, m), smoothwdth, 'omitnan');
+        meancurvemean(n, :, m) = movmean(meancurvemean(n, :, m), smoothwdth, 'includenan');
         meancurvemean(n, meancurvecount(n, :, m) < countthreshold, m) = NaN;
-        meancurvemean(n, :, m) = movmean(meancurvemean(n, :, m), smoothwdth, 'omitnan');
         if shiftmode == 1
             vertshift = mean(meancurvemean(n, 1:(align_wind + max_offset + ex_start(n)), m));
         elseif shiftmode == 2
