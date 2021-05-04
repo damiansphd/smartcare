@@ -72,9 +72,11 @@ for i = 1:nlccombs
 end
 
 lcsort = getLCSortOrder(amInterventions, nlatentcurves);
-amInterventions.SortedLatentCurve = lcsort(amInterventions.LatentCurve);
-amInterventions.Properties.VariableNames{'LatentCurve'} = 'OrigLatentCurve';
-amInterventions.Properties.VariableNames{'SortedLatentCurve'} = 'LatentCurve';
+amInterventions.OrigLatentCurve = amInterventions.LatentCurve;
+for n = 1:nlatentcurves
+    amInterventions.LatentCurve(amInterventions.OrigLatentCurve == lcsort(n)) = n;
+end
+
 
 % Scatter plot variables
 % 1) Robust Max FEV1
@@ -214,7 +216,7 @@ savePlotInDirAsSVG(f, plottitle, plotsubfolder);
 close(f);
 page = page + 1;
 thisplot = 1;
-plottitle = sprintf('%s - Variables vs Latent Curve Set For Paper Page %d of %d', plotname, page, npages);
+plottitle = sprintf('%s - Vars vs LC Set FP Pg %d of %d', plotname, page, npages);
 [f, p] = createFigureAndPanelForPaper('', widthinch, heightinch);
 
 for v = 1:nbarvars
@@ -474,7 +476,7 @@ close(f);
 
 page = page + 1;
 thisplot = 1;
-plottitle = sprintf('%s - Variables vs Latent Curve Set For Paper Page %d of %d', plotname, page, npages);
+plottitle = sprintf('%s - Vars vs LC Set FP Pg %d of %d', plotname, page, npages);
 [f, p] = createFigureAndPanelForPaper('', widthinch, heightinch);
 colormap(f, cmap);
 
@@ -516,7 +518,7 @@ savePlotInDirAsSVG(f, plottitle, plotsubfolder);
 close(f);
 
 page = page + 1;
-plottitle = sprintf('%s - Variables vs Latent Curve Set For Paper Page %d of %d', plotname, page, npages);
+plottitle = sprintf('%s - Vars vs LC Set FP Pg %d of %d', plotname, page, npages);
 [f, p] = createFigureAndPanelForPaper('', widthinch, heightinch);
 colormap(f, cmap);
 plotsdown   = 3; 
