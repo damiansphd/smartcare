@@ -1,3 +1,32 @@
+% loads Breathe clinical data for each patient
+% - concatenates all individual patients' clinical data category by category
+% - performs some field level data quality checks
+% 
+% Input:
+% ------
+% one spreadsheet per patient from the "DataFiles/BR/ClinicalData/" directory,
+% among hospitals list taking part into the study
+%
+% Output:
+% -------
+% breatheclinicaldata.mat with the following variables:
+% - brAdmissions          synonym for hospitalisation
+% - brAntibiotics         ab's name, route, homeIV, start/end date
+% - brClinicVisits        date, location (e.g. home or clinic)
+% - brCRP                 CRP measures
+% - brDrugTherapy         CFTR modulators therapy, start/stop date
+% - brEndStudy            empty for Breathe - nonrelevant
+% - brHghWght             height, weight (and seldom BMI, H_z & W_z scores)
+% - brMicrobiology        what bacterias in the lungs
+% - brOtherVisits         e.g. annual reviews, emergencies
+% - brPatient             patient profile (including mutations)
+% - brPFT                 Pulmonary Function Tests
+% - brUnplannedContact    e.g. call
+% - patientmaster         study enrollment start/end dates, StudyNumber (clinical), GUID/Partition Key (MagicBullet server)
+% 
+% Histogram of patient clinical data by month of last update.png - plot
+
+
 clear; clc; close all;
 
 study = 'BR';
@@ -86,6 +115,7 @@ if sum(idx) > 0
 end
 
 % drug therapy data
+% TODO % clean drug therapy namings (see unique(brDrugTherapy.DrugTherapyType)
 idx = isnat(brDrugTherapy.DrugTherapyStartDate);
 fprintf('Found %d Drug Therapy rows with blank dates\n', sum(idx));
 if sum(idx) > 0

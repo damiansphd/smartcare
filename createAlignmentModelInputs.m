@@ -1,3 +1,20 @@
+% creates the inputs for the model
+% 
+% - creates list of interventions with enough data to run model on
+% - formats measure data into a datacube of size (npatients, ndays,
+% nmeasurestype)
+% - outputs this in a .mat file
+% 
+% Input:
+% ------
+% clinical and measurements data
+% ivandmeasures_gap .mat
+%
+%
+% Output:
+% -------
+% alignmentmodelinputs_gap .mat
+
 clear; close all; clc;
 
 [studynbr, study, studyfullname] = selectStudy();

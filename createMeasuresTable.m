@@ -1,6 +1,16 @@
 function [measures, nmeasures] = createMeasuresTable(physdata)
 
-% createMeasuresTable - creates the measures table 
+% creates the measures table
+%
+% Input:
+% ------
+% physdata      measurements data
+% 
+% Output:
+% -------
+% nmeasures     #recording types
+% measures      table template of size (nmeasures, 7) with AlignWindStd, 
+%   OvervallStd, Mask columns to be populated during alignment model execution
 
 nmeasures = size(unique(physdata.RecordingType), 1);
 

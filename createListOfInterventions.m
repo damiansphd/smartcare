@@ -1,7 +1,18 @@
 function [interventions] = createListOfInterventions(ivandmeasurestable, physdata, offset)
 
-% createListOfInterventions - creates the list of distinct IV Antiobiotic
-% treatments in a structure to be used by the alignment model
+% creates the list of distinct IV Antiobiotic treatments in a structure to be used by the alignment model
+% 
+% - filters treatments containing too much missing data
+% - adds new columns to be populated during model run
+% 
+% Input:
+% ------
+% ivandmeasurestable      list of oral & IV treatments
+% physdata, offset        measurements data
+% 
+% Output:
+% -------
+% table with final treatment list
 
 % get the date scaling offset for each patient
 patientoffsets = getPatientOffsets(physdata);
