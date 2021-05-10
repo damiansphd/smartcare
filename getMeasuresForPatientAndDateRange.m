@@ -1,14 +1,18 @@
-function relrows = getMeasuresForPatientAndDateRange(physdata,smartcareID, daymid, range, includeActivity)
+function relrows = getMeasuresForPatientAndDateRange(physdata,smartcareID, daymid, range, rectype, includeActivity)
 
 % getMeasuresForPatientDateRange - returns table containing the measurements 
 % for a given patient with +/- days around a specified date
 
-if includeActivity
-    % dummy index of all rows in physdata
-    idxm = find(physdata.SmartCareID);
+if ismember(rectype,'All')
+    if includeActivity
+        % dummy index of all rows in physdata
+        idxm = find(physdata.SmartCareID);
+    else
+        % index rows of all measurment types except ActivityRecording
+        idxm = find(~ismember(physdata.RecordingType, 'ActivityRecording'));
+    end
 else
-    % index rows of all measurment types except ActivityRecording
-    idxm = find(~ismember(physdata.RecordingType, 'ActivityRecording'));
+    idxm = find(ismember(physdata.RecordingType, rectype));
 end
 
 dayfrom = daymid - range;
