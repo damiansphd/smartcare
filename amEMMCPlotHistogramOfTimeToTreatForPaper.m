@@ -5,8 +5,8 @@ function amEMMCPlotHistogramOfTimeToTreatForPaper(amInterventions, plotname, plo
 
 plottitle   = sprintf('%s - Histogram of Time to Treat For Paper', plotname);
 
-pghght = 3;
-pgwdth = 3;
+pghght = 5;
+pgwdth = 8;
 
 [f, p] = createFigureAndPanelForPaper('', pgwdth, pghght);
 
