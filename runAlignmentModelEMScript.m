@@ -1,11 +1,3 @@
-% sequentially runs alignment models according to parameter file format
-%
-% x lines in the chosen parameter file = x alignment model runs
-% 
-% Input:
-% ------
-% *RunParameters*.xlsx      parameter files list (one chosen during runtime)
-
 clear; close all; clc;
 
 RunParameterFiles = {  
