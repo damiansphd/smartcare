@@ -1,3 +1,41 @@
+% 1st Breathe data processing step and analysis from raw measurements
+% takes the raw home measurement files, along with the GUID to 
+% study email mapping file and processes them. The main steps performed are: 
+% i) Filtering
+%     a. removing patients with no measurement data
+%     b. removing measurement data for unknown patients or those with no clinical data
+%     c. removing records marked as deleted
+%     d. removing measurement records before the study start date for each patient
+%     e. removing measurement records after the last clinical data update date for each patient
+% ii) Removing data anomalies - upper and lower treshold 
+% iii) Handling duplicate records
+% #not for Breathe iv)	Handling patients with small amounts of data or very sparse data
+% v) Creates various plots visualise the study data and spreadsheets to allow results of the 
+% processing to analysed in more detail (ie which records where deleted and why).
+% 
+% Input:
+% ------
+% latest Breathe measdate from eponym function
+% raw measurements data
+% breatheclinicaldata.mat               contains clinical data and patient master file
+%
+% Output:
+% -------
+% breathedata.mat with the following variables (sorted from earliest to latest processed):
+% - broffset                            date of the study's first recorded measurement
+% - brphysdata_original                 raw measures
+% - brphysdata_deleted                  deleted measures
+% - brphysdata_predupehandling          measures before handling duplicates 
+% - brphysdata_predateoutlierhandling   same as final data since no outliers handling here
+% - brphysdata                          final data table
+% * NB * brphysdata features contain:
+%     - DateNum                         #days since broffset
+%     - ScaleDateNum                    #days since patient 's 1st recorded measure
+% 
+% HeatmapAllPatientsWithStudyPeriod     Plots the temporal data count heatmap
+% datademographicsbypatient             .mat and Excel files with boxchart like statistics
+% BreatheDeletedMeasurementData         Excel containing brphysdata_deleted
+
 clear; clc; close all;
 
 tic

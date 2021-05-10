@@ -10,8 +10,9 @@ for i=1:size(physdata,1)
     scid = physdata.SmartCareID(i);
     scaleddn = physdata.ScaledDateNum(i);
     index = physdata.Index(i);
-    column = physdata.Column{i};
+    column = physdata.Column{i}; % brphysdata features (FEV, Sleep, etc)
     
+    % populate the datacube with measured values
     datacube(scid, scaleddn, index) = physdata{i, {column}};
     %if ~isnan(datacube(scid, scaleddn, index))
     %    pmmid50mean = demographicstable{demographicstable.SmartCareID == scid & ismember(demographicstable.RecordingType, measure),{ddcolumn}}(5);

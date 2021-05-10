@@ -1,8 +1,22 @@
 function runAlignmentModelEMMCFcn(amRunParameters)
 
-% function to run the alignment model (EM version) given a set of run
-% parameters. This version allows for multiple versions of the latent
-% curves
+% runs the alignment model (EM version) given a set of run parameters.
+%
+% This version allows for multiple versions of the latent curves.
+% 
+% Input:
+% ------
+% amRunParameters                 parameter file
+% *alignmentmodelinputs_gap*.mat  modelinputsmatfile
+% *datademographicsbypatient.mat  datademographicsfile
+% *dataoutliers.mat               dataoutliersfile
+% *LabelledInterventions*.mat     labelledinterventionsfile (manually generated)
+% *electivetreatments_gap10.xlsx  electivefile (manually generated)
+% 
+% Output:
+% -------
+% mutliple plots
+% *obj*.mat                       results (very long file name)
 
 % set the various model run parameters
 [mversion, study, treatgap, testlabelmthd, testlabeltxt, ...

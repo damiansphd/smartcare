@@ -1,3 +1,21 @@
+% creates list of oral & IV treatments
+%
+% 1. collapses down the multiple concurrent/sequential antibiotic treatments
+% 2. creates the initial list of unique treatments for a given treatment gap 
+% 3. creates stats on number of recorded measures in the 40 days prior to 
+% the treatment start. This is used in the next script to filter out 
+% examples with very sparse data
+% 
+% Input:
+% ------
+% clinical data
+% measurements data
+%
+% Output:
+% -------
+% ivandmeasures_gap .mat                    stats on #recorded measures
+% MeasuresPriorToIVTreatments_gap .xlsx     idem + full measures list
+
 clc; clear; close all;
 
 
@@ -5,18 +23,10 @@ basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 
 [studynbr, study, studyfullname] = selectStudy();
-[datamatfile, clinicalmatfile, demographicsmatfile] = getRawDataFilenamesForStudy(study);
+[datamatfile, clinicalmatfile, ] = getRawDataFilenamesForStudy(study);
 [physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, study);
 [cdPatient, cdDrugTherapy, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
     cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
-
-% can use this for studies without reasons as the reason is defaulted to PE
-% for them
-fprintf('Loading exacerbation reasons\n');
-exreasonsfile = 'climbexacerbationreasons.mat';
-load(fullfile(basedir, subfolder, exreasonsfile), 'exacerbationreasons');
-
-fprintf('\n');
 
 tic
 % remove Oral treatments & sort by SmartCareID and StopDate
@@ -24,6 +34,12 @@ tic
 %idx = find(ismember(cdAntibiotics.Route, {'Oral'}));
 %cdAntibiotics(idx,:) = [];
 if studynbr == 3
+    % extension for non empty reasons
+    fprintf('Loading exacerbation reasons\n');
+    exreasonsfile = 'climbexacerbationreasons.mat';
+    load(fullfile(basedir, subfolder, exreasonsfile), 'exacerbationreasons');
+    fprintf('\n');
+
     ivTreatments               = unique(cdAntibiotics(:,{'ID', 'StudyNumber', 'Hospital', 'StartDate', 'StopDate', 'Route', 'Reason'}));
 else
     ivTreatments               = unique(cdAntibiotics(:,{'ID', 'StudyNumber', 'Hospital', 'StartDate', 'StopDate', 'Route'}));
