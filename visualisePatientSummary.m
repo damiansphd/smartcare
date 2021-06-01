@@ -9,6 +9,10 @@ subfolder = 'MatlabSavedVariables';
 [cdPatient, cdDrugTherapy, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
     cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
 
+% Tristan's function to harmonise drug therapy namings - temporary until 
+% REDcap is active
+cdDrugTherapy.DrugTherapyType = cleanDrugTherapyNamings(cdDrugTherapy.DrugTherapyType);
+
 tic
 fprintf('Loading demographic data by patient\n');
 load(fullfile(basedir, subfolder, demographicsmatfile), 'demographicstable', 'overalltable');
@@ -25,6 +29,7 @@ if runmode ~= 1 & runmode ~= 2
     fprintf('Invalid entry')
     return;
 end
+
 if runmode == 1
     patientlist = unique(physdata.SmartCareID);
 elseif runmode == 2
@@ -34,11 +39,12 @@ elseif runmode == 2
 end
 
 patientoffsets = getPatientOffsets(physdata);
-cvcol   = [0     1     0   ];
+cvcol   = [0.94  0.52  0.15];
 admcol  = [0.694 0.627 0.78]; 
 ivcol   = [1     0     0   ];
 oralcol = [1     0.85  0   ];
-
+trplcol = [0     1     0   ];
+drugcol = [0     0.8   0.6 ];
 
 for i = 1:size(patientlist,1)
 %for i = 59:59
@@ -247,38 +253,47 @@ for i = 1:size(patientlist,1)
     
     ax = subplot(cplotsdown, cplotsacross, 1,'Parent',sp3);
     hold on;
-    title(ax, 'Clinic Visits ({\color[rgb]{0 1 0}g}), Admissions ({\color[rgb]{0.694 0.627 0.78}p}), IV Antibiotics ({\color[rgb]{1 0 0}r}) and Oral Antibiotics ({\color[rgb]{1 0.85 0}y})');
-    %title(ax, 'Clinic Visits ({\color{green}g}), Admissions ({\color{red}r}), IV Antibiotics ({\color{magenta}m}) and Oral Antibiotics ({\color{cyan}c})');
+    title(ax, 'Clinic Visits ({\color[rgb]{0.5 0.33 0}br}), Admissions ({\color[rgb]{0.694 0.627 0.78}p}), IV ({\color[rgb]{1 0 0}r}) and Oral ({\color[rgb]{1 0.85 0}y}) Antibiotics, Triple Therapy ({\color[rgb]{0 1 0}g}) and Other Therapies ({\color[rgb]{0 0.8 0.6}g})');
     xlabel(ax, 'Days');
     ylabel(ax, 'Event');
     xlim(xl);
-    yl = [0 4];
+    yl = [0 5];
     ylim(yl);
-    linewidth = 10;
+    linewidth = 8;
     
     cvset     = cdClinicVisits(cdClinicVisits.ID == scid,:);
     cvset.AttendanceDatedn = datenum(cvset.AttendanceDate) - offset - poffset + 1;
     for a = 1:size(cvset,1)
-        line(ax, [cvset.AttendanceDatedn(a) cvset.AttendanceDatedn(a) + 1], [3.5, 3.5], 'Color', cvcol, 'LineStyle', '-', 'LineWidth', linewidth);
+        line(ax, [cvset.AttendanceDatedn(a) cvset.AttendanceDatedn(a) + 1], [4.5, 4.5], 'Color', cvcol, 'LineStyle', '-', 'LineWidth', linewidth);
     end
     admset    = cdAdmissions(cdAdmissions.ID == scid,:);
     admset.Admitteddn = datenum(admset.Admitted) - offset - poffset + 1;
     admset.Dischargedn = datenum(admset.Discharge) - offset - poffset + 1;
     admdates = unique([admset.Admitteddn ; admset.Dischargedn]);
     for a = 1:size(admset,1)
-        line(ax, [admset.Admitteddn(a) admset.Dischargedn(a)], [2.5, 2.5], 'Color', admcol, 'LineStyle', '-', 'LineWidth', linewidth);
+        line(ax, [admset.Admitteddn(a) admset.Dischargedn(a)], [3.5, 3.5], 'Color', admcol, 'LineStyle', '-', 'LineWidth', linewidth);
     end
     ivabset   = cdAntibiotics(cdAntibiotics.ID == scid & ismember(cdAntibiotics.Route, {'IV'}),:);
     ivabset.Startdn = datenum(ivabset.StartDate) - offset - poffset + 1;
     ivabset.Stopdn = datenum(ivabset.StopDate) - offset - poffset + 1;
     for a = 1:size(ivabset,1)
-        line(ax, [ivabset.Startdn(a) ivabset.Stopdn(a)], [1.5, 1.5], 'Color', ivcol, 'LineStyle', '-', 'LineWidth', linewidth);
+        line(ax, [ivabset.Startdn(a) ivabset.Stopdn(a)], [2.5, 2.5], 'Color', ivcol, 'LineStyle', '-', 'LineWidth', linewidth);
     end
     oralabset = cdAntibiotics(cdAntibiotics.ID == scid & ismember(cdAntibiotics.Route, {'Oral'}),:);
     oralabset.Startdn = datenum(oralabset.StartDate) - offset - poffset + 1;
     oralabset.Stopdn = datenum(oralabset.StopDate) - offset - poffset + 1;
     for a = 1:size(oralabset,1)
-        line(ax, [oralabset.Startdn(a) oralabset.Stopdn(a)], [0.5, 0.5], 'Color', oralcol, 'LineStyle', '-', 'LineWidth', linewidth);
+        line(ax, [oralabset.Startdn(a) oralabset.Stopdn(a)], [1.5, 1.5], 'Color', oralcol, 'LineStyle', '-', 'LineWidth', linewidth);
+    end
+    trplset = cdDrugTherapy(cdDrugTherapy.ID == scid & ismember(cdDrugTherapy.DrugTherapyType, {'Triple Therapy'}),:);
+    trplset.Startdn = datenum(trplset.DrugTherapyStartDate) - offset - poffset + 1;
+    for a = 1:size(trplset,1)
+        line(ax, [trplset.Startdn(a) trplset.Startdn(a) + 1], [0.5, 0.5], 'Color', trplcol, 'LineStyle', '-', 'LineWidth', linewidth);
+    end
+    drugset = cdDrugTherapy(cdDrugTherapy.ID == scid & ~ismember(cdDrugTherapy.DrugTherapyType, {'Triple Therapy'}),:);
+    drugset.Startdn = datenum(drugset.DrugTherapyStartDate) - offset - poffset + 1;
+    for a = 1:size(drugset,1)
+        line(ax, [drugset.Startdn(a) drugset.Startdn(a) + 1], [0.5, 0.5], 'Color', drugcol, 'LineStyle', '-', 'LineWidth', linewidth);
     end
     hold off;
     
@@ -311,6 +326,14 @@ for i = 1:size(patientlist,1)
             fill(ax, [oralabset.Startdn(a) oralabset.Stopdn(a) oralabset.Stopdn(a) oralabset.Startdn(a)], ...
                       [yl(1) yl(1) yl(2) yl(2)], oralcol, 'FaceAlpha', '0.1', 'EdgeColor', 'none');
         end
+        for a = 1:size(trplset,1)
+            fill(ax, [trplset.Startdn(a), trplset.Startdn(a) + 1, trplset.Startdn(a) + 1, trplset.Startdn(a)] , ...
+                      [yl(1) yl(1) yl(2) yl(2)], trplcol, 'EdgeColor', 'none');
+        end
+        for a = 1:size(drugset,1)
+            fill(ax, [drugset.Startdn(a), drugset.Startdn(a) + 1, drugset.Startdn(a) + 1, drugset.Startdn(a)], ...
+                      [yl(1) yl(1) yl(2) yl(2)], drugcol, 'EdgeColor', 'none');
+        end
         hold off;
     end
     
@@ -341,6 +364,14 @@ for i = 1:size(patientlist,1)
         for a = 1:size(oralabset,1)
             fill(ax, [oralabset.Startdn(a) oralabset.Stopdn(a) oralabset.Stopdn(a) oralabset.Startdn(a)], ...
                       [yl(1) yl(1) yl(2) yl(2)], oralcol, 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+        end
+        for a = 1:size(trplset,1)
+            fill(ax, [trplset.Startdn(a), trplset.Startdn(a) + 1, trplset.Startdn(a) + 1, trplset.Startdn(a)] , ...
+                      [yl(1) yl(1) yl(2) yl(2)], trplcol, 'EdgeColor', 'none');
+        end
+        for a = 1:size(drugset,1)
+            fill(ax, [drugset.Startdn(a), drugset.Startdn(a) + 1, drugset.Startdn(a) + 1, drugset.Startdn(a)], ...
+                      [yl(1) yl(1) yl(2) yl(2)], drugcol, 'EdgeColor', 'none');
         end
         hold off;
     end
@@ -406,6 +437,14 @@ for i = 1:size(patientlist,1)
             for a = 1:size(oralabset,1)
                 fill(ax, [oralabset.Startdn(a) oralabset.Stopdn(a) oralabset.Stopdn(a) oralabset.Startdn(a)], ...
                           [yl(1) yl(1) yl(2) yl(2)], oralcol, 'FaceAlpha', '0.1', 'EdgeColor', 'none');
+            end
+            for a = 1:size(trplset,1)
+            fill(ax, [trplset.Startdn(a), trplset.Startdn(a) + 1, trplset.Startdn(a) + 1, trplset.Startdn(a)] , ...
+                         [yl(1) yl(1) yl(2) yl(2)], trplcol, 'EdgeColor', 'none');
+            end
+            for a = 1:size(drugset,1)
+                fill(ax, [drugset.Startdn(a), drugset.Startdn(a) + 1, drugset.Startdn(a) + 1, drugset.Startdn(a)], ...
+                         [yl(1) yl(1) yl(2) yl(2)], drugcol, 'EdgeColor', 'none');
             end
             hold off;
         end
