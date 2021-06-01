@@ -79,6 +79,7 @@ elseif ismember(study, {'BR'})
     colors(16,:)  = temp(18,:);
     colors(17,:)  = temp(19,:);
     colors(18,:)  = temp(20,:);
+    colors(19,:)  = temp(21,:);
 else
     fprintf('**** Unknown Study ****');
     return;

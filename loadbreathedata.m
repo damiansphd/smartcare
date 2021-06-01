@@ -179,6 +179,7 @@ for i = 1:nmeasfile
         case 'Spirometer'
             recordingtype = 'FEV1Recording';
             [brphysdata, brphysdata_deleted] = addBreatheRowsForMeasure(brphysdata, brphysdata_deleted, measdata, filetype, recordingtype, delzero);
+            [brphysdata] = addBreatheRowsForLungFcn(brphysdata, brPatient);
             recordingtype = 'FEF2575Recording';
             [brphysdata, brphysdata_deleted] = addBreatheRowsForMeasure(brphysdata, brphysdata_deleted, measdata, filetype, recordingtype, delzero);
             recordingtype = 'FEV075Recording';
