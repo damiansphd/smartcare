@@ -1,8 +1,9 @@
 function [amInterventions, amIntrDatacube, ninterventions, intrkeepidx] = amEMMCPreprocessInterventions(amInterventions, ...
     amIntrDatacube, amElectiveTreatments, measures, nmeasures, max_offset, align_wind, ninterventions,  intrmode, study)
 
-% amEMMCPreprocessInterventions - preprocess intervention data and associated
-% measurement data
+% 1) for each intervention, calculate data window completeness (without the interpolated measurements) 
+% -> data window completeness = 100 * #actual_points / #max_points
+% 2) optionnally remove sequential interventions if intrmode == 2
 
 meanwindow = 10;
 
