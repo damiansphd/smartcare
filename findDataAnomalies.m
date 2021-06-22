@@ -1,3 +1,17 @@
+% highlight data anomalies to be optionnaly excluded prior to run the alignment model
+%
+% used to exclude certain outlier points in the model alignment process if 
+% exclude anomalies is chosen as a run parameter
+% 
+% Input:
+% ------
+% *alignmentmodelinputs_gap*.mat    alignment model inptus
+% *datademographicsbypatient.mat    created in loadbreathedata
+%
+% Output:
+% -------
+% *dataoutliers.mat     MAT-file storing data outliers
+
 clear; close all; clc;
 
 [studynbr, study, studyfullname] = selectStudy();
