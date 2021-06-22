@@ -46,6 +46,9 @@ fprintf('Total of %d files to download\n', nfiles);
 for f = 1:nfiles
     location = filelist(f);
     fileds = tabularTextDatastore(location, 'Delimiter', ',');
+    fileds.SelectedVariableNames = fileds.VariableNames;
+    fileds.SelectedFormats{4} = '%q';
+    
     filename = erase(filelist{f}, sprintf('%s/', mdir));
     fprintf('%d of %d: Downloading %28s....', f, nfiles, filename);
     filename = sprintf('%s.csv', filename);
