@@ -1,7 +1,7 @@
-function createAndSaveBreatheFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pstudydate, ...
+function createAndSaveBreatheWeightPlots(patientlist, pmeaswght, pclinwght, pstudydate, ...
     plotsacross, plotsdown, plotsperpage, subfolder, filenameprefix)
 
-% createAndSaveBreatheFEVPlots - function to create plots of FEV home vs clinical 
+% createAndSaveBreatheWeightPlots - function to create plots of weight home vs clinical 
 % measures and save results to file
 
 npages = ceil(size(patientlist, 1) / plotsperpage);
@@ -15,10 +15,10 @@ for i = 1:size(patientlist, 1)
     hospital = pstudydate.Hospital{pstudydate.SmartCareID == scid};
     studyid  = pstudydate.StudyNumber{pstudydate.SmartCareID == scid};
     % get home weight measures just for current patient
-    pmeasures = pmeasuresfev(pmeasuresfev.SmartCareID == scid,:);
+    pmeasures = pmeaswght(pmeaswght.SmartCareID == scid,:);
     % get clinical weight measures just for current patient
-    pclinical = pclinicalfev(pclinicalfev.SmartCareID == scid,:);
-        
+    pclinical = pclinwght(pclinwght.SmartCareID == scid,:);
+    
     % store min and max to scale x-axis of plot display. Set min to -5 if less
     % than, to avoid wasting plot space for the one patient with a larger delay
     % between study date and active measurement period
@@ -27,33 +27,33 @@ for i = 1:size(patientlist, 1)
         mindays = -5;
     end
     maxdays = max([pmeasures.ScaledDateNum ; 150]);
-    
+
     % store min and max for patient (and handle case where there are no
     % clinical measures
     if size(pmeasures, 1) > 0
-        minpmfev = min(pmeasures.FEV1);
-        maxpmfev = max(pmeasures.FEV1);
+        minpmwght = min(pmeasures.Weight);
+        maxpmwght = max(pmeasures.Weight);
     else
-        minpmfev = 50;
-        maxpmfev = 50;
+        minpmwght = 50;
+        maxpmwght = 50;
     end
     if size(pclinical,1) > 0
-        minpcfev = min(pclinical.FEV1);
-        maxpcfev = max(pclinical.FEV1);
+        minpcwght = min(pclinical.Weight);
+        maxpcwght = max(pclinical.Weight);
     else
-        minpcfev = minpmfev;
-        maxpcfev = maxpmfev;
+        minpcwght = minpmwght;
+        maxpcwght = maxpmwght;
     end
     
-    % plot FEV1 measures
+    % plot Weight measures
     ax = subplot(plotsdown, plotsacross, i - (page - 1) * plotsperpage, 'Parent', p);
     hold on;
-    plot(ax, pmeasures.ScaledDateNum,pmeasures.FEV1,'y-o',...
+    plot(ax, pmeasures.ScaledDateNum,pmeasures.Weight,'y-o',...
         'LineWidth',1,...
         'MarkerSize',3,...
         'MarkerEdgeColor','b',...
         'MarkerFaceColor','g');
-    plot(ax, pclinical.ScaledDateNum,pclinical.FEV1,'c-o',...
+    plot(ax, pclinical.ScaledDateNum,pclinical.Weight,'c-o',...
         'LineWidth',1,...
         'MarkerSize',3,...
         'MarkerEdgeColor','m',...
@@ -61,10 +61,10 @@ for i = 1:size(patientlist, 1)
     xl = [mindays maxdays];
     xlim(xl);
     rangelimit = 0.5;
-    yl = setYDisplayRange(min(minpcfev, minpmfev), max(maxpcfev, maxpmfev), rangelimit);
+    yl = setYDisplayRange(min(minpcwght, minpmwght), max(maxpcwght, maxpmwght), rangelimit);
     ylim(yl);
-    title(ax, sprintf('ID%3d (%s %s)',scid, hospital, studyid), 'fontsize', 10);
-
+    title(ax, sprintf('ID%3d (%s %s)',scid, hospital, studyid), 'fontsize', 6);
+    
     hold off
     fprintf('Row %3d, Patient %3d\n', ...
         i, scid); 

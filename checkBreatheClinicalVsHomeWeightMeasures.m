@@ -18,13 +18,13 @@ patientoffsets = getPatientOffsets(physdata);
 
 % extract clinical FEV1 measures and join with offsets to keep only those patients who
 % have enough data (ie the patients left after outlier date handling
-pclinicalfev = sortrows(cdPFT(:,{'ID', 'LungFunctionDate', 'FEV1'}), {'ID', 'LungFunctionDate'}, 'ascend');
-pclinicalfev.Properties.VariableNames{'ID'} = 'SmartCareID';
-pclinicalfev = innerjoin(pclinicalfev, patientoffsets);
+pclinwght = sortrows(cdHghtWght(:,{'ID', 'MeasDate', 'Weight'}), {'ID', 'MeasDate'}, 'ascend');
+pclinwght.Properties.VariableNames{'ID'} = 'SmartCareID';
+pclinwght = innerjoin(pclinwght, patientoffsets);
 
 % create a scaleddatenum to translate the study date to the same normalised
 % scale as measurement data scaled date num
-pclinicalfev.ScaledDateNum = datenum(pclinicalfev.LungFunctionDate) - offset - pclinicalfev.PatientOffset;
+pclinwght.ScaledDateNum = datenum(pclinwght.MeasDate) - offset - pclinwght.PatientOffset;
 
 % extract study date and join with offsets to keep only those patients who
 % have enough data (ie the patients left after outlier date handling
@@ -36,9 +36,10 @@ pstudydate = innerjoin(patientoffsets, pstudydate);
 % scale as measurement data scaled date num
 pstudydate.ScaledDateNum = datenum(pstudydate.StudyDate) - offset - pstudydate.PatientOffset + 1;
 
+
 % extract just the weight measures from smartcare data
-pmeasuresfev = physdata(ismember(physdata.RecordingType,'FEV1Recording'),{'SmartCareID', 'ScaledDateNum', 'FEV'});
-pmeasuresfev.Properties.VariableNames{'FEV'} = 'FEV1';
+pmeaswght = physdata(ismember(physdata.RecordingType,'WeightRecording'),{'SmartCareID', 'ScaledDateNum', 'WeightInKg'});
+pmeaswght.Properties.VariableNames{'WeightInKg'} = 'Weight';
 
 plotsacross = 3;
 plotsdown = 5;
@@ -51,11 +52,13 @@ end
 toc
 
 tic
+
+tic
 % create plots for all patients
 fprintf('FEV Plots for all patients\n');
-patientlist = unique(pmeasuresfev.SmartCareID);
-filenameprefix = sprintf('%s-CalcClinicalVsHomeFEV1', study);
-createAndSaveBreatheFEVPlots(patientlist, pmeasuresfev, pclinicalfev, pstudydate, ...
+patientlist = unique(pmeaswght.SmartCareID);
+filenameprefix = sprintf('%s-CalcClinicalVsHomeWeight', study);
+createAndSaveBreatheWeightPlots(patientlist, pmeaswght, pclinwght, pstudydate, ...
     plotsacross, plotsdown, plotsperpage, subfolder, filenameprefix);
 
 toc

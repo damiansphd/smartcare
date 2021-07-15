@@ -14,7 +14,7 @@
 %
 % Output:
 % -------
-% ivandmeasures_gap .mat                    stats on #recorded measures
+% <StudyName>ivandmeasures_gap .mat       stats on #recorded measures
 % MeasuresPriorToTreatments_gap .xlsx     idem + full measures list
 
 clc; clear; close all;
@@ -28,7 +28,7 @@ subfolder = 'MatlabSavedVariables';
 [physdata, offset] = loadAndHarmoniseMeasVars(datamatfile, subfolder, study);
 [cdPatient, ~, ~, cdAntibiotics, ~, ~, ~, ~, ~, ~, ~] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
 
-selectmeas = {'CoughRecording', 'FEV1Recording', 'MinsAsleepRecording', 'O2SaturationRecording', ...
+selectmeas = {'CoughRecording', 'FEV1Recording', 'MinsAsleepRecording', 'O2SaturationRecording', 'PulseRateRecording', ...
            'RestingHRRecording', 'TemperatureRecording', 'WellnessRecording'};
 
 tic

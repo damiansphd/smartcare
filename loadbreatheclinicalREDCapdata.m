@@ -149,6 +149,13 @@ fprintf('Populating derived columns\n');
 toc
 fprintf('\n');
 
+% populate default values as necessary
+tic
+fprintf('Populating default values\n');
+defidx = ~ismember(brAntibiotics.HomeIV_s, {'Yes', 'No'});
+brAntibiotics.HomeIV_s(defidx) = {'No'};
+
+
 % create stub variable for end of study for backward compatibility
 brtable = 'brEndStudy';
 [mltable] = createBreatheSingleClinicalTable(brtable, 0);

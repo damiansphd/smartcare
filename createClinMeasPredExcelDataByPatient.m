@@ -10,7 +10,7 @@ subfolder = 'MatlabSavedVariables';
     cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
 
 if ismember(study, 'SC')
-    patlist = [24, 30, 32, 59, 79, 115, 173, 188, 214, 215, 241];
+    patlist = [24, 30, 32, 59, 79, 115, 140, 173, 188, 214, 215, 241];
 elseif ismember(study, 'TM')
     patlist = cdPatient.ID';
 else
