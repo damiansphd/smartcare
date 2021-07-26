@@ -207,8 +207,8 @@ amEMMCPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount,
 toc
 fprintf('\n');
 
-%if ismember(study, {'SC', 'CL', 'BR'})
-if ismember(study, {'SC', 'CL'})
+if ismember(study, {'SC', 'CL', 'BR'})
+%if ismember(study, {'SC', 'CL'})
     ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions(intrkeepidx, :), amInterventions, ...
                 overall_pdoffset, max_offset, 'Plots', plotname, ninterventions, nlatentcurves);
 else

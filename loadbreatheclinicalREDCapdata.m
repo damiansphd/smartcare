@@ -409,7 +409,7 @@ fprintf('\n');
 
 brhosp = getListOfBreatheHospitals();
 plotsacross = 2;
-plotsdown   = ceil(size(brhosp, 1)/plotsacross);
+plotsdown   = size(brhosp, 1);
 
 pghght = 3 * plotsdown;
 pgwdth = 7;
@@ -419,20 +419,35 @@ plottitle = sprintf('Histogram of patient clinical data by month of last update'
 
 for i = 1:size(brhosp, 1)
 
-    ax = subplot(plotsdown, plotsacross, i, 'Parent', p);
+    ax = subplot(plotsdown, plotsacross, (2 * i - 1), 'Parent', p);
 
-    histogram(ax, month(brPatient.PatClinDate(ismember(brPatient.Hospital, brhosp.Acronym(i)))));
-    
+    histogram(ax, month(brPatient.PatClinDate(ismember(brPatient.Hospital, brhosp.Acronym(i)) & ismember(brPatient.ConsentStatus, 'Yes'))));
     xlabel(ax, 'Month');
     ylabel(ax, 'Count');
-    title(ax, brhosp.Name{i});
-    xlim(ax, [1 12]);
+    title(ax, sprintf('%s Active', brhosp.Name{i}));
+    xlim(ax, [0.5 12.5]);
     
+    ax = subplot(plotsdown, plotsacross, (2 * i), 'Parent', p);
+    
+    histogram(ax, month(brPatient.PatClinDate(ismember(brPatient.Hospital, brhosp.Acronym(i)) & ~ismember(brPatient.ConsentStatus, 'Yes'))));
+    xlabel(ax, 'Month');
+    ylabel(ax, 'Count');
+    title(ax, sprintf('%s Inactive', brhosp.Name{i}));
+    xlim(ax, [0.5 12.5]);
     
 end
 
 plotsubfolder = sprintf('Plots/%s', study);
 savePlotInDir(f, plottitle, plotsubfolder);
 close(f);
+
+fprintf('Active patients with aged last update date\n');
+fprintf('------------------------------------------\n');
+fprintf('\n');
+brPatient((today - datenum(brPatient.PatClinDate)) > 62 & ismember(brPatient.ConsentStatus, 'Yes'), ...
+    {'ID', 'REDCapID', 'Hospital', 'StudyNumber', 'StudyDate', 'PatClinDate', 'ConsentStatus'})
+
+
+
 
 
