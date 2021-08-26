@@ -20,9 +20,10 @@ fprintf(' 8: Slides - histogram of variable time to treatment\n');
 fprintf(' 9: Paper Figure 5c alt - Interventions over time no filtering\n');
 fprintf('10: Paper Figure 1B - Number of interventions histogram\n');
 fprintf('11: Modulator therapy - reduction in intervention frequency\n');
+fprintf('12: Plot Variables vs Intr Signal\n');
 
 fprintf('\n');
-npaperplots = 11;
+npaperplots = 12;
 srunfunction = input(sprintf('Choose function (0-%d): ', npaperplots), 's');
 runfunction = str2double(srunfunction);
 
@@ -155,6 +156,11 @@ elseif runfunction == 10
 elseif runfunction == 11
     fprintf('Modulator Therapy - analysing reduction in frequency of exacerbations\n');
     [brDTExStats, sumtable, hospsumtable] = calcExFrequencyByDT(offset, ivandmeasurestable, cdPatient, cdDrugTherapy, amInterventions, study);
+elseif runfunction == 12
+    fprintf('Loading latest labelled test data file\n');
+    load(fullfile(basedir, subfolder, labelledinterventionsfile));
+    fprintf('Plotting Variables vs Intr signal\n');
+    plotVariablesVsIntrSignal(amLabelledInterventions, sprintf('Plots/%s', study), study);
 else
     fprintf('Should not get here....\n');
 end

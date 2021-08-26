@@ -40,8 +40,10 @@ amintr.RelUB2      = [];
 
 amlabintr = outerjoin(amintr, amlabintr, 'LeftKeys', {'SmartCareID', 'Hospital', 'IVStartDate', 'IVStopDate'}, ...
                         'RightKeys', {'SmartCareID', 'Hospital', 'IVStartDate', 'IVStopDate'}, ...
-                        'RightVariables', {'IncludeInTestSet', 'LowerBound1', 'UpperBound1', 'LowerBound2', 'UpperBound2'});
+                        'RightVariables', {'Sparse', 'NoSignal', 'IncludeInTestSet', 'LowerBound1', 'UpperBound1', 'LowerBound2', 'UpperBound2'});
                     
+amlabintr.Sparse(~ismember(amlabintr.Sparse, {'Y', 'N'}))                     = 'N';
+amlabintr.NoSignal(~ismember(amlabintr.NoSignal, {'Y', 'N'}))                 = 'N';
 amlabintr.IncludeInTestSet(~ismember(amlabintr.IncludeInTestSet, {'Y', 'N'})) = 'N';
 amlabintr.LowerBound1(isnan(amlabintr.LowerBound1)) = 0;
 amlabintr.UpperBound1(isnan(amlabintr.UpperBound1)) = 0;

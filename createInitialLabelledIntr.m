@@ -16,6 +16,8 @@ amLabelledInterventions.RelUB1      = [];
 amLabelledInterventions.RelLB2      = [];
 amLabelledInterventions.RelUB2      = [];
 
+amLabelledInterventions.Sparse(:)            = 'N';
+amLabelledInterventions.NoSignal(:)          = 'N';
 amLabelledInterventions.IncludeInTestSet(:)  = 'N';
 amLabelledInterventions.LowerBound1(:)       = 0;
 amLabelledInterventions.UpperBound1(:)       = 0;

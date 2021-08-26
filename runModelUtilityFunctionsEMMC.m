@@ -58,6 +58,8 @@ fprintf('\n');
 runfunction = selectValFromRange('Choose function', 1, noptions);
 fprintf('\n');
 
+basedir = setBaseDir();
+subfolder = 'MatlabSavedVariables';
 [~, studytmp, ~] = selectStudy();
 
 if ismember(runfunction, [10, 26])
@@ -68,14 +70,11 @@ else
     [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir(studytmp, '',      '', 'IntrFilt', 'TGap',       '');
 end
 
-basedir = setBaseDir();
-subfolder = 'MatlabSavedVariables';
 fprintf('Loading output from model run\n');
 load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun)));
 
 predictivemodelinputsfile = sprintf('%spredictivemodelinputs.mat', study);
 ivandmeasuresfile = sprintf('%sivandmeasures_gap%d.mat', study, treatgap);
-
 
 % default some variables for backward compatibility with prior versions
 if ~exist('animated_overall_pdoffset', 'var')
@@ -199,8 +198,11 @@ elseif runfunction == 8
     testsetmode = selectValFromRange('Select mode to run', 1, 2);
     subfolder = 'MatlabSavedVariables';
     load(fullfile(basedir, subfolder, labelledinterventionsfile));
-    amEMMCCompareModelRunToTestData(amLabelledInterventions(intrkeepidx, :), amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, hstg, overall_hist, ...
-        meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, nlatentcurves, max_offset, align_wind, sigmamethod, study, mversion, modelrun, modelidx, testsetmode);
+    %amEMMCCompareModelRunToTestData(amLabelledInterventions(intrkeepidx, :), amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, hstg, overall_hist, ...
+    %    meancurvemean, normmean, normstd, ex_start, nmeasures, ninterventions, nlatentcurves, max_offset, align_wind, sigmamethod, study, mversion, modelrun, modelidx, testsetmode);
+    amEMMCCompareModelRunToTestData(amLabelledInterventions, amInterventions, amIntrDatacube, measures, pdoffset, overall_pdoffset, hstg, overall_hist, ...
+        meancurvemean, normmean, normstd, ex_start, nmeasures, nlatentcurves, max_offset, align_wind, sigmamethod, study, mversion, modelrun, modelidx, testsetmode, plotsubfolder);
+
 elseif runfunction == 9
     fprintf('<placeholder for Dragos new option>\n');
 elseif runfunction == 10
@@ -209,7 +211,8 @@ elseif runfunction == 10
     subfolder = 'MatlabSavedVariables';
     load(fullfile(basedir, subfolder, labelledinterventionsfile));
     plotmode = 'Overall'; 
-    [lcbymodelrun, offsetbymodelrun] = amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions(intrkeepidx, :), modelrun, modelidx, models, plotmode, study);
+    %[lcbymodelrun, offsetbymodelrun] = amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions(intrkeepidx, :), modelrun, modelidx, models, plotmode, study);
+    [lcbymodelrun, offsetbymodelrun] = amEMMCCompareMultipleModelRunToTestData(amLabelledInterventions, modelidx, models, plotmode, study);
 elseif runfunction == 11
     fprintf('Comparing results of multiple model runs\n');
     fprintf('\n');
@@ -232,7 +235,9 @@ elseif runfunction == 14
     load(fullfile(basedir, subfolder, labelledinterventionsfile));
     fprintf('Calculating Ex_Start from Test Labels and Offsets\n');
     fprintf('\n');
-    derived_ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions(intrkeepidx, :), amInterventions, ...
+    %derived_ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions(intrkeepidx, :), amInterventions, ...
+    %    overall_pdoffset, max_offset, sprintf('Plots/%s', modelrun), modelrun, ninterventions, nlatentcurves);
+    derived_ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions, amInterventions, ...
         overall_pdoffset, max_offset, sprintf('Plots/%s', modelrun), modelrun, ninterventions, nlatentcurves);
 elseif runfunction == 15
     run_type = 'Best Alignment';
@@ -538,6 +543,8 @@ elseif runfunction == 44
         tmpnlc           = nlatentcurves;
     end
     plotLCSetByHospital(tmpInterventions, plotname, plotsubfolder, tmpnlc);
+
+    
 else
     fprintf('Should not get here....\n');
 end

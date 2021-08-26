@@ -209,7 +209,9 @@ fprintf('\n');
 
 if ismember(study, {'SC', 'CL', 'BR'})
 %if ismember(study, {'SC', 'CL'})
-    ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions(intrkeepidx, :), amInterventions, ...
+    %ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions(intrkeepidx, :), amInterventions, ...
+    %            overall_pdoffset, max_offset, 'Plots', plotname, ninterventions, nlatentcurves);
+    ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions, amInterventions, ...
                 overall_pdoffset, max_offset, 'Plots', plotname, ninterventions, nlatentcurves);
 else
    ex_start = input('Look at best start and enter exacerbation start: ');

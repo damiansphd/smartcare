@@ -1,19 +1,8 @@
 function [amInterventions, amIntrDatacube, ninterventions, intrkeepidx] = amEMMCPreprocessInterventions(amInterventions, ...
     amIntrDatacube, amElectiveTreatments, measures, nmeasures, max_offset, align_wind, ninterventions,  intrmode, study)
 
-% 1) for each intervention, calculate data window completeness (without the interpolated measurements) 
-% -> data window completeness = 100 * #actual_points / #max_points
-% 2) optionnally remove sequential interventions if intrmode == 2
-
-meanwindow = 10;
-
-if ismember(study, {'SC', 'TM'})
-    compthresh = 35;
-elseif ismember(study, {'CL'})
-    compthresh = 33;
-else
-    compthresh = 35;
-end
+% amEMMCPreprocessInterventions - preprocess intervention data and associated
+% measurement data
 
 % add columns for Data Window Completeness
 for i = 1:ninterventions
@@ -42,13 +31,24 @@ amInterventions = outerjoin(amInterventions, amElectiveTreatments, 'LeftKeys', {
 %amInterventions(isnan(amInterventions.SmartCareID), :) = [];
 
 % remove any interventions where insufficient data in the data window
-% don't do this for project breathe
-if ~ismember(study, {'BR'})
-    idx = find(amInterventions.DataWindowCompleteness < compthresh);
-    amInterventions(idx,:) = [];
-    amIntrDatacube(idx,:,:) = [];
-    ninterventions = size(amInterventions,1);
+if ismember(study, {'BR'})
+    %idx = amInterventions.AvgMeasuresPerDay < 2.5;
+    idx = amInterventions.AvgMeasuresPerDay < 2;    
+else
+    if ismember(study, {'SC', 'TM'})
+        compthresh = 35;
+    elseif ismember(study, {'CL'})
+        compthresh = 33;
+    else
+        compthresh = 35;
+    end
+    idx = amInterventions.DataWindowCompleteness < compthresh;
 end
+
+fprintf('Removing %d interventions below completeness threshold\n', sum(idx));
+amInterventions(idx,:) = [];
+amIntrDatacube(idx,:,:) = [];
+ninterventions = size(amInterventions,1);
 
 if intrmode == 1
     intrkeepidx = true(size(amInterventions, 1),1);

@@ -438,7 +438,7 @@ for i = 1:size(brhosp, 1)
 end
 
 plotsubfolder = sprintf('Plots/%s', study);
-savePlotInDir(f, plottitle, plotsubfolder);
+savePlotInDir(f, sprintf('%s-%s', plottitle, datestr(today, 'yyyymmdd')), plotsubfolder);
 close(f);
 
 fprintf('Active patients with aged last update date\n');

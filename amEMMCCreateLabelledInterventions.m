@@ -13,7 +13,7 @@ if ismember(study, 'CL')
     datacomp    = 50;
 elseif ismember(study, 'BR')
     boundwindow = 9;
-    datacomp    = 50;
+    %datacomp    = 50;
 else
     boundwindow = 9;
     datacomp    = 60;
@@ -32,7 +32,7 @@ else
     fprintf('Function cannot handle more than 18 measurement types\n');
     return;
 end
-days = [-1 * (max_offset + align_wind - 1): -1];
+days = (-1 * (max_offset + align_wind - 1): -1);
 xl  = zeros(nmeasures + 1, 2);
 yl  = zeros(nmeasures + 1, 2);
 
@@ -83,6 +83,21 @@ while i <= interto
         [xl(m,:), yl(m,:)] = plotHorizontalLine(ax(m), normmean(i, m), xl(m,:), yl(m,:), 'blue', '--', 0.5); % plot mean
     end
     
+    [sparse] = selectValFromRange('Sparse data example ? (1:No, 2:Yes) ', 1, 2);
+    if sparse == 2
+        amLabelledInterventions.Sparse(i) = 'Y';
+    else
+        amLabelledInterventions.Sparse(i) = 'N';
+    end
+    [nosignal] = selectValFromRange('No signal example ? (1:No, 2:Yes 3:Maybe) ', 1, 3);
+    if nosignal == 2
+        amLabelledInterventions.NoSignal(i) = 'Y';
+    elseif nosignal == 3
+        amLabelledInterventions.NoSignal(i) = 'M';
+    else
+        amLabelledInterventions.NoSignal(i) = 'N';
+    end
+    
     lower1 = selectLabBound('lowerbound1', (-1 * (max_offset + align_wind)) + 1, -1);    
     amLabelledInterventions.LowerBound1(i) = lower1;
     
@@ -124,11 +139,21 @@ while i <= interto
     lb1 = amLabelledInterventions.LowerBound1(i);
     lb2 = amLabelledInterventions.LowerBound2(i);
     
-    if ((amLabelledInterventions.DataWindowCompleteness(i) >= datacomp) ...
-            && (((ub1 - lb1) + (ub2 - lb2)) <= boundwindow))
-        amLabelledInterventions.IncludeInTestSet(i) = 'Y';
+    if ~ismember(study, 'BR')
+        if ((amLabelledInterventions.DataWindowCompleteness(i) >= datacomp) ...
+                && (((ub1 - lb1) + (ub2 - lb2)) <= boundwindow))
+            amLabelledInterventions.IncludeInTestSet(i) = 'Y';
+        else
+            amLabelledInterventions.IncludeInTestSet(i) = 'N';
+        end
     else
-        amLabelledInterventions.IncludeInTestSet(i) = 'N';
+        if ((amLabelledInterventions.Sparse(i) == 'N') ...
+                && (amLabelledInterventions.NoSignal(i) == 'N') ...
+                && (((ub1 - lb1) + (ub2 - lb2)) <= boundwindow))
+            amLabelledInterventions.IncludeInTestSet(i) = 'Y';
+        else
+            amLabelledInterventions.IncludeInTestSet(i) = 'N';
+        end
     end
     
     [temp] = selectValFromRange('Re-do labelling (1:No, 2:Yes, 3:Exit) ', 1, 3);
