@@ -74,7 +74,9 @@ for m = 1:nmeasures
     plottitle = sprintf('%s_%s', plotname, measures.DisplayName{m});
     anchor = 1; % latent curve is to be anchored on the plot (right side at min_offset)
     
-    [f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
+    % temp changes for thesis version
+    %[f, p] = createFigureAndPanel(plottitle, 'portrait', 'a4');
+    [f, p] = createFigureAndPanel('', 'portrait', 'a4');
     
     xl = [((-1 * (max_offset + align_wind)) + 1 - 0.5), -0.5];
     yl = [min(meancurvemean(:, m)) max(meancurvemean(:, m))];
@@ -87,12 +89,15 @@ for m = 1:nmeasures
     end
     
     ax = subplot(plotsdown,plotsacross, 1:6,'Parent',p);
+    
     yyaxis left;
     
     [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, (meancurvemean(:, m)), xl, yl, 'blue', ':', 0.5, anchor);
     %[xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, smooth(meancurvemean(:, m), 5), xl, yl, 'blue', '-', 0.5, anchor);
     [xl, yl] = plotLatentCurve(ax, max_offset, align_wind, min_offset, movmean(meancurvemean(:, m), 3, 'omitnan'), xl, yl, 'blue', '-', 0.5, anchor);
     
+    % thesis - added title 
+    title(measures.DisplayName{m});
     ax.XAxis.FontSize = 8;
     xlabel('Days prior to Intervention');
     ax.YAxis(1).Color = 'blue';
@@ -105,8 +110,7 @@ for m = 1:nmeasures
     
     yyaxis right
     ax.YAxis(2).Color = 'black';
-    ax.YAxis(2).FontSize = 8;
-    ylabel('Count of Data points');
+    
     
     if isequal(run_type,'Best Alignment')
         bar([-1 * (max_offset + align_wind - 1): -1], max_points, 0.5, 'FaceColor', 'white', 'FaceAlpha', 0.1);
@@ -124,12 +128,16 @@ for m = 1:nmeasures
     end
     ylim(ylbar);
     
+    ax.YAxis(2).FontSize = 8;
+    ylabel('Count of Data points');
+    
+    
     subplot(plotsdown,plotsacross, 7:16,'Parent',p);
     h = heatmap(p, datatable, 'ScaledDateNum', 'Intervention', 'Colormap', colors, 'MissingDataColor', 'white', ...
         'ColorVariable','Count','ColorMethod','max', 'MissingDataLabel', 'No data', 'ColorBarVisible', 'off', 'FontSize', 8);
     h.Title = ' ';
     h.XLabel = 'Days Prior to Intervention';
-    h.YLabel = 'Intervention';
+    h.YLabel = 'Examples (sorted by Offset)';
     h.YDisplayData = sorted_interventions.IntrNbr;
     h.XLimits = {-1 * (max_offset + align_wind - 1), max(datatable.ScaledDateNum)};
     h.CellLabelColor = 'none';

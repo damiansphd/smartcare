@@ -12,7 +12,9 @@ end
 histogram(ax, -1 * offsets);
 xlim(ax, [(-1 * max_offset) + 0.5, 0.5]);
 ylim(ax, [0 ymax]);
-title(ax, sprintf('Offsets (%d Interventions)', size(offsets, 1)), 'FontSize', 6);
+title(ax, sprintf('Offsets (%d Examples)', size(offsets, 1)), 'FontSize', 8);
+xlabel(ax, 'Offset (Inverted)');
+ylabel(ax, 'Example Count');
 
 end
 

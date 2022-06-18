@@ -1,12 +1,23 @@
-function plotNbrIntrByPatient(physdata, offset, ivandmeasurestable, cdPatient, amInterventions, study)
+function plotNbrIntrByPatient(physdata, offset, ivandmeasurestable, cdPatient, amInterventions, study, fnsuffix)
 
 % plotNbrIntrByPatient - plots bar chart of number of interventions by
 % patient (for patients with enough data to be analysed)
 
-goodpattbl = cdPatient(:, {'ID', 'StudyDate', 'PatClinDate'});
-goodpattbl.Properties.VariableNames{'ID'} = 'SmartCareID';
-goodpattbl.StudyDn   = datenum(goodpattbl.StudyDate) - offset + 1;
-goodpattbl.PatClinDn = datenum(goodpattbl.PatClinDate) - offset + 1;
+if ismember(study, 'BR')
+    goodpattbl = cdPatient(:, {'ID', 'StudyDate', 'PatClinDate'});
+    goodpattbl.Properties.VariableNames{'ID'} = 'SmartCareID';
+    goodpattbl.StudyDn   = datenum(goodpattbl.StudyDate) - offset + 1;
+    goodpattbl.PatClinDn = datenum(goodpattbl.PatClinDate) - offset + 1;
+else
+    goodpatlist = unique(physdata.SmartCareID);
+    goodpattbl = table('Size',[size(goodpatlist, 1), 1], ...
+                       'VariableTypes', {'double'}, ...
+                       'VariableNames', {'SmartCareID'});
+    goodpattbl.SmartCareID = goodpatlist;
+    goodpattbl = innerjoin(goodpattbl, cdPatient, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'ID'}, 'RightVariables', {'StudyDate'});
+    goodpattbl.StudyDn = datenum(goodpattbl.StudyDate) - offset + 1;
+    goodpattbl.PatClinDn = goodpattbl.StudyDn + 183;
+end
 
 minmeasdn = varfun(@min, physdata(:, {'SmartCareID', 'DateNum'}), 'GroupingVariables', {'SmartCareID'});
 goodpattbl = outerjoin(goodpattbl, minmeasdn, 'LeftKeys', {'SmartCareID'}, 'RightKeys', {'SmartCareID'}, ...
@@ -34,13 +45,13 @@ goodpattbl = outerjoin(goodpattbl, predintr, 'LeftKeys', {'SmartCareID'}, 'Right
 goodpattbl.NbrPredIntr(isnan(goodpattbl.NbrPredIntr)) = 0;                 
 nbrpredintr = varfun(@max, goodpattbl(:,{'NbrPredIntr'}), 'GroupingVariables', {'NbrPredIntr'});
 
-plotsdown   = 2; 
+plotsdown   = 1; 
 plotsacross = 1;
 thisplot = 1;
 widthinch = 3.5;
-heightinch = 5.5;
+heightinch = 2.5;
 fontname = 'Arial';
-plottitle = sprintf('%s - Nbr Intr By Patient For Paper', study);
+plottitle = sprintf('%s - Nbr Intr By Patient For %s', study, fnsuffix);
 [f, p] = createFigureAndPanelForPaper('', widthinch, heightinch);
 ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
 hold on;
@@ -56,10 +67,17 @@ ax.FontSize = 6;
 ax.FontName = fontname;
 xlabel(ax, 'Number of acute pulmonary exacerbations', 'FontSize', 8);
 ylabel(ax, 'Number of participants', 'FontSize', 8);
-title(ax, 'All Interventions', sprintf('p = %d, n = %d', size(goodpattbl, 1), sum(goodpattbl.NbrAllIntr)), 'FontSize', 8);
+%title(ax, 'All Interventions', sprintf('p = %d, n = %d', size(goodpattbl, 1), sum(goodpattbl.NbrAllIntr)), 'FontSize', 8);
 xlim(ax, [-0.6, max(nbrallintr.NbrAllIntr) + 0.6]);
 
-thisplot = 2;
+% save plot
+plotsubfolder = sprintf('Plots/%s', study);
+savePlotInDir(f, plottitle, plotsubfolder);
+savePlotInDirAsSVG(f, plottitle, plotsubfolder);
+close(f);
+
+plottitle = sprintf('%s - Nbr Pred Intr By Patient For %s', study, fnsuffix);
+[f, p] = createFigureAndPanelForPaper('', widthinch, heightinch);
 ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
 hold on;
 for i = 1:size(nbrpredintr, 1)
@@ -74,7 +92,7 @@ ax.FontSize = 6;
 ax.FontName = fontname;
 xlabel(ax, 'Number of acute pulmonary exacerbations', 'FontSize', 8);
 ylabel(ax, 'Number of participants', 'FontSize', 8);
-title(ax, 'Predicted Interventions', sprintf('p = %d, n = %d', size(goodpattbl, 1), sum(goodpattbl.NbrPredIntr)), 'FontSize', 8);
+%title(ax, 'Predicted Interventions', sprintf('p = %d, n = %d', size(goodpattbl, 1), sum(goodpattbl.NbrPredIntr)), 'FontSize', 8);
 xlim(ax, [-0.6, max(nbrpredintr.NbrPredIntr) + 0.6]);
 
 % save plot

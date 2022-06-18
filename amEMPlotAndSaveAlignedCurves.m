@@ -30,5 +30,47 @@ amEMPlotOffsetHistogram(ax, offsets, max_offset);
 savePlotInDir(f, plottitle, plotsubfolder);
 close(f);
 
+% thesis - extra plot of just two measures + offset histogram
+plotsdown = 1;
+plotsacross = 3;
+plottitle = sprintf('%s - %s - Subset', plotname, run_type);
+pghght = 2.75;
+pgwdth = 7.5;
+[f, p] = createFigureAndPanelForPaper('', pgwdth, pghght);
+thisplot = 1;
+for m = 1:nmeasures
+    if ismember(measures.DisplayName(m), {'LungFunction', 'Wellness'})
+        subplottitle = measures.DisplayName{m};
+        ax = subplot(plotsdown, plotsacross, thisplot,'Parent',p);
+        amEMPlotAlignedCurve(ax, profile_pre(:, m), meancurvemean(:, m), meancurvecount(:, m), meancurvestd(:, m), ...
+            measures(m, :), max_points, min_offset, max_offset, align_wind, run_type, ex_start, sigmamethod, anchor, subplottitle);
+        thisplot = thisplot + 1;
+    end
+end
+
+ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
+amEMPlotOffsetHistogram(ax, offsets, max_offset);
+
+% save plot
+savePlotInDir(f, plottitle, plotsubfolder);
+close(f);
+
+% thesis - extra plot of just the offset histogram
+
+plotsdown = 1;
+plotsacross = 1;
+plottitle = sprintf('%s - %s - OffsetHistogram', plotname, run_type);
+pghght = 5;
+pgwdth = 4;
+[f, p] = createFigureAndPanelForPaper('', pgwdth, pghght);
+thisplot = 1;
+ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
+amEMPlotOffsetHistogram(ax, offsets, max_offset);
+
+% save plot
+savePlotInDir(f, plottitle, plotsubfolder);
+close(f);
+
+
 end
 

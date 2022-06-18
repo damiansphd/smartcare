@@ -103,7 +103,7 @@ elseif runfunction == 3
     shiftmode = 4; % shift by 7d mean to left of ex_start
     examplemode = 0; % no examples
     lcexamples = [];
-    pcountthresh = 6;
+    pcountthresh = 3;
     amEMMCPlotSuperimposedAlignedCurvesForPaper(meancurvemean, meancurvecount, amIntrNormcube, amInterventions, ...
         measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, ...
         nlatentcurves, pcountthresh, shiftmode, study, examplemode, lcexamples);
@@ -152,7 +152,7 @@ elseif runfunction == 9
         npatients, maxdays, plotname, plotsubfolder, nlatentcurves, plotmode, studymarkermode, pfiltermode);
 elseif runfunction == 10
     fprintf('Plotting histogram of mnumber of interventions\n');
-    plotNbrIntrByPatient(physdata, offset, ivandmeasurestable, cdPatient, amInterventions, study);
+    plotNbrIntrByPatient(physdata, offset, ivandmeasurestable, cdPatient, amInterventions, study, 'Paper');
 elseif runfunction == 11
     fprintf('Modulator Therapy - analysing reduction in frequency of exacerbations\n');
     [brDTExStats, sumtable, hospsumtable] = calcExFrequencyByDT(offset, ivandmeasurestable, cdPatient, cdDrugTherapy, amInterventions, study);

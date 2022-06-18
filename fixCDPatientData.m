@@ -7,15 +7,18 @@ fprintf('Fixing Patient data anomalies\n');
 fprintf('-----------------____--------\n');
 
 % Fix non-numeric value of Weight
-idx1 = find(cdPatient.ID == 88);
-idx2 = find(ismember(cdPatient.Weight,'75,4'));
-idx = intersect(idx1,idx2);
-cdPatient.Weight(idx) = {'75.4'};
+%idx1 = find(cdPatient.ID == 88);
+%idx2 = find(ismember(cdPatient.Weight,'75,4'));
+%idx = intersect(idx1,idx2);
+%cdPatient.Weight(idx1) = {'75.4'};
+
+idx = find(cdPatient.ID == 88);
+cdPatient.Weight(idx) = 75.4;
 updates = size(idx,1);
 fprintf('Fixing %2d mis-typed Weight values\n', updates);
 
 % now can convert StopDate to a datetime format
-cdPatient.Weight = str2double(cdPatient.Weight);
+%cdPatient.Weight = str2double(cdPatient.Weight);
 
 % fix typo in study start date for patient 36
 idx = find(cdPatient.ID == 36);
