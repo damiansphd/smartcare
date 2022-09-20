@@ -7,7 +7,7 @@ nsamples = size(offsets, 1);
 if nsamples <= 100
     ymax = 30;
 else
-    ymax = 100;
+    ymax = 60;
 end
 histogram(ax, -1 * offsets);
 xlim(ax, [(-1 * max_offset) + 0.5, 0.5]);

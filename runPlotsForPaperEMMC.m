@@ -103,7 +103,7 @@ elseif runfunction == 3
     shiftmode = 4; % shift by 7d mean to left of ex_start
     examplemode = 0; % no examples
     lcexamples = [];
-    pcountthresh = 3;
+    pcountthresh = 9;
     amEMMCPlotSuperimposedAlignedCurvesForPaper(meancurvemean, meancurvecount, amIntrNormcube, amInterventions, ...
         measures, min_offset, max_offset, align_wind, nmeasures, run_type, ex_start, plotname, plotsubfolder, ...
         nlatentcurves, pcountthresh, shiftmode, study, examplemode, lcexamples);

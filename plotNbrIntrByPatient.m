@@ -4,7 +4,8 @@ function plotNbrIntrByPatient(physdata, offset, ivandmeasurestable, cdPatient, a
 % patient (for patients with enough data to be analysed)
 
 if ismember(study, 'BR')
-    goodpattbl = cdPatient(:, {'ID', 'StudyDate', 'PatClinDate'});
+    %goodpattbl = cdPatient(:, {'ID', 'StudyDate', 'PatClinDate'});
+    goodpattbl = cdPatient(ismember(cdPatient.ID, unique(physdata.SmartCareID)), {'ID', 'StudyDate', 'PatClinDate'});
     goodpattbl.Properties.VariableNames{'ID'} = 'SmartCareID';
     goodpattbl.StudyDn   = datenum(goodpattbl.StudyDate) - offset + 1;
     goodpattbl.PatClinDn = datenum(goodpattbl.PatClinDate) - offset + 1;

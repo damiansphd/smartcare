@@ -96,7 +96,7 @@ sumtable.AnnualFreq = 365 * sumtable.sum_NbrIntr ./ sumtable.sum_NbrDays;
 hospsumtable = varfun(@sum, brDTExStats, 'InputVariables', {'NbrDays', 'NbrIntr'}, 'GroupingVariables', {'Hospital', 'DTType'});
 hospsumtable.AnnualFreq = 365 * hospsumtable.sum_NbrIntr ./ hospsumtable.sum_NbrDays;  
 
-daysthresh = 5000;
+daysthresh = 7500;
 tempsumtable = sumtable(sumtable.sum_NbrDays > daysthresh, :);
 
 plotsdown   = 1; 
@@ -105,17 +105,17 @@ thisplot = 1;
 widthinch = 11;
 heightinch = 5;
 fontname = 'Arial';
-plottitle = sprintf('%s - Drug Therapy Impact', study);
+plottitle = sprintf('%s - Modulator Therapy Impact', study);
 [f, p] = createFigureAndPanelForPaper('', widthinch, heightinch);
 
 ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
 hold on;
 b = bar(ax, tempsumtable.sum_NbrDays);
 set(ax, 'xticklabel', tempsumtable.DTType);
-set(ax, 'yticklabel', {'0', '10,000', '20,000', '30,000'});
+set(ax, 'yticklabel', {'0', '10,000', '20,000', '30,000', '40,000', '50,000'});
 ax.XTick = [1, 2, 3];
-ax.YTick = [0, 10000, 20000, 30000];
-ylim(ax, [0, 30000]);
+ax.YTick = [0, 10000, 20000, 30000, 40000, 50000];
+ylim(ax, [0, 50000]);
 xtickangle(ax, 30);
 b.FaceColor = 'flat';
 b.CData     = [0.0000, 0.4470, 0.7410; ...
@@ -123,9 +123,10 @@ b.CData     = [0.0000, 0.4470, 0.7410; ...
                0.9290, 0.6940, 0.1250];
 ax.FontSize = 8;
 ax.FontName = fontname;
-xlabel(ax, 'Drug Therapy', 'FontSize', 10);
+ax.FontWeight = 'bold';
+xlabel(ax, 'Modulator Therapy', 'FontSize', 10);
 ylabel(ax, 'Nbr Days in Study', 'FontSize', 10);
-title(ax, 'Study Days by Drug Therapy', 'FontSize', 10);
+title(ax, '(a) Number of Study Days', 'FontSize', 10);
 hold off;
 
 thisplot = thisplot + 1;
@@ -144,9 +145,10 @@ b.CData     = [0.0000, 0.4470, 0.7410; ...
                0.9290, 0.6940, 0.1250];
 ax.FontSize = 8;
 ax.FontName = fontname;
-xlabel(ax, 'Drug Therapy', 'FontSize', 10);
+ax.FontWeight = 'bold';
+xlabel(ax, 'Modulator Therapy', 'FontSize', 10);
 ylabel(ax, 'Nbr Interventions', 'FontSize', 10);
-title(ax, 'Interventions by Drug Therapy', 'FontSize', 10);
+title(ax, '(b) Number of Interventions', 'FontSize', 10);
 hold off;
 
 thisplot = thisplot + 1;
@@ -170,9 +172,10 @@ text(xtips, ytips, labels,'HorizontalAlignment','center', ...
     'VerticalAlignment','bottom');
 ax.FontSize = 8;
 ax.FontName = fontname;
-xlabel(ax, 'Drug Therapy', 'FontSize', 10);
-ylabel(ax, 'Annual Frequency', 'FontSize', 10);
-title(ax, 'Annual Frequency by Drug Therapy', 'FontSize', 10);
+ax.FontWeight = 'bold';
+xlabel(ax, 'Modulator Therapy', 'FontSize', 10);
+ylabel(ax, 'Annual APE Frequency', 'FontSize', 10);
+title(ax, '(c) Annual APE Frequency', 'FontSize', 10);
 hold off;
 toc
 fprintf('\n');
