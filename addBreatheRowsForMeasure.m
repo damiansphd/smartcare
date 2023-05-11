@@ -25,6 +25,8 @@ if nmeas > 0
         mbrphysdata(:, {outputcolname}) = array2table(table2array(mbrphysdata(:, {outputcolname})) * 10);
     end
     % invert cough scale so it is consistent with other subjective scores
+    % (should have a +10 in the inversion to result in a scale of 10-100
+    % not 0-90)
     if ismember(recordingtype, {'CoughRecording'})
         mbrphysdata(:, {outputcolname}) = array2table(100 - table2array(mbrphysdata(:, {outputcolname})));
     end

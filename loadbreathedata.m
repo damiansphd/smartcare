@@ -233,7 +233,7 @@ printDataDemographics(brphysdata, 0);
 plotMeasuresByHour(brphysdata, 0, 'BR - Measures By Hour Histograms', study);
 
 brphysdata_predupehandling = brphysdata;
-
+brphy
 % generate data demographics by patient
 generateDataDemographicsByPatientFn(brphysdata, brPatient, study);
 
