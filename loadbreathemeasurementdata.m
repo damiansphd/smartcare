@@ -91,6 +91,11 @@ for i = 1:nmeasfile
     mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'HasHayFever'})) = {'logical'};
 
     measdata = readtable(fullfile(basedir, subfolder, MeasFiles{i}), mfopts);
+    measdata = renamevars(measdata, ["UserId", "EntityId", "ClientTimestamp"], ["PartitionKey", "RowKey", "Date"]);
+    if ~any(ismember(measdata.Properties.VariableNames, {'CaptureType'}))
+        measdata.CaptureType(:) = {'Manual'};
+    end
+    
     norigrows = size(measdata, 1);
     fprintf('%d measurements\n', norigrows);
     measdata = outerjoin(measdata, brPatient, 'LeftKeys', {'PartitionKey'}, 'RightKeys', {'PartitionKey'}, 'RightVariables', {'ID', 'StudyNumber', 'StudyDate', 'PatClinDate'});
