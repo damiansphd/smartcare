@@ -1,4 +1,4 @@
-function [brDTExStats, sumtable, hospsumtable] = calcExFrequencyByDT(offset, ivandmeasurestable, cdPatient, cdDrugTherapy, amInterventions, study)
+function [brDTExStats, sumtable, hospsumtable] = calcExFrequencyByDT(offset, ivandmeasurestable, cdPatient, cdDrugTherapy, amInterventions, study, textsuffix)
 
 % calcExFrequencyByDT - function to analyse the frequency of exacerbations
 % (per patient year in the study) by type of drug therapy.
@@ -91,12 +91,14 @@ for p = 1:size(cdPatient, 1)
     
 end
 
-sumtable = varfun(@sum, brDTExStats, 'InputVariables', {'NbrDays', 'NbrIntr'}, 'GroupingVariables', {'DTType'});
+sumtable = varfun(@sum, brDTExStats, 'InputVariables', {'NbrDays', 'NbrIntr', 'NbrPredIntr'}, 'GroupingVariables', {'DTType'});
 sumtable.AnnualFreq = 365 * sumtable.sum_NbrIntr ./ sumtable.sum_NbrDays;
-hospsumtable = varfun(@sum, brDTExStats, 'InputVariables', {'NbrDays', 'NbrIntr'}, 'GroupingVariables', {'Hospital', 'DTType'});
-hospsumtable.AnnualFreq = 365 * hospsumtable.sum_NbrIntr ./ hospsumtable.sum_NbrDays;  
+sumtable.AnnualPredFreq = 365 * sumtable.sum_NbrPredIntr ./ sumtable.sum_NbrDays;
+hospsumtable = varfun(@sum, brDTExStats, 'InputVariables', {'NbrDays', 'NbrIntr', 'NbrPredIntr'}, 'GroupingVariables', {'Hospital', 'DTType'});
+hospsumtable.AnnualFreq = 365 * hospsumtable.sum_NbrIntr ./ hospsumtable.sum_NbrDays; 
+hospsumtable.AnnualPredFreq = 365 * hospsumtable.sum_NbrPredIntr ./ hospsumtable.sum_NbrDays;
 
-daysthresh = 7500;
+daysthresh = 10000;
 tempsumtable = sumtable(sumtable.sum_NbrDays > daysthresh, :);
 
 plotsdown   = 1; 
@@ -105,17 +107,17 @@ thisplot = 1;
 widthinch = 11;
 heightinch = 5;
 fontname = 'Arial';
-plottitle = sprintf('%s - Modulator Therapy Impact', study);
+plottitle = sprintf('%s - Modulator Therapy Impact - %s', study, textsuffix);
 [f, p] = createFigureAndPanelForPaper('', widthinch, heightinch);
 
 ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
 hold on;
 b = bar(ax, tempsumtable.sum_NbrDays);
 set(ax, 'xticklabel', tempsumtable.DTType);
-set(ax, 'yticklabel', {'0', '10,000', '20,000', '30,000', '40,000', '50,000'});
+set(ax, 'yticklabel', {'0', '50,000', '100,000', '150,000', '200,000', '250,000'});
 ax.XTick = [1, 2, 3];
-ax.YTick = [0, 10000, 20000, 30000, 40000, 50000];
-ylim(ax, [0, 50000]);
+ax.YTick = [0, 50000, 100000, 150000, 200000, 250000];
+ylim(ax, [0, 250000]);
 xtickangle(ax, 30);
 b.FaceColor = 'flat';
 b.CData     = [0.0000, 0.4470, 0.7410; ...
@@ -132,12 +134,24 @@ hold off;
 thisplot = thisplot + 1;
 ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
 hold on;
-b = bar(ax, tempsumtable.sum_NbrIntr);
+if ismember(textsuffix, {'ExclElect'})
+    b = bar(ax, tempsumtable.sum_NbrPredIntr);
+else
+    b = bar(ax, tempsumtable.sum_NbrIntr);
+end
 set(ax, 'xticklabel', tempsumtable.DTType);
-set(ax, 'yticklabel', {'0', '50', '100', '150'});
+
 ax.XTick = [1, 2, 3];
-ax.YTick = [0, 50, 100, 150];
-ylim(ax, [0, 150]);
+
+if ismember(textsuffix, {'ExclElect'})
+    set(ax, 'yticklabel', {'0', '25', '50', '75', '100'});
+    ax.YTick = [0, 25, 50, 75, 100];
+    ylim(ax, [0, 100]);
+else
+    set(ax, 'yticklabel', {'0', '100', '200', '300', '400', '500', '600'});
+    ax.YTick = [0, 100, 200, 300, 400, 500, 600];
+    ylim(ax, [0, 600]);
+end
 xtickangle(ax, 30);
 b.FaceColor = 'flat';
 b.CData     = [0.0000, 0.4470, 0.7410; ...
@@ -154,12 +168,25 @@ hold off;
 thisplot = thisplot + 1;
 ax = subplot(plotsdown, plotsacross, thisplot, 'Parent', p);
 hold on;
-b = bar(ax, tempsumtable.AnnualFreq);
+if ismember(textsuffix, {'ExclElect'})
+    b = bar(ax, tempsumtable.AnnualPredFreq);
+else
+    b = bar(ax, tempsumtable.AnnualFreq);
+end
+
 set(ax, 'xticklabel', tempsumtable.DTType);
-set(ax, 'yticklabel', {'0', '0.5', '1.0', '1.5', '2.0'});
+
 ax.XTick = [1, 2, 3];
-ax.YTick = [0, 0.5, 1.0, 1.5, 2.0];
-ylim(ax, [0, 2]);
+
+if ismember(textsuffix, {'ExclElect'})
+    set(ax, 'yticklabel', {'0', '0.1', '0.2', '0.3', '0.4', '0.5'});
+    ax.YTick = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
+    ylim(ax, [0, 0.5]);
+else
+    set(ax, 'yticklabel', {'0', '0.5', '1.0', '1.5', '2.0'});
+    ax.YTick = [0, 0.5, 1.0, 1.5, 2.0];
+    ylim(ax, [0, 2]);
+end
 xtickangle(ax, 30);
 b.FaceColor = 'flat';
 b.CData     = [0.0000, 0.4470, 0.7410; ...

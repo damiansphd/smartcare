@@ -5,7 +5,7 @@ function [harmname] = harmoniseDrugTherapyName(rawname)
 
 % until we are live on REDCap, we need to harmonise all the variants of the
 % free form text
-nonlist = {'None', 'none'};
+nonlist = {'None', 'none', 'Unknown', ''};
 ivalist = {'Ivacaftor', 'ivacaftor'};
 symlist = {'Symkevi', 'Symkevi Modulator', 'symkevi'};
 orklist = {'Orkambi'};

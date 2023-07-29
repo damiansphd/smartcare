@@ -19,11 +19,12 @@ fprintf(' 7: Paper Figure 5c - Interventions over time\n');
 fprintf(' 8: Slides - histogram of variable time to treatment\n');
 fprintf(' 9: Paper Figure 5c alt - Interventions over time no filtering\n');
 fprintf('10: Paper Figure 1B - Number of interventions histogram\n');
-fprintf('11: Modulator therapy - reduction in intervention frequency\n');
-fprintf('12: Plot Variables vs Intr Signal\n');
+fprintf('11: Modulator therapy - reduction in intervention frequency (excl electives)\n');
+fprintf('12: Modulator therapy - reduction in intervention frequency (all data)\n');
+fprintf('13: Plot Variables vs Intr Signal\n');
 
 fprintf('\n');
-npaperplots = 12;
+npaperplots = 13;
 srunfunction = input(sprintf('Choose function (0-%d): ', npaperplots), 's');
 runfunction = str2double(srunfunction);
 
@@ -38,7 +39,7 @@ fprintf('\n');
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 [studynbr, study, studyfullname] = selectStudy();
-if runfunction == 0 || runfunction == 1 || runfunction == 2 || runfunction == 6 || runfunction == 10 || runfunction == 11
+if runfunction == 0 || runfunction == 1 || runfunction == 2 || runfunction == 6 || runfunction == 10 || runfunction == 11 || runfunction == 12
     fprintf('Loading raw data for study\n');
     chosentreatgap = selectTreatmentGap();
     tic
@@ -56,7 +57,7 @@ if runfunction == 0 || runfunction == 1 || runfunction == 2 || runfunction == 6 
     fprintf('\n');
 end
 
-if runfunction >= 3 && runfunction < 11
+if runfunction >= 3 && runfunction < 12
     [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir(study, '',      '', 'IntrFilt', 'TGap',       '');
     tic
     fprintf('Loading output from model run\n');
@@ -154,9 +155,14 @@ elseif runfunction == 10
     fprintf('Plotting histogram of mnumber of interventions\n');
     plotNbrIntrByPatient(physdata, offset, ivandmeasurestable, cdPatient, amInterventions, study, 'Paper');
 elseif runfunction == 11
-    fprintf('Modulator Therapy - analysing reduction in frequency of exacerbations\n');
-    [brDTExStats, sumtable, hospsumtable] = calcExFrequencyByDT(offset, ivandmeasurestable, cdPatient, cdDrugTherapy, amInterventions, study);
+    fprintf('Modulator Therapy - analysing reduction in frequency of exacerbations - excluding electives\n');
+    textsuffix = 'ExclElect';
+    [brDTExStats, sumtable, hospsumtable] = calcExFrequencyByDT(offset, ivandmeasurestable, cdPatient, cdDrugTherapy, amInterventions(amInterventions.ElectiveTreatment~='Y', :), study, textsuffix);
 elseif runfunction == 12
+    fprintf('Modulator Therapy - analysing reduction in frequency of exacerbations - all data\n');
+    textsuffix = 'All';
+    [brDTExStats, sumtable, hospsumtable] = calcExFrequencyByDT(offset, ivandmeasurestable, cdPatient, cdDrugTherapy, amInterventions, study, textsuffix);
+elseif runfunction == 13
     fprintf('Loading latest labelled test data file\n');
     load(fullfile(basedir, subfolder, labelledinterventionsfile));
     fprintf('Plotting Variables vs Intr signal\n');

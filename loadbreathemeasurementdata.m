@@ -91,7 +91,16 @@ for i = 1:nmeasfile
     mfopts.VariableTypes(:, ismember(mfopts.VariableNames, {'HasHayFever'})) = {'logical'};
 
     measdata = readtable(fullfile(basedir, subfolder, MeasFiles{i}), mfopts);
-    measdata = renamevars(measdata, ["UserId", "EntityId", "ClientTimestamp"], ["PartitionKey", "RowKey", "Date"]);
+    if any(ismember(measdata.Properties.VariableNames, {'UserId'}))
+        measdata = renamevars(measdata, ["UserId"], ["PartitionKey"]);
+    end
+    if any(ismember(measdata.Properties.VariableNames, {'EntityId'}))
+        measdata = renamevars(measdata, ["EntityId"], ["RowKey"]);
+    end
+    if any(ismember(measdata.Properties.VariableNames, {'ClientTimestamp'}))
+        measdata = renamevars(measdata, ["ClientTimestamp"], ["Date"]);
+    end
+    %measdata = renamevars(measdata, ["UserId", "EntityId", "ClientTimestamp"], ["PartitionKey", "RowKey", "Date"]);
     if ~any(ismember(measdata.Properties.VariableNames, {'CaptureType'}))
         measdata.CaptureType(:) = {'Manual'};
     end
