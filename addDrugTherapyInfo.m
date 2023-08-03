@@ -20,7 +20,9 @@ trplist = {'Triple Therapy', 'Kaftrio', 'Kaftrio + Kalydeco', 'Modulator VX-445,
 for i = 1:size(amInterventions, 1)
     patdt = cdDrugTherapy(cdDrugTherapy.ID == amInterventions.SmartCareID(i), :);
     if size(patdt, 1) > 0
-        patdtidx = find(patdt.DrugTherapyStartDate < amInterventions.IVStartDate(i), 1, 'last');
+        % revised logic - assume it takes 14 days to see the effect of drug
+        % therapy, so adjust drug therapy start date accordingly
+        patdtidx = find((patdt.DrugTherapyStartDate + days(14)) < amInterventions.IVStartDate(i), 1, 'last');
         if size(patdtidx, 1) > 0
             amInterventions.DrugTherapy(i) = harmoniseDrugTherapyName(patdt.DrugTherapyType(patdtidx)); 
         end

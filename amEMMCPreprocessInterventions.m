@@ -57,7 +57,12 @@ elseif intrmode == 2
     amInterventions(~intrkeepidx,:) = [];
     amIntrDatacube(~intrkeepidx,:,:) = [];
     ninterventions = size(amInterventions,1);
-else
+elseif intrmode == 3
+    intrkeepidx = ismember(amInterventions.DrugTherapy, {'Triple Therapy'});
+    amInterventions(~intrkeepidx,:) = [];
+    amIntrDatacube(~intrkeepidx,:,:) = [];
+    ninterventions = size(amInterventions,1);
+else    
     fprintf('**** Unknown intrmode ****\n');
 end
     

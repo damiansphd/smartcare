@@ -6,7 +6,7 @@ function intrmode = selectIntrFilterMthd()
 
 sintrmode = input('Enter Intervention Filtering mode ? ', 's');
 intrmode = str2double(sintrmode);
-if (isnan(intrmode) || intrmode < 1 || intrmode > 2)
+if (isnan(intrmode) || intrmode < 1 || intrmode > 3)
     fprintf('Invalid choice - defaulting to 1\n');
     intrmode = 1;
 end
