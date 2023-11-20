@@ -1,9 +1,8 @@
-function [redcaptablemap, redcapfieldmap] = loadREDCapFieldMapFile(basedir, subfolder)
+function [redcaptablemap, redcapfieldmap] = loadREDCapFieldMapFile(basedir, subfolder, fnamematchstring)
 
 % loadREDCapFieldMapFile - loads the latest REDCap field mapping file
 
 fmapsubfolder = sprintf('%s/%s', subfolder, 'FieldMapping');
-fnamematchstring = 'REDCapFieldMappingFile*';
 
 [latestfname, filefound] = getLatestFileName(basedir, fmapsubfolder, fnamematchstring);
 

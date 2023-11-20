@@ -1,9 +1,8 @@
-function [redcapdict] = loadREDCapDictionaryFile(basedir, subfolder)
+function [redcapdict] = loadREDCapDictionaryFile(basedir, subfolder, fnamematchstring)
 
 % loadREDCapDictionaryFile - loads the latest REDCap dictionary file
 
 dictsubfolder = sprintf('%s/%s', subfolder, 'DataDictionary');
-fnamematchstring = 'AnalysisOfRemoteMonitoringVirt_DataDictionary*';
 
 [latestfname, filefound] = getLatestFileName(basedir, dictsubfolder, fnamematchstring);
 

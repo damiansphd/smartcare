@@ -50,21 +50,24 @@ fprintf('\n');
 % load latest patient ID mapping file
 tic
 fprintf('Finding the most recent patient id mapping file\n');
-[redcapidmap] = loadREDCapPatientIDMapFile(basedir, subfolder);
+fnamematchstr = 'PatientIDMappingFile*';
+[redcapidmap] = loadREDCapPatientIDMapFile(basedir, subfolder, fnamematchstr);
 toc
 fprintf('\n');
 
 % load latest REDCap data dictionary file
 tic
 fprintf('Finding the most recent REDCap data dictionary file\n');
-[redcapdict] = loadREDCapDictionaryFile(basedir, subfolder);
+fnamematchstr = 'AnalysisOfRemoteMonitoringVirt_DataDictionary*';
+[redcapdict] = loadREDCapDictionaryFile(basedir, subfolder, fnamematchstr);
 toc
 fprintf('\n');
 
 % load latest REDCap table and field mapping file
 tic
 fprintf('Finding the most recent table and field mapping file\n');
-[redcaptablemap, redcapfieldmap] = loadREDCapFieldMapFile(basedir, subfolder);
+fnamematchstr = 'REDCapFieldMappingFile*';
+[redcaptablemap, redcapfieldmap] = loadREDCapFieldMapFile(basedir, subfolder, fnamematchstr);
 toc
 fprintf('\n');
 
@@ -72,7 +75,9 @@ fprintf('\n');
 % hospitals)
 tic
 fprintf('Finding the most recent REDCap data export file\n');
-[redcapdata, redcapinstrcounts] = loadREDCapDataExportFile(basedir, subfolder, redcapdict);
+fnamematchstr = 'AnalysisOfRemoteMoni_DATA*';
+redcapidcol = 'study_id';
+[redcapdata, redcapinstrcounts] = loadREDCapDataExportFile(basedir, subfolder, fnamematchstr, redcapdict, redcapidcol);
 toc
 fprintf('\n');
 

@@ -25,6 +25,11 @@ elseif ismember(study, 'BR')
     physdata       = brphysdata;
     offset         = broffset;
     physdata_predateoutlierhandling = brphysdata_predateoutlierhandling;
+elseif ismember(study, 'AC')
+    load(fullfile(basedir, subfolder, datamatfile), 'acphysdata', 'acoffset', 'acphysdata_predateoutlierhandling');
+    physdata       = acphysdata;
+    offset         = acoffset;
+    physdata_predateoutlierhandling = acphysdata_predateoutlierhandling;
 end
 toc
 

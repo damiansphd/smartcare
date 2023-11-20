@@ -17,7 +17,11 @@ if size(illogicalids, 1) > 0
 end
 
 newredcapids = setdiff(allredcapids, priorredcapids);
-newredcapids = natsort(newredcapids);
+if ismember(class(newredcapids), {'cell'})
+    newredcapids = natsort(newredcapids);
+else
+    newredcapids = sort(newredcapids);
+end
 nnewids = size(newredcapids, 1);
 
 newstudyids = priormaxstudyid + (1:nnewids)';
