@@ -13,7 +13,7 @@ if ismember(study, {'SC', 'TM'})
     studyduration = 184;
 elseif ismember(study, {'CL'})
     studyduration = 184;
-elseif ismember(study, {'BR'})
+elseif ismember(study, {'BR', 'AC'})
     studyduration = max(physdata.ScaledDateNum);
 else
     fprintf('**** Unknown Study ****');
@@ -104,7 +104,7 @@ if ismember(study, {'SC'})
     [pdcountmtable] = calcDataComplianceStats(dataset, totdays, totmeas, studyduration, meastype, filttype, ...
                                         datafilter, bccolor, tickrange, ticklabels, subfolder, study);                 
     
-elseif ismember(study, {'BR'})
+elseif ismember(study, {'BR', 'AC'})
     
     alldataset       = physdata(~ismember(physdata.RecordingType, {'LungFunctionRecording'}), {'SmartCareID','ScaledDateNum'});
     pdcountallmtable = varfun(@max, alldataset, 'GroupingVariables', {'SmartCareID', 'ScaledDateNum'});

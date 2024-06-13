@@ -46,7 +46,7 @@ if ismember(study, {'SC', 'CL', 'BR'})
 end
     
 
-if ismember(study, {'BR', 'CL'})
+if ismember(study, {'BR', 'CL', 'AC'})
     subfolder = sprintf('DataFiles/%s', study);
 else
     subfolder = 'DataFiles';
@@ -121,10 +121,14 @@ elseif vshiftmode == 2
     allowvshift1 = false;
     maxiterations1 = 200;
     allowvshift2 = true;
-    maxiterations2 = 50;
-    
+    maxiterations2 = 50;    
 end
 miniiter = 0;
+
+% override for now as ACE-CF doesn't have enough data to converge
+%if ismember(study, {'AC'})
+%    maxiterations1 = 50;
+%end
 
 tic
 [meancurvesumsq, meancurvesum, meancurvecount, meancurvemean, meancurvestd, amInterventions, ...
@@ -214,8 +218,11 @@ if ismember(study, {'SC', 'CL'})
     ex_start = amEMMCCalcExStartsFromTestLabels(amLabelledInterventions, amInterventions, ...
                 overall_pdoffset, max_offset, 'Plots', plotname, ninterventions, nlatentcurves);
 else
-   ex_start = input('Look at best start and enter exacerbation start: ');
-   fprintf('\n'); 
+    ex_start = zeros(1, nlatentcurves);
+    for l = 1:nlatentcurves
+        ex_start(l) = input(sprintf('Curve Set %d: Look at best start and enter exacerbation start: ', l));
+        fprintf('\n');
+    end
 end
 
 tic
@@ -229,9 +236,11 @@ mkdir(strcat(basedir, plotsubfolder));
 [amInterventions] = amEMMCCalcConfidenceBounds(overall_pdoffset, amInterventions, min_offset, max_offset, ninterventions, confidencethreshold, confidencemode);
 [amInterventions] = amEMMCCalcAbsPredAndBounds(amInterventions, ex_start, nlatentcurves);
 
-[sorted_interventions, max_points] = amEMMCVisualiseAlignmentDetail(amIntrNormcube, amHeldBackcube, amInterventions, meancurvemean, ...
-    meancurvecount, meancurvestd, overall_pdoffset, measures, min_offset, max_offset, align_wind, nmeasures, ninterventions, ...
-    run_type, ex_start, curveaveragingmethod, plotname, plotsubfolder, nlatentcurves);
+%if ~ismember(study, {'AC'})
+    [sorted_interventions, max_points] = amEMMCVisualiseAlignmentDetail(amIntrNormcube, amHeldBackcube, amInterventions, meancurvemean, ...
+        meancurvecount, meancurvestd, overall_pdoffset, measures, min_offset, max_offset, align_wind, nmeasures, ninterventions, ...
+        run_type, ex_start, curveaveragingmethod, plotname, plotsubfolder, nlatentcurves);
+%end
 
 amEMMCPlotAndSaveAlignedCurves(unaligned_profile, meancurvemean, meancurvecount, meancurvestd, ...
     amInterventions.Offset, amInterventions.LatentCurve, ...

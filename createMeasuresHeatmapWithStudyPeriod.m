@@ -41,7 +41,7 @@ elseif ismember(study, {'CL'})
     colors(15,:)  = temp(20,:);
     colors(16,:)  = [1 0 1];
     nmeasures = 15;
-elseif ismember(study, {'BR'})
+elseif ismember(study, {'BR', 'AC'})
     colors(1,:)  = temp(4,:);
     colors(2,:)  = temp(5,:);
     colors(3,:)  = temp(6,:);

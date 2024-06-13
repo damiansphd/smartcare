@@ -26,9 +26,9 @@ if nmeas > 0
     end
     % invert cough scale so it is consistent with other subjective scores
     % (should have a +10 in the inversion to result in a scale of 10-100
-    % not 0-90)
+    % not 0-90) -- now fixed during work on Ace-CF
     if ismember(recordingtype, {'CoughRecording'})
-        mbrphysdata(:, {outputcolname}) = array2table(100 - table2array(mbrphysdata(:, {outputcolname})));
+        mbrphysdata(:, {outputcolname}) = array2table(110 - table2array(mbrphysdata(:, {outputcolname})));
     end
     % only include non-null measurements
     if ismember(class(table2array(mbrphysdata(:, {outputcolname}))), {'double'})

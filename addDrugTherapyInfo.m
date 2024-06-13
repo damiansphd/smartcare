@@ -9,14 +9,6 @@ fprintf('Adding drug therapy info\n');
 % add the new column with a default value of None
 amInterventions.DrugTherapy(:) = {'None'};
 
-% until we are live on REDCap, we need to harmonise all the variants of the
-% free form text
-ivalist = {'Ivacaftor', 'ivacaftor'};
-symlist = {'Symkevi', 'Symkevi Modulator', 'symkevi'};
-orklist = {'Orkambi'};
-trplist = {'Triple Therapy', 'Kaftrio', 'Kaftrio + Kalydeco', 'Modulator VX-445,tezacaftor,ivacaftor', 'Trikafta', 'Trikaftor', ...
-            'Triple therapy', 'VX115 Study Trikafta open label', 'kaftrio', 'triple therapy open label trial', 'Kaftrio/Trikafta/TripleTherapy'};
-
 for i = 1:size(amInterventions, 1)
     patdt = cdDrugTherapy(cdDrugTherapy.ID == amInterventions.SmartCareID(i), :);
     if size(patdt, 1) > 0

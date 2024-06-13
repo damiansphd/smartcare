@@ -74,7 +74,7 @@ fprintf('\n');
 tic
 fprintf('Finding the most recent table and field mapping file\n');
 fnamematchstr = 'AC-REDCapFieldMappingFile*';
-[redcaptablemap, redcapfieldmap] = loadREDCapFieldMapFile(basedir, subfolder, fnamematchstr);
+[redcaptablemap, redcapfieldmap, recordeventcolmap] = loadacecfREDCapFieldMapFile(basedir, subfolder, fnamematchstr);
 toc
 fprintf('\n');
 
@@ -144,33 +144,51 @@ ntables = size(redcaptablemap, 1);
 for t = 1:ntables
     rcinstr = redcaptablemap.redcap_instrument{t};
     actable = redcaptablemap.matlab_table{t};
+    if sum(ismember(recordeventcolmap.redcap_instrument, {rcinstr})) > 0
+        receventfld = recordeventcolmap.record_event_col{ismember(recordeventcolmap.redcap_instrument, {rcinstr})};
+    else
+        receventfld = '';
+    end
     
     fprintf('Loading data from instrument %-24s to table %-18s: ', rcinstr, actable);
     
     % extract data rows for this instrument/table combination
     trcdata = redcapdata(ismember(redcapdata.redcap_repeat_instrument, {rcinstr}), :);
-    
-    
+    ntrowsorig = size(trcdata, 1);
     % for ACE-CF, temporarily include complete and unverified records,
     % until enough have been set to complete.
     completefld = sprintf('%s_complete', rcinstr);
     %completeidx = table2array(trcdata(:, {completefld})) == 2;
-    
     if size(trcdata, 1) > 0
         completeidx = table2array(trcdata(:, {completefld})) ~= 0;
     else
         completeidx = [];
     end
-    
     trcdata = trcdata(completeidx, :);
-    %ntrows  = redcapinstrcounts.GroupCount(ismember(redcapinstrcounts.redcap_repeat_instrument, {rcinstr}));
-    ntrows = size(trcdata, 1);
+    
     if sum(completeidx) ~= size(completeidx, 1)
-        warnsuffix = '**** incomplete status rows filtered ****';
+        warnsuff1 = sprintf('**** %3d incomplete status rows **** ', size(completeidx, 1) - sum(completeidx));
     else
-        warnsuffix = '';
+        warnsuff1 = '';
     end
-    fprintf('%5d status complete rows of %5d total rows %s\n', sum(completeidx), size(completeidx, 1), warnsuffix);
+    
+    % for ACE-CF, delete the placeholder rows that indicate none of those
+    % events have happened.
+    if size(trcdata, 1) > 0 && ~isempty(receventfld)
+        receventidx = table2array(trcdata(:, {receventfld})) ~= 0;
+    else
+        receventidx = true(size(trcdata,1), 1);
+    end
+    trcdata = trcdata(receventidx, :);
+    
+    if sum(receventidx) ~= size(receventidx, 1)
+        warnsuff2 = sprintf('**** %3d no record event rows   ****', size(receventidx, 1) - sum(receventidx));
+    else
+        warnsuff2 = '';
+    end
+    
+    ntrows = size(trcdata, 1);
+    fprintf('Ingested %5d rows of %5d total rows %s%s\n', ntrows, ntrowsorig, warnsuff1, warnsuff2);
    
     tfieldmap = redcapfieldmap(ismember(redcapfieldmap.redcap_instrument, {rcinstr}), :);
 
@@ -183,6 +201,11 @@ for t = 1:ntables
 end
 toc
 fprintf('\n');
+
+% filter acPatDataUpdTo to keep single row per patient with the max
+% PatClinDate (there can be cases where multiple rows exist per patient,
+% and we just want the latest update date for each patient)
+acPatDataUpdTo = groupfilter(acPatDataUpdTo,'ID', @(x) x==max(x),'PatClinDate'); 
 
 % additionally populate the specific derived columns in the relevant tables
 tic
@@ -441,11 +464,11 @@ fprintf('\n');
 tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-outputfilename = 'acecfclinicaldata.mat';
+[~, outputfilename, ~] = getRawDataFilenamesForStudy(study);
 fprintf('Saving output variables to file %s\n', outputfilename);
 save(fullfile(basedir, subfolder,outputfilename), 'acPatient', 'acDrugTherapy', 'acAdmissions', ...
     'acAntibiotics', 'acClinicVisits', 'acOtherVisits', 'acUnplannedContact', ...
-    'acPFT', 'acCRP', 'acHghtWght', 'acMicrobiology', 'acEndStudy');
+    'acPFT', 'acCRP', 'acHghtWght', 'acMicrobiology', 'acEndStudy', 'acPatDataUpdTo');
 toc
 fprintf('\n');
 

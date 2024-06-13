@@ -9,7 +9,8 @@ allredcapids   = unique(redcapdata.study_id);
 priorredcapids = redcapidmap.redcap_id;
 
 % apply a quick check to ensure no redcap ids have been removed from the
-% data-set
+% data-set. Please note, you need at least 2 ids in the prior list for this
+% to work correctly
 illogicalids = setdiff(priorredcapids, allredcapids);
 if size(illogicalids, 1) > 0
     fprintf('**** found some previously existing redcap ids that no longer exist - please investigate ****\n');

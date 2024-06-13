@@ -17,6 +17,9 @@ elseif ismember(study, 'CL')
 elseif ismember(study, 'BR')
     clinicalmatfile = 'breatheclinicaldata.mat';
     datamatfile     = 'breathedata.mat';
+elseif ismember(study, 'AC')
+    clinicalmatfile = 'acecfclinicaldata.mat';
+    datamatfile     = 'acecfdata.mat';
 else
     fprintf('Invalid study\n');
     clinicalmatfile = 'unknown';
