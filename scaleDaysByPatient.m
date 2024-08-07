@@ -1,4 +1,4 @@
-function [physdata] = scaleDaysByPatient(physdata,doupdates)
+function [physdata, minDatesByPatient] = scaleDaysByPatient(physdata,doupdates)
 
 % scaleDateByPatient - adds a new column to physdata for the scaled datenum 
 % (relative to the first measurement date for each patient)

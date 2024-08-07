@@ -4,7 +4,7 @@ function [measdate] = getLatestBreatheMeasDate()
 % latest breathe measurement filename date suffixes
 
 %measdate     = '20210726';
-measdate     = '20230619';
+measdate     = '20240527';
 
 
 end
