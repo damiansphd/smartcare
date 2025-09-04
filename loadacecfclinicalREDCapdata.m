@@ -61,7 +61,11 @@ fprintf('Finding the most recent REDCap data dictionary file\n');
 fnamematchstr = 'ArtificialIntelligenceToContro_DataDictionary*';
 [redcapdict] = loadREDCapDictionaryFile(basedir, subfolder, fnamematchstr);
 % update hospital dropdown values
-redcapdict.Choices_Calculations_ORSliderLabels(ismember(redcapdict.Variable_FieldName, {'hospital'})) = {'1, PAP|2, CDF|3, GGC|4, EDB|5, KCL|6, BEL'};
+hosplist = getListOfAceCFHospitals();
+hospdropdown = createAceCFHospDropDownList(hosplist);
+redcapdict.Choices_Calculations_ORSliderLabels(ismember(redcapdict.Variable_FieldName, {'hospital'})) = hospdropdown;
+
+%redcapdict.Choices_Calculations_ORSliderLabels(ismember(redcapdict.Variable_FieldName, {'hospital'})) = {'1, PAP|2, CDF|3, GGC|4, EDB|5, KCL|6, BEL'};
 % convert yes/no fields to look like drop downs so we can process more easily
 redcapdict.FieldType(ismember(redcapdict.Variable_FieldName, {'consent_given'})) = {'dropdown'};
 redcapdict.FieldType(ismember(redcapdict.Variable_FieldName, {'ab_home'}))       = {'dropdown'};
@@ -220,7 +224,15 @@ fprintf('Populating default values\n');
 defidx = ~ismember(acAntibiotics.HomeIV_s, {'Yes', 'No'});
 fprintf('Updating %d blank HomeIV values\n', sum(defidx));
 acAntibiotics.HomeIV_s(defidx) = {'No'};
+toc
 
+% correct HomeIV_s column as REDCap now captures 'Home Usage' more broadly
+tic
+fprintf('Correcting HomeIV_s column\n');
+defidx = ~ismember(acAntibiotics.Route, {'IV'});
+fprintf('Updating %d HomeIV values to No for non-IV treatments\n', sum(defidx));
+acAntibiotics.HomeIV_s(defidx) = {'No'};
+toc
 
 % create stub variable for other visits, unplanned contact, height_weight and end of study for backward compatibility
 actable = 'acOtherVisits';
@@ -265,6 +277,25 @@ idx = isnat(acPatient.StudyDate) | isnat(acPatient.DOB);
 fprintf('Deleted %d Patients with blank dates\n', sum(idx));
 if sum(idx) > 0
     acPatient(idx,{'ID', 'Hospital', 'StudyNumber', 'StudyDate', 'DOB'})
+    acPatient(idx, :) = [];
+end
+fprintf('\n');
+
+% duplicate partition keys
+tmp = groupcounts(acPatient, {'PartitionKey'});
+duppartkey = tmp.PartitionKey(tmp.GroupCount > 1);
+idx = ismember(acPatient.PartitionKey, duppartkey);
+if sum(idx) > 0
+    fprintf('***** %d duplicate partition keys detected - please correct in REDCap before continuing (deleting for now) ****\n', sum(idx));
+    acPatient(ismember(acPatient.PartitionKey, duppartkey), {'ID', 'Hospital', 'StudyNumber', 'StudyNumber2', 'PartitionKey'})
+    acPatient(idx, :) = [];
+end
+
+% invalid partition keys (not 36 characters in length)
+idx = strlength(acPatient.PartitionKey)~=36;
+fprintf('Deleted %d Patients with invalid partition key\n', sum(idx));
+if sum(idx) > 0
+    acPatient(idx,{'ID', 'Hospital', 'StudyNumber', 'StudyDate', 'DOB', 'PartitionKey'})
     acPatient(idx, :) = [];
 end
 fprintf('\n');

@@ -20,6 +20,9 @@ elseif ismember(study, 'BR')
 elseif ismember(study, 'AC')
     clinicalmatfile = 'acecfclinicaldata.mat';
     datamatfile     = 'acecfdata.mat';
+elseif ismember(study, 'BE')
+    clinicalmatfile = 'bronchexclinicaldata.mat';
+    datamatfile     = 'bronchexdata.mat';
 else
     fprintf('Invalid study\n');
     clinicalmatfile = 'unknown';

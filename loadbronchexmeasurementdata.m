@@ -1,6 +1,6 @@
-% 1st Ace-CF data processing step and analysis from raw measurements
-% takes the raw home measurement files, along with the GUID to 
-% study email mapping file and processes them. The main steps performed are: 
+% BronchEx measurement data processing step and analysis from raw measurements
+% takes the raw home measurement files, along with the partition key to 
+% study id mapping file and processes them. The main steps performed are: 
 % i) Filtering
 %     a. removing patients with no measurement data
 %     b. removing measurement data for unknown patients or those with no clinical data
@@ -13,46 +13,47 @@
 %     usage).
 % ii) Removing data anomalies - upper and lower treshold 
 % iii) Handling duplicate records
-% #not for Ace-CF iv)	Handling patients with small amounts of data or very sparse data
-% v) Creates various plots visualise the study data and spreadsheets to allow results of the 
+% iv) Creates various plots visualise the study data and spreadsheets to allow results of the 
 % processing to analysed in more detail (ie which records where deleted and why).
 % 
 % Input:
 % ------
-% latest Breathe measdate from eponym function
-% raw measurements data (meas files are shared between Breathe and Ace-CF
-% studies
-% acecfclinicaldata.mat               contains clinical data and patient master file
+% latest BronchEx measdate from eponym function
+% raw measurements data (meas files are shared between Breathe, Ace-CF, and
+% BronchEx studies
+% bronchexclinicaldata.mat contains clinical data
 %
 % Output:
 % -------
-% acecfdata.mat with the following variables (sorted from earliest to latest processed):
-% - acoffset                            date of the study's first recorded measurement
-% - acphysdata_original                 raw measures
-% - acphysdata_deleted                  deleted measures
-% - acphysdata_predupehandling          measures before handling duplicates 
-% - acphysdata_predateoutlierhandling   same as final data since no outliers handling here
-% - acphysdata                          final data table
-% * NB * acphysdata features contain:
+% bronchexdata.mat with the following variables (sorted from earliest to latest processed):
+% - beoffset                            date of the study's first recorded measurement
+% - bephysdata_original                 raw measures
+% - bephysdata_deleted                  deleted measures
+% - bephysdata_predupehandling          measures before handling duplicates 
+% - bephysdata_predateoutlierhandling   same as final data since no outliers handling here
+% - bephysdata                          final data table
+% * NB * bephysdata features contain:
 %     - DateNum                         #days since broffset
 %     - ScaleDateNum                    #days since patient 's 1st recorded measure
 % 
 % HeatmapAllPatientsWithStudyPeriod     Plots the temporal data count heatmap
 % datademographicsbypatient             .mat and Excel files with boxchart like statistics
-% AceCFDeletedMeasurementData         Excel containing brphysdata_deleted
+% BronchExDeletedMeasurementData        Excel containing brphysdata_deleted
 
 clear; clc; close all;
 
 % choose filter method for measurement data
-measdatafiltmthd = selectMeasDataFiltMthd();
+% measdatafiltmthd = selectMeasDataFiltMthd();
+
+study = 'BE';
+[measmatfilename, clinicalmatfilename, ~] = getRawDataFilenamesForStudy(study);
 
 tic
-fprintf('Loading Ace-CF Clinical Data\n');
+fprintf('Loading BronchEx Clinical Data\n');
 fprintf('-----------------------------\n');
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-clinicalmatfile = 'acecfclinicaldata.mat';
-load(fullfile(basedir, subfolder, clinicalmatfile));
+load(fullfile(basedir, subfolder, clinicalmatfilename));
 fprintf('Done\n');
 toc
 fprintf('\n');
@@ -61,19 +62,17 @@ fprintf('\n');
 % the measurement files from 20240925. Now changing to convert both REDCap
 % and measurement data partition keys to upper case so it will be
 % backwardly compatible
-acPatient.PartitionKey = upper(acPatient.PartitionKey);
+bePatient.PartitionKey = upper(bePatient.PartitionKey);
 
-study = 'AC';
-
-fprintf('Loading Ace-CF measurement data\n');
+fprintf('Loading BronchEx measurement data\n');
 fprintf('----------------------------------------\n');
 
-acphysdata = createBreatheMeasuresTable(0);
-acphysdata_deleted = acphysdata;
-acphysdata_deleted.Reason(:) = {''};
+bephysdata = createBreatheMeasuresTable(0);
+bephysdata_deleted = bephysdata;
+bephysdata_deleted.Reason(:) = {''};
 
 measfileprefix = 'Breathe_';
-measdate       = getLatestAceCFMeasDate();
+measdate       = getLatestBronchExMeasDate();
 measdatedt     = datetime(str2double(measdate), 'ConvertFrom', 'yyyymmdd');
 measfilesuffix = '.csv';
 basedir        = setBaseDir();
@@ -142,7 +141,7 @@ for i = 1:nmeasfile
     
     norigrows = size(measdata, 1);
     fprintf('%d measurements\n', norigrows);
-    measdata = outerjoin(measdata, acPatient, 'LeftKeys', {'PartitionKey'}, 'RightKeys', {'PartitionKey'}, 'RightVariables', {'ID', 'StudyNumber', 'StudyDate', 'PatClinDate'});
+    measdata = outerjoin(measdata, bePatient, 'LeftKeys', {'PartitionKey'}, 'RightKeys', {'PartitionKey'}, 'RightVariables', {'ID', 'StudyNumber', 'StudyDate', 'PatClinDate'});
     measdata.TimestampDt = datetime(measdata.Timestamp, 'TimeZone','UTC','Format','yyyy-MM-dd HH:mm:ss.SSSSSSS Z');
     measdata.DateDt      = datetime(measdata.Date,    'TimeZone','UTC','Format','yyyy-MM-dd HH:mm:ss.SSSSSSS Z');
     measdata.TimestampDt.TimeZone = '';
@@ -178,17 +177,11 @@ for i = 1:nmeasfile
         fprintf('*** Deleting %d measures before study start date ***\n', sum(idx));
         measdata(idx, :) = [];
     end
-    if measdatafiltmthd == 1
-        % remove records after last patient clinical update date
-        idx = measdata.DateDt > measdata.PatClinDate;
-        if sum(idx) > 0
-            fprintf('*** Deleting %d measures after last clinical update by patient ***\n', sum(idx));
-            measdata(idx, :) = [];
-        end
-    elseif measdatafiltmthd == 2
-        fprintf('*** Not filtering measures after last clinical update by patient ***\n');
-    else
-        fprintf('*** Unknown filtering method ***\n');
+    % remove records after last patient clinical update date
+    idx = measdata.DateDt > measdata.PatClinDate;
+    if sum(idx) > 0
+        fprintf('*** Deleting %d measures after last clinical update by patient ***\n', sum(idx));
+        measdata(idx, :) = [];
     end
         
     delzero = 1;
@@ -196,48 +189,48 @@ for i = 1:nmeasfile
     switch filetype
         case {'Activity', 'Activities'}
             recordingtype = 'CalorieRecording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, delzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, delzero);
         case 'Coughing'
             recordingtype = 'CoughRecording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, delzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, delzero);
         case {'HeartRate', 'HeartRates'}
             recordingtype = 'RestingHRRecording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, delzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, delzero);
         case {'Oximeter', 'Oximeters'}
             recordingtype = 'O2SaturationRecording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, delzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, delzero);
             recordingtype = 'PulseRateRecording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, delzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, delzero);
         case {'Sleep', 'Sleeps'}
             recordingtype = 'MinsAsleepRecording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, dontdelzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, dontdelzero);
             recordingtype = 'MinsAwakeRecording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, dontdelzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, dontdelzero);
         case {'Spirometer', 'Spirometers'}
             recordingtype = 'FEV1Recording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, delzero);
-            [acphysdata] = addBreatheRowsForLungFcn(acphysdata, acPatient);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, delzero);
+            [bephysdata] = addBreatheRowsForLungFcn(bephysdata, bePatient);
             recordingtype = 'FEF2575Recording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, delzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, delzero);
             recordingtype = 'FEV075Recording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, delzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, delzero);
             recordingtype = 'FEV1DivFEV6Recording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, delzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, delzero);
             recordingtype = 'FEV6Recording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, delzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, delzero);
         case {'Temperature', 'Temperatures'}
             recordingtype = 'TemperatureRecording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, delzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, delzero);
         case {'Weight', 'Weights'}
             recordingtype = 'WeightRecording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, delzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, delzero);
         case {'Wellbeing', 'Wellbeings'}
             recordingtype = 'WellnessRecording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, delzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, delzero);
             recordingtype = 'HasColdOrFluRecording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, dontdelzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, dontdelzero);
             recordingtype = 'HasHayFeverRecording';
-            [acphysdata, acphysdata_deleted] = addBreatheRowsForMeasure(acphysdata, acphysdata_deleted, measdata, filetype, recordingtype, dontdelzero);
+            [bephysdata, bephysdata_deleted] = addBreatheRowsForMeasure(bephysdata, bephysdata_deleted, measdata, filetype, recordingtype, dontdelzero);
 
         otherwise
             fprintf('*** Unknown file type %s ***\n', filetype)
@@ -247,76 +240,64 @@ for i = 1:nmeasfile
     fprintf('\n');
 end
 
-acphysdata_original = acphysdata;
-fprintf('Ace-CF data has %d rows\n', size(acphysdata, 1));
+bephysdata_original = bephysdata;
+fprintf('BronchEx data has %d rows\n', size(bephysdata, 1));
 fprintf('\n');
 
 % set study offset 
-minmdate = min(acphysdata.Date_TimeRecorded);
-acoffset = datenum(datetime(year(minmdate), month(minmdate), day(minmdate)));
-acphysdata.DateNum = ceil(datenum(datetime(acphysdata.Date_TimeRecorded)+seconds(1)) - acoffset);
+minmdate = min(bephysdata.Date_TimeRecorded);
+beoffset = datenum(datetime(year(minmdate), month(minmdate), day(minmdate)));
+bephysdata.DateNum = ceil(datenum(datetime(bephysdata.Date_TimeRecorded)+seconds(1)) - beoffset);
 
 % calc and print overall data demographics before data anomaly fixes
-printDataDemographics(acphysdata, 0);
+printDataDemographics(bephysdata, 0);
 fprintf('\n');
 
-[acphysdata, acphysdata_deleted] = correctBreatheDataAnomalies(acphysdata, acphysdata_deleted);
+[bephysdata, bephysdata_deleted] = correctBreatheDataAnomalies(bephysdata, bephysdata_deleted);
 
 % sort measurement data
-acphysdata = sortrows(acphysdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
+bephysdata = sortrows(bephysdata, {'SmartCareID', 'RecordingType', 'Date_TimeRecorded'}, 'ascend');
 
-printDataDemographics(acphysdata, 0);
+printDataDemographics(bephysdata, 0);
 
-plotMeasuresByHour(acphysdata, 0, 'AC - Measures By Hour Histograms', study);
+plotMeasuresByHour(bephysdata, 0, sprintf('%s - Measures By Hour Histograms', study), study);
 
-acphysdata_predupehandling = acphysdata;
+bephysdata_predupehandling = bephysdata;
 
 % generate data demographics by patient
-generateDataDemographicsByPatientFn(acphysdata, acPatient, study);
+generateDataDemographicsByPatientFn(bephysdata, bePatient, study);
 
 % handle duplicates
 doupdates = true;
 detaillog = false;
-acphysdata = handleBreatheDuplicateMeasures(acphysdata, study, doupdates, detaillog);
+bephysdata = handleBreatheDuplicateMeasures(bephysdata, study, doupdates, detaillog);
 
 % calc and print overall data demographics after data anomaly fixes
-printDataDemographics(acphysdata, 0);
+printDataDemographics(bephysdata, 0);
 
 % populate ScaledDateNum with the days from first measurement (by patient)
-acphysdata = scaleDaysByPatient(acphysdata, doupdates);
+bephysdata = scaleDaysByPatient(bephysdata, doupdates);
 
-acphysdata_predateoutlierhandling = acphysdata;
+bephysdata_predateoutlierhandling = bephysdata;
 
-% don't do this for project breathe or ace-cf
-% analyse measurement date outliers and handle as appropriate
-%acphysdata = analyseAndHandleDateOutliers(acphysdata, study, doupdates);
-
-createMeasuresHeatmapWithStudyPeriod(acphysdata, acoffset, acPatient, study);
+createMeasuresHeatmapWithStudyPeriod(bephysdata, beoffset, bePatient, study);
 
 % calc and print overall data demographics after data anomaly fixes
 %printDataDemographics(brphysdata, 0);
 
 % generate data demographics by patient
-generateDataDemographicsByPatientFn(acphysdata, acPatient, study);
+generateDataDemographicsByPatientFn(bephysdata, bePatient, study);
 
 tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
-
-if measdatafiltmthd == 2
-    outputfilename = 'acecfdata-nofilt.mat';
-else
-    [outputfilename, ~, ~] = getRawDataFilenamesForStudy(study);
-end
-fprintf('Saving output variables to file %s\n', outputfilename);
-save(fullfile(basedir, subfolder, outputfilename), 'acphysdata', 'acoffset', 'acphysdata_deleted', ...
-    'acphysdata_original', 'acphysdata_predupehandling', 'acphysdata_predateoutlierhandling');
+fprintf('Saving output variables to file %s\n', measmatfilename);
+save(fullfile(basedir, subfolder, measmatfilename), 'bephysdata', 'beoffset', 'bephysdata_deleted', ...
+    'bephysdata_original', 'bephysdata_predupehandling', 'bephysdata_predateoutlierhandling');
 
 subfolder = 'ExcelFiles';
-if measdatafiltmthd == 2
-    delrowfilename = 'AceCFDeletedMeasurementData-nofilt.xlsx';
-else
-    delrowfilename = 'AceCFDeletedMeasurementData.xlsx';
-end
-writetable(acphysdata_deleted(~ismember(acphysdata_deleted.Reason, {'NULL Measurement'}),:), fullfile(basedir, subfolder, delrowfilename));
+
+delrowfilename = 'BronchExDeletedMeasurementData.xlsx';
+
+writetable(bephysdata_deleted(~ismember(bephysdata_deleted.Reason, {'NULL Measurement'}),:), fullfile(basedir, subfolder, delrowfilename));
 toc

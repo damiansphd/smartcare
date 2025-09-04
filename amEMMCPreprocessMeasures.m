@@ -159,6 +159,16 @@ elseif measuresmask == 30
     % project breathe
     idx = ismember(measures.DisplayName, {'Cough', 'Wellness'});
     measures.Mask(idx) = 1;    
+elseif measuresmask == 31
+    % bronchex
+    idx = ismember(measures.DisplayName, {'Cough', 'LungFunction', 'MinsAsleep', 'O2Saturation', ...
+        'PulseRate', 'Wellness'});
+    measures.Mask(idx) = 1;
+elseif measuresmask == 32
+    % bronchex
+    idx = ismember(measures.DisplayName, {'Cough', 'LungFunction', 'MinsAsleep', ...
+        'PulseRate', 'Wellness'});
+    measures.Mask(idx) = 1;
 else
     % shouldn't ever get here - but default to just cough if it ever
     % happens

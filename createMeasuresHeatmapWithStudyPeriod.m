@@ -41,7 +41,7 @@ elseif ismember(study, {'CL'})
     colors(15,:)  = temp(20,:);
     colors(16,:)  = [1 0 1];
     nmeasures = 15;
-elseif ismember(study, {'BR', 'AC'})
+elseif ismember(study, {'BR', 'AC', 'BE'})
     colors(1,:)  = temp(4,:);
     colors(2,:)  = temp(5,:);
     colors(3,:)  = temp(6,:);
@@ -88,7 +88,14 @@ patientstudydate.ScaledDateNum = datenum(patientstudydate.StudyDate) - offset - 
 
 % add rows to the count table to mark the study start and end dates (use a count
 % of 10 to allow it to be highlighted in a different colour on the heatmap
-studyduration = 183;
+if ismember(study, {'SC', 'TM', 'CL'})
+    studyduration = 183;
+elseif ismember(study, {'AC', 'BE'})
+    studyduration = 365;
+elseif ismember(study, {'BR'})
+    studyduration = 900;
+end
+
 fixedcount = ones(size(patientstudydate, 1), 1) * (nmeasures + 1);
 fixedcount = array2table(fixedcount);
 fixedcount.Properties.VariableNames{'fixedcount'} = 'GroupCount';

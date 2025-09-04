@@ -4,7 +4,8 @@ function [column] = getColumnForRawBreatheCaptureType(filetype)
 % from the input files for project breathe measurement data
 
 switch filetype
-    case {'Activity', 'Coughing', 'HeartRate', 'Oximeter', 'Sleep', 'Spirometer', 'Temperature', 'Weight', 'Wellbeing'}
+    case {'Activity', 'Activities', 'Coughing', 'HeartRate', 'HeartRates', 'Oximeter', 'Oximeters', 'Sleep', 'Sleeps', ...
+            'Spirometer', 'Spirometers', 'Temperature', 'Temperatures', 'Weight', 'Weights', 'Wellbeing', 'Wellbeings'}
         column = 'CaptureType';
     otherwise
         fprintf('*** Unknown filetype %s ***\n', filetype);

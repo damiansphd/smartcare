@@ -14,7 +14,7 @@ tempdata = physdata;
 tempdata(:,{'UserName', 'ScaledDateNum', 'DateNum', 'Date_TimeRecorded'}) = [];
 if ismember(study, {'SC'})
     tempdata(:,{'FEV1', 'PredictedFEV', 'ScalingRatio', 'CalcFEV1SetAs'}) = [];
-elseif ismember(study, {'BR', 'AC'})
+elseif ismember(study, {'BR', 'AC', 'BE'})
     tempdata(:,{'CaptureType'}) = [];
 elseif ismember(study, {'CL'})
     % no need to remove any columns for climb;

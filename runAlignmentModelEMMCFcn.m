@@ -46,7 +46,7 @@ if ismember(study, {'SC', 'CL', 'BR'})
 end
     
 
-if ismember(study, {'BR', 'CL', 'AC'})
+if ismember(study, {'BR', 'CL', 'AC', 'BE'})
     subfolder = sprintf('DataFiles/%s', study);
 else
     subfolder = 'DataFiles';

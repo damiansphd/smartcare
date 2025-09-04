@@ -17,11 +17,11 @@ upperthresh = 6000;
 % Lung Function
 recordingtype = 'FEV1Recording';
 lowerthresh = 0.1;
-upperthresh = 6;
+upperthresh = 7;
 [brphysdata, brphysdata_deleted] = findAndDeleteAnomalousMeasures(brphysdata, brphysdata_deleted, recordingtype, lowerthresh, upperthresh);
 recordingtype = 'FEV6Recording';
 lowerthresh = 0.2;
-upperthresh = 7;
+upperthresh = 10;
 [brphysdata, brphysdata_deleted] = findAndDeleteAnomalousMeasures(brphysdata, brphysdata_deleted, recordingtype, lowerthresh, upperthresh);
 
 % O2 Saturation
@@ -32,7 +32,7 @@ upperthresh = 100;
 
 % Pulse Rate (BPM)
 recordingtype = 'PulseRateRecording';
-lowerthresh = 40;
+lowerthresh = 30;
 upperthresh = 200;
 [brphysdata, brphysdata_deleted] = findAndDeleteAnomalousMeasures(brphysdata, brphysdata_deleted, recordingtype, lowerthresh, upperthresh);
 
@@ -61,7 +61,7 @@ upperthresh = 40;
 % Weight Recording
 recordingtype = 'WeightRecording';
 lowerthresh = 30;
-upperthresh = 120;
+upperthresh = 140;
 [brphysdata, brphysdata_deleted] = findAndDeleteAnomalousMeasures(brphysdata, brphysdata_deleted, recordingtype, lowerthresh, upperthresh);
 
 fprintf('\n');

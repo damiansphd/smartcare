@@ -83,6 +83,23 @@ elseif ismember(study, 'AC')
     cdMedications  = [];
     cdNewMeds      = [];
     cdUnplannedContact = acUnplannedContact;
+elseif ismember(study, 'BE')
+    load(fullfile(basedir, subfolder, clinicalmatfile), 'bePatient', 'beDrugTherapy', 'beMicrobiology', 'beClinicVisits', 'bePFT', 'beAdmissions', ...
+        'beAntibiotics', 'beCRP', 'beEndStudy', 'beOtherVisits', 'beHghtWght', 'beUnplannedContact');
+    cdPatient      = bePatient;
+    cdDrugTherapy  = beDrugTherapy;
+    cdMicrobiology = beMicrobiology;
+    cdClinicVisits = beClinicVisits;
+    cdPFT          = bePFT;
+    cdAdmissions   = beAdmissions;
+    cdAntibiotics  = beAntibiotics;
+    cdCRP          = beCRP;
+    cdEndStudy     = beEndStudy;
+    cdOtherVisits  = beOtherVisits;
+    cdHghtWght     = beHghtWght;
+    cdMedications  = [];
+    cdNewMeds      = [];
+    cdUnplannedContact = beUnplannedContact;
 end
 
 toc
