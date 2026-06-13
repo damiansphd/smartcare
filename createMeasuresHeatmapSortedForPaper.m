@@ -15,10 +15,15 @@ elseif ismember(study, {'CL'})
     studyduration = 184;
 elseif ismember(study, {'BR', 'AC'})
     studyduration = max(physdata.ScaledDateNum);
+elseif ismember(study, {'BE'})
+    studyduration = 183;    
 else
-    fprintf('**** Unknown Study ****');
+    fprintf('**** Unknown Study ****\n');
     return;
 end
+
+physdata = physdata(physdata.ScaledDateNum < (studyduration + 1), :);
+
 
 % get the date scaling offset for each patient
 %patientoffsets = getPatientOffsets(physdata);
@@ -104,7 +109,7 @@ if ismember(study, {'SC'})
     [pdcountmtable] = calcDataComplianceStats(dataset, totdays, totmeas, studyduration, meastype, filttype, ...
                                         datafilter, bccolor, tickrange, ticklabels, subfolder, study);                 
     
-elseif ismember(study, {'BR', 'AC'})
+elseif ismember(study, {'BR', 'AC', 'BE'})
     
     alldataset       = physdata(~ismember(physdata.RecordingType, {'LungFunctionRecording'}), {'SmartCareID','ScaledDateNum'});
     pdcountallmtable = varfun(@max, alldataset, 'GroupingVariables', {'SmartCareID', 'ScaledDateNum'});

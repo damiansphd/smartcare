@@ -1,4 +1,4 @@
-function [acPatient, acCRP, acPFT] = populateAceCFDerivedColsInMLTables(acPatient, acCRP, acPFT, acPatDataUpdTo)
+function [acPatient, acCRP, acPFT] = populateAceCFDerivedColsInMLTables(acPatient, acCRP, acPFT, acPatDataUpdTo, acEndStudy)
 
 % populateAceCFDerivedColsInMLTables - populates the derived columns in the
 % relevant tables (that aren't available directly from REDCap for the
@@ -8,6 +8,7 @@ acPatient.Prior6Mnth               = acPatient.StudyDate - calmonths(6);
 acPatient.Post6Mnth                = acPatient.StudyDate + calmonths(6);
 acPatient.Age                      = floor(years(acPatient.StudyDate - acPatient.DOB));
 
+% add patient data updated to as column to acPatient table
 acPatient.PatClinDate = [];
 acPatient = outerjoin(acPatient, acPatDataUpdTo, 'LeftKeys', {'ID'}, 'RightKeys', {'ID'}, 'RightVariables', {'PatClinDate'}, 'Type', 'left');
 
@@ -16,8 +17,18 @@ acPatient = outerjoin(acPatient, acPatDataUpdTo, 'LeftKeys', {'ID'}, 'RightKeys'
 patnoupdidx = isnat(acPatient.PatClinDate);
 acPatient.PatClinDate(patnoupdidx) = acPatient.StudyDate(patnoupdidx);
 
-%wdrwnidx = ismember(acPatient.ConsentStatus, 'Withdrawn') & acPatient.WithdrawalDate < acPatient.PatClinDate;
-%acPatient.PatClinDate(wdrwnidx) = acPatient.WithdrawalDate(wdrwnidx);
+% add study end date as column to acPatient table
+acPatient = outerjoin(acPatient, acEndStudy, 'LeftKeys', {'ID'}, 'RightKeys', {'ID'}, 'RightVariables', {'EndOfStudyDate', 'EndOfStudyReason'}, 'Type', 'left');
+acPatient.StudyEndDate = acPatient.EndOfStudyDate;
+
+% default study end date to be the study date + 1 year where not yet
+% entered in REDCap
+studyendidx = isnat(acPatient.StudyEndDate);
+acPatient.StudyEndDate(studyendidx) = acPatient.StudyDate(studyendidx) + days(365);
+
+% limit official study period to 365 days if EndOfStudyDate is longer
+studyendidx = days(acPatient.StudyEndDate - acPatient.StudyDate) > 365;
+acPatient.StudyEndDate(studyendidx) = acPatient.StudyDate(studyendidx) + days(365);
 
 acPatient.FEV1SetAs             = round(acPatient.PredictedFEV1, 1);
 

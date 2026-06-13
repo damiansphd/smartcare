@@ -44,7 +44,7 @@
 clear; clc; close all;
 
 % choose filter method for measurement data
-measdatafiltmthd = selectMeasDataFiltMthd();
+[datefiltmode, cohortfiltmode, filtfilesuffix] = selectMeasDataFiltMthd();
 
 tic
 fprintf('Loading Ace-CF Clinical Data\n');
@@ -64,6 +64,7 @@ fprintf('\n');
 acPatient.PartitionKey = upper(acPatient.PartitionKey);
 
 study = 'AC';
+studydays = 365;
 
 fprintf('Loading Ace-CF measurement data\n');
 fprintf('----------------------------------------\n');
@@ -142,7 +143,7 @@ for i = 1:nmeasfile
     
     norigrows = size(measdata, 1);
     fprintf('%d measurements\n', norigrows);
-    measdata = outerjoin(measdata, acPatient, 'LeftKeys', {'PartitionKey'}, 'RightKeys', {'PartitionKey'}, 'RightVariables', {'ID', 'StudyNumber', 'StudyDate', 'PatClinDate'});
+    measdata = outerjoin(measdata, acPatient, 'LeftKeys', {'PartitionKey'}, 'RightKeys', {'PartitionKey'}, 'RightVariables', {'ID', 'StudyNumber', 'StudyDate', 'StudyEndDate', 'PatClinDate', 'Cohort'});
     measdata.TimestampDt = datetime(measdata.Timestamp, 'TimeZone','UTC','Format','yyyy-MM-dd HH:mm:ss.SSSSSSS Z');
     measdata.DateDt      = datetime(measdata.Date,    'TimeZone','UTC','Format','yyyy-MM-dd HH:mm:ss.SSSSSSS Z');
     measdata.TimestampDt.TimeZone = '';
@@ -178,15 +179,33 @@ for i = 1:nmeasfile
         fprintf('*** Deleting %d measures before study start date ***\n', sum(idx));
         measdata(idx, :) = [];
     end
-    if measdatafiltmthd == 1
-        % remove records after last patient clinical update date
-        idx = measdata.DateDt > measdata.PatClinDate;
+    % remove records after study period (depending on date filtering mode)
+    if datefiltmode == 1
+        idx = measdata.DateDt > measdata.StudyEndDate;
         if sum(idx) > 0
-            fprintf('*** Deleting %d measures after last clinical update by patient ***\n', sum(idx));
+            fprintf('*** Deleting %d measures after official study period by patient ***\n', sum(idx));
             measdata(idx, :) = [];
         end
-    elseif measdatafiltmthd == 2
-        fprintf('*** Not filtering measures after last clinical update by patient ***\n');
+    elseif datefiltmode == 2
+        % do nothing
+    else
+        fprintf('*** Unknown filtering method ***\n');
+    end
+    % remove records by cohort (depending on cohort filtering mode)
+    if cohortfiltmode == 1
+        idx = ~ismember(measdata.Cohort, {'Signal'});
+        if sum(idx) > 0
+            fprintf('*** Deleting %d measures not in signal cohort ***\n', sum(idx));
+            measdata(idx, :) = [];
+        end
+    elseif cohortfiltmode == 2
+        idx = ~ismember(measdata.Cohort, {'Breathe Only'});
+        if sum(idx) > 0
+            fprintf('*** Deleting %d measures not in breathe only cohort ***\n', sum(idx));
+            measdata(idx, :) = [];
+        end
+    elseif cohortfiltmode == 3
+        % do nothing
     else
         fprintf('*** Unknown filtering method ***\n');
     end
@@ -267,7 +286,7 @@ acphysdata = sortrows(acphysdata, {'SmartCareID', 'RecordingType', 'Date_TimeRec
 
 printDataDemographics(acphysdata, 0);
 
-plotMeasuresByHour(acphysdata, 0, 'AC - Measures By Hour Histograms', study);
+plotMeasuresByHour(acphysdata, 0, sprintf('AC - Measures By Hour Histograms-%s', filtfilesuffix), study);
 
 acphysdata_predupehandling = acphysdata;
 
@@ -291,7 +310,7 @@ acphysdata_predateoutlierhandling = acphysdata;
 % analyse measurement date outliers and handle as appropriate
 %acphysdata = analyseAndHandleDateOutliers(acphysdata, study, doupdates);
 
-createMeasuresHeatmapWithStudyPeriod(acphysdata, acoffset, acPatient, study);
+createAceCFMeasuresHeatmapWithStudyPeriod(acphysdata, acoffset, acPatient, study, filtfilesuffix);
 
 % calc and print overall data demographics after data anomaly fixes
 %printDataDemographics(brphysdata, 0);
@@ -303,20 +322,15 @@ tic
 basedir = setBaseDir();
 subfolder = 'MatlabSavedVariables';
 
-if measdatafiltmthd == 2
-    outputfilename = 'acecfdata-nofilt.mat';
-else
-    [outputfilename, ~, ~] = getRawDataFilenamesForStudy(study);
-end
+[tmpfilename, ~, ~] = getRawDataFilenamesForStudy(study);
+outputfilename = sprintf('%s-%s.%s', extractBefore(tmpfilename, '.'), filtfilesuffix, extractAfter(tmpfilename, '.'));
+
 fprintf('Saving output variables to file %s\n', outputfilename);
 save(fullfile(basedir, subfolder, outputfilename), 'acphysdata', 'acoffset', 'acphysdata_deleted', ...
     'acphysdata_original', 'acphysdata_predupehandling', 'acphysdata_predateoutlierhandling');
 
 subfolder = 'ExcelFiles';
-if measdatafiltmthd == 2
-    delrowfilename = 'AceCFDeletedMeasurementData-nofilt.xlsx';
-else
-    delrowfilename = 'AceCFDeletedMeasurementData.xlsx';
-end
+delrowfilename = sprintf('AceCFDeletedMeasurementData-%s.xlsx', filtfilesuffix);
+
 writetable(acphysdata_deleted(~ismember(acphysdata_deleted.Reason, {'NULL Measurement'}),:), fullfile(basedir, subfolder, delrowfilename));
 toc

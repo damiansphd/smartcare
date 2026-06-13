@@ -53,6 +53,7 @@ xlabel(ax, '\bfMeasures per day');
 ylabel(ax, '\bfStudy Days');
 filename = sprintf('%s-MeasuresPerDay-%s', study, meastype);
 savePlotInDir(f, filename, subfolder);
+savePlotInDirAsSVG(f, filename, subfolder);
 close(f);
 
 if ismember(study, {'SC'})
@@ -208,7 +209,7 @@ sp3 = uicontrol('Parent', p3, ...
 % save results
 filename = sprintf('%s-Heatmap-RecordedMeasuresByParticipantForThesis-%s', study, meastype);
 savePlotInDir(f, filename, subfolder);
-%savePlotInDirAsSVG(f, filename, subfolder);
+savePlotInDirAsSVG(f, filename, subfolder);
 close(f);
 
 toc

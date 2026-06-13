@@ -28,6 +28,7 @@
 % - acPatient             patient profile (including mutations, consent 
 % status, and last updated date for the clinical data
 % - acPFT                 Pulmonary Function Tests
+% - acEndOfStudy          Contains study end date (and status)
 % - acUnplannedContact    <empty>
 %
 % Excel file
@@ -119,12 +120,13 @@ fprintf('Replacing drop down values with names\n');
 [redcapdata] = replaceDropDownValuesWithNames(redcapdata, redcapdict, 'ue_type');
 [redcapdata] = replaceDropDownValuesWithNames(redcapdata, redcapdict, 'ov_type');
 [redcapdata] = replaceDropDownValuesWithNames(redcapdata, redcapdict, 'ad_planned');
+[redcapdata] = replaceDropDownValuesWithNames(redcapdata, redcapdict, 'eos_reason');
 
 toc
 fprintf('\n');
 
-redcapdata = sortrows(redcapdata, {'redcap_repeat_instrument', redcapidcol, 'redcap_repeat_instance'}, {'Ascend', 'Ascend', 'Ascend'});
-
+redcapdata = natsortrows(redcapdata, [], {'redcap_repeat_instrument', redcapidcol, 'redcap_event_name', 'redcap_repeat_instance'}, {'ascend', 'ascend', 'ascend', 'ascend'});
+    
 % add a record to the id mapping file for each new patient (assigning a new
 % internal id for each)
 tic
@@ -209,12 +211,14 @@ fprintf('\n');
 % filter acPatDataUpdTo to keep single row per patient with the max
 % PatClinDate (there can be cases where multiple rows exist per patient,
 % and we just want the latest update date for each patient)
-acPatDataUpdTo = groupfilter(acPatDataUpdTo,'ID', @(x) x==max(x),'PatClinDate'); 
+acPatDataUpdTo = groupfilter(acPatDataUpdTo,'ID', @(x) x==max(x),'PatClinDate');
+% handle case where more than one record with same upd date
+acPatDataUpdTo = unique(acPatDataUpdTo);
 
 % additionally populate the specific derived columns in the relevant tables
 tic
 fprintf('Populating derived columns\n');
-[acPatient, acCRP, acPFT] = populateAceCFDerivedColsInMLTables(acPatient, acCRP, acPFT, acPatDataUpdTo);
+[acPatient, acCRP, acPFT] = populateAceCFDerivedColsInMLTables(acPatient, acCRP, acPFT, acPatDataUpdTo, acEndStudy);
 toc
 fprintf('\n');
 
@@ -247,10 +251,6 @@ actable = 'acHghtWght';
 [mltable] = createAceCFSingleClinicalTable(actable, 0);
 eval(sprintf('%s = mltable;', actable));
 
-actable = 'acEndStudy';
-[mltable] = createAceCFSingleClinicalTable(actable, 0);
-eval(sprintf('%s = mltable;', actable));
-
 % sort rows
 tic
 fprintf('Sorting rows in tables\n');
@@ -265,6 +265,7 @@ acPFT               = sortrows(acPFT,              {'ID', 'LungFunctionDate'});
 acCRP               = sortrows(acCRP,              {'ID', 'CRPDate'});
 acMicrobiology      = sortrows(acMicrobiology,     {'ID', 'DateMicrobiology'});
 acHghtWght          = sortrows(acHghtWght,         {'ID', 'MeasDate'});
+acEndStudy          = sortrows(acEndStudy,         {'ID', 'EndOfStudyDate'});
 toc
 fprintf('\n');
 

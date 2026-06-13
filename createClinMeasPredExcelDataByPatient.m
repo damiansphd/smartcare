@@ -9,14 +9,6 @@ subfolder = 'MatlabSavedVariables';
 [cdPatient, cdDrugTherapy, cdMicrobiology, cdAntibiotics, cdAdmissions, cdPFT, cdCRP, ...
     cdClinicVisits, cdOtherVisits, cdEndStudy, cdHghtWght] = loadAndHarmoniseClinVars(clinicalmatfile, subfolder, study);
 
-if ismember(study, 'SC')
-    patlist = [24, 30, 32, 59, 79, 115, 140, 173, 188, 214, 215, 241];
-elseif ismember(study, 'TM')
-    patlist = cdPatient.ID';
-else
-    fprintf('Need to add patient list for other studies\n');
-end
-
 [modelrun, modelidx, models] = amEMMCSelectModelRunFromDir(study, '',      '', 'IntrFilt', 'TGap',       '');
 
 fprintf('Loading model run results data\n');
@@ -24,7 +16,16 @@ load(fullfile(basedir, subfolder, sprintf('%s.mat', modelrun)));
 
 basedir = setBaseDir();
 subfolder = 'ExcelFiles';
-outputfilename = sprintf('ClinMeasPred-%s.xlsx', modelrun);
+outputfilename = sprintf('ClinMeasPredNew-%s.xlsx', modelrun);
+
+if ismember(study, 'SC')
+    %patlist = [24, 30, 32, 59, 79, 115, 140, 173, 188, 214, 215, 241];
+    patlist = unique(amInterventions.SmartCareID)';
+elseif ismember(study, 'TM')
+    patlist = cdPatient.ID';
+else
+    fprintf('Need to add patient list for other studies\n');
+end
 
 nonmeascols = 8;
 
